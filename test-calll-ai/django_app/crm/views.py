@@ -195,6 +195,8 @@ def api_internal_save_call_session_and_memory(request):
 
         duration_seconds = int(data.get('duration_seconds', 0))
         direction = data.get('direction', 'inbound')
+        is_internal_test = bool(data.get('is_internal_test')) or direction == 'internal_test'
+        caller_extension = str(data.get('caller_extension') or '').strip()
         caller_phone = str(data.get('caller_phone') or 'web_dashboard').strip()
         destination_phone = str(data.get('destination_phone') or '').strip()
         customer_name = str(data.get('customer_name') or '').strip()
@@ -237,7 +239,12 @@ def api_internal_save_call_session_and_memory(request):
                 session.caller_phone = caller_phone
             if destination_phone:
                 session.destination_phone = destination_phone
-            update_fields = ['ended_at', 'duration_seconds', 'transcript_text', 'summary', 'caller_phone', 'destination_phone']
+            if is_internal_test:
+                session.is_internal_test = True
+                session.direction = 'internal_test'
+            if caller_extension:
+                session.caller_extension = caller_extension
+            update_fields = ['ended_at', 'duration_seconds', 'transcript_text', 'summary', 'caller_phone', 'destination_phone', 'is_internal_test', 'caller_extension', 'direction']
             if req_recording_url and not session.recording_url:
                 session.recording_url = req_recording_url
                 update_fields.append('recording_url')
@@ -246,7 +253,7 @@ def api_internal_save_call_session_and_memory(request):
             session = CallSession.objects.create(
                 user=user,
                 room_name=room_name,
-                direction=direction,
+                direction='internal_test' if is_internal_test else direction,
                 caller_phone=caller_phone,
                 destination_phone=destination_phone,
                 call_goal=call_goal,
@@ -254,7 +261,9 @@ def api_internal_save_call_session_and_memory(request):
                 duration_seconds=duration_seconds,
                 transcript_text=transcript_text,
                 summary=summary,
-                recording_url=req_recording_url
+                recording_url=req_recording_url,
+                is_internal_test=is_internal_test,
+                caller_extension=caller_extension
             )
 
         # 1.1 Calculate billing with strict ceiling rounding and deduct from wallet (Partner or User)
@@ -370,23 +379,24 @@ def api_internal_save_call_session_and_memory(request):
         except Exception as b_err:
             logger.error(f"Error processing call billing for room {room_name}: {b_err}", exc_info=True)
 
-        # 2. Upsert CustomerMemory for (user, caller_phone)
-        memory, _ = CustomerMemory.objects.get_or_create(user=user, phone_number=caller_phone)
-        if customer_name:
-            memory.customer_name = customer_name
-        if permanent_profile is not None:
-            if isinstance(permanent_profile, dict):
-                memory.permanent_profile = permanent_profile
-            elif isinstance(permanent_profile, str):
-                try:
-                    memory.permanent_profile = json.loads(permanent_profile)
-                except Exception:
-                    pass
-        if summary:
-            memory.last_interaction_summary = summary
-        memory.last_interaction_at = now_dt
-        memory.total_calls_count = (memory.total_calls_count or 0) + 1
-        memory.save()
+        # 2. Upsert CustomerMemory for (user, caller_phone) (Skip for internal employee test calls)
+        if not is_internal_test and caller_phone:
+            memory, _ = CustomerMemory.objects.get_or_create(user=user, phone_number=caller_phone)
+            if customer_name:
+                memory.customer_name = customer_name
+            if permanent_profile is not None:
+                if isinstance(permanent_profile, dict):
+                    memory.permanent_profile = permanent_profile
+                elif isinstance(permanent_profile, str):
+                    try:
+                        memory.permanent_profile = json.loads(permanent_profile)
+                    except Exception:
+                        pass
+            if summary:
+                memory.last_interaction_summary = summary
+            memory.last_interaction_at = now_dt
+            memory.total_calls_count = (memory.total_calls_count or 0) + 1
+            memory.save()
 
         # 3. Check and update matching CampaignContact
         try:

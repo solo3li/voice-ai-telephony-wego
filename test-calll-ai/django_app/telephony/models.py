@@ -390,3 +390,80 @@ def resolve_tenant_from_did(called_number: str):
 
     return None, None
 
+
+class TenantTelephonyConfig(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='telephony_config', verbose_name="المستأجر / الشركة")
+    wazo_context = models.CharField(max_length=128, blank=True, default='', db_index=True, help_text="سياق السنترال الداخلي في Wazo")
+    wazo_context_id = models.CharField(max_length=64, blank=True, default='', help_text="معرف السياق في Wazo")
+    user_range_start = models.PositiveIntegerField(default=100)
+    user_range_end = models.PositiveIntegerField(default=899)
+    queue_range_start = models.PositiveIntegerField(default=200)
+    queue_range_end = models.PositiveIntegerField(default=299)
+    ai_extension = models.CharField(max_length=16, default='999', help_text="تحويلة الذكاء الاصطناعي الداخلية")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'voice_assistant_tenanttelephonyconfig'
+        verbose_name = "إعدادات سنترال المستأجر (Wazo Context)"
+        verbose_name_plural = "إعدادات سنترال المستأجرين (Wazo Contexts)"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.wazo_context or 'سياق افتراضي'}"
+
+
+def get_or_create_tenant_context(user: User) -> TenantTelephonyConfig:
+    """
+    Get or provision dedicated Wazo native context for a tenant.
+    Auto-provisions the context in Wazo via REST API if not yet created.
+    """
+    from .wazo_client import wazo_client
+
+    cfg, created = TenantTelephonyConfig.objects.get_or_create(user=user)
+    if not cfg.wazo_context:
+        ctx_data = wazo_client.create_tenant_context(
+            tenant_id=user.id,
+            label=f"tenant_{user.id}_{user.username}"[:64]
+        )
+        cfg.wazo_context = ctx_data.get("name") or f"ctx_tenant_{user.id}_internal"
+        cfg.wazo_context_id = str(ctx_data.get("id", ""))
+        cfg.save(update_fields=['wazo_context', 'wazo_context_id', 'updated_at'])
+
+    return cfg
+
+
+def resolve_tenant_from_context_and_ext(context_name: str, caller_ext: str = ""):
+    """
+    Resolve tenant User, EmployeeProfile, and AgentProfile when an employee dials 999.
+    Matches via Wazo context name or employee extension.
+    """
+    from call_center.models import EmployeeProfile
+    from agents.models import AgentProfile
+
+    user = None
+    target_profile = None
+    employee = None
+
+    # 1. Match by TenantTelephonyConfig wazo_context
+    if context_name:
+        cfg = TenantTelephonyConfig.objects.filter(wazo_context=context_name).select_related('user').first()
+        if cfg:
+            user = cfg.user
+
+    # 2. If user found and caller_ext provided, look up specific employee
+    if user and caller_ext:
+        employee = EmployeeProfile.objects.filter(employer=user, extension=caller_ext, is_active=True).first()
+
+    # 3. Fallback: match by caller_ext if context_name is default or missing
+    if not user and caller_ext:
+        employee = EmployeeProfile.objects.filter(extension=caller_ext, is_active=True).select_related('employer', 'user').first()
+        if employee:
+            user = employee.employer or employee.user
+
+    # 4. Resolve active AgentProfile for this user
+    if user:
+        target_profile = AgentProfile.objects.filter(user=user, is_active=True).first()
+
+    return user, employee, target_profile
+
+

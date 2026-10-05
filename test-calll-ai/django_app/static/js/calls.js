@@ -81,7 +81,10 @@ function renderCallsTable(calls) {
 
   tbody.innerHTML = calls.map(c => {
     let dirBadge = '';
-    if (c.direction === 'inbound') {
+    if (c.is_internal_test || c.direction === 'internal_test') {
+      const extLabel = c.caller_extension ? ` (${c.caller_extension})` : '';
+      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">🧪 اختبار داخلي${extLabel}</span>`;
+    } else if (c.direction === 'inbound') {
       dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300">📥 واردة</span>`;
     } else if (c.direction === 'outbound_ai') {
       dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">🤖 صادرة AI</span>`;

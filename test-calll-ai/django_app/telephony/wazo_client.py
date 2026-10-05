@@ -89,6 +89,60 @@ class WazoClient:
         # Fallback simulation ID for offline/dev environments
         return {"uuid": f"sim-user-{uuid.uuid4().hex[:8]}", "firstname": firstname}
 
+    def create_tenant_context(self, tenant_id: int, label: str = "") -> Dict[str, Any]:
+        """
+        Create a dedicated internal context in Wazo for native multi-tenant isolation.
+        Configures user_ranges (100-899) and queue_ranges (200-299).
+        """
+        context_label = label.strip() or f"Tenant_{tenant_id}"
+        expected_name = f"ctx_tenant_{tenant_id}_internal"
+        url = f"{self.confd_url}/contexts"
+
+        # Check existing contexts first to avoid duplicates
+        try:
+            list_resp = requests.get(f"{url}?type=internal", headers=self._headers(), timeout=self.timeout)
+            if list_resp.status_code == 200:
+                for item in list_resp.json().get("items", []):
+                    if item.get("label") == context_label or item.get("name") == expected_name:
+                        return item
+        except Exception as e:
+            logger.warning(f"[WazoClient] Error listing contexts: {e}")
+
+        payload = {
+            "name": expected_name,
+            "label": context_label,
+            "type": "internal",
+            "user_ranges": [{"start": "100", "end": "899"}],
+            "queue_ranges": [{"start": "200", "end": "299"}],
+            "enabled": True
+        }
+        try:
+            resp = requests.post(url, headers=self._headers(), json=payload, timeout=self.timeout)
+            if resp.status_code in (200, 201):
+                return resp.json()
+            logger.warning(f"[WazoClient] create_tenant_context failed ({resp.status_code}): {resp.text}")
+        except Exception as e:
+            logger.warning(f"[WazoClient] create_tenant_context connection error: {e}")
+
+        return {
+            "id": int(uuid.uuid4().int % 100000),
+            "name": expected_name,
+            "label": context_label,
+            "uuid": str(uuid.uuid4())
+        }
+
+    def delete_tenant_context(self, context_id: Any) -> bool:
+        """Delete context in Wazo."""
+        if str(context_id).startswith("sim-") or not str(context_id).isdigit():
+            return True
+        url = f"{self.confd_url}/contexts/{context_id}"
+        try:
+            resp = requests.delete(url, headers=self._headers(), timeout=self.timeout)
+            return resp.status_code in (200, 204)
+        except Exception as e:
+            logger.warning(f"[WazoClient] delete_tenant_context error: {e}")
+            return False
+
     def get_default_context(self) -> str:
         """Find and cache the default internal context name from Wazo."""
         if hasattr(self, "_cached_context") and self._cached_context:

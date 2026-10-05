@@ -75,6 +75,7 @@ class CallSession(models.Model):
         ('inbound', 'مكالمة واردة'),
         ('outbound_agent', 'صادرة (موظف)'),
         ('outbound_ai', 'صادرة (ذكاء اصطناعي)'),
+        ('internal_test', 'مكالمة اختبار داخلية (Internal Test)'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='call_sessions')
@@ -91,6 +92,8 @@ class CallSession(models.Model):
     transcript_text = models.TextField(blank=True, default='')
     summary = models.TextField(blank=True, default='')
     recording_url = models.CharField(max_length=500, blank=True, default='')
+    is_internal_test = models.BooleanField(default=False, verbose_name="مكالمة اختبار داخلية لموظف")
+    caller_extension = models.CharField(max_length=32, blank=True, default='', verbose_name="تحويلة الموظف المتصل")
 
     class Meta:
         db_table = 'voice_assistant_callsession'
@@ -144,6 +147,8 @@ class CallSession(models.Model):
             "transcript_text": self.transcript_text or "",
             "recording_url": rec_url,
             "dialogue_turns": self.dialogue_turns,
+            "is_internal_test": self.is_internal_test,
+            "caller_extension": self.caller_extension,
         }
 
 

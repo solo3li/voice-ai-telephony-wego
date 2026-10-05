@@ -641,6 +641,30 @@ def api_internal_agent_bootstrap(request):
     try:
         data = json.loads(request.body.decode('utf-8')) if request.body else {}
         user_id = data.get('user_id')
+        wazo_ctx = data.get('wazo_context') or data.get('context')
+        caller_ext = data.get('caller_extension') or data.get('extension')
+        room_name = data.get('room_name')
+
+        is_internal_test = False
+        if room_name:
+            try:
+                import redis
+                r = redis.Redis.from_url(settings.REDIS_URL)
+                is_internal_test = bool(r.get(f"is_internal_test:{room_name}"))
+                if not caller_ext:
+                    c_ext = r.get(f"caller_ext:{room_name}")
+                    if c_ext:
+                        caller_ext = c_ext.decode() if isinstance(c_ext, bytes) else str(c_ext)
+            except Exception:
+                pass
+
+        if not user_id and (wazo_ctx or caller_ext):
+            from telephony.models import resolve_tenant_from_context_and_ext
+            tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)
+            if tenant_u:
+                user_id = tenant_u.id
+                is_internal_test = True
+
         if not user_id:
             return JsonResponse({"status": "error", "message": "user_id is required"}, status=400)
         user = User.objects.filter(id=user_id).first()
@@ -737,7 +761,9 @@ def api_internal_agent_bootstrap(request):
             "customer_memory": memory_data,
             "partner_info": partner_info,
             "call_queues": queues_list,
-            "live_context": live_ctx_data
+            "live_context": live_ctx_data,
+            "is_internal_test": is_internal_test,
+            "caller_extension": caller_ext or ""
         })
 
     except Exception as e:

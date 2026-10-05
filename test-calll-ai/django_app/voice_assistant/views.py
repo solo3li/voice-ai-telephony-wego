@@ -358,22 +358,44 @@ def livekit_webhook(request):
 
             if not user_id:
                 try:
-                    from telephony.models import resolve_tenant_from_did
+                    from telephony.models import resolve_tenant_from_did, resolve_tenant_from_context_and_ext
                     call_to = ""
+                    wazo_ctx = ""
+                    caller_ext = ""
                     part_attrs = getattr(event.participant, "attributes", {}) or {}
                     if isinstance(part_attrs, dict):
                         call_to = part_attrs.get("sip.callTo") or part_attrs.get("sip.phoneNumber") or ""
-                    if not call_to:
-                        for p_token in parts:
-                            if p_token.startswith("+") or (p_token.isdigit() and len(p_token) >= 7):
-                                call_to = p_token
-                                break
-                    if call_to:
-                        tenant_u, did_prof = resolve_tenant_from_did(call_to)
+                        wazo_ctx = part_attrs.get("sip.h.X-Wazo-Tenant-Context") or part_attrs.get("X-Wazo-Tenant-Context") or ""
+                        caller_ext = part_attrs.get("sip.h.X-Wazo-Caller-Ext") or part_attrs.get("X-Wazo-Caller-Ext") or ""
+
+                    # 1. Check if this is an internal employee call (e.g. dialed 999 or has Wazo Context)
+                    if call_to in ("999", "sip:999") or "999" in room_name or wazo_ctx or (caller_ext and len(caller_ext) <= 4):
+                        tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)
                         if tenant_u:
                             user_id = tenant_u.id
-                            if did_prof and not profile:
-                                profile = did_prof.to_dict()
+                            if ext_prof and not profile:
+                                profile = ext_prof.to_dict()
+                            try:
+                                r = redis.Redis.from_url(settings.REDIS_URL)
+                                r.set(f"is_internal_test:{room_name}", "1", ex=7200)
+                                if caller_ext:
+                                    r.set(f"caller_ext:{room_name}", caller_ext, ex=7200)
+                            except Exception:
+                                pass
+
+                    # 2. Check external DID resolution
+                    if not user_id:
+                        if not call_to:
+                            for p_token in parts:
+                                if p_token.startswith("+") or (p_token.isdigit() and len(p_token) >= 7):
+                                    call_to = p_token
+                                    break
+                        if call_to:
+                            tenant_u, did_prof = resolve_tenant_from_did(call_to)
+                            if tenant_u:
+                                user_id = tenant_u.id
+                                if did_prof and not profile:
+                                    profile = did_prof.to_dict()
 
                     if not user_id and participant_identity.startswith("sip_"):
                         raw_sip_id = participant_identity.replace("sip_sip_", "").replace("sip_", "").split("@")[0]
@@ -383,7 +405,7 @@ def livekit_webhook(request):
                             if did_prof and not profile:
                                 profile = did_prof.to_dict()
                 except Exception as did_err:
-                    logger.warning(f"Error resolving tenant from DID in livekit_webhook: {did_err}")
+                    logger.warning(f"Error resolving tenant in livekit_webhook: {did_err}")
 
             if user_id and not profile:
                 if "_pbx_" in room_name:

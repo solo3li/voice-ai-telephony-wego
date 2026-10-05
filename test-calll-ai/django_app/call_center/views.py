@@ -236,11 +236,21 @@ def api_create_employee(request):
         if not employer:
             employer = User.objects.filter(is_superuser=True).order_by('id').first()
 
-        # Headless Wazo Provisioning
+        # Ensure tenant has a native Wazo context
+        tenant_context = None
+        try:
+            from telephony.models import get_or_create_tenant_context
+            tenant_cfg = get_or_create_tenant_context(employer)
+            tenant_context = tenant_cfg.wazo_context
+        except Exception as e:
+            logger.warning(f"Could not resolve tenant context: {e}")
+
+        # Headless Wazo Provisioning in Tenant Context
         wazo_info = wazo_client.provision_employee(
             display_name=display_name,
             extension=extension,
-            password=password
+            password=password,
+            context=tenant_context
         )
 
         employee = EmployeeProfile.objects.create(
@@ -581,12 +591,21 @@ def create_call_queue(request):
             user_id=request.user.id
         ))
 
-        # Headless Wazo Queue Provisioning
+        tenant_context = None
+        try:
+            from telephony.models import get_or_create_tenant_context
+            tenant_cfg = get_or_create_tenant_context(request.user)
+            tenant_context = tenant_cfg.wazo_context
+        except Exception as e:
+            logger.warning(f"Could not resolve tenant context for queue: {e}")
+
+        # Headless Wazo Queue Provisioning in Tenant Context
         wazo_q = wazo_client.create_queue(
             name=name,
             number=code,
             strategy=strategy,
-            ring_timeout=ring_timeout
+            ring_timeout=ring_timeout,
+            context=tenant_context
         )
         wazo_queue_id = str(wazo_q.get("id") or "")
 
