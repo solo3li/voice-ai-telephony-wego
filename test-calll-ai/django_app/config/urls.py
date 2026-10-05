@@ -18,7 +18,31 @@ combined_inngest_functions = (
     + list(all_agent_inngest_functions)
 )
 
+import os
+from django.http import FileResponse, Http404
+
+
+def serve_favicon_ico(request):
+    for dir_path in [settings.STATIC_ROOT, *(getattr(settings, 'STATICFILES_DIRS', []) or [])]:
+        if dir_path:
+            p = os.path.join(str(dir_path), 'favicon.ico')
+            if os.path.exists(p):
+                return FileResponse(open(p, 'rb'), content_type='image/x-icon')
+    return Http404()
+
+
+def serve_favicon_svg(request):
+    for dir_path in [settings.STATIC_ROOT, *(getattr(settings, 'STATICFILES_DIRS', []) or [])]:
+        if dir_path:
+            p = os.path.join(str(dir_path), 'favicon.svg')
+            if os.path.exists(p):
+                return FileResponse(open(p, 'rb'), content_type='image/svg+xml')
+    return Http404()
+
+
 urlpatterns = [
+    path('favicon.ico', serve_favicon_ico, name='favicon_ico'),
+    path('favicon.svg', serve_favicon_svg, name='favicon_svg'),
     inngest.django.serve(inngest_client, combined_inngest_functions, serve_path="/api/inngest/"),
     path('admin/', admin.site.urls),
     path('api/knowledge/', include('knowledge.urls')),
