@@ -263,8 +263,13 @@ class CallSessionSerializer(serializers.Serializer):
     status = serializers.CharField()
     duration = serializers.IntegerField()
     started_at = serializers.DateTimeField()
-    ended_at = serializers.DateTimeField(allow_null=True)
-    recording_url = serializers.URLField(allow_null=True)
+    ended_at = serializers.DateTimeField(allow_null=True, required=False)
+    recording_url = serializers.URLField(allow_null=True, required=False)
+    transferred_recording_url = serializers.URLField(allow_null=True, required=False)
+    transferred_to_extension = serializers.CharField(allow_blank=True, required=False)
+    is_transferred = serializers.BooleanField(required=False, default=False)
+    caller_extension = serializers.CharField(allow_blank=True, required=False)
+    is_internal_test = serializers.BooleanField(required=False, default=False)
     summary = serializers.CharField(allow_blank=True)
 
 

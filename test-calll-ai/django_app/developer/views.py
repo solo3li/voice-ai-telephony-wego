@@ -1508,7 +1508,7 @@ def api_user_calls(request):
 
     search = request.GET.get('search', '').strip()
     if search:
-        qs = qs.filter(Q(caller_phone__icontains=search) | Q(destination_phone__icontains=search) | Q(call_goal__icontains=search) | Q(summary__icontains=search))
+        qs = qs.filter(Q(caller_phone__icontains=search) | Q(destination_phone__icontains=search) | Q(room_name__icontains=search) | Q(call_goal__icontains=search) | Q(summary__icontains=search))
 
     limit = min(int(request.GET.get('limit', 50)), 200)
     offset = max(int(request.GET.get('offset', 0)), 0)
@@ -1533,6 +1533,11 @@ def api_user_calls(request):
             "summary": call.summary or "",
             "transcript_text": call.transcript_text or "",
             "recording_url": get_full_recording_url(request, call.recording_url),
+            "transferred_recording_url": get_full_recording_url(request, call.transferred_recording_url),
+            "transferred_to_extension": call.transferred_to_extension or "",
+            "is_transferred": bool(call.transferred_recording_url or call.transferred_to_extension),
+            "caller_extension": call.caller_extension or "",
+            "is_internal_test": call.is_internal_test,
             "dialogue_turns": call.dialogue_turns,
         })
 
@@ -1581,6 +1586,11 @@ def api_user_call_detail(request, call_id):
             "summary": call.summary or "",
             "transcript_text": call.transcript_text or "",
             "recording_url": get_full_recording_url(request, call.recording_url),
+            "transferred_recording_url": get_full_recording_url(request, call.transferred_recording_url),
+            "transferred_to_extension": call.transferred_to_extension or "",
+            "is_transferred": bool(call.transferred_recording_url or call.transferred_to_extension),
+            "caller_extension": call.caller_extension or "",
+            "is_internal_test": call.is_internal_test,
             "dialogue_turns": call.dialogue_turns,
         }
     })
@@ -2232,6 +2242,9 @@ def api_user_crm_customer_delete(request, phone):
                     "cost": float(c.cost),
                     "summary": c.summary or "",
                     "recording_url": get_full_recording_url(request, c.recording_url),
+                    "transferred_recording_url": get_full_recording_url(request, c.transferred_recording_url),
+                    "transferred_to_extension": c.transferred_to_extension or "",
+                    "is_transferred": bool(c.transferred_recording_url or c.transferred_to_extension),
                 }
                 for c in recent_calls
             ]

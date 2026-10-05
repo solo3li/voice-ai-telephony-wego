@@ -995,6 +995,11 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                                         "summary": "تم التواصل مع العميل وتأكيد استلام الطلب غداً بمشيئة الله.",
                                         "transcript_text": "المساعد: مرحباً بك... العميل: أهلاً، نعم أؤكد الطلب.",
                                         "recording_url": "https://app.169.58.32.179.nip.io/media/recordings/call_482.mp3",
+                                        "transferred_recording_url": "https://app.169.58.32.179.nip.io/media/recordings/1791208708.482.wav",
+                                        "transferred_to_extension": "محمد علي (109)",
+                                        "is_transferred": True,
+                                        "caller_extension": "101",
+                                        "is_internal_test": False,
                                         "dialogue_turns": 4
                                     }
                                 }
