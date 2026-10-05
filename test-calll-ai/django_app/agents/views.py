@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import AgentProfile, UserMCPServer, SystemSetting
+from .models import AgentProfile, UserMCPServer, SystemSetting, TenantLiveContext
 
 logger = logging.getLogger(__name__)
 
