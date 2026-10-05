@@ -1,0 +1,74 @@
+{
+  "client": {
+    "token": {
+      "hmac_secret_key": "centrifugo_secret_key_1234567890"
+    },
+    "allowed_origins": [
+      "*",
+      "https://app.localhost",
+      "http://app.localhost",
+      "https://localhost",
+      "http://localhost",
+      "https://app.169.58.32.179.nip.io",
+      "http://app.169.58.32.179.nip.io",
+      "https://169.58.32.179.nip.io",
+      "https://employee.169.58.32.179.nip.io",
+      "http://employee.169.58.32.179.nip.io",
+      "http://localhost:8081",
+      "http://localhost:8082",
+      "http://localhost:19006",
+      "http://127.0.0.1:8081",
+      "http://169.58.32.179:8081",
+      "http://169.58.32.179:8082",
+      "http://169.58.32.179:19006",
+      "http://169.58.32.179"
+    ]
+  },
+  "http_api": {
+    "key": "centrifugo_api_key_1234567890"
+  },
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis:6379"
+    }
+  },
+  "channel": {
+    "without_namespace": {
+      "allow_subscribe_for_client": true,
+      "presence": true,
+      "history_size": 50,
+      "history_ttl": "300s"
+    },
+    "namespaces": [
+      {
+        "name": "rooms",
+        "allow_subscribe_for_client": true,
+        "presence": true,
+        "history_size": 50,
+        "history_ttl": "300s"
+      },
+      {
+        "name": "employee",
+        "allow_subscribe_for_client": true,
+        "presence": true,
+        "history_size": 50,
+        "history_ttl": "300s"
+      },
+      {
+        "name": "employees",
+        "allow_subscribe_for_client": true,
+        "presence": true,
+        "history_size": 50,
+        "history_ttl": "300s"
+      },
+      {
+        "name": "queues",
+        "allow_subscribe_for_client": true,
+        "presence": true,
+        "history_size": 50,
+        "history_ttl": "300s"
+      }
+    ]
+  }
+}

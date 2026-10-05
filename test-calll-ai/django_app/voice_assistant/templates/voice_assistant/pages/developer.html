@@ -1,0 +1,289 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}واجهات المطورين (API) - المساعد الصوتي الذكي{% endblock %}
+
+{% block content %}
+<!-- Header & Action Ribbon -->
+    <div class="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">⚡</span>
+          <h3 class="text-lg font-bold text-[#680E23]">واجهات المطورين المباشرة (Direct Developer API &amp; Keys)</h3>
+          <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">v1 Active</span>
+        </div>
+        <p class="text-xs text-[#6E645D] mt-1 max-w-2xl leading-relaxed">
+          ادمج المساعد الصوتي والذكاء الاصطناعي وخوادم FastMCP وبدء مكالمات WebRTC مباشرة في موقعك أو تطبيقاتك الخاصة باستخدام مفتاح الـ API الشخصي لحسابك (<code class="bg-[#FAF7F2] px-1 py-0.5 rounded text-[#680E23] font-mono">X-API-Key</code>).
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <a href="/api/v1/docs/" target="_blank" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#520B1C] text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
+          <span>📖</span>
+          <span>فتح التوثيق التفاعلي (Scalar Docs)</span>
+          <span>↗</span>
+        </a>
+        <button type="button" onclick="loadDeveloperKeys()" class="px-3.5 py-2 rounded-xl border border-[#DDD5C7] bg-[#FAF7F2] hover:bg-white text-xs font-bold text-[#1C1917] transition flex items-center gap-1.5 shadow-sm">
+          <span>🔄</span> <span>تحديث</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- API Key Management Card -->
+    <div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2 border-b border-[#EAE3D9] pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🔑</span>
+          <h4 class="font-bold text-sm text-[#1C1917]">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
+        </div>
+        <button type="button" onclick="rotateDeveloperKeyPrompt()" class="px-3 py-1.5 rounded-lg border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition flex items-center gap-1">
+          <span>⚠️</span> <span>تدوير المفتاح (Regenerate Key)</span>
+        </button>
+      </div>
+
+      <p class="text-xs text-[#6E645D]">
+        استخدم هذا المفتاح في ترويسة <code class="bg-[#FAF7F2] px-1 py-0.5 rounded text-[#680E23] font-mono font-bold">X-API-Key: sk_live_usr_...</code> أو <code class="bg-[#FAF7F2] px-1 py-0.5 rounded text-[#680E23] font-mono font-bold">Authorization: Bearer sk_live_usr_...</code> للوصول إلى كافة الموارد. احرص على حفظه بأمان وعدم مشاركته في الكود المفتوح.
+      </p>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+        <div class="lg:col-span-8 relative">
+          <input type="password" id="dev-api-key-input" readonly value="sk_live_usr_loading..."
+                 class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-4 py-2.5 text-xs font-mono text-[#1C1917] focus:outline-none select-all pe-24">
+          <div class="absolute end-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <button type="button" onclick="toggleDevKeyVisibility()" id="btn-toggle-dev-key" class="p-1.5 text-xs text-[#6E645D] hover:text-[#1C1917] rounded-md transition" title="إظهار / إخفاء المفتاح">
+              👁️
+            </button>
+            <button type="button" onclick="copyDevApiKey()" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#680E23] text-white hover:bg-[#520B1C] transition shadow-sm flex items-center gap-1">
+              <span>📋</span> <span>نسخ</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 flex items-center gap-4 text-xs text-[#6E645D]">
+          <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-xl p-2.5 flex-1">
+            <span class="block text-[10px] text-[#8C827A]">تاريخ الإنشاء:</span>
+            <span id="dev-key-created-at" class="font-bold text-[#1C1917] font-mono">--</span>
+          </div>
+          <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-xl p-2.5 flex-1">
+            <span class="block text-[10px] text-[#8C827A]">آخر استخدام:</span>
+            <span id="dev-key-last-used" class="font-bold text-[#1C1917] font-mono">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick cURL Code Samples -->
+      <div class="mt-4 pt-4 border-t border-[#EAE3D9] grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 class="font-bold text-xs text-[#1C1917] mb-2 flex items-center gap-1.5">
+            <span>👤</span> <span>استعلام الحساب (Get Account):</span>
+          </h5>
+          <div class="relative bg-[#181514] rounded-xl p-3.5 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-curl-sample">curl -X GET "https://localhost/api/v1/account/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Accept: application/json"</pre>
+            <button type="button" onclick="copyDevCurlSample()" class="absolute top-2.5 right-2.5 px-2 py-1 text-[11px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition">
+              نسخ
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h5 class="font-bold text-xs text-[#680E23] mb-2 flex items-center gap-1.5">
+            <span>📞</span> <span>إجراء مكالمة صادرة بالذكاء الاصطناعي (Dial Call):</span>
+          </h5>
+          <div class="relative bg-[#181514] rounded-xl p-3.5 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-curl-dial-sample">curl -X POST "https://localhost/api/v1/calls/dial/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'</pre>
+            <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-dial-sample').innerText); showToast('تم نسخ كود المكالمة الصادرة بنجاح', 'success');" class="absolute top-2.5 right-2.5 px-2 py-1 text-[11px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition">
+              نسخ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Structured Live Context Card (In-Memory Redis Cache) ==================== -->
+    <div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#EAE3D9] pb-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xl">🏪</span>
+            <h4 class="font-bold text-sm text-[#1C1917]">الذاكرة المنظمة الحية للنشاط (Structured Live Context - In-Memory Cache)</h4>
+            <span id="live-context-redis-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1">
+              <span>⚪</span> <span>جاري الفحص...</span>
+            </span>
+            <span id="live-context-size-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[#FAF7F2] text-[#6E645D] border border-[#DDD5C7]">
+              الحجم: 0 KB / 100 KB
+            </span>
+          </div>
+          <p class="text-xs text-[#6E645D] mt-1 leading-relaxed max-w-3xl">
+            بيانات نشاطك الحية والمنظمة (الفروع، مناطق ورسوم التوصيل، المنيو، وقائمة الأصناف غير المتوفرة اليوم). تُحقن فوراً في بداية كل مكالمة من الذاكرة اللحظية (<code class="bg-[#FAF7F2] px-1 py-0.5 rounded text-[#680E23] font-mono font-bold">Redis &lt; 2ms</code>) لتمكين الذكاء الاصطناعي من الإجابة بدقة مطلقة دون استدعاء أدوات خارجية أو هلوسة.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap text-xs">
+          <button type="button" onclick="loadRestaurantTemplate()" class="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold transition flex items-center gap-1 shadow-sm">
+            <span>📋</span> <span>قالب مطعم نموذجي</span>
+          </button>
+          <button type="button" onclick="formatLiveContextJson()" class="px-3 py-1.5 rounded-xl border border-[#DDD5C7] bg-[#FAF7F2] hover:bg-white text-[#1C1917] font-semibold transition flex items-center gap-1 shadow-sm">
+            <span>⚡</span> <span>تنسيق الـ JSON</span>
+          </button>
+          <button type="button" onclick="togglePromptPreview()" id="btn-toggle-prompt-preview" class="px-3 py-1.5 rounded-xl border border-[#D4AF37] bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] font-bold transition flex items-center gap-1 shadow-sm">
+            <span>👁️</span> <span>معاينة ما يراه الـ AI</span>
+          </button>
+          <button type="button" onclick="clearLiveContext()" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold transition flex items-center gap-1">
+            <span>🗑️</span> <span>مسح</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- JSON Validation Alert Notification -->
+      <div id="live-context-alert" class="hidden p-3 rounded-xl text-xs flex items-center gap-2 transition"></div>
+
+      <!-- JSON Editor Textarea Area -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs text-[#6E645D]">
+          <label for="live-context-json-input" class="font-bold text-[#1C1917] flex items-center gap-1.5">
+            <span>📝</span> <span>محرر الـ JSON المنظم (Single Source of Truth):</span>
+          </label>
+          <span id="live-context-last-updated" class="font-mono text-[11px] text-[#8C827A]">آخر تحديث: --</span>
+        </div>
+        <div class="relative">
+          <textarea id="live-context-json-input" rows="12" dir="ltr"
+                    class="w-full bg-[#181514] text-[#a6e3a1] font-mono text-xs p-4 rounded-2xl border border-[#3D1A12] focus:outline-none focus:border-[#D4AF37] shadow-inner leading-relaxed select-all"
+                    placeholder='{\n  "restaurant_name": "مطعم بيتزا إيطاليانو",\n  "branches": [...],\n  "delivery_zones": [...],\n  "out_of_stock": [...],\n  "menu": [...]\n}'></textarea>
+        </div>
+      </div>
+
+      <!-- AI Prompt Preview Collapsible Drawer -->
+      <div id="live-context-prompt-preview-box" class="hidden p-4 rounded-2xl bg-[#FAF7F2] border border-[#DDD5C7] space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5">
+            <span>🤖</span> <span>كيف يقرأ الذكاء الاصطناعي هذا الـ JSON داخل التوجيهات المباشرة (System Instruction):</span>
+          </span>
+          <button type="button" onclick="togglePromptPreview()" class="text-xs text-[#6E645D] hover:text-[#1C1917]">إغلاق ✕</button>
+        </div>
+        <pre id="live-context-prompt-preview-content" class="bg-white p-3 rounded-xl border border-[#EAE3D9] text-xs font-mono text-[#1C1917] whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed" dir="rtl">جاري التحميل...</pre>
+      </div>
+
+      <!-- Action Bar & External API Sync Info -->
+      <div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-[#EAE3D9]">
+        <div class="text-xs text-[#6E645D] flex items-center gap-2">
+          <span>💡</span>
+          <span>كل حفظ جديد يستبدل السابق بالكامل في الـ DB وكاش الـ Redis (Atomic Overwrite).</span>
+        </div>
+
+        <button type="button" onclick="saveLiveContext()" id="btn-save-live-context" class="px-5 py-2.5 rounded-xl bg-[#680E23] hover:bg-[#520B1C] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#680E23]/20">
+          <span>💾</span>
+          <span>حفظ واستبدال فوري (Save &amp; Push to Redis)</span>
+        </button>
+      </div>
+
+      <!-- Quick cURL for Context API -->
+      <div class="pt-3 border-t border-[#EAE3D9]">
+        <h5 class="font-bold text-xs text-[#1C1917] mb-2 flex items-center gap-1.5">
+          <span>🔄</span> <span>تحديث البيانات آلياً من نظام الـ POS / الكاشير / ERP عبر الـ API:</span>
+        </h5>
+        <div class="relative bg-[#181514] rounded-xl p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-curl-context-sample">curl -X PUT "https://localhost/api/v1/context/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"restaurant_name": "مطعم البرجر الذهبي", "out_of_stock": ["برجر دبل بيف"], "branches": [{"name": "المعادي", "status": "مفتوح", "hours": "12 م - 2 ص"}]}'</pre>
+          <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-context-sample').innerText); showToast('تم نسخ كود الـ API إلى الحافظة', 'success');" class="absolute top-2 right-2 px-2 py-1 text-[11px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition">
+            نسخ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources & API Capabilities Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>👤</span> <span>1. الحساب والمحفظة</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">GET /account/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">استعلم برمجياً عن رصيد محفظتك المتاح، البروفايل الصوتي النشط، وإحصائيات استخدامك.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>🎙️</span> <span>2. الشخصيات واللهجات</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/profiles/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">إنشاء وتعديل وتفعيل شخصيات الذكاء الاصطناعي واللهجات فورياً.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>🧠</span> <span>3. ذاكرة وسياق العملاء</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/memory/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">استرجاع وتحديث سجل وسياق المتصل التراكمي برقم هاتفه قبل أو أثناء المحادثة.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>📚</span> <span>4. قواعد المعرفة RAG</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/rag/query/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">رفع وفهرسة ملفات PDF ومستندات الشركة والبحث الدلالي بالمتجهات المدمجة مع Gemini.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>🛠️</span> <span>5. خوادم FastMCP والأدوات</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/mcp/ &amp; sync/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">ربط خوادم الأدوات الخارجية عبر SSE ومزامنة دوال الـ AI للاستدعاء أثناء المكالمات.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>⚡</span> <span>6. بدء مكالمة WebRTC</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">POST /token/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">إصدار توكن LiveKit مؤقت مشفر لبدء مكالمة صوتية حية فائقة السرعة من المتصفح أو التطبيق.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>📞</span> <span>7. السنترالات و DIDs</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/telephony/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">ربط خطوط السنترال الداخلي وأرقام الاستقبال وتوجيه الاتصالات الهاتفية.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>👥</span> <span>8. الموظفون والطوابير</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/employees/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">إدارة تحويلات الموظفين الداخلية وتوزيع المكالمات واستراتيجيات طوابير الانتظار.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>📋</span> <span>9. سجلات المكالمات والويبهوك</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#6E645D]">/calls/ &amp; /webhooks/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">استعراض تفاصيل المكالمات، التسجيلات، الملخصات الذكية، واستقبال إشعارات انتهاء المكالمات.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white border border-[#D4AF37]/50 shadow-sm space-y-2 bg-gradient-to-br from-white to-[#FAF7F2]">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-[#680E23] flex items-center gap-1.5"><span>⚡</span> <span>10. الذاكرة المنظمة اللحظية</span></span>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#FAF7F2] text-[#680E23] font-bold">/context/</span>
+        </div>
+        <p class="text-xs text-[#6E645D] leading-relaxed">حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة (&lt; 2ms) لمنع الهلوسة في المكالمات.</p>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/developer.js' %}"></script>
+{% endblock %}

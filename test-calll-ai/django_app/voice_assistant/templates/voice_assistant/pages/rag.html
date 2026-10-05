@@ -1,0 +1,70 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}قاعدة المعرفة RAG - المساعد الصوتي الذكي{% endblock %}
+
+{% block content %}
+<!-- Documents Knowledge Base Section -->
+<section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4">
+      <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+        <div>
+          <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#680E23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            مستندات قاعدة المعرفة (RAG Knowledge Base)
+          </h2>
+          <p class="text-xs text-[#6E645D] mt-1">
+            ارفع ملفاتك (PDF, DOCX, TXT) ليتم تضمينها وفهرستها دلالياً في PostgreSQL باستخدام Gemini text-embedding-004.
+          </p>
+        </div>
+
+        <!-- Upload Form -->
+        <form id="upload-form" onsubmit="uploadDocument(event)" class="flex items-center gap-2">
+          {% csrf_token %}
+          <label class="cursor-pointer px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#2D2825] text-xs font-medium border border-[#DDD5C7] flex items-center gap-2 transition shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#680E23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span id="upload-file-label">اختر ملفاً (PDF/DOCX/TXT)</span>
+            <input type="file" id="file-input" name="file" accept=".pdf,.docx,.doc,.txt,.md" class="hidden" onchange="handleFileSelect(event)" />
+          </label>
+          <button 
+            type="submit" 
+            id="btn-upload" 
+            disabled
+            class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5"
+          >
+            <span>رفع ومعالجة</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Upload Status Notification -->
+      <div id="upload-status" class="mt-4 hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+      <!-- Documents List Table -->
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead>
+            <tr class="text-[#6E645D] border-b border-[#EAE3D9]">
+              <th class="py-2.5 px-3">اسم المستند</th>
+              <th class="py-2.5 px-3">النوع</th>
+              <th class="py-2.5 px-3">المقاطع الدلالية (Chunks)</th>
+              <th class="py-2.5 px-3">تاريخ الفهرسة</th>
+              <th class="py-2.5 px-3 text-center">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="docs-tbody" class="divide-y divide-[#EAE3D9]">
+            <tr>
+              <td colspan="5" class="text-center py-6 text-[#8C827A]">جاري تحميل المستندات...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/rag.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,80 @@
+http:
+  routers:
+    django-router:
+      rule: "Host(`app.169.58.32.179.nip.io`) || Host(`169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "django-service"
+      tls:
+        certResolver: "letsencrypt"
+
+    livekit-router:
+      rule: "Host(`livekit.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "livekit-service"
+      tls:
+        certResolver: "letsencrypt"
+
+    centrifugo-router:
+      rule: "Host(`centrifugo.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "centrifugo-service"
+      tls:
+        certResolver: "letsencrypt"
+
+    inngest-router:
+      rule: "Host(`inngest.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "inngest-service"
+      tls:
+        certResolver: "letsencrypt"
+
+    employee-router:
+      rule: "Host(`employee.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "employee-service"
+      tls:
+        certResolver: "letsencrypt"
+
+    minio-router:
+      rule: "Host(`minio.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      service: "minio-service"
+      tls:
+        certResolver: "letsencrypt"
+
+  services:
+    django-service:
+      loadBalancer:
+        servers:
+          - url: "http://django:8000"
+
+    livekit-service:
+      loadBalancer:
+        servers:
+          - url: "http://livekit:7880"
+
+    centrifugo-service:
+      loadBalancer:
+        servers:
+          - url: "http://centrifugo:8000"
+
+    inngest-service:
+      loadBalancer:
+        servers:
+          - url: "http://inngest:8288"
+
+    employee-service:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:8081"
+
+    minio-service:
+      loadBalancer:
+        servers:
+          - url: "http://minio:9000"

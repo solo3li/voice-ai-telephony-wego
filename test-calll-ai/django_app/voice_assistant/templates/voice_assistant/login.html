@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول | المساعد الصوتي الذكي Enterprise Voice AI</title>
+  
+  <!-- Google Fonts: Tajawal (Arabic) & Inter (English) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #FAF7F2;
+      --bg-surface: #F5EFE6;
+      --burgundy-primary: #680E23;
+      --burgundy-dark: #4A0817;
+      --burgundy-accent: #841832;
+      --gold-accent: #C5A880;
+      --gold-border: #E8DAC6;
+      --border-color: #EAE3D9;
+      --text-dark: #1C1917;
+    }
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(104, 14, 35, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(197, 168, 128, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(104, 14, 35, 0.02) 0%, transparent 60%);
+      min-height: 100vh;
+    }
+
+    .luxury-shadow {
+      box-shadow: 0 15px 45px -10px rgba(104, 14, 35, 0.08), 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .luxury-orb {
+      background: radial-gradient(circle at 35% 35%, #9E1C38 0%, #680E23 55%, #420814 100%);
+      border: 2px solid #D4AF37;
+      box-shadow: 0 0 25px rgba(104, 14, 35, 0.25);
+    }
+  </style>
+</head>
+<body class="text-[#1C1917] flex items-center justify-center p-4 sm:p-6 antialiased">
+
+  <!-- Ambient Luxury Decorative Background Shapes -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-32 -start-32 w-96 h-96 rounded-full bg-[#680E23]/5 blur-3xl"></div>
+    <div class="absolute -bottom-32 -end-32 w-96 h-96 rounded-full bg-[#C5A880]/10 blur-3xl"></div>
+  </div>
+
+  <div class="w-full max-w-md bg-white border border-[#EAE3D9] rounded-3xl p-8 sm:p-10 luxury-shadow relative z-10 transition-all duration-300">
+    
+    <!-- Header Branding -->
+    <div class="text-center mb-8">
+      
+      <!-- Luxury Voice Orb / Icon -->
+      <div class="w-16 h-16 rounded-2xl luxury-orb mx-auto flex items-center justify-center mb-4 transition-transform hover:scale-105 duration-300 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+      </div>
+
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF0F2] border border-[#E8CCD2] text-[#680E23] text-xs font-bold mb-3 shadow-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#680E23] animate-pulse"></span>
+        <span>منظومة الذكاء الاصطناعي الصوتي</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#1C1917] tracking-tight">
+        تسجيل الدخول
+      </h1>
+      <p class="text-xs sm:text-sm text-[#6E645D] mt-2">
+        مرحباً بك مجدداً في منصة المساعد الصوتي الفوري
+      </p>
+    </div>
+
+    <!-- Error Alert Box -->
+    {% if error %}
+    <div class="mb-6 p-3.5 rounded-2xl bg-[#FAF0F2] border border-[#E8CCD2] text-xs text-[#680E23] flex items-center gap-3 animate-shake">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0 text-[#680E23]" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+      </svg>
+      <span class="font-medium">{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Login Form -->
+    <form method="POST" action="" class="space-y-5">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
+
+      <!-- Username Input -->
+      <div>
+        <label for="username" class="block text-xs font-bold text-[#443D39] mb-1.5">اسم المستخدم</label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            required 
+            autocomplete="username"
+            autofocus
+            class="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7] text-sm text-[#1C1917] placeholder-[#A3988F] focus:outline-none focus:border-[#680E23] focus:ring-2 focus:ring-[#680E23]/15 transition duration-200"
+            placeholder="أدخل اسم المستخدم الخاص بك"
+          />
+        </div>
+      </div>
+
+      <!-- Password Input -->
+      <div>
+        <div class="flex justify-between items-center mb-1.5">
+          <label for="password" class="block text-xs font-bold text-[#443D39]">كلمة المرور</label>
+        </div>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            autocomplete="current-password"
+            class="w-full px-4 py-3 pe-11 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7] text-sm text-[#1C1917] placeholder-[#A3988F] focus:outline-none focus:border-[#680E23] focus:ring-2 focus:ring-[#680E23]/15 transition duration-200"
+            placeholder="••••••••"
+          />
+          <button 
+            type="button" 
+            onclick="togglePasswordVisibility('password', this)" 
+            class="absolute end-3 top-1/2 -translate-y-1/2 p-1 text-[#8C827A] hover:text-[#680E23] transition focus:outline-none"
+            title="إظهار / إخفاء كلمة المرور"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="w-full py-3.5 px-4 rounded-xl font-bold bg-[#680E23] hover:bg-[#520B1C] text-white shadow-lg shadow-[#680E23]/25 transition duration-200 transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer text-sm"
+      >
+        <span>تسجيل الدخول</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </button>
+    </form>
+
+    <!-- Bottom Switcher to Register -->
+    <div class="mt-8 pt-6 border-t border-[#EAE3D9] text-center text-xs text-[#6E645D]">
+      ليس لديك حساب بعد؟
+      <a href="{% url 'voice_assistant:register' %}" class="text-[#680E23] hover:text-[#4A0817] font-bold mr-1 transition underline underline-offset-4">
+        أنشئ حساباً جديداً الآن
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    function togglePasswordVisibility(fieldId, btn) {
+      const input = document.getElementById(fieldId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#680E23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+          </svg>
+        `;
+      } else {
+        input.type = 'password';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#8C827A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+#!/bin/sh
+ip_addr=$1
+ping_count="3"
+ping_interval="10"
+
+if [ -z "$ip_addr" ]; then
+    echo "usage: $(basename $0) ip_addr"
+    exit 1
+fi
+
+ping -c $ping_count -i $ping_interval "$ip_addr"
+ping_status=$?
+if [ ! -f /var/lib/wazo/is-secondary ]; then
+    echo "HA mode changed, this stack is no longer a secondary"
+    exit 0
+elif [ $ping_status -eq 0 ]; then
+    /usr/sbin/xivo-manage-slave-services stop
+else
+    /usr/sbin/xivo-manage-slave-services start
+fi

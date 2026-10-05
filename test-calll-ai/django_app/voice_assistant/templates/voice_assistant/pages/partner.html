@@ -1,0 +1,349 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}بوابة الشركاء وحلول الـ SaaS - المساعد الصوتي الذكي{% endblock %}
+
+{% block content %}
+<!-- Partner Header & Refresh Ribbon -->
+<div class="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm">
+  <div>
+    <h3 class="text-lg font-bold text-[#680E23] flex items-center gap-2">
+      <span>💼</span> <span>برنامج الشركاء وحلول الـ SaaS (Partner &amp; Reseller Portal)</span>
+    </h3>
+    <p class="text-xs text-[#6E645D] mt-1">
+      إدارة عملاء الساس التابعين، مفاتيح الربط البرمجي (Headless API)، الـ Webhook، وتتبع استهلاك المكالمات المجمعة بالسعر المخفض.
+    </p>
+  </div>
+  <div class="flex items-center gap-2 flex-wrap">
+    <a href="/api/partner/v1/docs/" target="_blank" class="px-3.5 py-2 rounded-xl bg-[#680E23] hover:bg-[#520B1C] text-white border border-[#680E23] text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+      <span>📖</span> <span>وثائق الـ API للمطورين</span>
+      <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+    </a>
+    <button type="button" onclick="openPartnerDocsModal()" class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+      <span>📋</span> <span>الدليل السريع</span>
+    </button>
+    <button type="button" onclick="loadPartnerDashboard()" class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+      <span>🔄</span> <span>تحديث البيانات</span>
+    </button>
+  </div>
+</div>
+
+<!-- Partner Status Notice Banner (if pending or unregistered) -->
+<div id="partner-status-banner" class="hidden p-4 rounded-2xl text-xs font-semibold flex items-center justify-between gap-3"></div>
+
+<!-- Partner KPIs Metric Cards -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]">رصيد محفظة الشريك المتاحة</span>
+    <p id="partner-kpi-balance" class="text-2xl font-bold font-mono text-[#680E23] mt-1">$0.00</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]">سعر الدقيقة المخصص لك</span>
+    <p id="partner-kpi-rate" class="text-2xl font-bold font-mono text-emerald-700 mt-1">$0.0300 / د</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]">إجمالي عملاء الساس النشطين</span>
+    <p id="partner-kpi-clients" class="text-2xl font-bold font-mono text-[#1C1917] mt-1">0</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]">إجمالي الدقائق المستهلكة لعملائك</span>
+    <p id="partner-kpi-minutes" class="text-2xl font-bold font-mono text-[#6E645D] mt-1">0 د</p>
+  </div>
+</div>
+
+<!-- Developer Credentials & Shared MCP Configuration -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Card 1: API Key & Webhook Settings -->
+  <div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+    <h4 class="font-bold text-[#1C1917] text-sm flex items-center gap-2 pb-3 border-b border-[#EAE3D9]">
+      <span>🔑</span> <span>بيانات الربط البرمجي الخلفي (Headless API Access)</span>
+    </h4>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">كود الشريك (Partner Code)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="partner-code-input" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#680E23] font-mono font-bold" />
+          <button type="button" onclick="copyPartnerText('partner-code-input')" class="px-3 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#443D39] font-semibold">نسخ</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">مفتاح الوصول الرئيسي (X-Partner-Key)</label>
+        <div class="flex items-center gap-2">
+          <input type="password" id="partner-api-key-input" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono" />
+          <button type="button" onclick="togglePartnerKeyVisibility()" id="btn-toggle-partner-key" class="px-3 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#443D39] font-semibold">إظهار</button>
+          <button type="button" onclick="copyPartnerText('partner-api-key-input')" class="px-3 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#443D39] font-semibold">نسخ</button>
+          <button type="button" onclick="regeneratePartnerApiKey()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold" title="إعادة توليد المفتاح">🔄</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">رابط استقبال الـ Webhook الخاص بنظامك</label>
+        <div class="flex items-center gap-2">
+          <input type="url" id="partner-webhook-url-input" placeholder="https://your-saas.com/api/voice-webhooks/" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono focus:outline-none focus:border-[#680E23]" />
+          <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition shrink-0">حفظ</button>
+          <button type="button" onclick="testPartnerWebhook()" class="px-3 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] font-semibold transition shrink-0">فحص الاتصال</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Shared MCP Server Configuration -->
+  <div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+    <h4 class="font-bold text-[#1C1917] text-sm flex items-center gap-2 pb-3 border-b border-[#EAE3D9]">
+      <span>🧩</span> <span>خادم الـ MCP الموروث لعملائك (Shared SaaS Tools)</span>
+    </h4>
+
+    <p class="text-xs text-[#6E645D] leading-relaxed">
+      اختر خادم أدوات MCP من خوادمك المربوطة ليتم توريثه وتفعيله تلقائياً لكافة عملاء الساس التابعين لك. عند استدعاء الوكيل الصوتي لأي أداة على هذا الخادم، سيتم تمرير معرف العميل المتحدث <code class="text-[#680E23] bg-[#FAF7F2] px-1 py-0.5 rounded font-mono">X-Client-ID</code> تلقائياً.
+    </p>
+
+    <div class="space-y-3 text-xs pt-2">
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">خادم الـ MCP المشترك الافتراضي</label>
+        <select id="partner-shared-mcp-select" class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]">
+          <option value="">-- بدون خادم موروث --</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="button" onclick="savePartnerSettings()" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition shadow-sm">
+          حفظ خادم الـ MCP المشترك
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Clients Management Table -->
+<div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAE3D9]">
+    <div>
+      <h4 class="font-bold text-[#1C1917] text-sm flex items-center gap-1.5">
+        <span>👥</span> <span>إدارة عملاء الساس التابعين (Sub-Clients)</span>
+      </h4>
+      <p class="text-xs text-[#8C827A] mt-0.5">قائمة بجميع حسابات العملاء التي تم إنشاؤها عبر الـ API الخلفي التابع لنظامك</p>
+    </div>
+    <span class="text-xs text-[#6E645D]">يتم الخصم من محفظتك المركزية بالسعر المخفض</span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-start">
+      <thead>
+        <tr class="border-b border-[#EAE3D9] bg-[#FAF7F2] text-[#6E645D]">
+          <th class="py-3 px-4 text-start font-bold">معرف العميل (ID)</th>
+          <th class="py-3 px-4 text-start font-bold">الاسم والبيانات</th>
+          <th class="py-3 px-4 text-start font-bold">المعرف الخارجي (Ref)</th>
+          <th class="py-3 px-4 text-start font-bold">تاريخ الانضمام</th>
+          <th class="py-3 px-4 text-start font-bold">الدقائق المستهلكة</th>
+          <th class="py-3 px-4 text-start font-bold">إجمالي التكلفة</th>
+          <th class="py-3 px-4 text-start font-bold">سقف الاستهلاك (Cap)</th>
+          <th class="py-3 px-4 text-start font-bold">الحالة</th>
+          <th class="py-3 px-4 text-start font-bold">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="partner-clients-tbody" class="divide-y divide-[#EAE3D9]">
+        <tr>
+          <td colspan="9" class="py-8 text-center text-[#8C827A]">
+            جاري تحميل عملاء الساس...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Sub-Clients CDR Live Call Logs Table -->
+<div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAE3D9]">
+    <div>
+      <h4 class="font-bold text-[#1C1917] text-sm flex items-center gap-1.5">
+        <span>📋</span> <span>سجل مكالمات عملاء الساس (Partner Sub-Clients CDR)</span>
+      </h4>
+      <p class="text-xs text-[#8C827A] mt-0.5">تفاصيل استهلاك مكالمات عملائك والدقائق المخصومة من رصيدك بالسعر المخفض</p>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-start">
+      <thead>
+        <tr class="border-b border-[#EAE3D9] bg-[#FAF7F2] text-[#6E645D]">
+          <th class="py-3 px-4 text-start font-bold">وقت المكالمة</th>
+          <th class="py-3 px-4 text-start font-bold">العميل التابع</th>
+          <th class="py-3 px-4 text-start font-bold">الاتجاه والطرف</th>
+          <th class="py-3 px-4 text-start font-bold">المدة بالثواني</th>
+          <th class="py-3 px-4 text-start font-bold">الدقائق (Ceiling)</th>
+          <th class="py-3 px-4 text-start font-bold">التكلفة المخصومة</th>
+          <th class="py-3 px-4 text-start font-bold">الملخص الذكي</th>
+        </tr>
+      </thead>
+      <tbody id="partner-calls-tbody" class="divide-y divide-[#EAE3D9]">
+        <tr>
+          <td colspan="7" class="py-8 text-center text-[#8C827A]">
+            لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal: Partner Application -->
+<div id="partner-apply-modal" class="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border-2 border-[#D4AF37]/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#680E23] flex items-center gap-2">
+        <span>💼</span> <span>طلب الانضمام كشريك SaaS و موزع معتمد</span>
+      </h3>
+      <button type="button" onclick="closePartnerApplyModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <p class="text-[#443D39] leading-relaxed">
+      انضم لبرنامج الشركاء لربط نظامك أو منصتك عبر الـ APIs الخلفية، وتوفير خدمات المساعد الصوتي لعملائك بتسعير جملة مخفض للدقيقة وتحكم كامل.
+    </p>
+
+    <div id="partner-apply-alert" class="hidden p-3 rounded-xl text-xs"></div>
+
+    <form id="partner-apply-form" onsubmit="submitPartnerApply(event)" class="space-y-3">
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">اسم الشركة أو المنصة (SaaS Name) *</label>
+        <input type="text" id="partner-apply-company" required placeholder="مثال: متجر بلس للحلول الرقمية" class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">موقع المنصة الإلكتروني</label>
+        <input type="url" id="partner-apply-website" placeholder="https://example.com" class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">نبذة عن النشاط وحجم الاستخدام المتوقع</label>
+        <textarea id="partner-apply-desc" rows="3" placeholder="وصف موجز عن كيفية استخدام الذكاء الاصطناعي والصوت لخدمة عملائك..." class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+        <button type="button" onclick="closePartnerApplyModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+        <button type="submit" id="btn-submit-partner-apply" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-bold transition flex items-center gap-1.5 shadow">
+          <span>إرسال الطلب للمراجعة</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Client Cap Adjustment -->
+<div id="partner-cap-modal" class="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#680E23] flex items-center gap-2">
+        <span>⚙️</span> <span>تعديل سقف استهلاك العميل (Usage Cap)</span>
+      </h3>
+      <button type="button" onclick="closeClientCapModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <input type="hidden" id="cap-modal-client-id" />
+
+    <div class="space-y-3">
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">سقف الإنفاق بالدولار (Spending Cap $)</label>
+        <input type="number" id="cap-modal-spending" step="0.5" placeholder="اتركه فارغاً لعدم وضع حد مالي" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        <span class="text-[10px] text-[#8C827A] block mt-0.5">الحد الأقصى للتكلفة المسموح بها لهذا العميل</span>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">سقف الدقائق (Minute Cap)</label>
+        <input type="number" id="cap-modal-minutes" step="1" placeholder="اتركه فارغاً لعدم وضع حد للدقائق" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        <span class="text-[10px] text-[#8C827A] block mt-0.5">الحد الأقصى للدقائق الصوتية المسموح بها</span>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="cap-modal-active" class="rounded accent-[#680E23]" />
+        <label for="cap-modal-active" class="font-semibold text-[#443D39]">تفعيل حساب العميل والسماح له بإجراء واستقبال المكالمات</label>
+      </div>
+    </div>
+
+    <div id="cap-modal-alert" class="hidden p-2 rounded-xl text-xs"></div>
+
+    <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+      <button type="button" onclick="closeClientCapModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+      <button type="button" onclick="saveClientCap()" id="btn-save-client-cap" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-bold transition">حفظ السقف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quick API Docs -->
+<div id="partner-docs-modal" class="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <div class="flex items-center gap-2">
+        <span class="text-base">📖</span>
+        <h3 class="text-base font-bold text-[#680E23]">دليل مطوري الـ API وخدمات الـ SaaS (Quick Reference)</h3>
+      </div>
+      <button type="button" onclick="closePartnerDocsModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <div class="p-3 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl flex items-center justify-between">
+      <div>
+        <span class="font-bold text-[#1C1917] block">بوابة التوثيق التفاعلية الكاملة للمطورين:</span>
+        <span class="text-[11px] text-[#6E645D]">تحتوي على أمثلة كود بـ cURL, Python, Node.js ووحدة اختبار حية لجميع الواجهات.</span>
+      </div>
+      <a href="/api/partner/v1/docs/" target="_blank" class="px-4 py-2 bg-[#680E23] hover:bg-[#520B1C] text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-sm shrink-0">
+        <span>فتح البوابة</span>
+        <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+      </a>
+    </div>
+
+    <div class="space-y-3 font-mono">
+      <div class="border border-[#EAE3D9] rounded-xl p-3 bg-white space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-[#680E23] text-white text-[10px] font-bold px-2 py-0.5 rounded">POST</span>
+          <span class="font-bold text-[#1C1917]">/api/partner/v1/clients/register/</span>
+        </div>
+        <p class="font-sans text-[11px] text-[#6E645D]">تسجيل عميل ساس جديد خلفياً وإرجاع client_id فوراً.</p>
+      </div>
+
+      <div class="border border-[#EAE3D9] rounded-xl p-3 bg-white space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">GET / POST</span>
+          <span class="font-bold text-[#1C1917]">/api/partner/v1/clients/{id}/employees/</span>
+        </div>
+        <p class="font-sans text-[11px] text-[#6E645D]">إدارة الموظفين والتحويلات الداخلية للعميل (Full CRUD).</p>
+      </div>
+
+      <div class="border border-[#EAE3D9] rounded-xl p-3 bg-white space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">GET / POST</span>
+          <span class="font-bold text-[#1C1917]">/api/partner/v1/clients/{id}/queues/</span>
+        </div>
+        <p class="font-sans text-[11px] text-[#6E645D]">إنشاء طوابير الانتظار وتعيين الموظفين داخل الطابور برمجياً.</p>
+      </div>
+
+      <div class="border border-[#EAE3D9] rounded-xl p-3 bg-white space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-[#680E23] text-white text-[10px] font-bold px-2 py-0.5 rounded">POST</span>
+          <span class="font-bold text-[#1C1917]">/api/partner/v1/clients/{id}/rag/query/</span>
+        </div>
+        <p class="font-sans text-[11px] text-[#6E645D]">استعلام دلالي ذكي بالذكاء الاصطناعي في مستندات المتجر.</p>
+      </div>
+
+      <div class="border border-[#EAE3D9] rounded-xl p-3 bg-white space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-[#680E23] text-white text-[10px] font-bold px-2 py-0.5 rounded">POST</span>
+          <span class="font-bold text-[#1C1917]">/api/partner/v1/clients/{id}/token/</span>
+        </div>
+        <p class="font-sans text-[11px] text-[#6E645D]">إصدار توكن اتصال WebRTC للعميل لبدء مكالمة صوتية فورية.</p>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-2 border-t border-[#EAE3D9]">
+      <button type="button" onclick="closePartnerDocsModal()" class="px-5 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] font-bold transition">إغلاق</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/partner.js' %}"></script>
+{% endblock %}

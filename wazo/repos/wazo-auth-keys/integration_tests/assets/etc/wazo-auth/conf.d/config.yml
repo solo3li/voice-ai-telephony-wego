@@ -1,0 +1,27 @@
+debug: True
+
+rest_api:
+  listen: 0.0.0.0
+
+db_uri: postgresql://wazo-auth:Secr7t@postgres:5432
+
+amqp:
+  uri: amqp://guest:guest@rabbitmq:5672/
+
+service_discovery:
+  enabled: false
+
+token_cleanup_interval: 2.0
+
+enabled_http_plugins:
+  policies: True
+  tokens: True
+  user_policy: True
+  users: True
+
+enabled_backend_plugins:
+  wazo_user: True
+
+bootstrap_user_on_startup: True
+bootstrap_user_username: wazo-auth-cli
+bootstrap_user_password: secret

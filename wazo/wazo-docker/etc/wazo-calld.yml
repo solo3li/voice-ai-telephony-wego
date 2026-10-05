@@ -1,0 +1,29 @@
+debug: true
+rest_api:
+  listen: 0.0.0.0
+
+db_uri: postgresql://wazo:secret@postgres/wazo
+
+bus:
+  host: rabbitmq
+
+auth:
+  host: auth
+  port: 9497
+  prefix: null
+
+amid:
+  host: amid
+
+ari:
+  connection:
+    base_url: http://asterisk:5039
+
+confd:
+  host: confd
+
+phoned:
+  host: phoned
+
+service_discovery:
+  enabled: false

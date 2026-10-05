@@ -1,0 +1,127 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}ذاكرة وسجل العملاء (CRM) - المساعد الصوتي الذكي{% endblock %}
+
+{% block content %}
+<!-- CRM Main Section -->
+<section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4">
+      <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+        <div>
+          <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+            <span class="text-[#680E23] text-xl">🧠</span>
+            ذاكرة العميل الذكية (Two-Tier Distilled Memory)
+          </h2>
+          <p class="text-xs text-[#6E645D] mt-1">
+            تجمع بين <span class="text-[#680E23] font-semibold">الذاكرة الدائمة</span> و <span class="text-[#680E23] font-semibold">الذاكرة اللحظية</span> معزولة ومخصصة لكل رقم عميل يتصل بالنظام.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="loadCustomerMemory()" 
+            id="btn-refresh-memory"
+            class="px-3.5 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#2D2825] text-xs font-semibold border border-[#DDD5C7] transition flex items-center gap-1.5"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>تحديث</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="resetCustomerMemory()" 
+            id="btn-reset-memory"
+            class="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-semibold transition flex items-center gap-1.5"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>تصفير الذاكرة</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Customer Selector & Search Toolbar -->
+      <div class="bg-[#FAF7F2]/60 border border-[#EAE3D9] rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <span class="text-[#443D39] font-bold flex items-center gap-1">
+            <span>🔍</span> فحص ذاكرة رقم:
+          </span>
+          <select 
+            id="crm-customer-select" 
+            onchange="onCustomerSelectChange(this.value)"
+            class="bg-white border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-[#1C1917] text-xs focus:ring-1 focus:ring-[#680E23] font-mono shadow-sm"
+          >
+            <option value="web_dashboard">💻 web_dashboard (جلسة المتصفح)</option>
+          </select>
+          <div class="relative flex-1 min-w-[160px]">
+            <input 
+              id="crm-customer-search" 
+              type="text" 
+              placeholder="بحث برقم الهاتف أو الاسم..." 
+              oninput="debounceCustomerSearch(this.value)"
+              class="w-full bg-white border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-[#1C1917] text-xs placeholder-[#8C827A] focus:ring-1 focus:ring-[#680E23] shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] text-[#6E645D]">العميل المعروض:</span>
+          <span id="crm-active-customer-badge" class="font-mono text-xs font-bold text-[#680E23] bg-[#FAF0F2] px-2.5 py-1 rounded-lg border border-[#EAE3D9]">web_dashboard</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 text-xs">
+        <!-- Permanent Memory Card -->
+        <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#DDD5C7]">
+            <h3 class="font-bold text-[#2D2825] flex items-center gap-2">
+              <span class="text-[#680E23]">📌</span>
+              الذاكرة الدائمة (Permanent Profile)
+            </h3>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2]/80 text-[#680E23] border border-[#EAE3D9]">تراكمية ومحدثة</span>
+          </div>
+
+          <div id="memory-permanent-content" class="space-y-2 text-[#443D39]">
+            <div class="text-center py-4 text-[#8C827A]">جاري تحميل الذاكرة الدائمة...</div>
+          </div>
+        </div>
+
+        <!-- Immediate Working Memory Card -->
+        <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#DDD5C7]">
+            <h3 class="font-bold text-[#2D2825] flex items-center gap-2">
+              <span class="text-[#680E23]">⏱️</span>
+              الذاكرة اللحظية (آخر مكالمة)
+            </h3>
+            <span id="memory-calls-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9]">0 مكالمات مسجلة</span>
+          </div>
+
+          <div id="memory-immediate-content" class="space-y-2 text-[#443D39]">
+            <div class="text-center py-4 text-[#8C827A]">جاري تحميل ملخص آخر مكالمة...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Call Sessions Accordion/List -->
+      <div class="mt-4 pt-4 border-t border-[#EAE3D9]">
+        <details class="text-xs group" open>
+          <summary class="cursor-pointer font-semibold text-[#6E645D] hover:text-[#2D2825] flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <span>📜</span> أرشيف المكالمات السابقة والمستخلصة
+            </span>
+            <span class="text-[11px] text-[#8C827A] group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div id="memory-recent-calls" class="mt-3 space-y-2">
+            <div class="text-[#8C827A] text-center py-2">لا توجد مكالمات سابقة مسجلة.</div>
+          </div>
+        </details>
+      </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/crm.js' %}"></script>
+{% endblock %}

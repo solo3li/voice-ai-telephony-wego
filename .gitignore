@@ -1,0 +1,33 @@
+# Environment and secrets
+.env
+*.env
+variables.env
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Media & Storage
+media/
+*.sqlite3
+
+# Logs
+*.log
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo

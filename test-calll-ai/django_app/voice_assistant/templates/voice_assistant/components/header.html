@@ -1,0 +1,29 @@
+<!-- Top Luxury Header Component -->
+<header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[#EAE3D9] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+  <div class="flex items-center gap-3">
+    <h2 id="current-section-title" class="text-base font-bold text-[#680E23] flex items-center gap-2">
+      <span>{{ page_icon|default:"⚡" }}</span> <span>{{ page_title|default:"لوحة التحكم" }}</span>
+    </h2>
+  </div>
+
+  <!-- Live Service Status & Balance Badges -->
+  <div class="flex flex-wrap items-center gap-3 text-xs">
+    <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE3D9] text-[#6E645D] font-medium shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-[#C5A880]"></span> Centrifugo: جاري التحقق...
+    </span>
+
+    <!-- Header Wallet Balance Pill -->
+    <a href="{% url 'voice_assistant:billing_page' %}" id="header-wallet-badge" class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#D4AF37]/60 text-[#680E23] text-xs font-bold shadow-sm transition hover:shadow cursor-pointer">
+      <span class="text-sm">🪙</span>
+      <span class="text-[#8C827A] font-normal text-[11px]" data-i18n="header_balance">الرصيد:</span>
+      <span id="header-balance-val" class="font-mono text-xs font-bold text-[#680E23]">--.--</span>
+      <span id="header-balance-curr" class="text-[10px] text-[#6E645D]">USD</span>
+      <span class="w-4 h-4 rounded-full bg-[#680E23] text-white flex items-center justify-center text-[10px] group-hover:scale-110 transition font-bold" title="شحن الرصيد">+</span>
+    </a>
+
+    <!-- Bilingual Switcher Toggle Button -->
+    <button type="button" onclick="toggleLanguage()" id="lang-switch-btn" class="px-3.5 py-1.5 rounded-full bg-[#FAF0F2] border border-[#E8CCD2] text-[#680E23] text-xs font-bold hover:bg-[#F3E2E6] transition flex items-center gap-1.5 shadow-sm">
+      🌐 <span id="lang-text">English</span>
+    </button>
+  </div>
+</header>

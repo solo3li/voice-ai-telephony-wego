@@ -1,0 +1,17 @@
+{
+  "server_url": "https://app.169.58.32.179.nip.io",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3MCwidXNlcm5hbWUiOiJkb25nbGVfb3duZXJfdXNlciIsInJvbGUiOiJvd25lciIsImNyZWF0ZWRfYXQiOjE3OTA3NzI0ODEsImV4cCI6MTc5ODU0ODQ4MX0.a3q6qDyITmxWtxByozfmR_gMYXu4ESsCFQiFnl0dfWE",
+  "user_data": {
+    "id": 70,
+    "username": "dongle_owner_user",
+    "name": "أحمد المالك",
+    "is_staff": false
+  },
+  "active_profile": {
+    "id": 78,
+    "name": "مساعد مطعم بيسترو الذكي",
+    "dialect": "egyptian",
+    "persona_role": "customer_support"
+  },
+  "livekit_url": "wss://livekit.169.58.32.179.nip.io"
+}

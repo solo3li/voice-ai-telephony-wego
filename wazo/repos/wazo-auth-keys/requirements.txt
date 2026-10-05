@@ -1,0 +1,6 @@
+https://github.com/wazo-platform/wazo-lib-rest-client/archive/master.zip
+https://github.com/wazo-platform/wazo-auth-client/archive/master.zip
+https://github.com/wazo-platform/wazo-auth-cli/archive/master.zip
+https://github.com/wazo-platform/xivo-lib-python/archive/master.zip
+cliff==4.0.0
+pyyaml==6.0

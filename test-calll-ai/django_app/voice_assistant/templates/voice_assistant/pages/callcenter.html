@@ -1,0 +1,438 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}المركز الهاتفي وطوابير الانتظار - المساعد الصوتي الذكي{% endblock %}
+
+{% block extra_head %}
+<!-- LiveKit Client SDK for WebRTC Dashboard Calling -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Call Center Subtabs Navigation Bar -->
+<div class="bg-white p-4 rounded-3xl border border-[#EAE3D9] shadow-sm flex flex-wrap items-center justify-between gap-3">
+  <div class="flex items-center gap-2 p-1.5 bg-[#F5EFE6] border border-[#E8E0D5] rounded-2xl text-xs font-bold">
+    <button type="button" onclick="switchCallcenterSubtab('employees')" id="subtab-btn-employees" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 bg-[#680E23] text-white shadow-sm">
+      <span>👤</span>
+      <span>دليل الموظفين والتحويلات</span>
+    </button>
+    <button type="button" onclick="switchCallcenterSubtab('queues')" id="subtab-btn-queues" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-[#6E645D] hover:text-[#1C1917]">
+      <span>👥</span>
+      <span>طوابير الانتظار ومجموعات العمل</span>
+    </button>
+    <button type="button" onclick="switchCallcenterSubtab('recordings')" id="subtab-btn-recordings" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-[#6E645D] hover:text-[#1C1917]">
+      <span>🎙️</span>
+      <span>سجل مكالمات الموظفين والتسجيلات</span>
+    </button>
+  </div>
+  
+  <div class="text-xs text-[#8C827A] flex items-center gap-2">
+    <span>🎧 نظام الاتصال الهاتفي وسوفت فون WebRTC المباشر</span>
+  </div>
+</div>
+
+<!-- Subtab 1: Employees Directory & Softphone -->
+<div id="subtab-content-employees" class="callcenter-subtab-panel space-y-6">
+  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+      <div>
+        <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+          <span class="text-[#680E23] text-xl">🎧</span>
+          دليل تحويلات الموظفين ومنظومة الاتصال الداخلي (WebRTC Softphone)
+        </h2>
+        <p class="text-xs text-[#6E645D] mt-1">
+          أضف موظفين جدد وتحويلات داخلية، واتصل مباشرة بأي موظف أو طابور عبر <span class="text-[#680E23] font-semibold">WebRTC المباشر</span> من المتصفح دون الحاجة لأي برامج خارجية.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="openNewEmployeeModal()" 
+          class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#680E23]/20"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>➕ موظف جديد</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Call Control Banner -->
+    <div id="dashboard-active-call-banner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-[#FAF0F2] to-white border-2 border-[#680E23] shadow-md shadow-lg flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="w-3.5 h-3.5 rounded-full bg-[#680E23] animate-ping"></span>
+        <div>
+          <div id="dashboard-call-title" class="text-sm font-bold text-[#680E23]">جاري الاتصال...</div>
+          <div id="dashboard-call-sub" class="text-xs text-[#6E645D] font-mono">يتم الاتصال والمزامنة عبر WebRTC...</div>
+        </div>
+      </div>
+      <button 
+        type="button" 
+        onclick="endDashboardCall()" 
+        class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5 shadow-rose-600/30"
+      >
+        <span>إنهاء المكالمة 🔴</span>
+      </button>
+    </div>
+
+    <!-- Employees Directory Table -->
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-right text-xs">
+        <thead>
+          <tr class="text-[#6E645D] border-b border-[#EAE3D9]">
+            <th class="py-2.5 px-3">الموظف</th>
+            <th class="py-2.5 px-3 text-center text-[#680E23] font-bold">التحويلة الداخلية</th>
+            <th class="py-2.5 px-3">القسم</th>
+            <th class="py-2.5 px-3 text-center">حالة التواجد</th>
+            <th class="py-2.5 px-3">بروتوكول الصوت</th>
+            <th class="py-2.5 px-3 text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="employees-tbody" class="divide-y divide-[#EAE3D9]">
+          <tr>
+            <td colspan="6" class="text-center py-6 text-[#8C827A]">جاري تحميل دليل الموظفين...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Subtab 2: Call Queues & Routing -->
+<div id="subtab-content-queues" class="callcenter-subtab-panel space-y-6 hidden">
+  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-6">
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+      <div>
+        <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+          <span class="text-[#680E23] text-xl">👥</span>
+          طوابير الانتظار ومجموعات الاتصال (Call Queues &amp; Routing)
+        </h2>
+        <p class="text-xs text-[#6E645D] mt-1">
+          أنشئ طوابير فرق العمل (كود المبيعات 200، كود الدعم 300) مع نظام الرنين بالتناوب (Round-Robin)، موسيقى انتظار مخصصة، والتحويل التلقائي للذكاء الاصطناعي (Gemini Live) في حال عدم الرد.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="openNewQueueModal()" 
+          class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#680E23]/20"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>طابور جديد</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Call Queues Table -->
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-right text-xs">
+        <thead>
+          <tr class="text-[#6E645D] border-b border-[#EAE3D9]">
+            <th class="py-2.5 px-3">كود الطابور</th>
+            <th class="py-2.5 px-3">اسم الطابور</th>
+            <th class="py-2.5 px-3">استراتيجية التوزيع</th>
+            <th class="py-2.5 px-3">الموظفون المسندون والحالة الحية</th>
+            <th class="py-2.5 px-3 text-center">المكالمات المنتظرة</th>
+            <th class="py-2.5 px-3 text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="queues-tbody" class="divide-y divide-[#EAE3D9]">
+          <tr>
+            <td colspan="6" class="text-center py-6 text-[#8C827A]">جاري تحميل طوابير الانتظار...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Subtab 3: Employee Call Logs & Recordings -->
+<div id="subtab-content-recordings" class="callcenter-subtab-panel space-y-6 hidden">
+  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-6">
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+      <div>
+        <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+          <span class="text-[#680E23] text-xl">🎙️</span>
+          سجل مكالمات الموظفين والتسجيلات الصوتية (Call Recordings &amp; Logs)
+        </h2>
+        <p class="text-xs text-[#6E645D] mt-1">
+          مراقبة واستماع تسجيلات مكالمات الموظفين الخاصة بك (الواردة، الصادرة، والمحولة) مع إمكانية التشغيل المباشر والتحميل بصيغة MP3.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="loadEmployeeCallLogs()" 
+          class="px-3.5 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+          title="تحديث السجل"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>تحديث السجل</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      <div class="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9]">
+        <div class="text-[#8C827A] text-[11px] mb-1">إجمالي المكالمات</div>
+        <div class="text-lg font-bold text-[#1C1917]" id="stat-total-calls">0</div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-[#FAF0F2] border border-[#E8CCD2]">
+        <div class="text-[#680E23] text-[11px] mb-1 font-semibold">المكالمات المسجلة 🎙️</div>
+        <div class="text-lg font-bold text-[#680E23]" id="stat-recorded-calls">0</div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9]">
+        <div class="text-[#8C827A] text-[11px] mb-1">إجمالي وقت التحدث</div>
+        <div class="text-lg font-bold text-[#1C1917]" id="stat-total-duration">0 د</div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
+        <div class="text-rose-700 text-[11px] mb-1 font-semibold">المكالمات الفائتة</div>
+        <div class="text-lg font-bold text-rose-700" id="stat-missed-calls">0</div>
+      </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="p-3 bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl flex flex-wrap items-center gap-3 text-xs">
+      <div class="flex items-center gap-2">
+        <label class="font-semibold text-[#443D39] whitespace-nowrap">الموظف:</label>
+        <select id="filter-log-employee" onchange="loadEmployeeCallLogs()" class="px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-xl text-[#2D2825] focus:outline-none focus:border-[#680E23]">
+          <option value="">جميع الموظفين</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="font-semibold text-[#443D39] whitespace-nowrap">النوع:</label>
+        <select id="filter-log-type" onchange="loadEmployeeCallLogs()" class="px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-xl text-[#2D2825] focus:outline-none focus:border-[#680E23]">
+          <option value="">الكل</option>
+          <option value="inbound">واردة</option>
+          <option value="outbound">صادرة</option>
+          <option value="missed">فائتة</option>
+          <option value="transfer">محولة</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="font-semibold text-[#443D39] whitespace-nowrap">التسجيل:</label>
+        <select id="filter-log-recording" onchange="loadEmployeeCallLogs()" class="px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-xl text-[#2D2825] focus:outline-none focus:border-[#680E23]">
+          <option value="">الكل</option>
+          <option value="true">المسجلة صوتياً فقط</option>
+        </select>
+      </div>
+
+      <div class="flex-1 min-w-[200px]">
+        <input 
+          type="text" 
+          id="filter-log-search" 
+          onkeyup="debounceLogSearch()" 
+          placeholder="بحث باسم الموظف أو رقم الطرف الآخر..." 
+          class="w-full px-3 py-1.5 bg-white border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]"
+        />
+      </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-right text-xs">
+        <thead>
+          <tr class="text-[#6E645D] border-b border-[#EAE3D9]">
+            <th class="py-2.5 px-3">الموظف والتحويلة</th>
+            <th class="py-2.5 px-3">الطرف الآخر</th>
+            <th class="py-2.5 px-3 text-center">نوع المكالمة</th>
+            <th class="py-2.5 px-3">وقت البدء</th>
+            <th class="py-2.5 px-3 text-center">المدة</th>
+            <th class="py-2.5 px-3 text-center min-w-[260px]">التسجيل الصوتي</th>
+          </tr>
+        </thead>
+        <tbody id="recordings-tbody" class="divide-y divide-[#EAE3D9]">
+          <tr>
+            <td colspan="6" class="text-center py-6 text-[#8C827A]">جاري تحميل سجل المكالمات والتسجيلات...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal: New Call Queue -->
+<div id="new-queue-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+        <span>👥</span> إنشاء طابور انتظار / مجموعة عمل جديدة
+      </h3>
+      <button type="button" onclick="closeNewQueueModal()" class="text-[#6E645D] hover:text-[#2D2825]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form id="new-queue-form" onsubmit="handleCreateQueue(event)" class="space-y-3.5">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">اسم الطابور *</label>
+          <input type="text" id="queue-name" required placeholder="مثال: طابور المبيعات" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">كود الطابور (Extension Code) *</label>
+          <input type="text" id="queue-code" required pattern="[0-9]+" placeholder="مثال: 200 أو 300" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#680E23] font-bold font-mono focus:outline-none focus:border-[#680E23]" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">
+          <span>وصف واختصاصات الطابور للذكاء الاصطناعي</span>
+          <span class="text-[11px] font-normal text-[#8C827A] mr-1">(لتوجيه الـ AI متى يحول للموظفين)</span>
+        </label>
+        <textarea id="queue-description" rows="2" placeholder="مثال: مخصص لشكاوى الفواتير، الدعم الفني، والمشاكل التقنية. حول المتصل هنا عند حدوث مشكلة أو طلب الدعم." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23] leading-relaxed"></textarea>
+        <p class="text-[10px] text-[#8C827A] mt-0.5">يعتمد مساعد الذكاء الاصطناعي على هذا الوصف في المكالمة ليقرر متى يحول المتصل إلى هذا القسم فوراً.</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">استراتيجية التوزيع</label>
+          <select id="queue-strategy" class="w-full px-2.5 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#2D2825] text-xs focus:outline-none">
+            <option value="round_robin">رنين بالتناوب (Round-Robin)</option>
+            <option value="ring_all">رنين متزامن للكل (Ring-All)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">رنين الموظف (ثوانٍ)</label>
+          <input type="number" id="queue-ring-timeout" value="15" min="5" max="60" class="w-full px-2.5 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#2D2825] text-xs focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">أقصى انتظار (ثوانٍ)</label>
+          <input type="number" id="queue-total-timeout" value="60" min="15" max="300" class="w-full px-2.5 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#2D2825] text-xs focus:outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">الموظفون المسندون لهذا الطابور</label>
+        <div id="queue-members-list" class="max-h-32 overflow-y-auto p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7] space-y-1.5">
+          <span class="text-[#8C827A] text-[11px]">جاري تحميل خطوط الـ SIP...</span>
+        </div>
+        <p class="text-[10px] text-[#8C827A] mt-1">حدد الموظفين الذين ستصلهم المكالمات بالتناوب عند الاتصال أو التحويل لكود هذا الطابور.</p>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">ملف موسيقى الانتظار المخصصة (اختياري - MP3/WAV)</label>
+        <input type="file" id="queue-hold-music" accept="audio/*" class="w-full px-2 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#443D39] text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#680E23] file:text-white hover:file:bg-[#D4AF37]" />
+        <p class="text-[10px] text-[#8C827A] mt-0.5">إذا لم يُرفع ملف، سيعزف النظام نغمة انتظار متناغمة وهادئة افتراضياً.</p>
+      </div>
+
+      <div id="new-queue-error" class="hidden p-2 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+        <button type="button" onclick="closeNewQueueModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+        <button type="submit" id="btn-submit-queue" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+          <span>حفظ الطابور وتفعيل الكود</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Queue Description -->
+<div id="edit-queue-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+        <span>⚙️</span> تعديل اختصاصات وتوجيهات الطابور للـ AI
+      </h3>
+      <button type="button" onclick="closeEditQueueModal()" class="text-[#6E645D] hover:text-[#2D2825]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <input type="hidden" id="edit-queue-id" />
+    <div class="space-y-3">
+      <div>
+        <div class="font-bold text-[#680E23] text-sm mb-1" id="edit-queue-title-label">طابور الدعم</div>
+        <p class="text-[11px] text-[#8C827A]">قم بتحديد متى يحول المساعد الصوتي المكالمة إلى هذا الطابور بالتفصيل.</p>
+      </div>
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">وصف واختصاصات الطابور للذكاء الاصطناعي:</label>
+        <textarea id="edit-queue-description" rows="4" placeholder="مثال: مخصص لشكاوى الفواتير، الاستفسارات التقنية، الدعم الفني، والمشاكل الحسابية. حول المتصل هنا عند طلب التحدث مع الدعم أو موظف بشري." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23] leading-relaxed"></textarea>
+        <p class="text-[10px] text-[#8C827A] mt-1">يقرأ الذكاء الاصطناعي هذا الوصف أثناء الحوار مع المتصل ليحول إليه تلقائياً عند مطابقة المشكلة.</p>
+      </div>
+    </div>
+    <div id="edit-queue-error" class="hidden p-2 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+    <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+      <button type="button" onclick="closeEditQueueModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+      <button type="button" onclick="saveQueueDescription()" id="btn-save-queue-desc" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+        <span>حفظ التعديلات</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New Employee -->
+<div id="new-employee-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+        <span>👤</span> إضافة موظف وتحويلة داخلية جديدة
+      </h3>
+      <button type="button" onclick="closeNewEmployeeModal()" class="text-[#6E645D] hover:text-[#2D2825]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form id="new-employee-form" onsubmit="handleCreateEmployee(event)" class="space-y-3">
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">اسم الموظف الكامل *</label>
+        <input type="text" id="emp-name" required placeholder="مثال: خالد المنصور" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">رقم التحويلة *</label>
+          <input type="text" id="emp-extension" required pattern="[0-9]+" placeholder="مثال: 104" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#680E23] font-mono font-bold focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]" />
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">القسم</label>
+          <input type="text" id="emp-department" placeholder="المبيعات، الدعم..." value="المبيعات" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">اسم الدخول (Username) *</label>
+          <input type="text" id="emp-username" required placeholder="khaled_104" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">كلمة المرور *</label>
+          <input type="password" id="emp-password" required value="password123" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+        </div>
+      </div>
+
+      <div id="new-employee-error" class="hidden p-2 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+        <button type="button" onclick="closeNewEmployeeModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+        <button type="submit" id="btn-submit-employee" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+          <span>حفظ وإنشاء التحويلة</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/callcenter.js' %}"></script>
+{% endblock %}

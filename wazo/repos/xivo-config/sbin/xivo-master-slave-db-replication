@@ -1,0 +1,96 @@
+#!/bin/sh
+# Copyright 2017-2021 The Wazo Authors  (see the AUTHORS file)
+# SPDX-License-Identifier: GPL-3.0+
+
+SLAVE_IP=$1
+DB_NAME='asterisk'
+MASTER_BACKUP='out_master_backup.sql'
+DUMP='replication.sql'
+EXCLUDE_TABLES='\
+    -T call_log \
+    -T call_log_id_seq \
+    -T call_log_participant \
+    -T cel \
+    -T cel_id_seq \
+    -T dhcp \
+    -T dhcp_id_seq \
+    -T queue_log \
+    -T queue_log_id_seq \
+    -T session \
+    -T stat_agent \
+    -T stat_agent_id_seq \
+    -T stat_agent_periodic \
+    -T stat_agent_periodic_id_seq \
+    -T stat_call_on_queue \
+    -T stat_call_on_queue_id_seq \
+    -T stat_queue \
+    -T stat_queue_id_seq \
+    -T stat_queue_periodic \
+    -T stat_queue_periodic_id_seq \
+    -T mail \
+    -T mail_id_seq \
+    -T monitoring \
+    -T monitoring_id_seq \
+    -T netiface \
+    -T netiface_id_seq \
+    -T resolvconf \
+    -T resolvconf_id_seq \
+'
+PG_DUMP_OPTIONS="--data-only --schema=public $EXCLUDE_TABLES"
+
+panic() {
+    echo "Slave replication failed: $*" | mutt root@localhost
+    echo "Slave replication failed: $*"
+    exit 1
+}
+
+backup_master() {
+    master_backup=$1
+
+    su postgres -c "pg_dump $PG_DUMP_OPTIONS $DB_NAME -f $master_backup" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        panic "Could not dump master"
+    fi
+}
+
+generate_dump() {
+    master_backup=$1
+    dump=$2
+    truncate_cmd="TRUNCATE $(grep '^COPY' $master_backup | cut -f2 -d\  | paste -sd ',');"
+
+    echo "SET session_replication_role = replica;" > $dump
+    echo "BEGIN;" >> $dump
+    echo $truncate_cmd >> $dump
+    cat $master_backup >> $dump
+    echo "COMMIT;" >> $dump
+    echo "SET session_replication_role = DEFAULT;" >> $dump
+}
+
+import_dump() {
+    dump=$1
+    slave_ip=$2
+
+    psql -U postgres -h $SLAVE_IP -f $dump -v ON_ERROR_STOP= $DB_NAME > /dev/null
+    psql_status=$?
+    if [ $psql_status -ne 0 ]; then
+        panic "psql returned $psql_status while importing data into the slave"
+    fi
+}
+
+main() {
+    cd /tmp
+    backup_master $MASTER_BACKUP
+    generate_dump $MASTER_BACKUP $DUMP
+    import_dump $DUMP $SLAVE_IP
+
+    echo "Slave replication completed succesfully"
+
+    rm -f $DUMP
+}
+
+if [ -z $SLAVE_IP ]; then
+    echo "usage: $(basename $0) slave_ip"
+    exit 1
+fi
+
+main

@@ -1,0 +1,31 @@
+﻿# Environments & Secrets
+.env
+.env.*
+!.env.example
+*.backup
+
+# Python & Django
+__pycache__/
+*.py[cod]
+*.class
+*.sqlite3
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

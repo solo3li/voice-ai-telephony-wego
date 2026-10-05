@@ -1,0 +1,191 @@
+{% extends "voice_assistant/base.html" %}
+{% load static %}
+
+{% block title %}الرصيد والفواتير (Usage & Billing){% endblock %}
+
+{% block content %}
+<!-- Billing Header Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm">
+  <div>
+    <h3 class="text-lg font-bold text-[#680E23] flex items-center gap-2">
+      <span>💳</span> <span data-i18n="billing_title">حساب الاستخدام والرصيد</span>
+    </h3>
+    <p class="text-xs text-[#6E645D] mt-1" data-i18n="billing_subtitle">نظام رصيد مسبق الدفع (OpenRouter Style) مع خصم تكلفة الدقائق بالتقريب لأعلى دقيقة مرتفع</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button type="button" onclick="loadWalletData()" class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+      <span>🔄</span> <span>تحديث الرصيد</span>
+    </button>
+    <button type="button" onclick="openTopupModal()" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition flex items-center gap-2 shadow-md hover:shadow-lg">
+      <span>⚡</span> <span data-i18n="billing_btn_topup">شحن الرصيد الآن</span>
+    </button>
+  </div>
+</div>
+
+<!-- Top Hero: Available Balance Hero Card -->
+<div class="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white via-[#FAF7F2] to-[#F5EFE6] border-2 border-[#D4AF37]/50 shadow-md space-y-4 relative overflow-hidden">
+  <div class="flex flex-wrap justify-between items-start gap-4">
+    <div>
+      <span class="text-xs font-semibold text-[#8C827A] uppercase tracking-wider block" data-i18n="billing_balance_title">الرصيد المتاح حالياً (Available Balance)</span>
+      <div class="flex items-baseline gap-2 mt-2">
+        <span id="billing-wallet-balance" class="text-4xl sm:text-5xl font-extrabold font-mono text-[#680E23]">--.--</span>
+        <span id="billing-wallet-currency" class="px-2.5 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] font-bold text-xs border border-[#E8CCD2]">USD ($)</span>
+      </div>
+    </div>
+    <div class="text-end flex flex-col sm:items-end gap-2.5">
+      <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> جاهز للاتصال
+      </span>
+      <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm hover:shadow-md">
+        <span>⚡</span> <span>شحن المحفظة</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="pt-3 border-t border-[#EAE3D9] flex flex-wrap items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="text-[#6E645D]">التسعيرة الحالية للدقيقة:</span>
+      <span id="billing-rate-pill" class="px-2.5 py-0.5 rounded-md bg-[#680E23] text-white font-mono font-bold text-xs">$0.0500</span>
+      <span class="text-[11px] text-[#8C827A]">(تقريب لأعلى دقيقة مرتفع)</span>
+    </div>
+    <button type="button" onclick="openTopupModal()" class="text-[#680E23] hover:text-[#4A0817] font-bold text-xs underline flex items-center gap-1">
+      <span>+ إضافة رصيد للمحفظة</span>
+    </button>
+  </div>
+</div>
+
+<!-- Secondary Metrics Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm flex items-center justify-between">
+    <div>
+      <span class="text-xs text-[#8C827A]" data-i18n="billing_deposited">إجمالي المبالغ المشحونة</span>
+      <p id="billing-stat-deposited" class="text-xl font-bold font-mono text-[#1C1917] mt-1">$0.00</p>
+    </div>
+    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-lg">
+      📥
+    </div>
+  </div>
+
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm flex items-center justify-between">
+    <div>
+      <span class="text-xs text-[#8C827A]" data-i18n="billing_spent">إجمالي المستهلك بالمكالمات</span>
+      <p id="billing-stat-spent" class="text-xl font-bold font-mono text-[#680E23] mt-1">$0.00</p>
+    </div>
+    <div class="w-10 h-10 rounded-xl bg-[#FAF0F2] border border-[#E8CCD2] text-[#680E23] flex items-center justify-center text-lg">
+      📤
+    </div>
+  </div>
+
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm flex items-center justify-between">
+    <div>
+      <span class="text-xs text-[#8C827A]">إجمالي الدقائق المحتسبة</span>
+      <p id="billing-stat-minutes" class="text-xl font-bold font-mono text-[#1C1917] mt-1">0 دقيقة</p>
+    </div>
+    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-[#680E23] flex items-center justify-center text-lg">
+      ⏱️
+    </div>
+  </div>
+</div>
+
+<!-- Transactions Ledger Table -->
+<div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAE3D9]">
+    <div>
+      <h4 class="font-bold text-[#1C1917] text-sm flex items-center gap-2">
+        <span>📑</span> <span data-i18n="billing_ledger_title">سجل الحركات المالية (Financial Ledger)</span>
+      </h4>
+      <p class="text-xs text-[#8C827A] mt-0.5">توثيق كامل لكل عملية شحن، خصم مكالمة، وتحديث رصيد لحظي</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:border-[#680E23]">
+        <option value="all">جميع الحركات</option>
+        <option value="call_deduction">خصم مكالمات صوتية</option>
+        <option value="topup">شحن رصيد</option>
+        <option value="welcome_bonus">رصيد ترحيبي</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-start">
+      <thead>
+        <tr class="border-b border-[#EAE3D9] bg-[#FAF7F2] text-[#6E645D]">
+          <th class="py-3 px-4 text-start font-bold">التاريخ والوقت</th>
+          <th class="py-3 px-4 text-start font-bold">نوع الحركة</th>
+          <th class="py-3 px-4 text-start font-bold">المبلغ</th>
+          <th class="py-3 px-4 text-start font-bold">الرصيد بعد الحركة</th>
+          <th class="py-3 px-4 text-start font-bold">الدقائق / الثواني</th>
+          <th class="py-3 px-4 text-start font-bold">السعر المطبق</th>
+          <th class="py-3 px-4 text-start font-bold">البيان والتفاصيل</th>
+        </tr>
+      </thead>
+      <tbody id="billing-transactions-tbody" class="divide-y divide-[#EAE3D9]">
+        <tr>
+          <td colspan="7" class="py-8 text-center text-[#8C827A]">
+            جاري تحميل سجل الحركات المالية...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Top-Up Modal (OpenRouter Style) -->
+<div id="topup-modal" class="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border-2 border-[#D4AF37]/50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#680E23] flex items-center gap-2">
+        <span>⚡</span> <span>شحن رصيد المحفظة (Instant Top-Up)</span>
+      </h3>
+      <button type="button" onclick="closeTopupModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <p class="text-[#443D39] text-xs leading-relaxed">
+      أدخل المبلغ المطلوب شحنه أو اختر من المبالغ السريعة. يتم إيداع الرصيد فوراً في محفظتك المسبقة الدفع.
+    </p>
+
+    <!-- Fast Preset Amount Buttons -->
+    <div>
+      <label class="block font-semibold text-[#443D39] mb-1.5">مبالغ شحن سريعة:</label>
+      <div class="grid grid-cols-4 gap-2">
+        <button type="button" onclick="setTopupAmount(10)" class="py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] font-mono font-bold text-xs transition">10 $</button>
+        <button type="button" onclick="setTopupAmount(25)" class="py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] font-mono font-bold text-xs transition">25 $</button>
+        <button type="button" onclick="setTopupAmount(50)" class="py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] font-mono font-bold text-xs transition">50 $</button>
+        <button type="button" onclick="setTopupAmount(100)" class="py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] font-mono font-bold text-xs transition">100 $</button>
+      </div>
+    </div>
+
+    <!-- Custom Amount Input -->
+    <div>
+      <label class="block font-semibold text-[#443D39] mb-1">المبلغ المطلوب شحنه *</label>
+      <div class="relative">
+        <input 
+          type="number" 
+          id="topup-amount-input" 
+          step="1" 
+          min="1" 
+          value="25" 
+          required 
+          class="w-full px-3 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-bold text-base focus:outline-none focus:border-[#680E23]" 
+        />
+      </div>
+    </div>
+
+    <div id="topup-modal-alert" class="hidden p-2.5 rounded-xl text-xs"></div>
+
+    <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+      <button type="button" onclick="closeTopupModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+      <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-bold transition flex items-center gap-1.5 shadow">
+        <span>تأكيد الشحن الفوري</span>
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/billing.js' %}"></script>
+{% endblock %}

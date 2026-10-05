@@ -1,0 +1,30 @@
+api:
+  dashboard: false
+  insecure: false
+
+log:
+  level: DEBUG
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "hamed3alii.3@gmail.com"
+      storage: "/acme/acme.json"
+      httpChallenge:
+        entryPoint: "web"
+
+providers:
+  file:
+    filename: "/etc/traefik/dynamic_conf.yml"
+    watch: true

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+postmap /etc/postfix/canonical
+systemctl restart postfix

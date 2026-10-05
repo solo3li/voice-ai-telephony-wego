@@ -1,0 +1,108 @@
+name: Build Android APK and Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: ''
+      release_name:
+        description: 'Release Title'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK (EAS Local)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
+
+      - name: 📝 Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: 🟩 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: employee_expo57/package.json
+
+      - name: 📦 Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: 📂 Install Project Dependencies
+        working-directory: ./employee_expo57
+        run: npm install
+
+      - name: 🔨 Build Android APK Locally with EAS
+        working-directory: ./employee_expo57
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_NO_VCS: '1'
+        run: |
+          mkdir -p build
+          eas build --platform android --profile preview --local --output ./build/employee-softphone.apk --non-interactive
+          ls -la ./build/employee-softphone.apk
+
+      - name: 🏷️ Determine Release Tag & Title
+        id: release_meta
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            TAG="${{ github.event.inputs.release_tag }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v1.0.${{ github.run_number }}"
+          fi
+
+          if [ -n "${{ github.event.inputs.release_name }}" ]; then
+            TITLE="${{ github.event.inputs.release_name }}"
+          else
+            TITLE="Voice AI Employee Softphone ${TAG}"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "title=${TITLE}" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create GitHub Release & Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: ${{ steps.release_meta.outputs.title }}
+          body: |
+            ## 📱 Voice AI Employee Softphone - Android Release (${{ steps.release_meta.outputs.tag }})
+
+            ### ✨ What's Included:
+            - **App Theme**: Luxury Burgundy (`#800020`) & Off-White (`#f5f0e8`)
+            - **WebRTC & LiveKit**: Real-time internal & external telephony
+            - **Features**: Call transfers, hold music loop, dynamic queues, call logs
+            - **Format**: Standalone Android APK (Ready to install on any Android phone)
+
+            ---
+            *Built automatically via GitHub Actions with EAS Local Runner.*
+          files: |
+            employee_expo57/build/employee-softphone.apk
+          draft: false
+          prerelease: false

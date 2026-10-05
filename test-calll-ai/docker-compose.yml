@@ -1,0 +1,200 @@
+services:
+  traefik:
+    build:
+      context: ./traefik
+      dockerfile: Dockerfile
+    container_name: voice_traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - traefik_acme:/acme
+      - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:ro
+    networks:
+      - voice_net
+
+  livekit:
+    build:
+      context: ./livekit
+      dockerfile: Dockerfile
+    container_name: voice_livekit
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml --node-ip ${EXTERNAL_IP:-127.0.0.1}
+    environment:
+      - LIVEKIT_RTC_NODE_IP=${EXTERNAL_IP:-127.0.0.1}
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "50000-50020:50000-50020/udp"
+      - "7881:7881"
+      - "7882:7882/udp"
+    depends_on:
+      - redis
+    networks:
+      - voice_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: voice_redis
+    restart: unless-stopped
+    networks:
+      - voice_net
+
+  centrifugo:
+    build:
+      context: ./centrifugo
+      dockerfile: Dockerfile
+    container_name: voice_centrifugo
+    restart: unless-stopped
+    command: centrifugo -c /centrifugo/config.json
+    volumes:
+      - ./centrifugo/config.json:/centrifugo/config.json
+    depends_on:
+      - redis
+    networks:
+      - voice_net
+
+  inngest:
+    image: inngest/inngest:latest
+    container_name: voice_inngest
+    restart: unless-stopped
+    command: inngest dev -u http://django:8000/api/inngest/ --host 0.0.0.0 --port 8288
+    ports:
+      - "8288:8288"
+    networks:
+      - voice_net
+
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: voice_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-voice_db}
+      POSTGRES_USER: ${POSTGRES_USER:-voice_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voice_password_123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - voice_net
+
+  django:
+    build:
+      context: ./django_app
+      dockerfile: Dockerfile
+    container_name: voice_django
+    restart: unless-stopped
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./django_app:/app
+      - media_data:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - centrifugo
+      - livekit
+      - minio
+    networks:
+      - voice_net
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: voice_agent
+    restart: unless-stopped
+    volumes:
+      - ./agent:/app
+      - media_data:/app/media:ro
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - livekit
+      - centrifugo
+    networks:
+      - voice_net
+
+  sip:
+    image: livekit/sip:latest
+    container_name: voice_sip
+    restart: unless-stopped
+    environment:
+      SIP_CONFIG_BODY: |
+        api_key: devkey
+        api_secret: secretkey1234567890abcdef
+        ws_url: ws://livekit:7880
+        redis:
+          address: redis:6379
+        sip_port: 5060
+        rtp_port: 10000-10030
+        nat_1_to_1_ip: ${EXTERNAL_IP:-127.0.0.1}
+        use_external_ip: false
+        logging:
+          level: info
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "10000-10030:10000-10030/udp"
+    depends_on:
+      - livekit
+      - redis
+    networks:
+      - voice_net
+
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    container_name: voice_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - voice_net
+
+  egress:
+    image: livekit/egress:latest
+    container_name: voice_egress
+    restart: unless-stopped
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: devkey
+        api_secret: secretkey1234567890abcdef
+        ws_url: ws://livekit:7880
+        redis:
+          address: redis:6379
+        s3:
+          endpoint: http://minio:9000
+          access_key: minioadmin
+          secret: minioadmin123
+          bucket: call-recordings
+          region: us-east-1
+          force_path_style: true
+        logging:
+          level: info
+    depends_on:
+      - livekit
+      - redis
+      - minio
+    networks:
+      - voice_net
+
+volumes:
+  pgdata:
+  media_data:
+  traefik_acme:
+  minio_data:
+
+networks:
+  voice_net:
+    driver: bridge

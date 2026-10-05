@@ -1,0 +1,174 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}مواعيد العمل والخطة البديلة - المساعد الصوتي الذكي{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Top Header & Main Toggle Card -->
+  <div class="bg-white p-6 rounded-3xl border border-[#EAE3D9] shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">⏰</span>
+        <h2 class="text-lg font-bold text-[#1C1917]">مواعيد العمل والخطة البديلة (Business Hours)</h2>
+      </div>
+      <p class="text-xs text-[#6E645D]">
+        حدد أيام وساعات العمل الرسمية، وكيفية تعامل النظام تلقائياً مع المكالمات الواردة (SIP Trunk / PBX) خارج ساعات العمل.
+      </p>
+    </div>
+
+    <!-- Master Switch & Live Status Badge -->
+    <div class="flex items-center gap-4 bg-[#FAF7F2] border border-[#DDD5C7] px-4 py-2.5 rounded-2xl">
+      <div class="text-start">
+        <span class="block text-[11px] text-[#8C827A] font-medium">الحالة الآن:</span>
+        <span id="current-status-badge" class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500">
+          <span class="w-2 h-2 rounded-full bg-gray-400"></span> جاري التحقق...
+        </span>
+      </div>
+
+      <div class="h-8 w-px bg-[#EAE3D9]"></div>
+
+      <div class="flex items-center gap-2">
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="master-enable-schedule" onchange="toggleScheduleActive()" class="sr-only peer">
+          <div class="w-11 h-6 bg-[#DDD5C7] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#680E23]"></div>
+        </label>
+        <span id="master-enable-label" class="text-xs font-bold text-[#443D39]">معطل</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Schedule vs Off-Hours Action -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Column 1: Days of Week Schedule (7 cols) -->
+    <div class="lg:col-span-7 bg-white shadow-sm border border-[#EAE3D9] rounded-3xl p-6 space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAE3D9]">
+        <div class="flex items-center gap-2">
+          <span class="text-lg text-[#680E23]">📅</span>
+          <h3 class="text-sm font-bold text-[#1C1917]">جدول أيام وساعات العمل الأسبوعية</h3>
+        </div>
+
+        <!-- Timezone Selector -->
+        <div class="flex items-center gap-2 text-xs">
+          <label for="field-timezone" class="text-[#8C827A] font-semibold">المنطقة الزمنية:</label>
+          <select id="field-timezone" onchange="calculateCurrentStatus()" class="px-3 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-semibold focus:outline-none focus:border-[#680E23]">
+            <option value="Africa/Cairo">مصر (Africa/Cairo - GMT+2/3)</option>
+            <option value="Asia/Riyadh">السعودية (Asia/Riyadh - GMT+3)</option>
+            <option value="Asia/Dubai">الإمارات (Asia/Dubai - GMT+4)</option>
+            <option value="Asia/Kuwait">الكويت (Asia/Kuwait - GMT+3)</option>
+            <option value="Asia/Qatar">قطر (Asia/Qatar - GMT+3)</option>
+            <option value="Asia/Amman">الأردن (Asia/Amman - GMT+3)</option>
+            <option value="Europe/London">لندن (Europe/London - GMT+0/1)</option>
+            <option value="UTC">التوقيت العالمي (UTC)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Weekly Days Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-start">
+          <thead>
+            <tr class="text-[#8C827A] border-b border-[#EAE3D9] pb-2">
+              <th class="py-2.5 font-bold">اليوم</th>
+              <th class="py-2.5 font-bold text-center">نوع اليوم</th>
+              <th class="py-2.5 font-bold text-center">وقت البدء</th>
+              <th class="py-2.5 font-bold text-center">وقت الانتهاء</th>
+              <th class="py-2.5 font-bold text-center">الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="days-table-body" class="divide-y divide-[#F5EFE6]">
+            <!-- Generated dynamically via business_hours.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-3 bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9] text-[11px] text-[#6E645D] flex items-start gap-2">
+        <span class="text-sm">💡</span>
+        <span>
+          عند تحديد يوم كـ "عطلة"، سيتم توجيه جميع المكالمات الواردة خلال ذلك اليوم بالكامل إلى خطة خارج أوقات العمل.
+        </span>
+      </div>
+    </div>
+
+    <!-- Column 2: Off-Hours Handling Plan (5 cols) -->
+    <div class="lg:col-span-5 bg-white shadow-sm border border-[#EAE3D9] rounded-3xl p-6 space-y-5">
+      <div class="flex items-center gap-2 pb-3 border-b border-[#EAE3D9]">
+        <span class="text-lg text-[#680E23]">🛡️</span>
+        <h3 class="text-sm font-bold text-[#1C1917]">خطة التعامل خارج أوقات العمل</h3>
+      </div>
+
+      <!-- Action Type Radio Cards -->
+      <div class="space-y-3">
+        <label class="block text-xs font-bold text-[#443D39]">اختر إجراء الرد على المتصل خارج أوقات العمل:</label>
+
+        <!-- Option 1: AI Message -->
+        <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border border-[#DDD5C7] bg-[#FAF7F2] hover:border-[#680E23] cursor-pointer transition">
+          <input type="radio" name="action_type" value="ai_message" onchange="switchActionType('ai_message')" id="action-ai-message" class="mt-1 text-[#680E23] focus:ring-[#680E23]" checked>
+          <div class="space-y-0.5">
+            <span class="block text-xs font-bold text-[#1C1917]">🤖 نطق رسالة ذكية بصوت الذكاء الاصطناعي (AI Message)</span>
+            <span class="block text-[11px] text-[#8C827A]">ينطق المساعد الصوتي رسالة اعتذار رسمية مخصصة للعميل ثم يغلق المكالمة بلباقة.</span>
+          </div>
+        </label>
+
+        <!-- Option 2: Audio File Playback -->
+        <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border border-[#DDD5C7] bg-[#FAF7F2] hover:border-[#680E23] cursor-pointer transition">
+          <input type="radio" name="action_type" value="audio_file" onchange="switchActionType('audio_file')" id="action-audio-file" class="mt-1 text-[#680E23] focus:ring-[#680E23]">
+          <div class="space-y-0.5">
+            <span class="block text-xs font-bold text-[#1C1917]">🎵 تشغيل ملف صوتي مسجل مسبقاً (Audio File)</span>
+            <span class="block text-[11px] text-[#8C827A]">يتم بث ملف صوتي مرفوع (MP3/WAV) مباشرة للمتصل ثم إنهاء المكالمة.</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Section A: AI Message Textarea -->
+      <div id="section-ai-message" class="space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <label for="field-ai-message" class="font-bold text-[#443D39]">نص الرسالة المنطوقة للمتصل:</label>
+          <button type="button" onclick="resetDefaultAiMessage()" class="text-[11px] text-[#680E23] hover:underline">استعادة النص الافتراضي</button>
+        </div>
+        <textarea id="field-ai-message" rows="4" placeholder="اكتب الرسالة التي سينطقها المساعد الصوتي خارج مواعيد العمل..." class="w-full px-3 py-2.5 bg-white border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-1 focus:ring-[#680E23] text-xs leading-relaxed"></textarea>
+      </div>
+
+      <!-- Section B: Audio File Upload -->
+      <div id="section-audio-file" class="space-y-3 text-xs hidden">
+        <label class="block font-bold text-[#443D39]">رفع ملف صوتي مسجل (MP3 أو WAV):</label>
+        
+        <div class="border-2 border-dashed border-[#DDD5C7] rounded-2xl p-4 text-center bg-[#FAF7F2] space-y-2 hover:border-[#680E23] transition">
+          <input type="file" id="field-audio-file" accept="audio/mp3,audio/wav,audio/ogg,audio/m4a" onchange="handleAudioFileSelect(event)" class="hidden">
+          <button type="button" onclick="document.getElementById('field-audio-file').click()" class="px-4 py-2 bg-white border border-[#DDD5C7] rounded-xl font-bold text-[#680E23] hover:bg-[#FAF0F2] transition shadow-sm">
+            📁 اختر ملف صوتي من جهازك
+          </button>
+          <p id="audio-file-name" class="text-[11px] text-[#8C827A]">يدعم صيغ MP3 و WAV حتى 10 ميجابايت</p>
+        </div>
+
+        <!-- Audio Player Preview Widget -->
+        <div id="audio-preview-container" class="hidden bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl p-3 space-y-1.5">
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="font-bold text-[#443D39]">معاينة الملف الصوتي المعتمد:</span>
+            <span id="audio-source-type" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">جاهز للتشغيل</span>
+          </div>
+          <audio id="audio-player-preview" controls class="w-full h-8"></audio>
+        </div>
+      </div>
+
+      <!-- Action Buttons & Save Feedback -->
+      <div class="pt-4 border-t border-[#EAE3D9] flex flex-wrap items-center justify-between gap-3">
+        <div id="save-status-msg" class="text-xs text-[#6E645D]"></div>
+        <button type="button" onclick="saveBusinessHoursSchedule()" id="btn-save-schedule" class="px-5 py-2.5 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold shadow-md shadow-[#680E23]/20 transition flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>حفظ وتطبيق مواعيد العمل</span>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/business_hours.js' %}"></script>
+{% endblock %}

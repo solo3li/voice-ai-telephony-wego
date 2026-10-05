@@ -1,0 +1,96 @@
+default_user_policy: 'wazo_default_user_policy'
+
+default_policies:
+  wazo_default_user_policy:
+    description: 'Default Wazo policy for user'
+    acl:
+      - 'agentd.users.me.#'
+      - 'auth.users.me.external.#'
+      - 'auth.users.me.password.update'
+      - 'auth.users.me.sessions.*.delete'
+      - 'auth.users.me.sessions.read'
+      - 'auth.users.me.tokens.*.delete'
+      - 'auth.users.me.tokens.read'
+      - 'call-logd.users.me.#'
+      - 'calld.lines.*.presences.read'
+      - 'calld.parkings.#'
+      - 'calld.switchboards.#'
+      - 'calld.transfers.*.complete.update'
+      - 'calld.transfers.*.delete'
+      - 'calld.transfers.*.read'
+      - 'calld.users.me.#'
+      - 'calld.users.me.conferences.*.participants.read'
+      - 'chatd.users.*.presences.read'
+      - 'chatd.users.me.identities.read'
+      - 'chatd.users.me.presences.update'
+      - 'chatd.users.me.rooms.#'
+      - 'chatd.users.presences.read'
+      - 'confd.infos.read'
+      - 'confd.users.me.#.read'
+      - 'confd.users.me.forwards.*'
+      - 'confd.users.me.forwards.*.*'
+      - 'confd.users.me.funckeys.*'
+      - 'confd.users.me.funckeys.*.*'
+      - 'confd.users.me.meetings.#'
+      - 'confd.users.me.read'
+      - 'confd.users.me.services.*.*'
+      - 'confd.users.me.update'
+      - 'confd.users.me.blocklist.*'
+      - 'dird.#.me.read'
+      - 'dird.backends.*.sources.*.contacts.read'
+      - 'dird.directories.*.sources.read'
+      - 'dird.directories.favorites.#'
+      - 'dird.directories.lookup.*.headers.read'
+      - 'dird.directories.lookup.*.read'
+      - 'dird.directories.personal.*.read'
+      - 'dird.graphql.me'
+      - 'dird.personal.#'
+      - 'events.auth.users.me.external.#'
+      - 'events.auth.users.me.sessions.my_session.expire_soon'
+      - 'events.call_log.user.me.created'
+      - 'events.calls.me'
+      - 'events.chat.message.*.me'
+      - 'events.chat.message.*.me.*'
+      - 'events.chatd.users.*.presences.updated'
+      - 'events.chatd.users.me.rooms.#'
+      - 'events.conferences.users.me.#'
+      - 'events.config.users.me.#'
+      - 'events.directory.me.#'
+      - 'events.faxes.outbound.users.me.*'
+      - 'events.parkings.#'
+      - 'events.statuses.*'
+      - 'events.switchboards.#'
+      - 'events.transfers.me'
+      - 'events.users.me.#'
+      - 'events.voicemails.global.messages.#'
+      - 'webhookd.users.me.subscriptions.#'
+      - 'websocketd'
+  wazo_default_admin_policy:
+    description: 'Default Wazo policy for administrator'
+    acl:
+      - 'agentd.#'
+      - 'amid.#'
+      - 'auth.#'
+      - 'call-logd.#'
+      - 'calld.#'
+      - 'chatd.#'
+      - 'confd.#'
+      - 'dird.#'
+      - 'phoned.#'
+      - 'plugind.#'
+      - 'provd.#'
+      - 'webhookd.#'
+
+      - 'events.#'
+      - 'websocketd'
+
+tenant_default_groups:
+  wazo_default_admin_group:
+    policies:
+      wazo_default_admin_policy: true
+
+enabled_metadata_plugins:
+  user_admin_status: true
+
+purpose_metadata_mapping:
+  user: [user_admin_status]

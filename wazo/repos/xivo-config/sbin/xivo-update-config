@@ -1,0 +1,171 @@
+#!/bin/bash
+#
+
+BASE_TEMPLATE_DIR=/usr/share/xivo-config/templates
+CUSTOM_TEMPLATE_DIR=/etc/xivo/custom-templates
+
+set -o allexport
+. /usr/sbin/xivo-read-config
+set +o allexport
+
+# list all variables with the good prefix
+TEMPLATE_VARS="$(compgen -v XIVO_) $(compgen -v _XIVO_)"
+
+
+#### functions used for templating ####
+
+generate_file()
+{
+  local FILE=$1
+
+  for VAR in ${TEMPLATE_VARS}; do
+    VALUE="${!VAR}"
+    if ! sed -ri "s#\#${VAR}\##${VALUE}#g" ${FILE}; then
+      echo "Erreur: ${FILE}"
+      echo sed -ri "s#\#${VAR}\##${VALUE}#g" ${FILE}
+      cat ${FILE}
+    fi
+  done
+}
+
+apply_template_to_file()
+{
+  local RESULT_DIR=$1
+  local FILE_SUBPATH=$2
+  RESULT_FILE=$3
+
+  if [ -z "${RESULT_FILE}" ]; then
+    RESULT_FILE=${RESULT_DIR}/${FILE_SUBPATH}
+  fi
+
+  mkdir -p $(dirname ${RESULT_FILE})
+
+  if [ -e ${BASE_TEMPLATE_DIR}/${FILE_SUBPATH} ]; then
+    cp -a ${BASE_TEMPLATE_DIR}/${FILE_SUBPATH} ${RESULT_FILE}
+  fi
+  if [ -e ${CUSTOM_TEMPLATE_DIR}/${FILE_SUBPATH} ]; then
+    cp -a ${CUSTOM_TEMPLATE_DIR}/${FILE_SUBPATH} ${RESULT_FILE}
+  fi
+
+  generate_file ${RESULT_FILE}
+}
+
+apply_template_to_module()
+{
+  local RESULT_DIR=$1
+  local CONFIG_NAME=$2
+
+  mkdir -p ${RESULT_DIR}
+
+  if [ -e ${BASE_TEMPLATE_DIR}/${CONFIG_NAME} ]; then
+    cp -a ${BASE_TEMPLATE_DIR}/${CONFIG_NAME} ${RESULT_DIR}
+  fi
+  if [ -e ${CUSTOM_TEMPLATE_DIR}/${CONFIG_NAME} ]; then
+    cp -a ${CUSTOM_TEMPLATE_DIR}/${CONFIG_NAME} ${RESULT_DIR}
+  fi
+
+  FILE_LIST=$(find ${RESULT_DIR}/${CONFIG_NAME} -type f -print)
+  for F in ${FILE_LIST}; do
+    generate_file ${F}
+  done
+}
+
+check_diff()
+{
+  local RESULT_DIR=$1
+  local CONFIG_NAME=$2
+
+  local FILE_LIST=$(cd ${RESULT_DIR}/${CONFIG_NAME}; find . -type f -printf "%P\n")
+  for F in ${FILE_LIST}; do
+    if [ ! -e /${F} ]; then
+      return 1
+    fi
+    if ! diff ${RESULT_DIR}/${CONFIG_NAME}/${F} /${F} >/dev/null; then
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+do_apply()
+{
+  local RESULT_DIR=$1
+  local CONFIG_NAME=$2
+  local SYSTEM_DIR=$3
+
+  local RESULT_SUBDIR=${RESULT_DIR}/${CONFIG_NAME}
+  # if SYSTEM_DIR is empty, install into /
+
+  NOT_EXPANDED=$(grep -Er "#[A-Z0-9_]+#" ${RESULT_SUBDIR})
+  if [ -n "${NOT_EXPANDED}" ]; then
+    echo "ERROR: generation from template '${CONFIG_NAME}' failed because all variables could not be expanded:" >&2
+    echo ${NOT_EXPANDED} | cut -d: -f2-
+    return 1
+  fi
+
+  if [ -z "${DEBUG}" ]; then
+    cp -a ${RESULT_SUBDIR}/* ${SYSTEM_DIR}/
+    echo "'${CONFIG_NAME}' configuration UPDATED."
+  else
+    echo "DEBUG: would copy ${RESULT_SUBDIR}/* into ${SYSTEM_DIR}/"
+  fi
+}
+
+do_restart()
+{
+  local CONFIG_NAME=$1
+
+  local SCRIPT
+  if [ -f ${CUSTOM_TEMPLATE_DIR}/${CONFIG_NAME}.restart ]; then
+    SCRIPT=${CUSTOM_TEMPLATE_DIR}/${CONFIG_NAME}.restart
+  elif [ -f ${BASE_TEMPLATE_DIR}/${CONFIG_NAME}.restart ]; then
+    SCRIPT=${BASE_TEMPLATE_DIR}/${CONFIG_NAME}.restart
+  fi
+
+  if [ -z "${DEBUG}" ]; then
+    ${SCRIPT}
+  else
+    echo "DEBUG: would run: ${SCRIPT}"
+  fi
+}
+
+
+#### Apply template for each "configuration module" ####
+
+BASE_RESULT_DIR=$(mktemp -d)
+
+LIST1=$(cd ${BASE_TEMPLATE_DIR}; find . -mindepth 1 -maxdepth 1 -type d -printf "%P\n")
+LIST2=$(cd ${CUSTOM_TEMPLATE_DIR}; find . -mindepth 1 -maxdepth 1 -type d -printf "%P\n")
+LIST=$(echo -e "${LIST1}\n${LIST2}" | sort | uniq)
+
+for P in ${LIST}; do
+  if [ -f ${BASE_TEMPLATE_DIR}/${P}.skip -o -f ${CUSTOM_TEMPLATE_DIR}/${P}.skip ]; then
+    continue
+  fi
+
+  apply_template_to_module ${BASE_RESULT_DIR} ${P}
+  if check_diff ${BASE_RESULT_DIR} ${P}; then
+    echo "'${P}' configuration OK, skipping."
+  else
+    if do_apply ${BASE_RESULT_DIR} ${P}; then
+      do_restart ${P}
+    fi
+  fi
+done
+
+if [ "${XIVO_DHCP_ACTIVE}" = "1" ]; then
+  update-rc.d isc-dhcp-server defaults > /dev/null
+else
+  update-rc.d isc-dhcp-server remove > /dev/null
+fi
+
+#### cleanup ####
+
+if [ -z "${DEBUG}" ]; then
+  rm -rf ${BASE_RESULT_DIR}
+else
+  echo "DEBUG: generated files can be found here: ${BASE_RESULT_DIR}"
+fi
+
+echo "DONE"

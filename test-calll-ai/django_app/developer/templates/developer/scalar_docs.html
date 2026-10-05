@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}" dir="{% if is_ar %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if is_ar %}المساعد الصوتي الذكي | توثيق المطورين المباشر (Scalar API Reference){% else %}AI Voice Assistant | Developer API Reference (Scalar){% endif %}</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              canvas: '#FAF7F2',
+              primary: '#680E23',
+              primaryHover: '#520B1C',
+              gold: '#D4AF37',
+              goldHover: '#B8972E',
+              dark: '#1C1917',
+              muted: '#78716C',
+              surface: '#FFFFFF',
+              border: '#E7E5E4'
+            }
+          },
+          fontFamily: {
+            tajawal: ['Tajawal', 'sans-serif'],
+            inter: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FAF7F2;
+      color: #1C1917;
+      font-family: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif{% endif %};
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Scalar API Reference Custom Theme (Burgundy & Warm Off-White) */
+    :root, .scalar-api-reference, .light-mode {
+      --scalar-font: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', sans-serif{% endif %} !important;
+      --scalar-font-code: 'Inter', monospace !important;
+      
+      /* Brand Color Palette */
+      --scalar-color-1: #1C1917 !important;
+      --scalar-color-2: #78716C !important;
+      --scalar-color-3: #A8A29E !important;
+      --scalar-color-accent: #680E23 !important;
+      
+      /* Backgrounds */
+      --scalar-background-1: #FAF7F2 !important;
+      --scalar-background-2: #FFFFFF !important;
+      --scalar-background-3: #F5EFEB !important;
+      --scalar-background-accent: #680E23 !important;
+      
+      /* Borders & Dividers */
+      --scalar-border-color: #E7E5E4 !important;
+      
+      /* Buttons */
+      --scalar-button-1: #680E23 !important;
+      --scalar-button-1-hover: #520B1C !important;
+      --scalar-button-1-color: #FFFFFF !important;
+
+      /* Sidebar & Badges */
+      --scalar-sidebar-background-1: #FAF7F2 !important;
+      --scalar-sidebar-item-hover-background: #F5EFEB !important;
+      --scalar-sidebar-item-active-background: #FFFFFF !important;
+      --scalar-sidebar-color-1: #1C1917 !important;
+      --scalar-sidebar-color-2: #78716C !important;
+      --scalar-sidebar-border-color: #E7E5E4 !important;
+      
+      /* Code and Pre */
+      --scalar-code-background: #181514 !important;
+      --scalar-code-color: #FEE2E2 !important;
+    }
+
+    /* Clean Sidebar: Hide Models, Generate MCP, and Powered by Scalar */
+    .darklight-reference,
+    .scalar-mcp-layer,
+    .scalar-mcp-layer-link,
+    .mcp-nav,
+    .mcp-logo,
+    .references-footer,
+    a[href*="scalar.com"] {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      max-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* Navbar styling */
+    .top-nav {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #E7E5E4;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-brand-canvas text-brand-dark">
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="top-nav sticky top-0 z-50 px-4 lg:px-8 py-3.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Mode Title -->
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2 text-brand-primary font-bold text-lg hover:opacity-90 transition">
+          <span class="text-2xl">🎙️</span>
+          <span>{% if is_ar %}المساعد الصوتي الذكي{% else %}AI Voice Assistant{% endif %}</span>
+        </a>
+        <span class="bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-xs px-2.5 py-0.5 rounded-full font-bold">
+          Developer Voice API v1
+        </span>
+        <span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+          <span>⚡</span><span>{% if is_ar %}مشغّل Scalar التفاعلي{% else %}Scalar Interactive Docs{% endif %}</span>
+        </span>
+      </div>
+
+      <!-- Action Buttons & Key Info -->
+      <div class="flex items-center flex-wrap gap-2.5 text-xs font-bold">
+
+        <!-- Language Switcher Button -->
+        <button onclick="toggleLanguage()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-border bg-white text-brand-dark hover:border-brand-primary hover:text-brand-primary transition shadow-sm font-bold text-xs" title="{% if is_ar %}Switch to English{% else %}التحويل للغة العربية{% endif %}">
+          <span class="text-sm">🌐</span>
+          <span>{% if is_ar %}English{% else %}العربية{% endif %}</span>
+        </button>
+
+        <!-- User API Key Badge (if authenticated) -->
+        {% if user_api_key %}
+        <div class="flex items-center gap-1.5 bg-brand-canvas border border-brand-border px-3 py-1.5 rounded-lg text-brand-dark font-mono">
+          <span class="text-brand-muted font-sans">{% if is_ar %}مفتاحك:{% else %}Your Key:{% endif %}</span>
+          <span>{{ user_api_key|slice:":15" }}...</span>
+          <button onclick="copyUserKey('{{ user_api_key }}')" class="hover:text-brand-primary px-1 font-sans text-brand-primary" title="{% if is_ar %}نسخ المفتاح{% else %}Copy Key{% endif %}">{% if is_ar %}نسخ{% else %}Copy{% endif %}</button>
+        </div>
+        {% endif %}
+
+        <!-- Return to Dashboard -->
+        <a href="/#tab-developer" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-primary text-white hover:bg-brand-primaryHover transition shadow-sm">
+          <span>{% if is_ar %}العودة للوحة التحكم{% else %}Back to Dashboard{% endif %}</span>
+          <span>{% if is_ar %}&larr;{% else %}&rarr;{% endif %}</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Scalar API Reference Interactive Container -->
+  <main class="flex-1 w-full max-w-7xl mx-auto py-4 px-2 sm:px-4 min-h-[calc(100vh-140px)]">
+    <script
+      id="api-reference"
+      data-url="/api/v1/docs/openapi.json?lang={{ current_lang }}"
+      data-configuration='{
+        "theme": "none",
+        "layout": "modern",
+        "proxyUrl": "",
+        "forceDarkModeState": "light",
+        "hideDarkModeToggle": true,
+        "hideModels": true,
+        "showSidebar": true,
+        "searchHotKey": "k",
+        "mcp": {
+          "disabled": true
+        },
+        "customCss": ".darklight-reference, .references-footer, .scalar-mcp-layer, .scalar-mcp-layer-link, .mcp-nav, .mcp-logo, a[href*=\"scalar.com\"] { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; }",
+        "authentication": {
+          "preferredSecurityScheme": "UserApiKey",
+          "apiKey": {
+            "token": "{{ user_api_key|default:"" }}"
+          }
+        }
+      }'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+  </main>
+
+  <footer class="bg-white border-t border-brand-border py-4 text-center text-xs text-brand-muted">
+    {% if is_ar %}
+    منظومة المساعد الصوتي الذكي للمطورين &copy; 2026. واجهة التوثيق التفاعلية المدمجة عبر Scalar.
+    {% else %}
+    Voice AI Developer API Platform &copy; 2026. Interactive OpenAPI documentation powered by Scalar.
+    {% endif %}
+  </footer>
+
+  <script>
+    function copyUserKey(key) {
+      navigator.clipboard.writeText(key).then(() => {
+        const msg = "{% if is_ar %}تم نسخ مفتاح API بنجاح لاستخدامه في طلباتك وتطبيقاتك.{% else %}API key copied successfully for use in your applications.{% endif %}";
+        alert(msg);
+      });
+    }
+
+    function toggleLanguage() {
+      const nextLang = "{% if is_ar %}en{% else %}ar{% endif %}";
+      localStorage.setItem('user_docs_lang', nextLang);
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', nextLang);
+      window.location.href = url.toString();
+    }
+
+    // Align with saved language preference if no query parameter is explicitly provided
+    (function initLanguagePreference() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('lang')) {
+        const savedLang = localStorage.getItem('user_docs_lang');
+        if (savedLang && (savedLang === 'en' || savedLang === 'ar') && savedLang !== '{{ current_lang }}') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('lang', savedLang);
+          window.location.replace(url.toString());
+        }
+      }
+    })();
+
+    function safeHideSidebarFooters() {
+      const selectors = [
+        '.darklight-reference',
+        '.references-footer',
+        '.scalar-mcp-layer',
+        '.scalar-mcp-layer-link',
+        '.mcp-nav',
+        'a[href*="scalar.com"]'
+      ];
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          el.style.setProperty('display', 'none', 'important');
+        });
+      });
+    }
+
+    window.addEventListener('load', safeHideSidebarFooters);
+    setInterval(safeHideSidebarFooters, 1000);
+  </script>
+</body>
+</html>

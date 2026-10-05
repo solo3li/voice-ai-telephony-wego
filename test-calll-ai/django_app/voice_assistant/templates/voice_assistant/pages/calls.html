@@ -1,0 +1,207 @@
+{% extends "voice_assistant/base.html" %}
+{% load static %}
+
+{% block title %}سجل المكالمات (CDR) و التسجيلات{% endblock %}
+
+{% block content %}
+<!-- Calls Header Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm">
+  <div>
+    <h3 class="text-lg font-bold text-[#680E23] flex items-center gap-2">
+      <span>📋</span> <span data-i18n="calls_title">سجل كافة المكالمات (CDR)</span>
+    </h3>
+    <p class="text-xs text-[#6E645D] mt-1" data-i18n="calls_subtitle">عرض شامل لكافة المكالمات الواردة والصادرة مع فلاتر ذكية وإحصائيات الاستهلاك المالي ومشغل التسجيلات</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button type="button" onclick="loadCallsList()" class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+      <span>🔄</span> <span>تحديث السجل</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filtered Metrics Summary Banner -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]" data-i18n="calls_stat_total">إجمالي المكالمات</span>
+    <p id="calls-stat-total" class="text-2xl font-bold font-mono text-[#680E23] mt-1">0</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]" data-i18n="calls_stat_minutes">الدقائق المحتسبة (Ceiling)</span>
+    <p id="calls-stat-minutes" class="text-2xl font-bold font-mono text-[#1C1917] mt-1">0 د</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]" data-i18n="calls_stat_cost">التكلفة الإجمالية</span>
+    <p id="calls-stat-cost" class="text-2xl font-bold font-mono text-emerald-700 mt-1">$0.00</p>
+  </div>
+  <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] shadow-sm">
+    <span class="text-xs text-[#8C827A]">إجمالي الثواني الصوتية</span>
+    <p id="calls-stat-seconds" class="text-2xl font-bold font-mono text-[#6E645D] mt-1">0 ث</p>
+  </div>
+</div>
+
+<!-- Advanced Filter Toolbar -->
+<div class="p-5 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAE3D9]">
+    <h4 class="font-bold text-[#1C1917] text-xs flex items-center gap-1.5">
+      <span>🔍</span> <span>فلاتر البحث والتصفية المتقدمة (CDR Filters)</span>
+    </h4>
+    <button type="button" onclick="resetCallsFilter()" class="text-xs text-[#680E23] hover:underline font-semibold flex items-center gap-1">
+      <span>✕ إعادة تعيين الفلاتر</span>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+    <!-- Search Input -->
+    <div class="md:col-span-2">
+      <label class="block font-semibold text-[#443D39] mb-1">بحث نصي</label>
+      <div class="relative">
+        <input 
+          type="text" 
+          id="filter-calls-search" 
+          placeholder="رقم الهاتف، اسم العميل، اسم الغرفة، أو الهدف..." 
+          oninput="debounceCallsFilter()"
+          class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]"
+        />
+      </div>
+    </div>
+
+    <!-- Direction Filter -->
+    <div>
+      <label class="block font-semibold text-[#443D39] mb-1" data-i18n="calls_filter_direction">اتجاه المكالمة</label>
+      <select id="filter-calls-direction" onchange="loadCallsList()" class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]">
+        <option value="all">جميع الاتجاهات</option>
+        <option value="inbound">مكالمة واردة</option>
+        <option value="outbound_ai">صادرة (ذكاء اصطناعي)</option>
+        <option value="outbound_agent">صادرة (موظف)</option>
+      </select>
+    </div>
+
+    <!-- Duration Filter -->
+    <div>
+      <label class="block font-semibold text-[#443D39] mb-1" data-i18n="calls_filter_duration">مدة المكالمة</label>
+      <select id="filter-calls-duration" onchange="loadCallsList()" class="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]">
+        <option value="all">جميع المدد</option>
+        <option value="under_1m">أقل من دقيقة (&lt; 60ث)</option>
+        <option value="1m_to_5m">من 1 إلى 5 دقائق</option>
+        <option value="over_5m">أكثر من 5 دقائق</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Date Preset Quick Pills -->
+  <div class="flex flex-wrap items-center gap-2 pt-1">
+    <span class="text-xs font-semibold text-[#6E645D]" data-i18n="calls_filter_date">النطاق الزمني:</span>
+    <button type="button" onclick="setCallsDatePreset('all')" id="btn-preset-all" class="preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#680E23] text-white transition">الكل</button>
+    <button type="button" onclick="setCallsDatePreset('today')" id="btn-preset-today" class="preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition">اليوم</button>
+    <button type="button" onclick="setCallsDatePreset('last_7_days')" id="btn-preset-last_7_days" class="preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition">آخر 7 أيام</button>
+    <button type="button" onclick="setCallsDatePreset('this_month')" id="btn-preset-this_month" class="preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition">هذا الشهر</button>
+  </div>
+</div>
+
+<!-- Calls Data Table -->
+<div class="p-6 rounded-3xl bg-white border border-[#EAE3D9] shadow-sm space-y-4">
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-start">
+      <thead>
+        <tr class="border-b border-[#EAE3D9] bg-[#FAF7F2] text-[#6E645D]">
+          <th class="py-3 px-4 text-start font-bold">وقت المكالمة</th>
+          <th class="py-3 px-4 text-start font-bold">الاتجاه</th>
+          <th class="py-3 px-4 text-start font-bold">الطرف / العميل</th>
+          <th class="py-3 px-4 text-start font-bold">الغرفة / المساعد</th>
+          <th class="py-3 px-4 text-start font-bold">المدة الفعلية</th>
+          <th class="py-3 px-4 text-start font-bold">الدقائق المحتسبة</th>
+          <th class="py-3 px-4 text-start font-bold">التكلفة</th>
+          <th class="py-3 px-4 text-start font-bold">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="calls-table-tbody" class="divide-y divide-[#EAE3D9]">
+        <tr>
+          <td colspan="8" class="py-8 text-center text-[#8C827A]">
+            جاري تحميل سجل المكالمات...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Call Details & Transcript Modal with Audio Player -->
+<div id="call-detail-modal" class="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9] shrink-0">
+      <div>
+        <h3 id="cdm-title" class="text-base font-bold text-[#680E23] flex items-center gap-2">
+          <span>📞</span> <span>تفاصيل المكالمة والملخص الذكي</span>
+        </h3>
+        <p id="cdm-subtitle" class="text-xs text-[#8C827A] mt-0.5">جلسة المكالمة</p>
+      </div>
+      <button type="button" onclick="closeCallDetailModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <div class="overflow-y-auto space-y-4 flex-1 pe-1">
+      <!-- Financial & Duration Highlights -->
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7]">
+          <span class="text-[10px] text-[#8C827A] block">المدة الفعلية</span>
+          <span id="cdm-duration" class="font-mono font-bold text-[#1C1917]">00:00</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7]">
+          <span class="text-[10px] text-[#8C827A] block">الدقائق المحتسبة</span>
+          <span id="cdm-billed-mins" class="font-mono font-bold text-[#680E23]">0 دقيقة</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7]">
+          <span class="text-[10px] text-[#8C827A] block">التكلفة</span>
+          <span id="cdm-cost" class="font-mono font-bold text-emerald-700">$0.00</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7]">
+          <span class="text-[10px] text-[#8C827A] block">الاتجاه</span>
+          <span id="cdm-direction" class="font-semibold text-[#1C1917]">واردة</span>
+        </div>
+      </div>
+
+      <!-- Call Recording Audio Player -->
+      <div id="cdm-recording-section" class="p-3.5 rounded-2xl bg-[#FAF0F2] border border-[#E8CCD2] space-y-2 hidden">
+        <div class="flex items-center justify-between">
+          <h5 class="font-bold text-[#680E23] text-xs flex items-center gap-1.5">
+            <span>🎙️</span> <span>تسجيل المكالمة الصوتي (Audio Recording):</span>
+          </h5>
+          <a id="cdm-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-lg bg-[#680E23] hover:bg-[#520B1C] text-white text-[11px] font-semibold transition inline-flex items-center gap-1 shadow-sm">
+            <span>⬇️</span> <span>تحميل MP3</span>
+          </a>
+        </div>
+        <audio id="cdm-audio-player" controls preload="none" class="w-full h-8 rounded-lg outline-none"></audio>
+      </div>
+
+      <!-- Call Summary -->
+      <div class="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] space-y-1.5">
+        <h5 class="font-bold text-[#680E23] text-xs flex items-center gap-1.5">
+          <span>💡</span> <span>ملخص المكالمة التراكمي (AI Summary):</span>
+        </h5>
+        <p id="cdm-summary" class="text-[#443D39] text-xs leading-relaxed">
+          لا يوجد ملخص مسجل لهذه المكالمة.
+        </p>
+      </div>
+
+      <!-- Full Transcript -->
+      <div class="space-y-2">
+        <h5 class="font-bold text-[#1C1917] text-xs flex items-center gap-1.5">
+          <span>📝</span> <span>نص المحادثة الكامل (Full Transcript):</span>
+        </h5>
+        <div id="cdm-transcript" class="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#DDD5C7] text-xs leading-relaxed text-[#1C1917] max-h-48 overflow-y-auto whitespace-pre-wrap font-sans">
+          لا يوجد نص مفرغ متاح.
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-3 border-t border-[#EAE3D9] shrink-0">
+      <button type="button" onclick="closeCallDetailModal()" class="px-4 py-2 rounded-xl bg-[#680E23] text-white font-semibold transition">إغلاق</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/calls.js' %}"></script>
+{% endblock %}
