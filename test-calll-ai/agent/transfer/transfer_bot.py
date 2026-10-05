@@ -50,10 +50,20 @@ async def execute_wazo_sip_blind_transfer(
         if not part_identity:
             try:
                 parts_res = await lk.room.list_participants(api.ListParticipantsRequest(room=room_name))
-                for p in parts_res.participants:
-                    if not p.identity.startswith("ai-") and not p.identity.startswith("transfer-"):
-                        part_identity = p.identity
-                        break
+                sip_candidates = [
+                    p.identity for p in parts_res.participants
+                    if p.identity.startswith("sip_")
+                ]
+                if caller_phone and f"sip_{caller_phone}" in sip_candidates:
+                    part_identity = f"sip_{caller_phone}"
+                elif sip_candidates:
+                    part_identity = sip_candidates[0]
+                else:
+                    for p in parts_res.participants:
+                        ident = p.identity or ""
+                        if not ident.startswith(("ai-", "transfer-", "queue-", "EG_", "egress-", "recorder-", "pipecat-")):
+                            part_identity = ident
+                            break
             except Exception as e:
                 logger.warning(f"[WAZO SIP TRANSFER] Error listing participants in room {room_name}: {e}")
 

@@ -377,13 +377,15 @@ async def run_agent_session(
                                     await asyncio.sleep(0.3)
 
                                     pt = session_state.pending_transfer
+                                    target_ident = f"sip_{caller_phone}" if caller_phone else None
                                     track_background_task(asyncio.create_task(execute_ai_transfer_and_hold(
                                         room_name=room_name,
                                         user_id=user_id,
                                         queue_code=pt["queue_code"],
                                         caller_phone=caller_phone,
                                         caller_name="العميل",
-                                        reason=pt.get("reason", "")
+                                        reason=pt.get("reason", ""),
+                                        target_participant_identity=target_ident
                                     )))
                                     logger.info(f"AI voice agent transfer launched. Exiting Voice Agent cleanly from room '{room_name}'.")
                                     stop_event.set()
