@@ -364,9 +364,30 @@ def livekit_webhook(request):
                     caller_ext = ""
                     part_attrs = getattr(event.participant, "attributes", {}) or {}
                     if isinstance(part_attrs, dict):
-                        call_to = part_attrs.get("sip.callTo") or part_attrs.get("sip.phoneNumber") or ""
-                        wazo_ctx = part_attrs.get("sip.h.X-Wazo-Tenant-Context") or part_attrs.get("X-Wazo-Tenant-Context") or ""
-                        caller_ext = part_attrs.get("sip.h.X-Wazo-Caller-Ext") or part_attrs.get("X-Wazo-Caller-Ext") or ""
+                        l_attrs = {str(k).lower(): str(v) for k, v in part_attrs.items()}
+                        call_to = (
+                            part_attrs.get("sip.callTo")
+                            or part_attrs.get("sip.phoneNumber")
+                            or l_attrs.get("sip.callto")
+                            or l_attrs.get("sip.phonenumber")
+                            or ""
+                        )
+                        wazo_ctx = (
+                            part_attrs.get("sip.h.X-Wazo-Tenant-Context")
+                            or part_attrs.get("X-Wazo-Tenant-Context")
+                            or l_attrs.get("sip.h.x-wazo-tenant-context")
+                            or l_attrs.get("x-wazo-tenant-context")
+                            or ""
+                        )
+                        caller_ext = (
+                            part_attrs.get("sip.h.X-Wazo-Caller-Ext")
+                            or part_attrs.get("X-Wazo-Caller-Ext")
+                            or l_attrs.get("sip.h.x-wazo-caller-ext")
+                            or l_attrs.get("x-wazo-caller-ext")
+                            or part_attrs.get("sip.callerId")
+                            or l_attrs.get("sip.callerid")
+                            or ""
+                        )
 
                     # 1. Check if this is an internal employee call (e.g. dialed 999 or has Wazo Context)
                     if call_to in ("999", "sip:999") or "999" in room_name or wazo_ctx or (caller_ext and len(caller_ext) <= 4):

@@ -182,7 +182,7 @@ class WazoClient:
                     break
                 buf += chunk
 
-            # Send reload command
+            # Send reload res_pjsip command
             cmd_req = "Action: Command\r\nCommand: module reload res_pjsip.so\r\n\r\n"
             s.sendall(cmd_req.encode())
             buf = b""
@@ -192,8 +192,18 @@ class WazoClient:
                     break
                 buf += chunk
 
+            # Send dialplan reload command so new extensions and contexts are active
+            cmd_dp = "Action: Command\r\nCommand: dialplan reload\r\n\r\n"
+            s.sendall(cmd_dp.encode())
+            buf = b""
+            while b"\r\n\r\n" not in buf:
+                chunk = s.recv(2048)
+                if not chunk:
+                    break
+                buf += chunk
+
             s.close()
-            logger.info("[WazoClient] Asterisk res_pjsip reloaded successfully via AMI")
+            logger.info("[WazoClient] Asterisk res_pjsip and dialplan reloaded successfully via AMI")
             return True
         except Exception as e:
             logger.warning(f"[WazoClient] Could not reload Asterisk res_pjsip via AMI: {e}")
