@@ -53,6 +53,11 @@ class EmployeeProfile(models.Model):
         return False
 
     def to_dict(self):
+        from django.conf import settings
+        effective_host = self.sip_host
+        if not effective_host or effective_host in ('asterisk', '127.0.0.1', 'localhost'):
+            effective_host = getattr(settings, 'EXTERNAL_IP', '169.58.32.179')
+
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -67,12 +72,14 @@ class EmployeeProfile(models.Model):
             "push_token": self.push_token,
             "wazo_user_uuid": self.wazo_user_uuid,
             "wazo_line_id": self.wazo_line_id,
-            "sip_username": self.sip_username,
+            "sip_username": self.sip_username or f"emp{self.extension}",
             "sip_password": self.sip_password,
-            "sip_host": self.sip_host,
+            "sip_host": effective_host,
             "sip_port": self.sip_port,
             "sip_credentials": {
-                "server": f"{self.sip_host}:{self.sip_port}" if self.sip_host else f"127.0.0.1:{self.sip_port}",
+                "server": f"{effective_host}:{self.sip_port}",
+                "host": effective_host,
+                "port": self.sip_port,
                 "username": self.sip_username or f"emp{self.extension}",
                 "password": self.sip_password or "******",
                 "extension": self.extension

@@ -16,8 +16,13 @@ WAZO_AUTH_URL = os.getenv("WAZO_AUTH_URL", "http://auth:9497/0.1")
 WAZO_CONFD_URL = os.getenv("WAZO_CONFD_URL", "http://confd:9486/1.1")
 WAZO_AUTH_USER = os.getenv("WAZO_AUTH_USER", "wazo-auth-cli")
 WAZO_AUTH_PASSWORD = os.getenv("WAZO_AUTH_PASSWORD", "secret")
-WAZO_SIP_HOST = os.getenv("WAZO_SIP_HOST", os.getenv("EXTERNAL_IP", "127.0.0.1"))
+WAZO_SIP_HOST = os.getenv("WAZO_SIP_HOST", "asterisk")
+WAZO_EXTERNAL_SIP_HOST = os.getenv("WAZO_EXTERNAL_SIP_HOST", os.getenv("EXTERNAL_IP", "169.58.32.179"))
 WAZO_SIP_PORT = int(os.getenv("WAZO_SIP_PORT", "5070"))
+WAZO_AMI_HOST = os.getenv("WAZO_AMI_HOST", "asterisk")
+WAZO_AMI_PORT = int(os.getenv("WAZO_AMI_PORT", "5038"))
+WAZO_AMI_USER = os.getenv("WAZO_AMI_USER", "wazo_amid")
+WAZO_AMI_SECRET = os.getenv("WAZO_AMI_SECRET", "eeCho8ied3u")
 
 
 class WazoClient:
@@ -158,18 +163,106 @@ class WazoClient:
             logger.warning(f"[WazoClient] Error fetching contexts: {e}")
         return "default"
 
-    def create_line(self, context: Optional[str] = None) -> Dict[str, Any]:
-        """Create a PJSIP line in Wazo."""
+    def reload_asterisk_pjsip(self) -> bool:
+        """Issue AMI module reload res_pjsip.so to activate newly created credentials in Asterisk."""
+        try:
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(3.0)
+            s.connect((WAZO_AMI_HOST, WAZO_AMI_PORT))
+            s.recv(1024)
+
+            # Login
+            login_req = f"Action: Login\r\nUsername: {WAZO_AMI_USER}\r\nSecret: {WAZO_AMI_SECRET}\r\n\r\n"
+            s.sendall(login_req.encode())
+            buf = b""
+            while b"\r\n\r\n" not in buf:
+                chunk = s.recv(2048)
+                if not chunk:
+                    break
+                buf += chunk
+
+            # Send reload command
+            cmd_req = "Action: Command\r\nCommand: module reload res_pjsip.so\r\n\r\n"
+            s.sendall(cmd_req.encode())
+            buf = b""
+            while b"\r\n\r\n" not in buf:
+                chunk = s.recv(2048)
+                if not chunk:
+                    break
+                buf += chunk
+
+            s.close()
+            logger.info("[WazoClient] Asterisk res_pjsip reloaded successfully via AMI")
+            return True
+        except Exception as e:
+            logger.warning(f"[WazoClient] Could not reload Asterisk res_pjsip via AMI: {e}")
+            return False
+
+    def get_global_template_uuid(self) -> Optional[str]:
+        """Fetch the UUID of the global SIP endpoint template in Wazo."""
+        if hasattr(self, "_cached_global_template") and self._cached_global_template:
+            return self._cached_global_template
+        url = f"{self.confd_url}/endpoints/sip/templates?recurse=true"
+        try:
+            resp = requests.get(url, headers=self._headers(), timeout=self.timeout)
+            if resp.status_code == 200:
+                for item in resp.json().get("items", []):
+                    if item.get("label") == "global":
+                        self._cached_global_template = item.get("uuid")
+                        return self._cached_global_template
+        except Exception as e:
+            logger.warning(f"[WazoClient] Failed to fetch SIP templates: {e}")
+        return "5fdf9ed6-64b4-4bb9-835b-5684ae84e07d"
+
+    def attach_global_template(self, ep_uuid: str) -> bool:
+        """Attach global template to an endpoint to enable UDP transport, audio codecs, and AoR."""
+        template_uuid = self.get_global_template_uuid()
+        if not template_uuid:
+            return False
+        url = f"{self.confd_url}/endpoints/sip/{ep_uuid}"
+        payload = {"templates": [{"uuid": str(template_uuid)}]}
+        try:
+            resp = requests.put(url, headers=self._headers(), json=payload, timeout=self.timeout)
+            return resp.status_code in (200, 204)
+        except Exception as e:
+            logger.warning(f"[WazoClient] attach_global_template error: {e}")
+            return False
+
+    def create_line(
+        self,
+        context: Optional[str] = None,
+        sip_user: Optional[str] = None,
+        sip_pass: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Create a PJSIP line in Wazo with custom credentials if provided."""
         ctx = context if (context and context != "default") else self.get_default_context()
         url = f"{self.confd_url}/lines"
         payload = {
             "context": ctx,
             "protocol": "sip"
         }
+        if sip_user and sip_pass:
+            payload["endpoint_sip"] = {
+                "name": str(sip_user),
+                "label": str(sip_user),
+                "auth_section_options": [
+                    ["username", str(sip_user)],
+                    ["password", str(sip_pass)],
+                    ["auth_type", "userpass"]
+                ],
+                "aor_section_options": [
+                    ["max_contacts", "5"]
+                ]
+            }
         try:
             resp = requests.post(url, headers=self._headers(), json=payload, timeout=self.timeout)
             if resp.status_code in (200, 201):
-                return resp.json()
+                data = resp.json()
+                ep = data.get("endpoint_sip")
+                if ep and ep.get("uuid"):
+                    self.attach_global_template(ep["uuid"])
+                return data
             logger.warning(f"[WazoClient] create_line failed ({resp.status_code}): {resp.text}")
         except Exception as e:
             logger.warning(f"[WazoClient] create_line connection error: {e}")
@@ -225,7 +318,8 @@ class WazoClient:
     ) -> Dict[str, Any]:
         """
         All-in-one headless employee provisioning in Wazo.
-        Creates User, Line, Extension, links them, and returns SIP connection details for softphones/IP phones.
+        Creates User, Line with custom credentials, Extension, links them,
+        reloads Asterisk PJSIP, and returns SIP connection details for softphones/IP phones.
         """
         ctx = context if (context and context != "default") else self.get_default_context()
         sip_user = f"emp{extension}"
@@ -234,7 +328,7 @@ class WazoClient:
         user_data = self.create_user(firstname=display_name)
         user_uuid = user_data.get("uuid", f"sim-usr-{extension}")
 
-        line_data = self.create_line(context=ctx)
+        line_data = self.create_line(context=ctx, sip_user=sip_user, sip_pass=sip_pass)
         line_id = line_data.get("id", 1001)
 
         ext_data = self.create_extension(exten=extension, context=ctx)
@@ -242,6 +336,9 @@ class WazoClient:
 
         self.link_user_line(user_uuid, line_id)
         self.link_line_extension(line_id, ext_id)
+
+        # Trigger live reload of Asterisk PJSIP so credentials and AoR are active immediately
+        self.reload_asterisk_pjsip()
 
         # Extract PJSIP endpoint details if returned by Wazo, else build standard credentials
         endpoint = line_data.get("endpoint_sip") or {}
@@ -257,7 +354,7 @@ class WazoClient:
             "wazo_extension_id": str(ext_id),
             "sip_username": sip_user,
             "sip_password": sip_pass,
-            "sip_host": WAZO_SIP_HOST,
+            "sip_host": WAZO_EXTERNAL_SIP_HOST,
             "sip_port": WAZO_SIP_PORT,
             "extension": str(extension),
             "display_name": display_name,

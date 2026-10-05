@@ -763,7 +763,11 @@ function openSipCredentialsModal(empId) {
   const creds = emp.sip_credentials || {};
   document.getElementById('sip-modal-name').textContent = emp.display_name || 'الموظف';
   document.getElementById('sip-modal-ext').textContent = emp.extension || '';
-  document.getElementById('sip-modal-server').value = creds.host || emp.sip_host || window.location.hostname || '169.58.32.179';
+  let srvHost = creds.host || emp.sip_host;
+  if (!srvHost || srvHost === 'asterisk' || srvHost === '127.0.0.1' || srvHost === 'localhost') {
+    srvHost = '169.58.32.179';
+  }
+  document.getElementById('sip-modal-server').value = srvHost;
   document.getElementById('sip-modal-port').value = creds.port || emp.sip_port || 5070;
   document.getElementById('sip-modal-username').value = creds.username || emp.sip_username || ('emp' + emp.extension);
   document.getElementById('sip-modal-password').value = creds.password || emp.sip_password || '********';
