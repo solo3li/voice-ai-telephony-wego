@@ -100,6 +100,8 @@ services:
       - centrifugo
       - livekit
       - minio
+    ports:
+      - "8000:8000"
     networks:
       - voice_net
 
