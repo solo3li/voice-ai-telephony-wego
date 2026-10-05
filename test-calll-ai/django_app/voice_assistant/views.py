@@ -389,6 +389,20 @@ def livekit_webhook(request):
                             or ""
                         )
 
+                    # Fallback: extract caller_ext from room_name (e.g. sip_999__110_xyz) or participant_identity (sip_110)
+                    if not caller_ext:
+                        if "__" in room_name:
+                            try:
+                                candidate = room_name.split("__", 1)[1].split("_")[0]
+                                if candidate.isdigit() and len(candidate) <= 6:
+                                    caller_ext = candidate
+                            except Exception:
+                                pass
+                        if not caller_ext and str(participant_identity).startswith("sip_"):
+                            cand = str(participant_identity).replace("sip_sip_", "").replace("sip_", "").split("@")[0]
+                            if cand.isdigit() and len(cand) <= 6:
+                                caller_ext = cand
+
                     # 1. Check if this is an internal employee call (e.g. dialed 999 or has Wazo Context)
                     if call_to in ("999", "sip:999") or "999" in room_name or wazo_ctx or (caller_ext and len(caller_ext) <= 4):
                         tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)

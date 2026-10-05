@@ -146,15 +146,7 @@ async def run_off_hours_session(
                 async with client.aio.live.connect(model=GEMINI_LIVE_MODEL, config=live_config) as session:
                     # Instruct Gemini to speak the exact off-hours text
                     prompt = f"المتصل اتصل بالشركة خارج مواعيد العمل. انطق له هذه الرسالة بدقة: '{ai_message}'"
-                    await session.send_client_content(
-                        turns=[
-                            types.Content(
-                                role="user",
-                                parts=[types.Part(text=prompt)]
-                            )
-                        ],
-                        turn_complete=True
-                    )
+                    await session.send_realtime_input(text=prompt)
 
                     # Stream output audio until turn completes
                     async for response in session.receive():

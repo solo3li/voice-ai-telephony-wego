@@ -418,6 +418,30 @@ class WazoClient:
             "strategy": ast_strategy
         }
 
+    def add_queue_member(self, queue_id: Any, user_uuid: str, priority: int = 0) -> bool:
+        """Associate user to queue in Wazo."""
+        if not str(queue_id).isdigit() or not user_uuid or str(user_uuid).startswith("sim-"):
+            return True
+        url = f"{self.confd_url}/queues/{queue_id}/members/users/{user_uuid}"
+        try:
+            resp = requests.put(url, json={"priority": priority}, headers=self._headers(), timeout=self.timeout)
+            return resp.status_code in (200, 204)
+        except Exception as e:
+            logger.warning(f"[WazoClient] add_queue_member error: {e}")
+            return False
+
+    def remove_queue_member(self, queue_id: Any, user_uuid: str) -> bool:
+        """Dissociate user from queue in Wazo."""
+        if not str(queue_id).isdigit() or not user_uuid or str(user_uuid).startswith("sim-"):
+            return True
+        url = f"{self.confd_url}/queues/{queue_id}/members/users/{user_uuid}"
+        try:
+            resp = requests.delete(url, headers=self._headers(), timeout=self.timeout)
+            return resp.status_code in (200, 204)
+        except Exception as e:
+            logger.warning(f"[WazoClient] remove_queue_member error: {e}")
+            return False
+
     def delete_queue(self, queue_id: Any) -> bool:
         """Delete queue in Wazo."""
         if str(queue_id).startswith("sim-") or not str(queue_id).isdigit():

@@ -635,6 +635,11 @@ def create_call_queue(request):
                     order=order_idx,
                     is_active=True
                 )
+                if queue.wazo_queue_id and emp.wazo_user_uuid:
+                    try:
+                        wazo_client.add_queue_member(queue.wazo_queue_id, emp.wazo_user_uuid, priority=order_idx)
+                    except Exception as member_err:
+                        logger.warning(f"Failed to sync member {emp.extension} to Wazo queue {queue.wazo_queue_id}: {member_err}")
 
         return JsonResponse({
             "status": "success",
@@ -671,6 +676,35 @@ def update_call_queue(request, queue_id):
             queue.ring_timeout_seconds = int(data.get('ring_timeout_seconds'))
         if 'total_timeout_seconds' in data:
             queue.total_timeout_seconds = int(data.get('total_timeout_seconds'))
+
+        if 'member_ids' in data or request.POST.getlist('member_ids'):
+            member_ids = request.POST.getlist('member_ids') or data.get('member_ids', [])
+            if not isinstance(member_ids, list):
+                member_ids = [member_ids]
+
+            current_memberships = QueueMembership.objects.filter(queue=queue)
+            for m in current_memberships:
+                if queue.wazo_queue_id and m.employee.wazo_user_uuid:
+                    try:
+                        wazo_client.remove_queue_member(queue.wazo_queue_id, m.employee.wazo_user_uuid)
+                    except Exception as err:
+                        logger.warning(f"Error removing member from Wazo queue: {err}")
+            current_memberships.delete()
+
+            for order_idx, emp_id in enumerate(member_ids):
+                emp = EmployeeProfile.objects.filter(id=emp_id).first()
+                if emp:
+                    QueueMembership.objects.create(
+                        queue=queue,
+                        employee=emp,
+                        order=order_idx,
+                        is_active=True
+                    )
+                    if queue.wazo_queue_id and emp.wazo_user_uuid:
+                        try:
+                            wazo_client.add_queue_member(queue.wazo_queue_id, emp.wazo_user_uuid, priority=order_idx)
+                        except Exception as member_err:
+                            logger.warning(f"Failed to sync member {emp.extension} to Wazo queue {queue.wazo_queue_id}: {member_err}")
 
         queue.save()
         return JsonResponse({

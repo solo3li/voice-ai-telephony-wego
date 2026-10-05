@@ -28,7 +28,13 @@ async def execute_wazo_sip_blind_transfer(
     allowing Asterisk in Wazo to pull the caller into the queue natively.
     """
     channel_name = f"rooms:{room_name}"
-    transfer_uri = f"sip:{queue_code}@{WAZO_SIP_HOST}:{WAZO_SIP_PORT}"
+    sip_host = WAZO_SIP_HOST
+    # Asterisk inside docker listens on 5060; 5070 is only exposed externally on the host
+    if sip_host in ("asterisk", "wazo-docker-asterisk-1", "voice_sip", "127.0.0.1") or not sip_host:
+        sip_port = 5060
+    else:
+        sip_port = WAZO_SIP_PORT
+    transfer_uri = f"sip:{queue_code}@{sip_host}:{sip_port}"
     logger.info(f"[WAZO SIP TRANSFER] Initiating Blind Transfer (REFER) for room '{room_name}' to '{transfer_uri}' (reason: {reason})")
 
     await notify_centrifugo_async(

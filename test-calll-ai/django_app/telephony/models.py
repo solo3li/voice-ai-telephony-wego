@@ -383,11 +383,6 @@ def resolve_tenant_from_did(called_number: str):
             if num in candidates:
                 return trunk.user, trunk.target_profile
 
-    # 3. Fallback to default user/tenant if no exact DID matched
-    default_trunk = InboundPBXTrunk.objects.filter(is_active=True).select_related('user', 'target_profile').first()
-    if default_trunk:
-        return default_trunk.user, default_trunk.target_profile
-
     return None, None
 
 

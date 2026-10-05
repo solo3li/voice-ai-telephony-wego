@@ -256,15 +256,7 @@ async def run_agent_session(
                                     )
                                 else:
                                     prompt = f"المتصل قام بالرد أو الاتصال للتو وهو ينتظر سماعك الآن. ابدأ المحادثة فوراً وتحدث بهذه الجملة الترحيبية: '{welcome_msg}'"
-                                await session.send_client_content(
-                                    turns=[
-                                        types.Content(
-                                            role="user",
-                                            parts=[types.Part(text=prompt)]
-                                        )
-                                    ],
-                                    turn_complete=True
-                                )
+                                await session.send_realtime_input(text=prompt)
                             except Exception as ge:
                                 logger.warning(f"Error triggering proactive greeting: {ge}")
                         return
@@ -402,12 +394,9 @@ async def run_agent_session(
                     except Exception as ex:
                         if not stop_event.is_set():
                             logger.error(f"Error receiving from Gemini Live in room {room_name}: {ex}")
-                            err_str = str(ex)
-                            if "1008" in err_str or "aborted" in err_str.lower() or "policy violation" in err_str.lower():
-                                logger.warning(f"Fatal error from Gemini Live in room {room_name}. Terminating session cleanly.")
-                                stop_event.set()
-                                break
-                            await asyncio.sleep(0.1)
+                            logger.warning(f"Closing Gemini Live session cleanly for room {room_name}.")
+                            stop_event.set()
+                            break
 
             # Worker 3: Audio Pacer (paces output to LiveKit track with 250ms jitter buffer and drift-compensated clock)
             async def audio_pacer_worker():
