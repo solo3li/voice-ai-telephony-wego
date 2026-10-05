@@ -17,6 +17,12 @@ class EmployeeProfile(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ready')
     avatar_url = models.CharField(max_length=500, blank=True, default='')
     push_token = models.CharField(max_length=255, blank=True, default='', verbose_name="Expo Push Token", help_text="رمز إشعارات الدفع المباشر لجهاز الموظف")
+    wazo_user_uuid = models.CharField(max_length=128, blank=True, default='', help_text="معرف المستخدم في سنترال Wazo")
+    wazo_line_id = models.CharField(max_length=128, blank=True, default='', help_text="معرف الخط في سنترال Wazo")
+    sip_username = models.CharField(max_length=128, blank=True, default='', help_text="اسم مستخدم الـ SIP للهاتف المكتبي أو التطبيق")
+    sip_password = models.CharField(max_length=128, blank=True, default='', help_text="كلمة مرور الـ SIP")
+    sip_host = models.CharField(max_length=128, blank=True, default='', help_text="عنوان سيرفر الـ SIP")
+    sip_port = models.PositiveIntegerField(default=5070, help_text="منفذ سنترال Wazo")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -59,6 +65,18 @@ class EmployeeProfile(models.Model):
             "status_display": self.get_status_display(),
             "avatar_url": self.avatar_url or f"https://api.dicebear.com/7.x/bottts/png?seed={self.extension}",
             "push_token": self.push_token,
+            "wazo_user_uuid": self.wazo_user_uuid,
+            "wazo_line_id": self.wazo_line_id,
+            "sip_username": self.sip_username,
+            "sip_password": self.sip_password,
+            "sip_host": self.sip_host,
+            "sip_port": self.sip_port,
+            "sip_credentials": {
+                "server": f"{self.sip_host}:{self.sip_port}" if self.sip_host else f"127.0.0.1:{self.sip_port}",
+                "username": self.sip_username or f"emp{self.extension}",
+                "password": self.sip_password or "******",
+                "extension": self.extension
+            },
             "is_active": self.is_active,
             "is_owner": self.is_owner,
         }
@@ -69,6 +87,7 @@ class CallQueue(models.Model):
     name = models.CharField(max_length=100, default='طابور المبيعات')
     code = models.CharField(max_length=32, help_text='كود الطابور للاتصال والتحويل مثل 200 أو 300')
     description = models.TextField(blank=True, default='', help_text='وصف واختصاصات الطابور وتوجيهات الذكاء الاصطناعي للتحويل')
+    wazo_queue_id = models.CharField(max_length=128, blank=True, default='', help_text='معرف الطابور في سنترال Wazo')
     strategy = models.CharField(max_length=32, default='round_robin', choices=[
         ('round_robin', 'رنين بالتناوب (Round-Robin)'),
         ('ring_all', 'رنين جماعي متزامن (Ring-All)')
@@ -100,6 +119,7 @@ class CallQueue(models.Model):
             "name": self.name,
             "code": self.code,
             "description": self.description,
+            "wazo_queue_id": self.wazo_queue_id,
             "strategy": self.strategy,
             "ring_timeout_seconds": self.ring_timeout_seconds,
             "total_timeout_seconds": self.total_timeout_seconds,

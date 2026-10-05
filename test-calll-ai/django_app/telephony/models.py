@@ -315,3 +315,78 @@ class BusinessHoursSchedule(models.Model):
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M") if self.created_at else None,
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M") if self.updated_at else None,
         }
+
+
+class TenantDID(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dids', verbose_name="المستأجر / الشركة")
+    phone_number = models.CharField(max_length=64, unique=True, db_index=True, help_text="رقم الهاتف بصيغة E.164 (مثل +20108124794)")
+    label = models.CharField(max_length=128, blank=True, default='', help_text="تسمية توضيحية للرقم (مثل: خط الدعم الرئيسي)")
+    target_profile = models.ForeignKey('agents.AgentProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='did_mappings')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'voice_assistant_tenantdid'
+        ordering = ['-created_at']
+        verbose_name = "رقم خط المستأجر (DID)"
+        verbose_name_plural = "أرقام خطوط المستأجرين (DIDs)"
+
+    def __str__(self):
+        return f"{self.phone_number} -> {self.user.username} ({self.label})"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "username": self.user.username,
+            "phone_number": self.phone_number,
+            "label": self.label,
+            "target_profile_id": self.target_profile_id,
+            "target_profile_name": self.target_profile.name if self.target_profile else "",
+            "is_active": self.is_active,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M")
+        }
+
+
+def resolve_tenant_from_did(called_number: str):
+    """Resolve tenant User and AgentProfile from called DID phone number."""
+    if not called_number:
+        return None, None
+
+    import re
+    cleaned = re.sub(r'[\s\-\(\)\.]', '', str(called_number).strip())
+    candidates = [called_number, cleaned]
+    if not cleaned.startswith('+'):
+        candidates.append('+' + cleaned)
+
+    # Cross-match Egyptian mobile variations (+201..., 201..., 01...)
+    if cleaned.startswith('01'):
+        candidates.append('+20' + cleaned[1:])
+        candidates.append('20' + cleaned[1:])
+    elif cleaned.startswith('201'):
+        candidates.append('+' + cleaned)
+        candidates.append('0' + cleaned[2:])
+    elif cleaned.startswith('+201'):
+        candidates.append('0' + cleaned[3:])
+        candidates.append(cleaned[1:])
+
+    # 1. Match TenantDID
+    did_obj = TenantDID.objects.filter(is_active=True, phone_number__in=candidates).select_related('user', 'target_profile').first()
+    if did_obj:
+        return did_obj.user, did_obj.target_profile
+
+    # 2. Match InboundPBXTrunk.inbound_numbers
+    for trunk in InboundPBXTrunk.objects.filter(is_active=True).exclude(inbound_numbers='').select_related('user', 'target_profile'):
+        nums = [n.strip() for n in trunk.inbound_numbers.split(',') if n.strip()]
+        for num in nums:
+            if num in candidates:
+                return trunk.user, trunk.target_profile
+
+    # 3. Fallback to default user/tenant if no exact DID matched
+    default_trunk = InboundPBXTrunk.objects.filter(is_active=True).select_related('user', 'target_profile').first()
+    if default_trunk:
+        return default_trunk.user, default_trunk.target_profile
+
+    return None, None
+

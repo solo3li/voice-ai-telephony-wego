@@ -356,6 +356,35 @@ def livekit_webhook(request):
                 except Exception as e:
                     logger.error(f"Error loading queue {queue_code}: {e}")
 
+            if not user_id:
+                try:
+                    from telephony.models import resolve_tenant_from_did
+                    call_to = ""
+                    part_attrs = getattr(event.participant, "attributes", {}) or {}
+                    if isinstance(part_attrs, dict):
+                        call_to = part_attrs.get("sip.callTo") or part_attrs.get("sip.phoneNumber") or ""
+                    if not call_to:
+                        for p_token in parts:
+                            if p_token.startswith("+") or (p_token.isdigit() and len(p_token) >= 7):
+                                call_to = p_token
+                                break
+                    if call_to:
+                        tenant_u, did_prof = resolve_tenant_from_did(call_to)
+                        if tenant_u:
+                            user_id = tenant_u.id
+                            if did_prof and not profile:
+                                profile = did_prof.to_dict()
+
+                    if not user_id and participant_identity.startswith("sip_"):
+                        raw_sip_id = participant_identity.replace("sip_sip_", "").replace("sip_", "").split("@")[0]
+                        tenant_u, did_prof = resolve_tenant_from_did(raw_sip_id)
+                        if tenant_u:
+                            user_id = tenant_u.id
+                            if did_prof and not profile:
+                                profile = did_prof.to_dict()
+                except Exception as did_err:
+                    logger.warning(f"Error resolving tenant from DID in livekit_webhook: {did_err}")
+
             if user_id and not profile:
                 if "_pbx_" in room_name:
                     try:
@@ -370,6 +399,33 @@ def livekit_webhook(request):
                     active_prof = AgentProfile.objects.filter(user_id=user_id, is_active=True).first()
                     if active_prof:
                         profile = active_prof.to_dict()
+
+            # Pre-call Wallet Balance Guard
+            if user_id:
+                try:
+                    from decimal import Decimal
+                    from billing.models import BillingConfig, UserWallet
+                    from partners.models import PartnerClientRelationship
+                    b_cfg = BillingConfig.get_config()
+                    min_bal = b_cfg.min_balance_to_call
+
+                    partner_rel = PartnerClientRelationship.objects.select_related('partner__user').filter(
+                        client_id=user_id, partner__status='approved'
+                    ).first()
+                    check_user_id = partner_rel.partner.user_id if partner_rel and partner_rel.partner else user_id
+                    u_wallet = UserWallet.objects.filter(user_id=check_user_id).first()
+                    curr_bal = u_wallet.balance if u_wallet else Decimal('0.0000')
+
+                    if curr_bal < min_bal:
+                        logger.warning(f"[PRE-CALL GUARD] Suppressing AI in room '{room_name}': insufficient balance ({curr_bal} < {min_bal}) for user #{check_user_id}")
+                        publish_to_centrifugo(channel, {
+                            "event": "agent_error",
+                            "message": "عفواً، رصيد المحفظة غير كافٍ لإجراء أو استقبال المكالمات الصوتية بالذكاء الاصطناعي.",
+                            "timestamp": time.time(),
+                        })
+                        return HttpResponse("insufficient_balance", status=200)
+                except Exception as w_err:
+                    logger.warning(f"Error checking pre-call wallet balance for user #{user_id}: {w_err}")
 
             pending_dest = None
             if participant_identity.startswith("sip_"):

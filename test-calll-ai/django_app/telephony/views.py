@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from livekit import api
 
-from .models import OutboundSIPTrunk, InboundPBXTrunk
+from .models import OutboundSIPTrunk, InboundPBXTrunk, TenantDID, resolve_tenant_from_did
 from agents.models import AgentProfile
 from call_center.models import CallQueue
 from crm.models import CallSession
@@ -636,3 +636,77 @@ def delete_pbx_trunk(request, trunk_id):
     except Exception as e:
         logger.error(f"Error deleting PBX Trunk {trunk_id}: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": f"فشل حذف السنترال: {str(e)}"}, status=500)
+
+
+# ==================== Tenant DIDs & Multi-tenant Routing ====================
+
+@login_required(login_url='/login/')
+def list_tenant_dids(request):
+    """List DIDs for current tenant/user."""
+    dids = TenantDID.objects.filter(user=request.user)
+    return JsonResponse({
+        "status": "success",
+        "dids": [d.to_dict() for d in dids]
+    })
+
+
+@login_required(login_url='/login/')
+def save_tenant_did(request):
+    """Create or update a Tenant DID mapping."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = request.POST
+        if not data and request.body:
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+            except Exception:
+                data = {}
+
+        did_id = data.get('id')
+        raw_phone = str(data.get('phone_number', '')).strip()
+        label = str(data.get('label', '')).strip()
+        profile_id = data.get('target_profile_id')
+
+        normalized = normalize_phone_number(raw_phone)
+        if not normalized:
+            return JsonResponse({"status": "error", "message": "يرجى إدخال رقم هاتف صحيح بصيغة دولية"}, status=400)
+
+        target_profile = None
+        if profile_id:
+            target_profile = AgentProfile.objects.filter(id=profile_id, user=request.user).first()
+
+        if did_id:
+            did_obj = get_object_or_404(TenantDID, id=did_id, user=request.user)
+            did_obj.phone_number = normalized
+            did_obj.label = label
+            did_obj.target_profile = target_profile
+            did_obj.save()
+        else:
+            if TenantDID.objects.filter(phone_number=normalized).exclude(user=request.user).exists():
+                return JsonResponse({"status": "error", "message": "هذا الرقم مسجل مسبقاً لشركة أخرى"}, status=400)
+            did_obj, _ = TenantDID.objects.update_or_create(
+                user=request.user,
+                phone_number=normalized,
+                defaults={"label": label, "target_profile": target_profile, "is_active": True}
+            )
+        return JsonResponse({
+            "status": "success",
+            "message": f"تم حفظ الرقم {normalized} وربطه بالمستأجر بنجاح",
+            "did": did_obj.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Error saving Tenant DID: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required(login_url='/login/')
+def delete_tenant_did(request, did_id):
+    """Delete a tenant DID."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    did_obj = get_object_or_404(TenantDID, id=did_id, user=request.user)
+    num = did_obj.phone_number
+    did_obj.delete()
+    return JsonResponse({"status": "success", "message": f"تم حذف الرقم {num} بنجاح"})
+

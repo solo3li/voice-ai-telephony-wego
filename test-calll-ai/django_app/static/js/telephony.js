@@ -19,6 +19,9 @@ function switchTelephonySubtab(sub) {
     activeBtn.classList.add('bg-[#680E23]', 'text-white', 'shadow-sm');
     activeBtn.classList.remove('text-[#6E645D]');
   }
+  if (sub === 'dids') {
+    loadDids();
+  }
 }
 
 // ==================== Generic Outbound SIP Trunk ====================
@@ -701,7 +704,196 @@ function copyIssabelSnippet(elementId, btn) {
   });
 }
 
+// ==================== Tenant DIDs Management ====================
+
+let currentDids = [];
+
+async function loadDids() {
+  const tbody = document.getElementById('dids-tbody');
+  if (!tbody) return;
+
+  try {
+    const res = await fetch('/telephony/api/dids/');
+    const data = await res.json();
+    if (data.status !== 'success') return;
+
+    currentDids = data.dids || [];
+    if (currentDids.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-6 text-[#8C827A] text-xs">
+            لا توجد أرقام DID مسجلة بعد. اضغط "إضافة رقم DID جديد" لربط أول رقم.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = currentDids.map(did => `
+      <tr class="hover:bg-[#F5EFE6]/60 transition">
+        <td class="py-3 px-3">
+          <span class="font-mono font-bold text-[#680E23] bg-[#FAF0F2] border border-[#EAE3D9] px-2.5 py-1 rounded-lg text-sm shadow-sm">
+            ${escapeHtml(did.phone_number || did.did_number)}
+          </span>
+        </td>
+        <td class="py-3 px-3 text-[#443D39] font-semibold">${escapeHtml(did.label || did.description || '—')}</td>
+        <td class="py-3 px-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] font-semibold text-[11px]">
+            <span>🤖</span>
+            <span>${escapeHtml(did.target_profile_name || did.agent_profile_name || 'الافتراضي')}</span>
+          </span>
+        </td>
+        <td class="py-3 px-3 text-center">
+          ${did.is_active 
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">نشط وموجه</span>'
+            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">معطل</span>'
+          }
+        </td>
+        <td class="py-3 px-3 text-[#8C827A] font-mono text-[11px]">${escapeHtml(did.created_at || '—')}</td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button 
+              type="button" 
+              onclick="editDid(${did.id})"
+              class="px-2.5 py-1 rounded-lg bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 text-[#680E23] border border-[#E8CCD2] text-[11px] font-bold transition shadow-sm"
+              title="تعديل الرقم"
+            >
+              <span>✏️ تعديل</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="deleteDid(${did.id}, '${escapeHtml(did.phone_number || did.did_number)}')"
+              class="p-1 rounded-lg hover:bg-rose-100 hover:text-rose-700 text-[#8C827A] transition"
+              title="حذف الرقم"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Error loading DIDs:', err);
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-500">فشل في تحميل أرقام DID.</td></tr>`;
+  }
+}
+
+async function loadAgentProfilesForDid(selectedId = null) {
+  const sel = document.getElementById('did-agent-profile');
+  if (!sel) return;
+
+  try {
+    const res = await fetch('/api/agents/list/');
+    const data = await res.json();
+    const agents = data.agents || [];
+    sel.innerHTML = '<option value="">المساعد الافتراضي النشط</option>' + agents.map(a => 
+      `<option value="${a.id}" ${selectedId == a.id ? 'selected' : ''}>${escapeHtml(a.name || a.assistant_name || 'وكيل ' + a.id)}</option>`
+    ).join('');
+  } catch (e) {
+    console.error('Error fetching agents for DID:', e);
+  }
+}
+
+function openNewDidModal() {
+  document.getElementById('did-id').value = '';
+  document.getElementById('did-number').value = '';
+  document.getElementById('did-description').value = '';
+  document.getElementById('did-is-active').checked = true;
+  document.getElementById('did-error-msg').classList.add('hidden');
+  loadAgentProfilesForDid();
+
+  const modal = document.getElementById('new-did-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function editDid(id) {
+  const did = currentDids.find(d => d.id === id);
+  if (!did) return;
+
+  document.getElementById('did-id').value = did.id;
+  document.getElementById('did-number').value = did.phone_number || did.did_number || '';
+  document.getElementById('did-description').value = did.label || did.description || '';
+  document.getElementById('did-is-active').checked = did.is_active;
+  document.getElementById('did-error-msg').classList.add('hidden');
+  loadAgentProfilesForDid(did.target_profile_id || did.agent_profile_id);
+
+  const modal = document.getElementById('new-did-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeNewDidModal() {
+  const modal = document.getElementById('new-did-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleSaveDid(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit-did');
+  const errBox = document.getElementById('did-error-msg');
+  errBox.classList.add('hidden');
+  btn.disabled = true;
+
+  const idVal = document.getElementById('did-id').value;
+  const payload = {
+    id: idVal ? parseInt(idVal) : null,
+    phone_number: document.getElementById('did-number').value.trim(),
+    label: document.getElementById('did-description').value.trim(),
+    target_profile_id: document.getElementById('did-agent-profile').value || null,
+    is_active: document.getElementById('did-is-active').checked
+  };
+
+  try {
+    const res = await fetch('/telephony/api/dids/save/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      closeNewDidModal();
+      loadDids();
+    } else {
+      errBox.textContent = data.message || 'حدث خطأ أثناء حفظ الرقم.';
+      errBox.classList.remove('hidden');
+    }
+  } catch (err) {
+    errBox.textContent = 'فشل الاتصال بالخادم.';
+    errBox.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteDid(id, number) {
+  if (!confirm(`هل أنت متأكد من حذف رقم الـ DID (${number})؟`)) return;
+
+  try {
+    const res = await fetch(`/telephony/api/dids/${id}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      loadDids();
+    } else {
+      alert(data.message || 'فشل حذف الرقم.');
+    }
+  } catch (e) {
+    alert('فشل الاتصال بالخادم لحذف الرقم.');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadOutboundTrunk();
   loadPbxTrunks();
+  loadDids();
 });
+

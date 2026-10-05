@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from . import dongle_views
 
 urlpatterns = [
     # Developer Key Management (for logged-in UI dashboard)
@@ -76,12 +75,6 @@ urlpatterns = [
 
     # Structured Live Context API (Real-time in-memory cache)
     path('context/', views.api_user_live_context, name='developer_live_context'),
-
-    # GSM USB Dongle Gateway APIs
-    path('dongle/auth/login/', dongle_views.api_dongle_auth_login, name='developer_dongle_auth_login'),
-    path('dongle/call/', dongle_views.api_dongle_call_init, name='developer_dongle_call_init'),
-    path('dongle/hangup/', dongle_views.api_dongle_call_hangup, name='developer_dongle_call_hangup'),
-    path('dongle/status/', dongle_views.api_dongle_status, name='developer_dongle_status'),
 ]
 
 

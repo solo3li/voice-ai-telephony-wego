@@ -431,6 +431,78 @@
     </form>
   </div>
 </div>
+
+<!-- Modal: SIP Credentials for Softphone / IP Phone -->
+<div id="sip-credentials-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+        <span class="text-[#680E23]">🔑</span> بيانات اتصال SIP (سوفت فون وهاتف IP)
+      </h3>
+      <button type="button" onclick="closeSipCredentialsModal()" class="text-[#6E645D] hover:text-[#2D2825]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-3 bg-[#FAF0F2] border border-[#E8CCD2] rounded-2xl flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#680E23] text-white flex items-center justify-center font-bold text-sm" id="sip-modal-avatar">
+        👤
+      </div>
+      <div>
+        <div class="font-bold text-[#1C1917] text-sm" id="sip-modal-name">اسم الموظف</div>
+        <div class="text-[11px] text-[#680E23] font-mono">التحويلة: <span id="sip-modal-ext" class="font-bold">101</span> • خادم Wazo PBX</div>
+      </div>
+    </div>
+
+    <div class="space-y-2.5">
+      <div>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Server / Domain (عنوان الخادم)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="sip-modal-server" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-semibold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-server')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Port (منفذ الاتصال)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="sip-modal-port" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-semibold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-port')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Username / User ID (اسم المستخدم)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="sip-modal-username" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#680E23] font-mono font-bold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-username')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Password / Secret (كلمة المرور)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="sip-modal-password" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-semibold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-password')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] text-[11px] text-[#6E645D] leading-relaxed">
+      <span class="font-bold text-[#1C1917]">💡 كيفية الاستخدام:</span>
+      أدخل هذه البيانات في أي تطبيق SIP سوفت فون (مثل Zoiper, MicroSIP, Grandstream Wave) أو هاتف مكتبي IP Phone لاستقبال مكالمات الطوابير المحولة من الـ AI مباشرة بنقاء صوت فائق.
+    </div>
+
+    <div class="flex justify-end pt-2 border-t border-[#EAE3D9]">
+      <button type="button" onclick="closeSipCredentialsModal()" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition shadow-md shadow-[#680E23]/20">
+        إغلاق
+      </button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}

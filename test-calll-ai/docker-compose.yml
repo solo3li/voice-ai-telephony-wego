@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: voice_traefik
     restart: unless-stopped
+    profiles:
+      - standalone_traefik
     ports:
       - "80:80"
       - "443:443"
@@ -13,6 +15,7 @@ services:
       - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:ro
     networks:
       - voice_net
+
 
   livekit:
     build:
@@ -66,7 +69,7 @@ services:
       - voice_net
 
 
-  postgres:
+  voice_postgres:
     image: pgvector/pgvector:pg16
     container_name: voice_postgres
     restart: unless-stopped
@@ -92,7 +95,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - voice_postgres
       - redis
       - centrifugo
       - livekit
@@ -112,7 +115,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - voice_postgres
       - redis
       - livekit
       - centrifugo
@@ -197,4 +200,6 @@ volumes:
 
 networks:
   voice_net:
+    name: test-calll-ai_voice_net
     driver: bridge
+

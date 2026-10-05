@@ -20,6 +20,7 @@ from livekit import api
 
 from .models import EmployeeProfile, CallQueue, QueueMembership, EmployeeCallLog
 from .inngest_jobs import inngest_client
+from telephony.wazo_client import wazo_client
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +236,13 @@ def api_create_employee(request):
         if not employer:
             employer = User.objects.filter(is_superuser=True).order_by('id').first()
 
+        # Headless Wazo Provisioning
+        wazo_info = wazo_client.provision_employee(
+            display_name=display_name,
+            extension=extension,
+            password=password
+        )
+
         employee = EmployeeProfile.objects.create(
             user=user,
             employer=employer,
@@ -242,7 +250,13 @@ def api_create_employee(request):
             display_name=display_name,
             department=department,
             status='ready',
-            avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}"
+            avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}",
+            wazo_user_uuid=wazo_info.get("wazo_user_uuid", ""),
+            wazo_line_id=wazo_info.get("wazo_line_id", ""),
+            sip_username=wazo_info.get("sip_username", f"emp{extension}"),
+            sip_password=wazo_info.get("sip_password", password),
+            sip_host=wazo_info.get("sip_host", ""),
+            sip_port=wazo_info.get("sip_port", 5070)
         )
 
         publish_to_centrifugo("employees:presence", {
@@ -252,7 +266,7 @@ def api_create_employee(request):
 
         return JsonResponse({
             "status": "success",
-            "message": f"تم إنشاء حساب الموظف '{display_name}' (تحويلة {extension}) بنجاح",
+            "message": f"تم إنشاء حساب الموظف '{display_name}' (تحويلة {extension}) وضبط إعدادات SIP بنجاح",
             "employee": employee.to_dict()
         }, status=201)
 
@@ -273,6 +287,9 @@ def api_delete_employee(request, employee_id):
         employee = EmployeeProfile.objects.filter(id=employee_id).first()
         if not employee:
             return JsonResponse({"status": "error", "message": "الموظف غير موجود"}, status=404)
+
+        if employee.wazo_user_uuid:
+            wazo_client.delete_user(employee.wazo_user_uuid)
 
         name = employee.display_name
         ext = employee.extension
@@ -564,11 +581,21 @@ def create_call_queue(request):
             user_id=request.user.id
         ))
 
+        # Headless Wazo Queue Provisioning
+        wazo_q = wazo_client.create_queue(
+            name=name,
+            number=code,
+            strategy=strategy,
+            ring_timeout=ring_timeout
+        )
+        wazo_queue_id = str(wazo_q.get("id") or "")
+
         queue = CallQueue.objects.create(
             user=request.user,
             name=name,
             code=code,
             description=description,
+            wazo_queue_id=wazo_queue_id,
             strategy=strategy,
             ring_timeout_seconds=ring_timeout,
             total_timeout_seconds=total_timeout,
@@ -592,7 +619,7 @@ def create_call_queue(request):
 
         return JsonResponse({
             "status": "success",
-            "message": f"تم إنشاء طابور '{name}' بنجاح وتفعيل الكود {code}.",
+            "message": f"تم إنشاء طابور '{name}' بنجاح في السنترال وتفعيل الكود {code}.",
             "queue": queue.to_dict()
         }, status=201)
 
@@ -643,6 +670,8 @@ def delete_call_queue(request, queue_id):
         return JsonResponse({"status": "error", "message": "طريقة الطلب غير مسموحة"}, status=405)
 
     queue = get_object_or_404(CallQueue, id=queue_id, user=request.user)
+    if queue.wazo_queue_id:
+        wazo_client.delete_queue(queue.wazo_queue_id)
     name = queue.name
     queue.delete()
     return JsonResponse({"status": "success", "message": f"تم حذف الطابور '{name}' بنجاح."})

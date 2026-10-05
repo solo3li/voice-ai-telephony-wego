@@ -58,12 +58,16 @@ services:
       - variables.env
     expose:
       - 9497
+    networks:
+      - default
+      - voice_net
     volumes:
       - ./etc/wazo-auth.yml:/etc/wazo-auth/conf.d/config.yml:ro
       - type: bind
         source: ${LOCAL_GIT_REPOS}/wazo-auth-keys/etc/wazo-auth/conf.d/50-wazo-default.yml
         target: /etc/wazo-auth/conf.d/50-wazo-default.yml
         read_only: true
+
 
   confd:
     image: wazoplatform/wazo-confd:manage-db
@@ -74,8 +78,12 @@ services:
       - variables.env
     expose:
       - 9486
+    networks:
+      - default
+      - voice_net
     volumes:
       - ./etc/wazo-confd.yml:/etc/wazo-confd/conf.d/config.yml:ro
+
       - ./etc/xivo-dao.yml:/etc/xivo-dao/conf.d/config.yml:ro
       - ./bin/init-confd:/bin/wazo-confd/init:ro
       - ./bin/init-helpers:/var/lib/wazo/helpers:ro
@@ -147,7 +155,11 @@ services:
       - '[::]:5070:5060/udp'
       - '[::]:5070:5060/tcp'
       - '19980-20000:19980-20000/udp'  # RTP
+    networks:
+      - default
+      - voice_net
     volumes:
+
       - ./bin/init-helpers:/var/lib/wazo/helpers:ro
       - ./etc/wazo-confgend-client.conf:/etc/wazo-confgend-client/config.conf:ro
       - ./etc/asterisk-http.conf:/etc/asterisk/http.d/02-docker.conf:ro
@@ -347,3 +359,12 @@ volumes:
   asterisk-doc:
   asterisk-voicemail:
   tmp-rabbitmq:   # Compatibility for non-Linux systems
+
+networks:
+  default:
+    driver: bridge
+  voice_net:
+    name: test-calll-ai_voice_net
+    external: true
+
+

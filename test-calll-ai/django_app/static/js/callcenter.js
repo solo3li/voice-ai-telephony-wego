@@ -71,12 +71,20 @@ async function loadEmployees() {
           ${statusBadges[emp.status] || statusBadges['offline']}
         </td>
         <td class="py-3 px-3">
-          <span class="inline-flex items-center gap-1 text-[11px] text-[#680E23] font-mono">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#680E23]"></span> WebRTC LiveKit
+          <span class="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-mono font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Wazo PJSIP
           </span>
         </td>
         <td class="py-3 px-3 text-center">
           <div class="flex items-center justify-center gap-1.5">
+            <button 
+              type="button" 
+              onclick="openSipCredentialsModal(${emp.id})"
+              class="px-2 py-1 rounded-lg bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 text-[#680E23] border border-[#E8CCD2] text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm"
+              title="بيانات اتصال SIP للسوفت فون والهاتف المكتبي"
+            >
+              <span>🔑 بيانات SIP</span>
+            </button>
             <button 
               type="button" 
               onclick="dialTargetFromDashboard('${escapeHtml(emp.extension)}', '${escapeHtml(emp.display_name)}')"
@@ -88,7 +96,7 @@ async function loadEmployees() {
             <button 
               type="button" 
               onclick="deleteEmployee(${emp.id}, '${escapeHtml(emp.display_name)}')"
-              class="p-1 rounded-lg hover:bg-rose-950/80 hover:text-rose-300 text-[#8C827A] transition"
+              class="p-1 rounded-lg hover:bg-rose-100 hover:text-rose-700 text-[#8C827A] transition"
               title="حذف الموظف"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -745,6 +753,45 @@ async function loadEmployeeCallLogs() {
   }
 }
 
+function openSipCredentialsModal(empId) {
+  const emp = currentEmployees.find(e => e.id === empId);
+  if (!emp) return;
+
+  const modal = document.getElementById('sip-credentials-modal');
+  if (!modal) return;
+
+  const creds = emp.sip_credentials || {};
+  document.getElementById('sip-modal-name').textContent = emp.display_name || 'الموظف';
+  document.getElementById('sip-modal-ext').textContent = emp.extension || '';
+  document.getElementById('sip-modal-server').value = creds.host || emp.sip_host || window.location.hostname || '169.58.32.179';
+  document.getElementById('sip-modal-port').value = creds.port || emp.sip_port || 5070;
+  document.getElementById('sip-modal-username').value = creds.username || emp.sip_username || ('emp' + emp.extension);
+  document.getElementById('sip-modal-password').value = creds.password || emp.sip_password || '********';
+
+  modal.classList.remove('hidden');
+}
+
+function closeSipCredentialsModal() {
+  const modal = document.getElementById('sip-credentials-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyToClipboard(elementId) {
+  const input = document.getElementById(elementId);
+  if (!input) return;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const origBg = input.style.backgroundColor;
+    input.style.backgroundColor = '#E8F5E9';
+    setTimeout(() => {
+      input.style.backgroundColor = origBg;
+    }, 600);
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadEmployees();
   loadQueues();
@@ -752,4 +799,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadQueues, 8000);
   setInterval(loadEmployees, 8000);
 });
+
 

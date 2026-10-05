@@ -15,6 +15,10 @@
       <span>🏢</span>
       <span>سنترالات Issabel و Asterisk</span>
     </button>
+    <button type="button" onclick="switchTelephonySubtab('dids')" id="subtab-btn-dids" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-[#6E645D] hover:text-[#1C1917]">
+      <span>📱</span>
+      <span>أرقام DID المخصصة والمستأجرين</span>
+    </button>
   </div>
   
   <div class="text-xs text-[#8C827A] flex items-center gap-2">
@@ -148,6 +152,55 @@
       <div class="col-span-full py-8 text-center text-[#8C827A] text-xs">
         جاري تحميل السنترالات المربوطة...
       </div>
+    </div>
+  </section>
+</div>
+
+<!-- Subtab 3: Tenant DIDs Management -->
+<div id="subtab-content-dids" class="telephony-subtab-panel space-y-6 hidden">
+  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)] border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-6">
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#EAE3D9]">
+      <div>
+        <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+          <span class="text-[#680E23] text-xl">📱</span>
+          <span>توجيه أرقام DID المخصصة (Tenant Inbound DIDs)</span>
+        </h2>
+        <p class="text-xs text-[#6E645D] mt-1">
+          اربط أرقام الهواتف الواردة (DIDs) بمساعد الذكاء الاصطناعي المناسب لشركتك. عند ورود أي مكالمة SIP إلى هذا الرقم، يتعرف النظام تلقائياً على المستأجر (Tenant) ويحاسب الرصيد بالدقيقة ويطلق الوكيل الذكي المحدد.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="openNewDidModal()" 
+          class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#680E23]/20"
+        >
+          <span>➕</span>
+          <span>إضافة رقم DID جديد</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- DIDs Table -->
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-right text-xs">
+        <thead>
+          <tr class="text-[#6E645D] border-b border-[#EAE3D9]">
+            <th class="py-2.5 px-3">رقم الهاتف (DID)</th>
+            <th class="py-2.5 px-3">الوصف</th>
+            <th class="py-2.5 px-3">المساعد الصوتي المسند</th>
+            <th class="py-2.5 px-3 text-center">الحالة</th>
+            <th class="py-2.5 px-3">تاريخ الإضافة</th>
+            <th class="py-2.5 px-3 text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="dids-tbody" class="divide-y divide-[#EAE3D9]">
+          <tr>
+            <td colspan="6" class="text-center py-6 text-[#8C827A]">جاري تحميل أرقام DID...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </div>
@@ -399,6 +452,54 @@
     <div class="flex justify-end pt-2 border-t border-[#EAE3D9]">
       <button type="button" onclick="closeIssabelModal()" class="px-5 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#2D2825] font-semibold">إغلاق</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: New / Edit Tenant DID -->
+<div id="new-did-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+        <span>📱</span> إضافة / تعديل رقم DID
+      </h3>
+      <button type="button" onclick="closeNewDidModal()" class="text-[#6E645D] hover:text-[#2D2825] text-lg">&times;</button>
+    </div>
+
+    <form id="new-did-form" onsubmit="handleSaveDid(event)" class="space-y-3.5">
+      <input type="hidden" id="did-id" />
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">رقم الهاتف (DID Number) *</label>
+        <input type="text" id="did-number" required placeholder="مثال: +201012345678 أو 01012345678" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-bold focus:outline-none focus:border-[#680E23]" />
+        <p class="text-[10px] text-[#8C827A] mt-0.5">الرقم المطلوب من المتصلين للوصول لشركتك عبر الـ SIP.</p>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">الوصف أو اسم الفرع</label>
+        <input type="text" id="did-description" placeholder="مثال: الخط الساخن الرئيسي أو فرع القاهرة" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]" />
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#443D39] mb-1">المساعد الصوتي المسند (Agent Profile)</label>
+        <select id="did-agent-profile" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]">
+          <option value="">المساعد الافتراضي النشط</option>
+        </select>
+        <p class="text-[10px] text-[#8C827A] mt-0.5">المساعد الذي سيرد على المكالمات الواردة لهذا الرقم تحديداً.</p>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="did-is-active" checked class="rounded border-[#DDD5C7] text-[#680E23] focus:ring-[#680E23]" />
+        <label for="did-is-active" class="font-semibold text-[#443D39]">تفعيل استقبال المكالمات على هذا الرقم</label>
+      </div>
+
+      <div id="did-error-msg" class="hidden p-2 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+        <button type="button" onclick="closeNewDidModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
+        <button type="submit" id="btn-submit-did" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+          <span>حفظ الرقم</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}

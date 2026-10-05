@@ -12,4 +12,7 @@ urlpatterns = [
     path('pbx-trunks/', views.list_pbx_trunks, name='list_pbx_trunks'),
     path('pbx-trunks/save/', views.save_pbx_trunk, name='save_pbx_trunk'),
     path('pbx-trunks/<int:trunk_id>/delete/', views.delete_pbx_trunk, name='delete_pbx_trunk'),
+    path('dids/', views.list_tenant_dids, name='list_tenant_dids'),
+    path('dids/save/', views.save_tenant_did, name='save_tenant_did'),
+    path('dids/<int:did_id>/delete/', views.delete_tenant_did, name='delete_tenant_did'),
 ]
