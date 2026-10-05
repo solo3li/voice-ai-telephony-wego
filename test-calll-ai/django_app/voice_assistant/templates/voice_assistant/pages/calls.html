@@ -73,6 +73,7 @@
         <option value="inbound">مكالمة واردة</option>
         <option value="outbound_ai">صادرة (ذكاء اصطناعي)</option>
         <option value="outbound_agent">صادرة (موظف)</option>
+        <option value="internal_employee">مكالمة داخلية (موظفين / سنترال)</option>
       </select>
     </div>
 
@@ -86,6 +87,14 @@
         <option value="over_5m">أكثر من 5 دقائق</option>
       </select>
     </div>
+  </div>
+
+  <!-- Call Type Quick Pills -->
+  <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-[#EAE3D9]/60">
+    <span class="text-xs font-semibold text-[#6E645D]">تصفية المكالمات:</span>
+    <button type="button" onclick="setCallsTypeFilter('all')" id="btn-type-all" class="call-type-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#680E23] text-white transition">الكل</button>
+    <button type="button" onclick="setCallsTypeFilter('ai')" id="btn-type-ai" class="call-type-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition">🤖 مكالمات الذكاء الاصطناعي</button>
+    <button type="button" onclick="setCallsTypeFilter('internal')" id="btn-type-internal" class="call-type-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition">📞 مكالمات الموظفين الداخلية</button>
   </div>
 
   <!-- Date Preset Quick Pills -->

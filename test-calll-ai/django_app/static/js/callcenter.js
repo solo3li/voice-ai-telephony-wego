@@ -688,18 +688,21 @@ async function loadEmployeeCallLogs() {
       
       let recordingCell = '';
       if (log.recording_url) {
+        const isWav = log.recording_url && log.recording_url.endsWith('.wav');
+        const dlExt = isWav ? 'wav' : 'mp3';
         recordingCell = `
           <div class="flex items-center justify-center gap-2">
             <audio controls preload="none" class="h-8 max-w-[210px]" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.05));">
-              <source src="${escapeHtml(log.recording_url)}" type="audio/mpeg">
+              <source src="${escapeHtml(log.recording_url)}" type="${isWav ? 'audio/wav' : 'audio/mpeg'}">
+              <source src="${escapeHtml(log.recording_url)}">
               متصفحك لا يدعم مشغل الصوت.
             </audio>
             <a 
               href="${escapeHtml(log.recording_url)}" 
-              download="recording_${log.id}.mp3" 
+              download="recording_${log.id}.${dlExt}" 
               target="_blank" 
               class="p-1.5 rounded-lg bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] transition flex items-center justify-center"
-              title="تحميل ملف الصوت MP3"
+              title="تحميل ملف التسجيل الصوتي"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

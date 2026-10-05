@@ -84,6 +84,8 @@ function renderCallsTable(calls) {
     if (c.is_internal_test || c.direction === 'internal_test') {
       const extLabel = c.caller_extension ? ` (${c.caller_extension})` : '';
       dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">🧪 اختبار داخلي${extLabel}</span>`;
+    } else if (c.direction === 'internal_employee') {
+      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">📞 داخلية (موظفين)</span>`;
     } else if (c.direction === 'inbound') {
       dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300">📥 واردة</span>`;
     } else if (c.direction === 'outbound_ai') {
@@ -128,6 +130,23 @@ function debounceCallsFilter() {
   callsSearchTimeout = setTimeout(loadCallsList, 300);
 }
 
+function setCallsTypeFilter(type) {
+  const dirSel = document.getElementById('filter-calls-direction');
+  if (dirSel) {
+    if (type === 'all') dirSel.value = 'all';
+    else if (type === 'ai') dirSel.value = 'ai';
+    else if (type === 'internal') dirSel.value = 'internal';
+  }
+  document.querySelectorAll('.call-type-btn').forEach(b => {
+    b.className = 'call-type-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition';
+  });
+  const activeBtn = document.getElementById('btn-type-' + type);
+  if (activeBtn) {
+    activeBtn.className = 'call-type-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#680E23] text-white shadow-sm transition';
+  }
+  loadCallsList();
+}
+
 function setCallsDatePreset(preset) {
   currentCallsDatePreset = preset;
   document.querySelectorAll('.preset-date-btn').forEach(b => {
@@ -147,6 +166,7 @@ function resetCallsFilter() {
   if (sInp) sInp.value = '';
   if (dirSel) dirSel.value = 'all';
   if (durSel) durSel.value = 'all';
+  setCallsTypeFilter('all');
   setCallsDatePreset('all');
 }
 

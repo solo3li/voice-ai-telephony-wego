@@ -76,6 +76,7 @@ class CallSession(models.Model):
         ('outbound_agent', 'صادرة (موظف)'),
         ('outbound_ai', 'صادرة (ذكاء اصطناعي)'),
         ('internal_test', 'مكالمة اختبار داخلية (Internal Test)'),
+        ('internal_employee', 'مكالمة داخلية (موظفين / سنترال)'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='call_sessions')

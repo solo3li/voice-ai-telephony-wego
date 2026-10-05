@@ -1,8 +1,11 @@
 import re
+import os
 import time
 import json
 import uuid
+import math
 import logging
+import datetime
 import requests
 import jwt
 import redis
@@ -1896,4 +1899,176 @@ def api_internal_ai_transfer(request):
 
     except Exception as e:
         logger.error(f"Error in api_internal_ai_transfer: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_internal_asterisk_cdr(request):
+    """
+    Internal Webhook called by Asterisk Hangup Handler upon completion of non-AI
+    calls (inter-employee calls, transferred queue calls, direct SIP extensions).
+    Logs the call into CallSession (crm) and EmployeeCallLog (call_center),
+    links the audio recording file from Asterisk MixMonitor, and broadcasts real-time events.
+    """
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    try:
+        if request.POST:
+            caller = str(request.POST.get('caller', '')).strip()
+            callee = str(request.POST.get('callee', '')).strip()
+            duration_str = str(request.POST.get('duration', '0')).strip()
+            total_duration_str = str(request.POST.get('total_duration', '0')).strip()
+            status = str(request.POST.get('status', 'ANSWERED')).strip().upper()
+            uniqueid = str(request.POST.get('uniqueid', '')).strip()
+            recording = str(request.POST.get('recording', '')).strip()
+            context = str(request.POST.get('context', '')).strip()
+        else:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+            caller = str(data.get('caller', '')).strip()
+            callee = str(data.get('callee', '')).strip()
+            duration_str = str(data.get('duration', '0')).strip()
+            total_duration_str = str(data.get('total_duration', '0')).strip()
+            status = str(data.get('status', 'ANSWERED')).strip().upper()
+            uniqueid = str(data.get('uniqueid', '')).strip()
+            recording = str(data.get('recording', '')).strip()
+            context = str(data.get('context', '')).strip()
+
+        try:
+            duration = int(float(duration_str or 0))
+        except ValueError:
+            duration = 0
+
+        try:
+            total_duration = int(float(total_duration_str or 0))
+        except ValueError:
+            total_duration = duration
+
+        # Ignore AI-only calls (AI agent directly connects to 999 or livekit-ai and handles its own sessions)
+        if (caller == 'livekit-ai' and callee == '999') or (callee == '999' and not caller):
+            return JsonResponse({"status": "ignored", "message": "Handled by LiveKit AI"})
+
+        # Resolve tenant user and employee profiles
+        from telephony.models import resolve_tenant_from_context_and_ext
+        tenant_user, caller_emp, _ = resolve_tenant_from_context_and_ext(context, caller)
+
+        # Callee lookup
+        callee_emp = None
+        if callee:
+            callee_emp = EmployeeProfile.objects.filter(extension=callee, is_active=True).select_related('employer', 'user').first()
+
+        # If tenant_user was not found from caller, try finding it via callee
+        if not tenant_user and callee_emp:
+            tenant_user = callee_emp.employer or callee_emp.user
+
+        # Fallback to first admin user if still unresolved
+        if not tenant_user:
+            tenant_user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+
+        if not tenant_user:
+            logger.error("api_internal_asterisk_cdr: No tenant user could be resolved.")
+            return JsonResponse({"status": "error", "message": "No tenant user found"}, status=400)
+
+        # Check recording file on disk
+        rec_url = ""
+        if uniqueid:
+            local_wav_path = os.path.join(settings.MEDIA_ROOT, 'recordings', f"{uniqueid}.wav")
+            if os.path.exists(local_wav_path) and os.path.getsize(local_wav_path) > 44:
+                rec_url = f"/media/recordings/{uniqueid}.wav"
+            elif recording and not recording.startswith('http'):
+                rec_url = recording
+            elif recording:
+                rec_url = recording
+
+        now = timezone.now()
+        started_at = now - datetime.timedelta(seconds=total_duration) if total_duration > 0 else now
+
+        room_name = f"ast_{uniqueid}" if uniqueid else f"ast_{caller}_{callee}_{int(now.timestamp())}"
+        billed_minutes = math.ceil(duration / 60.0) if duration > 0 else 0
+
+        caller_name = caller_emp.display_name if caller_emp else f"التحويلة {caller}"
+        callee_name = callee_emp.display_name if callee_emp else f"التحويلة {callee}"
+
+        # 1. Create or update CallSession in crm
+        from crm.models import CallSession
+        session, created = CallSession.objects.update_or_create(
+            room_name=room_name,
+            defaults={
+                'user': tenant_user,
+                'direction': 'internal_employee',
+                'caller_phone': caller or 'Unknown',
+                'destination_phone': callee or 'Unknown',
+                'caller_extension': caller,
+                'started_at': started_at,
+                'ended_at': now,
+                'duration_seconds': duration,
+                'billed_minutes': billed_minutes,
+                'cost': 0.0000,
+                'summary': f"مكالمة هاتفية داخلية بين {caller_name} و {callee_name} ({status})",
+                'transcript_text': f"مكالمة هاتفية داخلية عبر سنترال Wazo/Asterisk بين {caller_name} و {callee_name}.\nالحالة: {status} | المدة: {duration} ثانية.",
+                'recording_url': rec_url,
+            }
+        )
+
+        # 2. Create EmployeeCallLog for Caller
+        if caller_emp:
+            EmployeeCallLog.objects.create(
+                employee=caller_emp,
+                other_party=callee_name,
+                extension=callee,
+                room_name=room_name,
+                call_type='outbound',
+                started_at=started_at,
+                ended_at=now,
+                duration_secs=duration,
+                recording_url=rec_url
+            )
+            if caller_emp.status == 'busy':
+                caller_emp.status = 'ready'
+                caller_emp.save(update_fields=['status'])
+                publish_to_centrifugo("employees:presence", {
+                    "event": "status_change",
+                    "employee": caller_emp.to_dict()
+                })
+
+        # 3. Create EmployeeCallLog for Callee
+        if callee_emp:
+            c_type = 'inbound' if (duration > 0 or status == 'ANSWERED') else 'missed'
+            EmployeeCallLog.objects.create(
+                employee=callee_emp,
+                other_party=caller_name,
+                extension=caller,
+                room_name=room_name,
+                call_type=c_type,
+                started_at=started_at,
+                ended_at=now,
+                duration_secs=duration,
+                recording_url=rec_url
+            )
+            if callee_emp.status == 'busy':
+                callee_emp.status = 'ready'
+                callee_emp.save(update_fields=['status'])
+                publish_to_centrifugo("employees:presence", {
+                    "event": "status_change",
+                    "employee": callee_emp.to_dict()
+                })
+
+        # 4. Notify tenant via Centrifugo
+        publish_to_centrifugo(f"tenant_{tenant_user.id}:calls", {
+            "event": "new_call_session",
+            "session": session.to_dict()
+        })
+
+        logger.info(f"api_internal_asterisk_cdr logged: caller={caller}, callee={callee}, dur={duration}s, status={status}, rec={rec_url}, session_id={session.id}")
+
+        return JsonResponse({
+            "status": "success",
+            "session_id": session.id,
+            "room_name": room_name,
+            "duration": duration,
+            "recording_url": rec_url
+        })
+
+    except Exception as e:
+        logger.error(f"Error in api_internal_asterisk_cdr: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)

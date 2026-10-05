@@ -486,7 +486,12 @@ def list_all_calls(request):
         # 2. Direction filter
         direction = request.GET.get('direction', '').strip()
         if direction and direction != 'all':
-            calls = calls.filter(direction=direction)
+            if direction == 'ai':
+                calls = calls.filter(direction__in=['inbound', 'outbound_ai'])
+            elif direction in ['internal', 'internal_employee']:
+                calls = calls.filter(direction__in=['internal_employee', 'internal_test'])
+            else:
+                calls = calls.filter(direction=direction)
 
         # 3. Date presets / range
         date_preset = request.GET.get('date_preset', '').strip()
@@ -534,7 +539,7 @@ def list_all_calls(request):
         )
 
         limit = int(request.GET.get('limit', 100))
-        results = [c.to_dict() for c in calls[:limit]]
+        results = [c.to_dict(request) for c in calls[:limit]]
 
         return JsonResponse({
             "status": "success",

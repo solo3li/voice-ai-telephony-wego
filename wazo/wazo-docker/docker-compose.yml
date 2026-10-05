@@ -172,6 +172,7 @@ services:
       - asterisk-autoprov:/etc/asterisk/pjsip.d:rw
       - asterisk-doc:/usr/share/asterisk/documentation:rw
       - asterisk-voicemail:/var/spool/asterisk/voicemail:rw
+      - /var/lib/docker/volumes/test-calll-ai_media_data/_data/recordings:/var/spool/asterisk/monitor/recordings:rw
     entrypoint: ["/bin/asterisk/init"]
     command: ["asterisk", "-fTvvv"]
 
