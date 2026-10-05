@@ -170,17 +170,30 @@
         </div>
       </div>
 
-      <!-- Call Recording Audio Player -->
+      <!-- Call Recording Audio Player (AI Agent) -->
       <div id="cdm-recording-section" class="p-3.5 rounded-2xl bg-[#FAF0F2] border border-[#E8CCD2] space-y-2 hidden">
         <div class="flex items-center justify-between">
           <h5 class="font-bold text-[#680E23] text-xs flex items-center gap-1.5">
-            <span>🎙️</span> <span>تسجيل المكالمة الصوتي (Audio Recording):</span>
+            <span>🎙️</span> <span>تسجيل محادثة الذكاء الاصطناعي (AI Agent):</span>
           </h5>
           <a id="cdm-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-lg bg-[#680E23] hover:bg-[#520B1C] text-white text-[11px] font-semibold transition inline-flex items-center gap-1 shadow-sm">
             <span>⬇️</span> <span>تحميل MP3</span>
           </a>
         </div>
         <audio id="cdm-audio-player" controls preload="none" class="w-full h-8 rounded-lg outline-none"></audio>
+      </div>
+
+      <!-- Transferred Call Recording Audio Player (Human Employee) -->
+      <div id="cdm-transferred-recording-section" class="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-2 hidden">
+        <div class="flex items-center justify-between">
+          <h5 class="font-bold text-emerald-800 text-xs flex items-center gap-1.5">
+            <span>👤</span> <span id="cdm-transferred-title">تسجيل محادثة الموظف البشري بعد التحويل (Human Employee):</span>
+          </h5>
+          <a id="cdm-transferred-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold transition inline-flex items-center gap-1 shadow-sm">
+            <span>⬇️</span> <span>تحميل التسجيل (WAV)</span>
+          </a>
+        </div>
+        <audio id="cdm-transferred-audio-player" controls preload="none" class="w-full h-8 rounded-lg outline-none"></audio>
       </div>
 
       <!-- Call Summary -->

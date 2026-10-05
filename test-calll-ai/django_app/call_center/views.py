@@ -1991,6 +1991,7 @@ def api_internal_asterisk_cdr(request):
 
         # 1. Create or update CallSession in crm
         from crm.models import CallSession
+        from django.db.models import Q
         session, created = CallSession.objects.update_or_create(
             room_name=room_name,
             defaults={
@@ -2009,6 +2010,65 @@ def api_internal_asterisk_cdr(request):
                 'recording_url': rec_url,
             }
         )
+
+        # 1.1 Link transferred recording to parent AI CallSession if this call was transferred from AI
+        ai_session = None
+        try:
+            r = redis.Redis.from_url(settings.REDIS_URL)
+            clean_c = caller.lstrip('+').strip()
+            ai_room_bytes = (
+                r.get(f"ai_transfer_caller:{caller}") or 
+                r.get(f"ai_transfer_caller:{clean_c}") or
+                r.get(f"ai_transfer_caller:sip_{clean_c}")
+            )
+            if ai_room_bytes:
+                ai_room = ai_room_bytes.decode('utf-8') if isinstance(ai_room_bytes, bytes) else str(ai_room_bytes)
+                ai_session = CallSession.objects.filter(room_name=ai_room).first()
+                if ai_session:
+                    logger.info(f"api_internal_asterisk_cdr: Matched AI CallSession via Redis transfer key: room={ai_room}, id={ai_session.id}")
+        except Exception as r_err:
+            logger.warning(f"api_internal_asterisk_cdr: Error checking Redis for transfer key: {r_err}")
+
+        # Fallback: check recent AI CallSession for the same caller number within past 1 hour
+        if not ai_session and caller:
+            try:
+                clean_c = caller.lstrip('+').strip()
+                ai_candidates = CallSession.objects.filter(
+                    started_at__gte=now - datetime.timedelta(hours=1),
+                    direction__in=['inbound', 'outbound_ai', 'internal_test']
+                )
+                ai_candidates = ai_candidates.filter(
+                    Q(caller_phone__icontains=clean_c) | 
+                    Q(caller_extension=caller) |
+                    Q(room_name__icontains=clean_c)
+                )
+                ai_session = ai_candidates.order_by('-started_at').first()
+                if ai_session:
+                    logger.info(f"api_internal_asterisk_cdr: Matched recent AI CallSession by caller match: id={ai_session.id}, room={ai_session.room_name}")
+            except Exception as match_err:
+                logger.warning(f"api_internal_asterisk_cdr: Error searching candidate AI session: {match_err}")
+
+        # If this call was transferred from AI, attach the human recording to the parent AI session
+        if ai_session and rec_url:
+            ai_session.transferred_recording_url = rec_url
+            target_desc = f"{callee_name} ({callee})" if callee_emp and callee != callee_name else (callee_name or f"التحويلة {callee}")
+            ai_session.transferred_to_extension = target_desc
+            transfer_note = f"تم تحويل المكالمة إلى {target_desc} واستمرت محادثة الموظف {duration} ثانية ({status})."
+            if not ai_session.summary:
+                ai_session.summary = transfer_note
+            elif transfer_note not in ai_session.summary:
+                ai_session.summary = f"{ai_session.summary} | {transfer_note}"
+            ai_session.save(update_fields=['transferred_recording_url', 'transferred_to_extension', 'summary'])
+            logger.info(f"api_internal_asterisk_cdr: Attached transferred recording '{rec_url}' to AI CallSession #{ai_session.id}")
+
+            # Also update internal employee session summary for reference
+            session.summary = f"محادثة محولة من المساعد الذكي ({ai_session.room_name}) إلى {callee_name} ({status})"
+            session.save(update_fields=['summary'])
+
+            publish_to_centrifugo(f"tenant_{ai_session.user_id}:calls", {
+                "event": "call_transferred_recording_ready",
+                "session": ai_session.to_dict()
+            })
 
         # 2. Create EmployeeCallLog for Caller
         if caller_emp:

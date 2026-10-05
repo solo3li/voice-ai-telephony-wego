@@ -93,6 +93,8 @@ class CallSession(models.Model):
     transcript_text = models.TextField(blank=True, default='')
     summary = models.TextField(blank=True, default='')
     recording_url = models.CharField(max_length=500, blank=True, default='')
+    transferred_recording_url = models.CharField(max_length=500, blank=True, default='', verbose_name="تسجيل مكالمة الموظف البشري المحولة")
+    transferred_to_extension = models.CharField(max_length=64, blank=True, default='', verbose_name="التحويلة أو الطابور المحول إليه")
     is_internal_test = models.BooleanField(default=False, verbose_name="مكالمة اختبار داخلية لموظف")
     caller_extension = models.CharField(max_length=32, blank=True, default='', verbose_name="تحويلة الموظف المتصل")
 
@@ -130,6 +132,12 @@ class CallSession(models.Model):
                 rec_url = request.build_absolute_uri(rec_url)
             except Exception:
                 pass
+        trans_rec_url = self.transferred_recording_url or ""
+        if trans_rec_url and request and not (trans_rec_url.startswith('http://') or trans_rec_url.startswith('https://')):
+            try:
+                trans_rec_url = request.build_absolute_uri(trans_rec_url)
+            except Exception:
+                pass
         return {
             "id": self.id,
             "room_name": self.room_name,
@@ -147,6 +155,8 @@ class CallSession(models.Model):
             "summary": self.summary or "",
             "transcript_text": self.transcript_text or "",
             "recording_url": rec_url,
+            "transferred_recording_url": trans_rec_url,
+            "transferred_to_extension": self.transferred_to_extension or "",
             "dialogue_turns": self.dialogue_turns,
             "is_internal_test": self.is_internal_test,
             "caller_extension": self.caller_extension,

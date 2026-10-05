@@ -95,6 +95,7 @@ function renderCallsTable(calls) {
     }
 
     const party = c.destination_phone || c.caller_phone || 'Web Dashboard';
+    const isTransferred = !!c.transferred_recording_url;
     const m = Math.floor(c.duration_seconds / 60);
     const s = c.duration_seconds % 60;
     const durFormatted = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
@@ -102,7 +103,10 @@ function renderCallsTable(calls) {
     return `
       <tr class="hover:bg-[#F5EFE6]/50 transition">
         <td class="py-3 px-4 text-[#6E645D] font-mono text-[11px] whitespace-nowrap">${c.started_at}</td>
-        <td class="py-3 px-4">${dirBadge}</td>
+        <td class="py-3 px-4">
+          ${dirBadge}
+          ${isTransferred ? '<span class="mt-1 block px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 w-fit">🔄 محولة لموظف</span>' : ''}
+        </td>
         <td class="py-3 px-4 font-mono font-bold text-[#1C1917]">${escapeHtml(party)}</td>
         <td class="py-3 px-4 text-[#443D39] max-w-[130px] truncate" title="${escapeHtml(c.room_name)}">${escapeHtml(c.room_name)}</td>
         <td class="py-3 px-4 font-mono text-[#6E645D]">${durFormatted}</td>
@@ -115,8 +119,13 @@ function renderCallsTable(calls) {
             <span>👁️ التفاصيل</span>
           </button>
           ${c.recording_url ? `
-            <a href="${c.recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-sm" title="استماع للتسجيل">
-              <span>▶️</span> <span>تسجيل</span>
+            <a href="${c.recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-sm" title="استماع لتسجيل الـ AI">
+              <span>🤖</span> <span>AI</span>
+            </a>
+          ` : ''}
+          ${c.transferred_recording_url ? `
+            <a href="${c.transferred_recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-sm" title="استماع لتسجيل الموظف البشري">
+              <span>👤</span> <span>موظف</span>
             </a>
           ` : ''}
         </td>
@@ -199,6 +208,7 @@ function openCallDetailModal(callId) {
   const mBox = document.getElementById('call-detail-modal');
   if (mBox) mBox.classList.remove('hidden');
 
+  // AI Recording
   const recSec = document.getElementById('cdm-recording-section');
   const audioEl = document.getElementById('cdm-audio-player');
   const dlBtn = document.getElementById('cdm-download-btn');
@@ -210,11 +220,30 @@ function openCallDetailModal(callId) {
     if (audioEl) { audioEl.pause(); audioEl.src = ''; }
     if (recSec) recSec.classList.add('hidden');
   }
+
+  // Transferred Human Employee Recording
+  const transRecSec = document.getElementById('cdm-transferred-recording-section');
+  const transAudioEl = document.getElementById('cdm-transferred-audio-player');
+  const transDlBtn = document.getElementById('cdm-transferred-download-btn');
+  const transTitle = document.getElementById('cdm-transferred-title');
+  if (call.transferred_recording_url) {
+    if (transAudioEl) transAudioEl.src = call.transferred_recording_url;
+    if (transDlBtn) transDlBtn.href = call.transferred_recording_url;
+    if (transTitle && call.transferred_to_extension) {
+      transTitle.innerText = `تسجيل محادثة الموظف البشري (${call.transferred_to_extension}):`;
+    }
+    if (transRecSec) transRecSec.classList.remove('hidden');
+  } else {
+    if (transAudioEl) { transAudioEl.pause(); transAudioEl.src = ''; }
+    if (transRecSec) transRecSec.classList.add('hidden');
+  }
 }
 
 function closeCallDetailModal() {
   const audioEl = document.getElementById('cdm-audio-player');
   if (audioEl) { audioEl.pause(); }
+  const transAudioEl = document.getElementById('cdm-transferred-audio-player');
+  if (transAudioEl) { transAudioEl.pause(); }
   const mBox = document.getElementById('call-detail-modal');
   if (mBox) mBox.classList.add('hidden');
 }
