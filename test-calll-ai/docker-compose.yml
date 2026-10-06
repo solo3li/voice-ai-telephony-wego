@@ -88,7 +88,7 @@ services:
       dockerfile: Dockerfile
     container_name: voice_django
     restart: unless-stopped
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker -w 3 -b 0.0.0.0:8000 --timeout 60 --max-requests 1000 --max-requests-jitter 50"
     volumes:
       - ./django_app:/app
       - media_data:/app/media

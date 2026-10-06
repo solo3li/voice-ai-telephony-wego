@@ -167,6 +167,7 @@ services:
       - ./etc/asterisk-pjsip.conf:/etc/asterisk/pjsip.d/03-docker.conf:ro
       - ./etc/asterisk-odbc.ini:/etc/odbc.ini:ro
       - ./etc/asterisk-res_odbc.conf:/etc/asterisk/res_odbc.d/02-docker.conf:ro
+      - ./etc/asterisk-amqp.conf:/etc/asterisk/amqp.d/02-docker.conf:ro
       - ./etc/asterisk-manager.conf:/etc/asterisk/manager.d/999-docker.conf:ro
       - ./bin/init-asterisk:/bin/asterisk/init:ro
       - asterisk-autoprov:/etc/asterisk/pjsip.d:rw
