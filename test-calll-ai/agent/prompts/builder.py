@@ -186,7 +186,7 @@ def generate_welcome_greeting(
     if is_outbound and outbound_context:
         goal = (outbound_context.get("call_goal") or "").strip()
         name = profile.get("name", "المساعد")
-        if goal:
+        if goal and len(goal) < 80 and not any(kw in goal for kw in ["أنت", "سيناريو", "تعليمات", "\n"]):
             return f"مرحباً بك، معك {name}. أتصل بحضرتك بخصوص {goal}."
         return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
 

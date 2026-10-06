@@ -1,5 +1,6 @@
 import time
 import json
+from typing import Optional, Dict, Any, List
 import requests
 from config import DJANGO_API_URL, INTERNAL_API_KEY, logger
 from .http_pool import get_http_session
