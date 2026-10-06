@@ -1306,6 +1306,24 @@ def api_partner_client_employees(request, client_id):
             first_name=display_name
         )
 
+        # Ensure tenant has a native Wazo context
+        tenant_context = None
+        try:
+            from telephony.models import get_or_create_tenant_context
+            tenant_cfg = get_or_create_tenant_context(request.client_user)
+            tenant_context = tenant_cfg.wazo_context
+        except Exception as e:
+            logger.warning(f"Could not resolve tenant context for partner client #{client_id}: {e}")
+
+        # Headless Wazo Provisioning in Tenant Context
+        from telephony.wazo_client import wazo_client
+        wazo_info = wazo_client.provision_employee(
+            display_name=display_name,
+            extension=extension,
+            password=password,
+            context=tenant_context
+        )
+
         employee = EmployeeProfile.objects.create(
             user=emp_user,
             employer=request.client_user,
@@ -1314,8 +1332,23 @@ def api_partner_client_employees(request, client_id):
             department=department,
             status=status_val,
             avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}",
+            wazo_user_uuid=wazo_info.get("wazo_user_uuid", ""),
+            wazo_line_id=wazo_info.get("wazo_line_id", ""),
+            sip_username=wazo_info.get("sip_username", f"emp{extension}"),
+            sip_password=wazo_info.get("sip_password", password),
+            sip_host=wazo_info.get("sip_host", ""),
+            sip_port=wazo_info.get("sip_port", 5070),
             is_active=True
         )
+
+        try:
+            from call_center.views import publish_to_centrifugo
+            publish_to_centrifugo("employees:presence", {
+                "event": "employee_created",
+                "employee": employee.to_dict()
+            })
+        except Exception:
+            pass
 
         return JsonResponse({
             "status": "success",
@@ -1323,7 +1356,15 @@ def api_partner_client_employees(request, client_id):
             "client_id": client_id,
             "employee": {
                 **employee.to_dict(),
-                "temporary_password": password
+                "temporary_password": password,
+                "sip_credentials": {
+                    "server": f"{employee.sip_host or '169.58.32.179'}:{employee.sip_port or 5070}",
+                    "host": employee.sip_host or "169.58.32.179",
+                    "port": employee.sip_port or 5070,
+                    "username": employee.sip_username or f"emp{extension}",
+                    "password": employee.sip_password or password,
+                    "extension": extension
+                }
             }
         }, status=201)
 
@@ -1393,10 +1434,17 @@ def api_partner_client_employee_detail(request, client_id, employee_id):
     elif request.method == 'DELETE':
         name = employee.display_name
         ext = employee.extension
+        wazo_uuid = employee.wazo_user_uuid
         user_to_del = employee.user
         employee.delete()
         if user_to_del:
             user_to_del.delete()
+        if wazo_uuid:
+            try:
+                from telephony.wazo_client import wazo_client
+                wazo_client.delete_user(wazo_uuid)
+            except Exception as e:
+                logger.warning(f"Failed to delete Wazo user {wazo_uuid}: {e}")
 
         return JsonResponse({
             "status": "success",
