@@ -34,43 +34,8 @@ from agent.session.tool_dispatcher import build_gemini_tools, handle_gemini_tool
 from agent.session.memory import distill_and_update_memory
 from agent.transfer.transfer_bot import execute_ai_transfer_and_hold
 
-import math
-
 # Global strong references for background tasks (e.g. memory distillation) to prevent Python 3.11 GC
 BACKGROUND_TASKS: Set[asyncio.Task] = set()
-
-# Precomputed Half-Cosine Ramp tables for 5ms micro-fade smoothing (120 samples at 24kHz)
-FADE_SAMPLES = 120
-FADE_IN_RAMP = [math.sin((i / FADE_SAMPLES) * (math.pi / 2)) for i in range(FADE_SAMPLES)]
-FADE_OUT_RAMP = [math.cos((i / FADE_SAMPLES) * (math.pi / 2)) for i in range(FADE_SAMPLES)]
-
-
-def apply_micro_fade_in(frame_bytes: bytes) -> bytes:
-    """Apply smooth 5ms half-cosine ramp to the start of the first audio frame of a speech turn."""
-    if len(frame_bytes) < FADE_SAMPLES * 2:
-        return frame_bytes
-    arr = bytearray(frame_bytes)
-    for i in range(FADE_SAMPLES):
-        offset = i * 2
-        val = int.from_bytes(arr[offset:offset+2], byteorder="little", signed=True)
-        smoothed = int(val * FADE_IN_RAMP[i])
-        arr[offset:offset+2] = smoothed.to_bytes(2, byteorder="little", signed=True)
-    return bytes(arr)
-
-
-def apply_micro_fade_out(frame_bytes: bytes) -> bytes:
-    """Apply smooth 5ms half-cosine ramp to the end of the final audio frame of a speech turn."""
-    total_samples = len(frame_bytes) // 2
-    if total_samples < FADE_SAMPLES:
-        return frame_bytes
-    arr = bytearray(frame_bytes)
-    start_sample = total_samples - FADE_SAMPLES
-    for i in range(FADE_SAMPLES):
-        offset = (start_sample + i) * 2
-        val = int.from_bytes(arr[offset:offset+2], byteorder="little", signed=True)
-        smoothed = int(val * FADE_OUT_RAMP[i])
-        arr[offset:offset+2] = smoothed.to_bytes(2, byteorder="little", signed=True)
-    return bytes(arr)
 
 
 def track_background_task(task: asyncio.Task) -> asyncio.Task:
@@ -365,12 +330,6 @@ async def run_agent_session(
 
                             # Interruption handling (Barge-in triggered by Gemini Live)
                             if content.interrupted:
-                                now = time.time()
-                                speaking_elapsed = now - getattr(session_state, "speech_turn_start_time", 0.0)
-                                if speaking_elapsed < 0.6 and not session_state.turn_complete:
-                                    logger.info(f"Ignoring early acoustic echo barge-in in room {room_name} (elapsed={speaking_elapsed:.2f}s)")
-                                    continue
-
                                 logger.info(f"Gemini playback interrupted by user in room {room_name}")
                                 session_state.interrupted = True
                                 session_state.is_agent_speaking = False
@@ -442,14 +401,11 @@ async def run_agent_session(
                             stop_event.set()
                             break
 
-            # Worker 3: Enhanced Smooth Audio Pacer (sub-millisecond jitter-smoothed clock with Micro-Fade DSP)
+            # Worker 3: Continuous Smooth Audio Pacer
             async def audio_pacer_worker():
                 buffer = bytearray()
                 prebuffered = False
-                is_turn_first_frame = True
-                # 260ms initial cushion on turn start (13 frames x 20ms = 260ms = 12,480 bytes)
-                PREBUFFER_FRAMES = 13
-                PREBUFFER_BYTES = OUT_FRAME_BYTES * PREBUFFER_FRAMES
+                JITTER_BUFFER_BYTES = OUT_FRAME_BYTES * 10  # 200ms initial cushion on speech turn start
                 next_frame_time = time.monotonic()
 
                 while not stop_event.is_set():
@@ -458,67 +414,37 @@ async def run_agent_session(
                         if session_state.interrupted:
                             buffer.clear()
                             prebuffered = False
-                            is_turn_first_frame = True
                             session_state.interrupted = False
                             next_frame_time = time.monotonic()
 
-                        # 2. Gather audio from queue into buffer
-                        while not out_audio_queue.empty():
+                        # 2. Collect incoming audio chunks from Gemini
+                        # Pre-buffer up to 200ms on turn start to absorb network jitter, unless turn is already completed
+                        while len(buffer) < OUT_FRAME_BYTES or (not prebuffered and len(buffer) < JITTER_BUFFER_BYTES and not session_state.turn_complete):
                             try:
-                                chunk = out_audio_queue.get_nowait()
+                                chunk = await asyncio.wait_for(out_audio_queue.get(), timeout=0.06)
+                                if session_state.interrupted:
+                                    buffer.clear()
+                                    prebuffered = False
+                                    session_state.interrupted = False
+                                    break
                                 buffer.extend(chunk)
-                            except asyncio.QueueEmpty:
-                                break
+                            except asyncio.TimeoutError:
+                                if session_state.turn_complete or len(buffer) >= OUT_FRAME_BYTES:
+                                    break
+                                if out_audio_queue.empty() and session_state.turn_complete and len(buffer) == 0:
+                                    break
 
-                        # 3. Prebuffer on speech turn start to absorb network jitter from Gemini
-                        if not prebuffered:
-                            if len(buffer) >= PREBUFFER_BYTES or (len(buffer) >= OUT_FRAME_BYTES and session_state.turn_complete):
-                                prebuffered = True
-                                is_turn_first_frame = True
-                                next_frame_time = time.monotonic()
-                            elif not session_state.turn_complete:
-                                try:
-                                    chunk = await asyncio.wait_for(out_audio_queue.get(), timeout=0.15)
-                                    buffer.extend(chunk)
-                                    while not out_audio_queue.empty():
-                                        buffer.extend(out_audio_queue.get_nowait())
-                                    if len(buffer) >= PREBUFFER_BYTES or session_state.turn_complete:
-                                        prebuffered = True
-                                        is_turn_first_frame = True
-                                        next_frame_time = time.monotonic()
-                                    else:
-                                        continue
-                                except asyncio.TimeoutError:
-                                    if len(buffer) >= OUT_FRAME_BYTES:
-                                        prebuffered = True
-                                        is_turn_first_frame = True
-                                        next_frame_time = time.monotonic()
-                                    else:
-                                        continue
-                            elif len(buffer) == 0:
-                                # Idle state between speech turns
-                                is_turn_first_frame = True
-                                if session_state.is_agent_speaking and (time.time() - session_state.agent_last_audio_time > AUDIO_SILENCE_THRESHOLD):
-                                    session_state.is_agent_speaking = False
-                                    logger.info(f"Agent playback finished for room {room_name}. Mic listening active.")
-                                    await notify_centrifugo_async(channel_name, "agent_listening", "المساعدة تستمع إليكِ الآن...")
-                                await asyncio.sleep(0.01)
-                                next_frame_time = time.monotonic()
-                                continue
+                        if session_state.interrupted:
+                            buffer.clear()
+                            prebuffered = False
+                            session_state.interrupted = False
+                            continue
 
-                        # 4. Emit 20ms audio frame if buffer has data
+                        # 3. Emit 20ms audio frame if buffer has data
                         if len(buffer) >= OUT_FRAME_BYTES:
+                            prebuffered = True
                             frame_bytes = bytes(buffer[:OUT_FRAME_BYTES])
                             del buffer[:OUT_FRAME_BYTES]
-
-                            # Apply smooth 5ms micro-fade-in on the very first frame of a speech turn
-                            if is_turn_first_frame:
-                                frame_bytes = apply_micro_fade_in(frame_bytes)
-                                is_turn_first_frame = False
-
-                            # If this was the last frame and turn is complete, apply micro-fade-out
-                            if len(buffer) == 0 and session_state.turn_complete and out_audio_queue.empty():
-                                frame_bytes = apply_micro_fade_out(frame_bytes)
 
                             frame = rtc.AudioFrame(
                                 data=frame_bytes,
@@ -529,50 +455,40 @@ async def run_agent_session(
                             await audio_source.capture_frame(frame)
                             session_state.agent_last_audio_time = time.time()
 
-                            # High-precision drift-compensated clock (20ms interval)
+                            # Drift-compensated clock pacing (20ms interval)
                             next_frame_time += AUDIO_FRAME_INTERVAL
                             now = time.monotonic()
                             sleep_duration = next_frame_time - now
                             if sleep_duration > 0:
                                 await asyncio.sleep(sleep_duration)
                             elif sleep_duration < -0.04:
-                                # Resynchronize clock smoothly if delayed
                                 next_frame_time = time.monotonic()
 
-                        elif session_state.turn_complete and out_audio_queue.empty():
-                            # Turn complete: only trailing sub-frame remaining in buffer
-                            if len(buffer) > 0:
-                                pad = OUT_FRAME_BYTES - len(buffer)
-                                frame_bytes = bytes(buffer + b'\x00' * pad)
-                                buffer.clear()
-                                # Apply smooth micro-fade-out on trailing frame
-                                frame_bytes = apply_micro_fade_out(frame_bytes)
-                                frame = rtc.AudioFrame(
-                                    data=frame_bytes,
-                                    sample_rate=OUT_SAMPLE_RATE,
-                                    num_channels=1,
-                                    samples_per_channel=OUT_FRAME_SAMPLES
-                                )
-                                await audio_source.capture_frame(frame)
-                                session_state.agent_last_audio_time = time.time()
-
+                        elif len(buffer) > 0 and session_state.turn_complete and out_audio_queue.empty():
+                            # Only pad trailing remaining bytes at the very end of a completed speech turn
+                            pad = OUT_FRAME_BYTES - len(buffer)
+                            frame_bytes = bytes(buffer + b'\x00' * pad)
+                            buffer.clear()
                             prebuffered = False
-                            is_turn_first_frame = True
+                            frame = rtc.AudioFrame(
+                                data=frame_bytes,
+                                sample_rate=OUT_SAMPLE_RATE,
+                                num_channels=1,
+                                samples_per_channel=OUT_FRAME_SAMPLES
+                            )
+                            await audio_source.capture_frame(frame)
+                            session_state.agent_last_audio_time = time.time()
                             next_frame_time = time.monotonic()
 
                         else:
-                            # ACTIVE TURN MICRO-PAUSE:
-                            # Gemini is still speaking, but the next burst packet was slightly delayed.
-                            # Seamlessly await next burst packet (up to 350ms to accommodate clause thinking).
-                            try:
-                                chunk = await asyncio.wait_for(out_audio_queue.get(), timeout=0.35)
-                                buffer.extend(chunk)
-                                while not out_audio_queue.empty():
-                                    buffer.extend(out_audio_queue.get_nowait())
-                                next_frame_time = time.monotonic()
-                            except asyncio.TimeoutError:
-                                next_frame_time = time.monotonic()
-                                await asyncio.sleep(0.01)
+                            # Idle state between speech turns
+                            prebuffered = False
+                            if session_state.is_agent_speaking and (time.time() - session_state.agent_last_audio_time > AUDIO_SILENCE_THRESHOLD):
+                                session_state.is_agent_speaking = False
+                                logger.info(f"Agent playback finished for room {room_name}. Mic listening active.")
+                                await notify_centrifugo_async(channel_name, "agent_listening", "المساعدة تستمع إليكِ الآن...")
+                            await asyncio.sleep(0.01)
+                            next_frame_time = time.monotonic()
 
                     except Exception as ex:
                         if not stop_event.is_set():
