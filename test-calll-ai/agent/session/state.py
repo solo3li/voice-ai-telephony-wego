@@ -1,4 +1,4 @@
-"""Session state tracking for active Voice Agent calls."""
+import time
 import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Set
@@ -14,7 +14,7 @@ class AgentSessionState:
     dialogue_turns: List[Dict[str, str]] = field(default_factory=list)
     is_agent_speaking: bool = False
     turn_complete: bool = True
-    agent_last_audio_time: float = 0.0
+    agent_last_audio_time: float = field(default_factory=time.time)
     interrupted: bool = False
     pending_transfer: Optional[Dict[str, Any]] = None
     background_tasks: Set[asyncio.Task] = field(default_factory=set)
