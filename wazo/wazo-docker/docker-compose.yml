@@ -149,6 +149,10 @@ services:
     expose:
       - "5038"  # AMI
       - "5039"  # HTTP (ARI/AJAM)
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - '0.0.0.0:5070:5060/udp'  # SIP UDP (custom 5070)
       - '0.0.0.0:5070:5060/tcp'  # SIP TCP (custom 5070)
