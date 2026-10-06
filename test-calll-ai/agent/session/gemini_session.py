@@ -28,6 +28,7 @@ from agent.clients.django_client import (
     parse_mcp_servers_from_bootstrap,
     parse_customer_memory_from_bootstrap,
     parse_active_profile_from_bootstrap,
+    save_call_session_and_update_memory_async,
 )
 from agent.prompts import build_dynamic_system_instruction, generate_welcome_greeting
 from agent.audio.stream_handler import setup_room_audio_listeners
@@ -236,8 +237,8 @@ async def run_agent_session(
             greeting_triggered = False
             async def trigger_proactive_greeting():
                 nonlocal greeting_triggered
-                # Poll for up to 20 seconds waiting for the human participant to connect
-                for _ in range(40):
+                # Poll for up to 30 seconds (60 * 0.5s) waiting for the human participant to connect
+                for _ in range(60):
                     if stop_event.is_set() or greeting_triggered:
                         return
                     humans = [p for p in room.remote_participants.values() if p.identity not in ("ai-agent", "pipecat-agent")]
@@ -280,6 +281,11 @@ async def run_agent_session(
                                 logger.warning(f"Error triggering proactive greeting: {ge}")
                         return
                     await asyncio.sleep(0.5)
+
+                is_outbound = bool(outbound_context and outbound_context.get("is_outbound_ai"))
+                if is_outbound and not greeting_triggered and not stop_event.is_set():
+                    logger.info(f"[OUTBOUND] No answer after 30s in room {room_name}. Terminating agent session.")
+                    stop_event.set()
 
             session_state.track_task(asyncio.create_task(trigger_proactive_greeting()))
 
@@ -578,20 +584,38 @@ async def run_agent_session(
             pass
         await notify_centrifugo_async(channel_name, "agent_disconnected", "تم إنهاء جلسة المساعدة الصوتية.")
 
-        if user_id and session_state.dialogue_turns:
+        if user_id:
             final_phone = session_state.caller_phone or caller_phone
-            logger.info(f"Triggering background memory distillation for user {user_id} [phone={final_phone}] with {len(session_state.dialogue_turns)} turns.")
-            track_background_task(
-                asyncio.create_task(
-                    distill_and_update_memory(
-                        user_id=user_id,
-                        caller_phone=final_phone,
-                        room_name=room_name,
-                        started_at=session_state.started_at,
-                        messages=list(session_state.dialogue_turns),
-                        current_profile=dict(memory_data.get("permanent_profile", {}) if memory_data else {}),
-                        genai_client=client,
-                        outbound_context=outbound_context
+            if session_state.dialogue_turns:
+                logger.info(f"Triggering background memory distillation for user {user_id} [phone={final_phone}] with {len(session_state.dialogue_turns)} turns.")
+                track_background_task(
+                    asyncio.create_task(
+                        distill_and_update_memory(
+                            user_id=user_id,
+                            caller_phone=final_phone,
+                            room_name=room_name,
+                            started_at=session_state.started_at,
+                            messages=list(session_state.dialogue_turns),
+                            current_profile=dict(memory_data.get("permanent_profile", {}) if memory_data else {}),
+                            genai_client=client,
+                            outbound_context=outbound_context
+                        )
                     )
                 )
-            )
+            else:
+                logger.info(f"Call in room {room_name} ended with 0 dialogue turns. Finalizing unanswered session in Django.")
+                track_background_task(
+                    asyncio.create_task(
+                        save_call_session_and_update_memory_async(
+                            user_id=user_id,
+                            room_name=room_name,
+                            started_at=session_state.started_at,
+                            transcript_text="",
+                            summary="لم يرد العميل على المكالمة.",
+                            updated_profile=dict(memory_data.get("permanent_profile", {}) if memory_data else {}),
+                            caller_phone=final_phone,
+                            outbound_context=outbound_context,
+                            duration_seconds=0
+                        )
+                    )
+                )

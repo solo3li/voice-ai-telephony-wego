@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import inngest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from django.conf import settings
 from django.contrib.auth.models import User
 from asgiref.sync import sync_to_async
@@ -72,13 +72,17 @@ def _initiate_contact_call_sync(contact_id: int) -> dict:
 
         if dial_res.get("status") == "success":
             room_name = dial_res.get("room_name")
+            sess_id = dial_res.get("session_id")
+            if sess_id:
+                contact.call_session_id = sess_id
+                contact.save(update_fields=['call_session', 'updated_at'])
             broadcast_campaign_update(campaign.id, "contact_calling", {
                 "contact_id": contact.id,
                 "phone": contact.phone_number,
                 "name": contact.customer_name,
                 "room_name": room_name
             })
-            return {"status": "success", "room_name": room_name, "dial_data": dial_res}
+            return {"status": "success", "room_name": room_name, "session_id": sess_id, "dial_data": dial_res}
         else:
             if dial_res.get("code") == "no_outbound_gateway":
                 # DO NOT mark as failed or waste retries when there is no gateway!
@@ -98,29 +102,76 @@ def _initiate_contact_call_sync(contact_id: int) -> dict:
                 contact.interest_level = 'unreached'
                 contact.call_summary = dial_res.get("message") or "فشل الاتصال بالمزود الخارجي"
                 contact.save(update_fields=['call_status', 'interest_level', 'call_summary', 'updated_at'])
-                campaign.update_metrics()
+                schedule_contact_retry(contact.id)
                 return {"status": "error", "message": dial_res.get("message")}
     except Exception as err:
         logger.exception(f"Error in _initiate_contact_call_sync for contact {contact_id}")
         return {"status": "error", "message": str(err)}
 
 
-def _check_and_mark_retry_sync(contact_id: int) -> dict:
-    """Synchronous check to determine if a contact call qualifies for durable retry."""
+def schedule_contact_retry(contact_id: int) -> bool:
+    """
+    Checks if a contact qualifies for durable retry and dispatches 'campaign/contact.retry'.
+    Called when a call is unanswered, busy, or failed.
+    """
     from crm.models import CampaignContact
     try:
-        contact = CampaignContact.objects.select_related('campaign').get(id=contact_id)
+        contact = CampaignContact.objects.select_related('campaign').filter(id=contact_id).first()
+        if not contact:
+            return False
         campaign = contact.campaign
-        if contact.retries_count < campaign.max_retries and campaign.status == 'running':
-            contact.retries_count += 1
-            contact.call_status = 'pending'
-            contact.save(update_fields=['retries_count', 'call_status', 'updated_at'])
-            delay_mins = max(1, campaign.retry_delay_minutes)
-            return {"should_retry": True, "delay_mins": delay_mins}
-        return {"should_retry": False}
+
+        if campaign.status not in ['running', 'draft']:
+            logger.info(f"Campaign #{campaign.id} status is '{campaign.status}'. Skipping retry for contact #{contact.id}.")
+            return False
+
+        if contact.call_status == 'answered':
+            logger.info(f"Contact #{contact.id} is answered. Skipping retry.")
+            return False
+
+        if contact.retries_count >= campaign.max_retries:
+            logger.info(f"Contact #{contact.id} exhausted maximum retries ({contact.retries_count}/{campaign.max_retries}).")
+            campaign.update_metrics()
+            return False
+
+        contact.retries_count += 1
+        delay_mins = max(1, campaign.retry_delay_minutes)
+        contact.call_summary = (
+            f"لم يرد العميل (المحاولة {contact.retries_count}/{campaign.max_retries}). "
+            f"مجدول لإعادة الاتصال تلقائياً بعد {delay_mins} دقيقة."
+        )
+        contact.save(update_fields=['retries_count', 'call_summary', 'updated_at'])
+        campaign.update_metrics()
+
+        from asgiref.sync import async_to_sync
+        async_to_sync(inngest_client.send)([
+            inngest.Event(
+                name="campaign/contact.retry",
+                data={
+                    "contact_id": contact.id,
+                    "campaign_id": campaign.id,
+                    "user_id": campaign.user_id,
+                    "delay_mins": delay_mins,
+                    "attempt": contact.retries_count
+                }
+            )
+        ])
+
+        broadcast_campaign_update(campaign.id, "contact_retry_scheduled", {
+            **contact.to_dict(),
+            "retry_in_minutes": delay_mins,
+            "next_attempt": contact.retries_count
+        })
+        logger.info(f"Scheduled retry for contact #{contact.id} ({contact.phone_number}) in {delay_mins} minutes (Attempt {contact.retries_count}/{campaign.max_retries}).")
+        return True
     except Exception as e:
-        logger.exception(f"Error in _check_and_mark_retry_sync: {e}")
-        return {"should_retry": False}
+        logger.exception(f"Error in schedule_contact_retry for contact {contact_id}: {e}")
+        return False
+
+
+def _check_and_mark_retry_sync(contact_id: int) -> dict:
+    """Synchronous check to determine if a contact call qualifies for durable retry."""
+    return {"should_retry": schedule_contact_retry(contact_id)}
 
 
 def _queue_contacts_sync(campaign_id: int) -> dict:
@@ -159,7 +210,7 @@ def _queue_contacts_sync(campaign_id: int) -> dict:
 async def fn_dial_campaign_contact(ctx: inngest.Context) -> dict:
     """
     Inngest background job to execute an outbound call for a campaign contact.
-    Handles concurrency throttling, LiveKit call dispatch, durable retry sleep, and lead scoring.
+    Handles concurrency throttling, LiveKit call dispatch, and lead scoring.
     """
     event_data = ctx.event.data
     contact_id = event_data.get("contact_id")
@@ -173,15 +224,67 @@ async def fn_dial_campaign_contact(ctx: inngest.Context) -> dict:
     if call_result.get("code") == "no_outbound_gateway" or call_result.get("status") == "aborted":
         return {"status": "aborted", "reason": "no_outbound_gateway", "contact_id": contact_id}
 
-    if call_result.get("status") != "success":
-        retry_info = await sync_to_async(_check_and_mark_retry_sync, thread_sensitive=True)(contact_id)
-        if retry_info.get("should_retry"):
-            delay_mins = retry_info.get("delay_mins", 15)
-            # Durable sleep via Inngest step before retry!
-            await ctx.step.sleep("retry-delay", f"{delay_mins}m")
-            return await ctx.step.run("retry-call", step_initiate_call)
+    return {"status": "dispatched", "contact_id": contact_id, "call_result": call_result}
 
-    return {"status": "completed", "contact_id": contact_id, "call_result": call_result}
+
+@inngest_client.create_function(
+    fn_id="retry-campaign-contact",
+    trigger=inngest.TriggerEvent(event="campaign/contact.retry"),
+)
+async def fn_retry_campaign_contact(ctx: inngest.Context) -> dict:
+    """
+    Durable retry handler: sleeps for the configured retry_delay_minutes,
+    re-verifies contact status, and dispatches a new dial event if eligible.
+    """
+    event_data = ctx.event.data
+    contact_id = event_data.get("contact_id")
+    delay_mins = int(event_data.get("delay_mins", 1))
+
+    logger.info(f"[RETRY] Durable sleep initiated for contact #{contact_id}: {delay_mins} minutes.")
+    await ctx.step.sleep("retry-delay", timedelta(minutes=delay_mins))
+
+    def _prepare_retry_sync():
+        from crm.models import CampaignContact, UserCampaignLimit
+        contact = CampaignContact.objects.select_related('campaign').filter(id=contact_id).first()
+        if not contact:
+            return {"eligible": False, "reason": "contact_not_found"}
+        campaign = contact.campaign
+        if campaign.status not in ['running', 'draft']:
+            logger.info(f"[RETRY] Campaign #{campaign.id} status is '{campaign.status}'. Skipping retry for contact #{contact.id}.")
+            return {"eligible": False, "reason": f"campaign_{campaign.status}"}
+        if contact.call_status == 'answered':
+            logger.info(f"[RETRY] Contact #{contact.id} already answered. Skipping retry.")
+            return {"eligible": False, "reason": "already_answered"}
+
+        contact.call_status = 'pending'
+        contact.save(update_fields=['call_status', 'updated_at'])
+        limit = UserCampaignLimit.get_limit_for_user(campaign.user)
+        return {
+            "eligible": True,
+            "campaign_id": campaign.id,
+            "contact_id": contact.id,
+            "user_id": campaign.user_id,
+            "concurrency_limit": limit
+        }
+
+    prep_res = await ctx.step.run("check-and-prepare", sync_to_async(_prepare_retry_sync, thread_sensitive=True))
+    if not prep_res.get("eligible"):
+        return {"status": "skipped", "reason": prep_res.get("reason"), "contact_id": contact_id}
+
+    # Emit dial event for this contact
+    await inngest_client.send([
+        inngest.Event(
+            name="campaign/contact.dial",
+            data={
+                "campaign_id": prep_res.get("campaign_id"),
+                "contact_id": prep_res.get("contact_id"),
+                "user_id": prep_res.get("user_id"),
+                "concurrency_limit": prep_res.get("concurrency_limit")
+            }
+        )
+    ])
+    logger.info(f"[RETRY] Successfully re-queued contact #{contact_id} for dialing after delay.")
+    return {"status": "retry_dispatched", "contact_id": contact_id}
 
 
 @inngest_client.create_function(
@@ -223,4 +326,5 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
 all_inngest_functions = [
     fn_dial_campaign_contact,
     fn_start_campaign,
+    fn_retry_campaign_contact,
 ]

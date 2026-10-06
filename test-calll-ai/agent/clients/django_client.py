@@ -272,9 +272,12 @@ def trigger_ai_transfer_sync(room_name: str, user_id: int, queue_code: str, call
 
 # ==================== Call Session & Memory Save API ====================
 
-def _build_call_complete_payload(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None) -> dict:
+def _build_call_complete_payload(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None) -> dict:
     now_ts = time.time()
-    duration = max(0, int(now_ts - started_at))
+    if duration_seconds is not None:
+        duration = max(0, int(duration_seconds))
+    else:
+        duration = max(0, int(now_ts - started_at))
     direction = 'inbound'
     destination_phone = ''
     call_goal = ''
@@ -300,11 +303,11 @@ def _build_call_complete_payload(user_id: int, room_name: str, started_at: float
         "permanent_profile": updated_profile
     }
 
-async def save_call_session_and_update_memory_async(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None):
+async def save_call_session_and_update_memory_async(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
     """Persist completed CallSession and update CustomerMemory non-blockingly via aiohttp."""
     if not user_id:
         return
-    payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context)
+    payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context, duration_seconds=duration_seconds)
     url = f"{DJANGO_API_URL}/api/crm/internal/complete-call/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -321,11 +324,11 @@ async def save_call_session_and_update_memory_async(user_id: int, room_name: str
     except Exception as e:
         logger.error(f"Failed to save call session via Django API asynchronously: {e}")
 
-def save_call_session_and_update_memory_sync(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None):
+def save_call_session_and_update_memory_sync(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
     """Persist completed CallSession and update CustomerMemory synchronously."""
     if not user_id:
         return
-    payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context)
+    payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context, duration_seconds=duration_seconds)
     url = f"{DJANGO_API_URL}/api/crm/internal/complete-call/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,

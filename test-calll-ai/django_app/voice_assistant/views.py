@@ -626,6 +626,36 @@ def livekit_webhook(request):
 
     elif event_type == "room_finished":
         logger.info(f"Room {room_name} finished.")
+        try:
+            from crm.models import CallSession, CampaignContact
+            from crm.inngest_jobs import schedule_contact_retry
+            import datetime
+
+            session = CallSession.objects.filter(room_name=room_name, ended_at__isnull=True).first()
+            if session:
+                logger.info(f"[WEBHOOK] Finalizing unclosed CallSession #{session.id} for finished room '{room_name}'")
+                session.ended_at = datetime.datetime.now(datetime.timezone.utc)
+                session.duration_seconds = 0
+                session.summary = session.summary or "انتهت المكالمة دون رد من الطرف الآخر."
+                session.save(update_fields=['ended_at', 'duration_seconds', 'summary'])
+
+                contact = CampaignContact.objects.filter(call_session=session).first()
+                if not contact and session.destination_phone and session.user:
+                    contact = CampaignContact.objects.filter(
+                        campaign__user=session.user,
+                        phone_number=session.destination_phone
+                    ).exclude(call_status='answered').first()
+
+                if contact and contact.call_status != 'answered':
+                    contact.call_status = 'no_answer'
+                    contact.interest_level = 'unreached'
+                    contact.call_summary = "لم يرد العميل على الاتصال."
+                    contact.call_session = session
+                    contact.save(update_fields=['call_status', 'interest_level', 'call_summary', 'call_session', 'updated_at'])
+                    contact.campaign.update_metrics()
+                    schedule_contact_retry(contact.id)
+        except Exception as rf_err:
+            logger.warning(f"Error handling room_finished cleanup for room '{room_name}': {rf_err}")
 
     elif event_type == "egress_ended":
         egress_info = getattr(event, 'egress_info', None)

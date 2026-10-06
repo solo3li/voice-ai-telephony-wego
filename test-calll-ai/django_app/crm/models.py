@@ -225,12 +225,23 @@ class OutboundCampaign(models.Model):
 
     def update_metrics(self):
         self.total_contacts = self.contacts.count()
-        self.completed_contacts = self.contacts.filter(call_status__in=['answered', 'busy', 'no_answer', 'failed']).count()
+        # Contact is completed only if answered OR if all retry attempts have been exhausted
+        self.completed_contacts = self.contacts.filter(
+            models.Q(call_status='answered') |
+            models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
+        ).count()
         self.answered_contacts = self.contacts.filter(call_status='answered').count()
         self.hot_leads_count = self.contacts.filter(interest_level='hot').count()
         self.warm_leads_count = self.contacts.filter(interest_level='warm').count()
         self.cold_leads_count = self.contacts.filter(interest_level='cold').count()
-        if self.total_contacts > 0 and self.completed_contacts >= self.total_contacts and self.status == 'running':
+
+        # Check if there are still pending contacts or contacts eligible for retry
+        has_pending_work = self.contacts.filter(
+            models.Q(call_status__in=['pending', 'in_progress']) |
+            (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
+        ).exists()
+
+        if self.total_contacts > 0 and not has_pending_work and self.status == 'running':
             self.status = 'completed'
         self.save(update_fields=[
             'total_contacts', 'completed_contacts', 'answered_contacts',

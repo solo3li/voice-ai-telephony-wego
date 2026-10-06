@@ -21,7 +21,18 @@ async def distill_and_update_memory(
     try:
         user_msgs = [m for m in messages if m.get("speaker") == "user"]
         if not user_msgs or len(messages) < 2:
-            logger.info(f"Call in room {room_name} had insufficient speech turns ({len(messages)}). Skipping memory distillation.")
+            logger.info(f"Call in room {room_name} had insufficient user speech turns ({len(messages)}). Finalizing session in Django.")
+            await save_call_session_and_update_memory_async(
+                user_id=user_id,
+                room_name=room_name,
+                started_at=started_at,
+                transcript_text="",
+                summary="لم يرد العميل على المكالمة أو تم إغلاقها فوراً.",
+                updated_profile=dict(current_profile or {}),
+                caller_phone=caller_phone,
+                outbound_context=outbound_context,
+                duration_seconds=0
+            )
             return
 
         lines = []
