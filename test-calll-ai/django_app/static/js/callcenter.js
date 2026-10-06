@@ -535,7 +535,11 @@ async function dialTargetFromDashboard(target, targetName) {
       });
 
       await dashboardLivekitRoom.connect(data.livekit_url, data.livekit_token);
-      await dashboardLivekitRoom.localParticipant.setMicrophoneEnabled(true);
+      await dashboardLivekitRoom.localParticipant.setMicrophoneEnabled(true, {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      });
     }
 
   } catch (err) {

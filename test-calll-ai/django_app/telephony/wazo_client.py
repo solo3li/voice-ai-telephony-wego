@@ -167,40 +167,38 @@ class WazoClient:
         """Issue AMI module reload res_pjsip.so to activate newly created credentials in Asterisk."""
         try:
             import socket
+            import time
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(3.0)
+            s.settimeout(4.0)
             s.connect((WAZO_AMI_HOST, WAZO_AMI_PORT))
             s.recv(1024)
 
             # Login
             login_req = f"Action: Login\r\nUsername: {WAZO_AMI_USER}\r\nSecret: {WAZO_AMI_SECRET}\r\n\r\n"
             s.sendall(login_req.encode())
-            buf = b""
-            while b"\r\n\r\n" not in buf:
-                chunk = s.recv(2048)
-                if not chunk:
-                    break
-                buf += chunk
+            time.sleep(0.1)
+            try:
+                s.recv(4096)
+            except Exception:
+                pass
 
             # Send reload res_pjsip command
             cmd_req = "Action: Command\r\nCommand: module reload res_pjsip.so\r\n\r\n"
             s.sendall(cmd_req.encode())
-            buf = b""
-            while b"\r\n\r\n" not in buf:
-                chunk = s.recv(2048)
-                if not chunk:
-                    break
-                buf += chunk
+            time.sleep(0.2)
+            try:
+                s.recv(4096)
+            except Exception:
+                pass
 
             # Send dialplan reload command so new extensions and contexts are active
             cmd_dp = "Action: Command\r\nCommand: dialplan reload\r\n\r\n"
             s.sendall(cmd_dp.encode())
-            buf = b""
-            while b"\r\n\r\n" not in buf:
-                chunk = s.recv(2048)
-                if not chunk:
-                    break
-                buf += chunk
+            time.sleep(0.2)
+            try:
+                s.recv(4096)
+            except Exception:
+                pass
 
             s.close()
             logger.info("[WazoClient] Asterisk res_pjsip and dialplan reloaded successfully via AMI")

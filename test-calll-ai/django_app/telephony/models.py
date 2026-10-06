@@ -120,7 +120,7 @@ class InboundPBXTrunk(models.Model):
             f"type=peer",
             f"qualify=yes",
             f"disallow=all",
-            f"allow=alaw,ulaw,opus",
+            f"allow=opus,alaw,ulaw",
             f"insecure=port,invite",
             f"context=from-internal",
             f"canreinvite=yes",
@@ -148,7 +148,7 @@ class InboundPBXTrunk(models.Model):
             f"context=from-internal",
             f"insecure=port,invite",
             f"disallow=all",
-            f"allow=alaw,ulaw,opus",
+            f"allow=opus,alaw,ulaw",
         ]
         if self.auth_mode == 'credentials' and self.auth_username:
             user_lines.extend([
