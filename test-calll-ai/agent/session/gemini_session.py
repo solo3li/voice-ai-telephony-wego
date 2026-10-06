@@ -359,13 +359,15 @@ async def run_agent_session(
                             if content.model_turn:
                                 session_state.turn_complete = False
                                 session_state.agent_last_audio_time = time.time()
+                                for part in content.model_turn.parts:
+                                    if part.inline_data and part.inline_data.data:
+                                        out_audio_queue.put_nowait(part.inline_data.data)
                                 if not session_state.is_agent_speaking:
                                     session_state.is_agent_speaking = True
                                     session_state.speech_turn_start_time = time.time()
-                                    await notify_centrifugo_async(channel_name, "agent_speaking", "المساعدة تتحدث الآن...")
-                                for part in content.model_turn.parts:
-                                    if part.inline_data and part.inline_data.data:
-                                        await out_audio_queue.put(part.inline_data.data)
+                                    track_background_task(asyncio.create_task(
+                                        notify_centrifugo_async(channel_name, "agent_speaking", "المساعدة تتحدث الآن...")
+                                    ))
 
                             if content.turn_complete:
                                 logger.info(f"Gemini model turn complete for room {room_name}")
@@ -405,7 +407,7 @@ async def run_agent_session(
             async def audio_pacer_worker():
                 buffer = bytearray()
                 prebuffered = False
-                JITTER_BUFFER_BYTES = OUT_FRAME_BYTES * 10  # 200ms initial cushion on speech turn start
+                JITTER_BUFFER_BYTES = OUT_FRAME_BYTES * 12  # 240ms jitter buffer (12 frames = 240ms)
                 next_frame_time = time.monotonic()
 
                 while not stop_event.is_set():
@@ -418,7 +420,7 @@ async def run_agent_session(
                             next_frame_time = time.monotonic()
 
                         # 2. Collect incoming audio chunks from Gemini
-                        # Pre-buffer up to 200ms on turn start to absorb network jitter, unless turn is already completed
+                        # Pre-buffer up to 240ms on turn start to absorb network jitter, unless turn is already completed
                         while len(buffer) < OUT_FRAME_BYTES or (not prebuffered and len(buffer) < JITTER_BUFFER_BYTES and not session_state.turn_complete):
                             try:
                                 chunk = await asyncio.wait_for(out_audio_queue.get(), timeout=0.06)
@@ -440,7 +442,7 @@ async def run_agent_session(
                             session_state.interrupted = False
                             continue
 
-                        # 3. Emit 20ms audio frame if buffer has data
+                        # 3. When at least one full 20ms frame is ready, capture and send to LiveKit
                         if len(buffer) >= OUT_FRAME_BYTES:
                             prebuffered = True
                             frame_bytes = bytes(buffer[:OUT_FRAME_BYTES])
@@ -455,14 +457,14 @@ async def run_agent_session(
                             await audio_source.capture_frame(frame)
                             session_state.agent_last_audio_time = time.time()
 
-                            # Drift-compensated clock pacing (20ms interval)
+                            # Drift-compensated clock pacing
                             next_frame_time += AUDIO_FRAME_INTERVAL
                             now = time.monotonic()
                             sleep_duration = next_frame_time - now
                             if sleep_duration > 0:
                                 await asyncio.sleep(sleep_duration)
-                            elif sleep_duration < -0.04:
-                                next_frame_time = time.monotonic()
+                            elif sleep_duration < -0.05:
+                                next_frame_time = now
 
                         elif len(buffer) > 0 and session_state.turn_complete and out_audio_queue.empty():
                             # Only pad trailing remaining bytes at the very end of a completed speech turn
@@ -486,7 +488,9 @@ async def run_agent_session(
                             if session_state.is_agent_speaking and (time.time() - session_state.agent_last_audio_time > AUDIO_SILENCE_THRESHOLD):
                                 session_state.is_agent_speaking = False
                                 logger.info(f"Agent playback finished for room {room_name}. Mic listening active.")
-                                await notify_centrifugo_async(channel_name, "agent_listening", "المساعدة تستمع إليكِ الآن...")
+                                track_background_task(asyncio.create_task(
+                                    notify_centrifugo_async(channel_name, "agent_listening", "المساعدة تستمع إليكِ الآن...")
+                                ))
                             await asyncio.sleep(0.01)
                             next_frame_time = time.monotonic()
 
