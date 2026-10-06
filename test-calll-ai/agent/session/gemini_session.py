@@ -1,5 +1,6 @@
 """Gemini 3.8 Live bidirectional audio streaming session."""
 import asyncio
+import numpy as np
 import time
 from typing import Dict, Any, Optional, Set
 from google import genai
@@ -14,6 +15,7 @@ from agent.config import (
     GEMINI_API_KEY,
     GEMINI_LIVE_MODEL,
     IN_CHUNK_SIZE,
+    GEMINI_OUT_SAMPLE_RATE,
     OUT_SAMPLE_RATE,
     OUT_FRAME_BYTES,
     OUT_FRAME_SAMPLES,
@@ -361,7 +363,11 @@ async def run_agent_session(
                                 session_state.agent_last_audio_time = time.time()
                                 for part in content.model_turn.parts:
                                     if part.inline_data and part.inline_data.data:
-                                        out_audio_queue.put_nowait(part.inline_data.data)
+                                        # Upsample Gemini native 24kHz → 48kHz (LiveKit SIP expects 48kHz)
+                                        # numpy.repeat duplicates each sample: exact 2x, zero latency, no state
+                                        arr_24k = np.frombuffer(part.inline_data.data, dtype=np.int16)
+                                        chunk_48k = np.repeat(arr_24k, 2).tobytes()
+                                        out_audio_queue.put_nowait(chunk_48k)
                                 if not session_state.is_agent_speaking:
                                     session_state.is_agent_speaking = True
                                     session_state.speech_turn_start_time = time.time()

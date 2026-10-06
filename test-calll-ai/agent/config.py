@@ -30,10 +30,14 @@ IN_SAMPLE_RATE = 16000          # Gemini input sample rate
 IN_NUM_CHANNELS = 1
 IN_CHUNK_SIZE = 1280            # 40ms at 16kHz 16-bit mono (16000 * 0.040 * 2)
 
-OUT_SAMPLE_RATE = 24000         # Gemini output & LiveKit track sample rate
+# NOTE: Gemini Live API outputs PCM at 24kHz. We upsample to 48kHz in the pipeline
+# so that LiveKit SIP receives native 48kHz PCM (expected_pcm_hz: 48000) and avoids
+# its internal resampler, which was causing mixer restarts and dropped samples.
+GEMINI_OUT_SAMPLE_RATE = 24000  # Raw Gemini audio output rate (fixed by API)
+OUT_SAMPLE_RATE = 48000         # Upsampled rate: native to LiveKit SIP & WebRTC
 OUT_NUM_CHANNELS = 1
-OUT_FRAME_SAMPLES = 480         # 20ms at 24kHz (24000 * 0.020)
-OUT_FRAME_BYTES = 960           # 480 samples * 2 bytes
+OUT_FRAME_SAMPLES = 960         # 20ms at 48kHz (48000 * 0.020)
+OUT_FRAME_BYTES = 1920          # 960 samples * 2 bytes (16-bit PCM)
 AUDIO_FRAME_INTERVAL = 0.020    # Exact 20ms between 20ms frames (drift-compensated clock)
 AUDIO_SILENCE_THRESHOLD = 0.25  # Seconds of silence after turn_complete before marking agent stopped speaking
 
