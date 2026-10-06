@@ -37,7 +37,7 @@ def run_queue_e2e_tests():
     sip_accounts = list(UserSIPAccount.objects.filter(user=user))
     print(f"[*] User has {len(sip_accounts)} SIP accounts:")
     for acc in sip_accounts:
-        print(f"    - {acc.name} ({acc.sip_username}) Trunk: {acc.livekit_trunk_id}")
+        print(f"    - {getattr(acc, 'display_name', getattr(acc, 'name', ''))} ({acc.sip_username}) Ext: {getattr(acc, 'extension', '')}")
 
     # 4. Test Queue Listing Endpoint
     from django.test import Client
