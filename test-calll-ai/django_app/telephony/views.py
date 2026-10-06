@@ -91,18 +91,24 @@ async def _async_delete_outbound_trunk(trunk_id):
         await lk.aclose()
 
 
-async def _async_dial_sip_participant(trunk_id, destination_phone, room_name, caller_id=None):
+async def _async_dial_sip_participant(trunk_id, destination_phone, room_name, caller_id=None, headers=None, display_name=None):
     lk = api.LiveKitAPI(settings.LIVEKIT_INTERNAL_URL, settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
     try:
-        req = api.CreateSIPParticipantRequest(
-            sip_trunk_id=trunk_id,
-            sip_call_to=destination_phone,
-            room_name=room_name,
-            sip_number=caller_id or "",
-            participant_identity=f"customer_{destination_phone}",
-            participant_name=f"عميل ({destination_phone})",
-            play_dialtone=True,
-        )
+        req_kwargs = {
+            "sip_trunk_id": trunk_id,
+            "sip_call_to": destination_phone,
+            "room_name": room_name,
+            "sip_number": caller_id or "",
+            "participant_identity": f"customer_{destination_phone}",
+            "participant_name": f"تحويلة ({destination_phone})" if len(destination_phone) <= 5 else f"عميل ({destination_phone})",
+            "play_dialtone": True,
+        }
+        if headers:
+            req_kwargs["headers"] = headers
+        if display_name:
+            req_kwargs["display_name"] = display_name
+
+        req = api.CreateSIPParticipantRequest(**req_kwargs)
         return await lk.sip.create_sip_participant(req)
     finally:
         await lk.aclose()

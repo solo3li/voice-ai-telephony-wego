@@ -4,7 +4,9 @@ import json
 import uuid
 import logging
 import asyncio
+import inspect
 import redis
+from django.db import models
 from django.conf import settings
 from livekit import api
 
@@ -52,30 +54,48 @@ def normalize_phone_number(raw_phone: str) -> str:
     return cleaned
 
 
-async def _async_dial_sip_participant(trunk_id, destination_phone, room_name, caller_id=None):
+async def _async_dial_sip_participant(trunk_id, destination_phone, room_name, caller_id=None, headers=None, display_name=None):
     """Dial participant via LiveKit SIP outbound trunk."""
     lk = api.LiveKitAPI(settings.LIVEKIT_INTERNAL_URL, settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
     try:
-        req = api.CreateSIPParticipantRequest(
-            sip_trunk_id=trunk_id,
-            sip_call_to=destination_phone,
-            room_name=room_name,
-            sip_number=caller_id or "",
-            participant_identity=f"customer_{destination_phone}",
-            participant_name=f"عميل ({destination_phone})",
-            play_dialtone=True,
-        )
+        req_kwargs = {
+            "sip_trunk_id": trunk_id,
+            "sip_call_to": destination_phone,
+            "room_name": room_name,
+            "sip_number": caller_id or "",
+            "participant_identity": f"customer_{destination_phone}",
+            "participant_name": f"تحويلة ({destination_phone})" if len(destination_phone) <= 5 else f"عميل ({destination_phone})",
+            "play_dialtone": True,
+        }
+        if headers:
+            req_kwargs["headers"] = headers
+        if display_name:
+            req_kwargs["display_name"] = display_name
+
+        req = api.CreateSIPParticipantRequest(**req_kwargs)
         return await lk.sip.create_sip_participant(req)
     finally:
         await lk.aclose()
 
 
-def check_has_active_outbound_gateway(user, gateway_type='auto', gateway_id=None, partner=None) -> tuple:
+def check_has_active_outbound_gateway(user, gateway_type='auto', gateway_id=None, partner=None, destination_phone="") -> tuple:
     """
     Validates if an active, usable outbound SIP trunk (PBX or Cloud) is available.
     Returns: (is_available: bool, trunk_id: str|None, trunk_name: str, caller_id: str, error_message: str)
     """
     gateway_type = str(gateway_type or 'auto').strip().lower()
+
+    # Smart Auto-Routing for internal extensions (e.g. 101, 109, 110)
+    is_internal_ext = bool(destination_phone and len(str(destination_phone)) <= 5 and str(destination_phone).isdigit())
+    if is_internal_ext:
+        pbx_t = InboundPBXTrunk.objects.filter(is_active=True, enable_outbound=True).exclude(livekit_outbound_trunk_id='').filter(
+            models.Q(user=user) | models.Q(pbx_ip='asterisk') | models.Q(name__icontains='wazo') | models.Q(name__icontains='asterisk')
+        ).first()
+        if not pbx_t:
+            pbx_t = InboundPBXTrunk.objects.filter(is_active=True, enable_outbound=True).exclude(livekit_outbound_trunk_id='').first()
+
+        trunk_id = pbx_t.livekit_outbound_trunk_id if pbx_t else "ST_WfEzgJNrQ7mx"
+        return True, trunk_id, "سنترال Wazo الداخلي (تحويلات)", "999", ""
 
     if gateway_type == 'pbx' and gateway_id:
         pbx_t = InboundPBXTrunk.objects.filter(id=gateway_id, user=user, is_active=True, enable_outbound=True).first()
@@ -161,7 +181,8 @@ def initiate_outbound_call(
         }
 
     # 1. Phone number validation / normalization
-    if len(raw_phone) <= 5 and raw_phone.isdigit():
+    is_internal_ext = len(raw_phone) <= 5 and raw_phone.isdigit()
+    if is_internal_ext:
         normalized_phone = raw_phone
     else:
         normalized_phone = normalize_phone_number(raw_phone)
@@ -173,60 +194,73 @@ def initiate_outbound_call(
                 "http_status": 400
             }
 
-    # 2. Wallet & Quota Checks
-    if partner and client_rel:
-        from billing.models import UserWallet
-        cost_check = partner.custom_rate_per_minute
-
-        if client_rel.is_cap_exceeded(cost_check):
-            return {
-                "status": "error",
-                "code": "CAP_EXCEEDED",
-                "message": "Client has reached their assigned spending or minute quota.",
-                "http_status": 403
-            }
-
-        partner_wallet, _ = UserWallet.objects.get_or_create(user=partner.user)
-        if partner_wallet.balance < cost_check:
-            return {
-                "status": "error",
-                "code": "PARTNER_BALANCE_LOW",
-                "message": "Partner balance is insufficient to start a new voice session.",
-                "http_status": 402
-            }
-    else:
+    # Resolve Multi-Tenant Context for internal extension
+    tenant_ctx = ""
+    if is_internal_ext:
         try:
-            from billing.models import BillingConfig, UserWallet
-            billing_cfg = BillingConfig.get_config()
-            wallet, _ = UserWallet.objects.get_or_create(
-                user=user,
-                defaults={
-                    'balance': billing_cfg.initial_welcome_credit,
-                    'currency': billing_cfg.currency,
-                    'total_deposited': billing_cfg.initial_welcome_credit,
-                }
-            )
-            if wallet.balance < billing_cfg.cost_per_minute:
-                sym = billing_cfg.get_currency_symbol()
+            from telephony.models import TenantTelephonyConfig
+            cfg = TenantTelephonyConfig.objects.filter(user=user).first()
+            if cfg and cfg.wazo_context:
+                tenant_ctx = cfg.wazo_context
+        except Exception as e:
+            logger.warning(f"Error resolving tenant config for user {user.id}: {e}")
+
+    # 2. Wallet & Quota Checks (Skipped for free internal extension tests)
+    if not is_internal_ext:
+        if partner and client_rel:
+            from billing.models import UserWallet
+            cost_check = partner.custom_rate_per_minute
+
+            if client_rel.is_cap_exceeded(cost_check):
                 return {
                     "status": "error",
-                    "code": "insufficient_balance",
-                    "message": f"رصيدك الحالي ({wallet.balance:.2f} {sym}) غير كافٍ لبدء مكالمة صادرة. الحد الأدنى المطلوب هو ({billing_cfg.cost_per_minute:.2f} {sym}). يرجى شحن الرصيد للمتابعة.",
-                    "balance": float(wallet.balance),
-                    "cost_per_minute": float(billing_cfg.cost_per_minute),
-                    "currency": wallet.currency,
-                    "currency_symbol": sym,
+                    "code": "CAP_EXCEEDED",
+                    "message": "Client has reached their assigned spending or minute quota.",
+                    "http_status": 403
+                }
+
+            partner_wallet, _ = UserWallet.objects.get_or_create(user=partner.user)
+            if partner_wallet.balance < cost_check:
+                return {
+                    "status": "error",
+                    "code": "PARTNER_BALANCE_LOW",
+                    "message": "Partner balance is insufficient to start a new voice session.",
                     "http_status": 402
                 }
-        except Exception as b_err:
-            logger.warning(f"Error checking wallet for outbound call: {b_err}")
+        else:
+            try:
+                from billing.models import BillingConfig, UserWallet
+                billing_cfg = BillingConfig.get_config()
+                wallet, _ = UserWallet.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'balance': billing_cfg.initial_welcome_credit,
+                        'currency': billing_cfg.currency,
+                        'total_deposited': billing_cfg.initial_welcome_credit,
+                    }
+                )
+                if wallet.balance < billing_cfg.cost_per_minute:
+                    sym = billing_cfg.get_currency_symbol()
+                    return {
+                        "status": "error",
+                        "code": "insufficient_balance",
+                        "message": f"رصيدك الحالي ({wallet.balance:.2f} {sym}) غير كافٍ لبدء مكالمة صادرة. الحد الأدنى المطلوب هو ({billing_cfg.cost_per_minute:.2f} {sym}). يرجى شحن الرصيد للمتابعة.",
+                        "balance": float(wallet.balance),
+                        "cost_per_minute": float(billing_cfg.cost_per_minute),
+                        "currency": wallet.currency,
+                        "currency_symbol": sym,
+                        "http_status": 402
+                    }
+            except Exception as b_err:
+                logger.warning(f"Error checking wallet for outbound call: {b_err}")
 
     # 3. Gateway Resolution (PBX / Cloud / Auto)
     has_gw, livekit_outbound_trunk_id, trunk_name, caller_id_val, err_msg = check_has_active_outbound_gateway(
         user=user,
         gateway_type=gateway_type,
         gateway_id=gateway_id,
-        partner=partner
+        partner=partner,
+        destination_phone=raw_phone
     )
     if not has_gw:
         return {
@@ -261,14 +295,28 @@ def initiate_outbound_call(
     )
 
     # 6. Dial external phone / PBX extension via LiveKit Outbound Trunk
+    sip_headers = {}
+    if is_internal_ext and tenant_ctx:
+        sip_headers["X-Wazo-Tenant-Context"] = tenant_ctx
+
+    caller_id_dial = "999" if is_internal_ext else (caller_id_val or "")
+    display_name_dial = "999 - Gemini Voice AI" if is_internal_ext else (caller_id_val or "")
+
     try:
         dial_fn = _get_dial_fn()
-        asyncio.run(dial_fn(
-            trunk_id=livekit_outbound_trunk_id,
-            destination_phone=normalized_phone,
-            room_name=room_name,
-            caller_id=caller_id_val
-        ))
+        sig = inspect.signature(dial_fn)
+        dial_kwargs = {
+            "trunk_id": livekit_outbound_trunk_id,
+            "destination_phone": normalized_phone,
+            "room_name": room_name,
+            "caller_id": caller_id_dial
+        }
+        if "headers" in sig.parameters:
+            dial_kwargs["headers"] = sip_headers
+        if "display_name" in sig.parameters:
+            dial_kwargs["display_name"] = display_name_dial
+
+        asyncio.run(dial_fn(**dial_kwargs))
     except Exception as dial_err:
         logger.error(f"Error executing LiveKit SIP dial for {normalized_phone} (Trunk: {livekit_outbound_trunk_id}): {dial_err}", exc_info=True)
         session.summary = f"Dial error: {str(dial_err)}"
