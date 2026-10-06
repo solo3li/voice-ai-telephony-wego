@@ -43,7 +43,12 @@ def serve_favicon_svg(request):
 urlpatterns = [
     path('favicon.ico', serve_favicon_ico, name='favicon_ico'),
     path('favicon.svg', serve_favicon_svg, name='favicon_svg'),
-    inngest.django.serve(inngest_client, combined_inngest_functions, serve_path="/api/inngest/"),
+    inngest.django.serve(
+        inngest_client,
+        combined_inngest_functions,
+        serve_origin="http://django:8000",
+        serve_path="/api/inngest/",
+    ),
     path('admin/', admin.site.urls),
     path('api/knowledge/', include('knowledge.urls')),
     path('api/agents/', include('agents.urls')),
