@@ -155,9 +155,8 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 # Internal Agent Service Authentication Key
 INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY', 'voice-internal-secret-token-key-12345')
 
-# Host IP & SIP Domain
+# Host IP
 EXTERNAL_IP = os.getenv('EXTERNAL_IP', '169.58.32.179')
-SIP_DOMAIN = os.getenv('SIP_DOMAIN', f"sip.{EXTERNAL_IP}.nip.io")
 
 # MinIO & Call Recordings Storage
 MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', 'http://minio:9000')

@@ -55,8 +55,8 @@ class EmployeeProfile(models.Model):
     def to_dict(self):
         from django.conf import settings
         effective_host = self.sip_host
-        if not effective_host or effective_host in ('asterisk', '127.0.0.1', 'localhost', '169.58.32.179'):
-            effective_host = getattr(settings, 'SIP_DOMAIN', f"sip.{getattr(settings, 'EXTERNAL_IP', '169.58.32.179')}.nip.io")
+        if not effective_host or effective_host in ('asterisk', '127.0.0.1', 'localhost'):
+            effective_host = getattr(settings, 'EXTERNAL_IP', '169.58.32.179')
 
         return {
             "id": self.id,
@@ -79,7 +79,6 @@ class EmployeeProfile(models.Model):
             "sip_credentials": {
                 "server": f"{effective_host}:{self.sip_port}",
                 "host": effective_host,
-                "domain": effective_host,
                 "port": self.sip_port,
                 "username": self.sip_username or f"emp{self.extension}",
                 "password": self.sip_password or "******",

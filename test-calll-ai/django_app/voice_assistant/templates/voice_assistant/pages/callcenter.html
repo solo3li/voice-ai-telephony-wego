@@ -458,27 +458,18 @@
 
     <div class="space-y-2.5">
       <div>
-        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Server (لبرامج السوفت فون مثل MicroSIP)</label>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Server / Domain (عنوان الخادم)</label>
         <div class="flex items-center gap-2">
-          <input type="text" id="sip-modal-server-full" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#680E23] font-mono font-bold" />
-          <button type="button" onclick="copyToClipboard('sip-modal-server-full')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
+          <input type="text" id="sip-modal-server" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-semibold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-server')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Host (الدومين)</label>
-          <div class="flex items-center gap-1.5">
-            <input type="text" id="sip-modal-server" readonly class="w-full px-2.5 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono text-[11px]" />
-            <button type="button" onclick="copyToClipboard('sip-modal-server')" class="px-2 py-1.5 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
-          </div>
-        </div>
-        <div>
-          <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Port (المنفذ)</label>
-          <div class="flex items-center gap-1.5">
-            <input type="text" id="sip-modal-port" readonly class="w-full px-2.5 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono text-[11px]" />
-            <button type="button" onclick="copyToClipboard('sip-modal-port')" class="px-2 py-1.5 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
-          </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-[#6E645D] mb-1">SIP Port (منفذ الاتصال)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="sip-modal-port" readonly class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono font-semibold" />
+          <button type="button" onclick="copyToClipboard('sip-modal-port')" class="px-3 py-2 rounded-xl bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 border border-[#E8CCD2] text-[#680E23] font-bold text-xs" title="نسخ">📋</button>
         </div>
       </div>
 
@@ -500,12 +491,8 @@
     </div>
 
     <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] text-[11px] text-[#6E645D] leading-relaxed">
-      <span class="font-bold text-[#1C1917]">💡 إعداد برنامج MicroSIP:</span><br/>
-      • <b>SIP Server</b>: انسخ حقل السيرفر المباشر أعلاه (<code class="text-[#680E23] font-mono font-bold">sip.169.58.32.179.nip.io:5070</code>)<br/>
-      • <b>SIP Proxy</b>: اتركه فارغاً<br/>
-      • <b>User / Login</b>: اسم المستخدم الموضح أعلاه<br/>
-      • <b>Domain</b>: <code class="text-[#680E23] font-mono font-bold">sip.169.58.32.179.nip.io:5070</code><br/>
-      • <b>Password</b>: كلمة المرور الموضحة
+      <span class="font-bold text-[#1C1917]">💡 كيفية الاستخدام:</span>
+      أدخل هذه البيانات في أي تطبيق SIP سوفت فون (مثل Zoiper, MicroSIP, Grandstream Wave) أو هاتف مكتبي IP Phone لاستقبال مكالمات الطوابير المحولة من الـ AI مباشرة بنقاء صوت فائق.
     </div>
 
     <div class="flex justify-end pt-2 border-t border-[#EAE3D9]">
