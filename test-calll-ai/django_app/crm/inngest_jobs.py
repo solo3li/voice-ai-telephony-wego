@@ -322,9 +322,34 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
     return await ctx.step.run("queue-contacts", step_queue_contacts)
 
 
+@inngest_client.create_function(
+    fn_id="coworker-post-call-orchestrator",
+    trigger=inngest.TriggerEvent(event="coworker/call.completed"),
+)
+async def fn_coworker_post_call_orchestrator(ctx: inngest.Context) -> dict:
+    """
+    Durable Inngest background job for Digital Coworker post-call processing.
+    Executes resiliently with automated retries and step logging.
+    """
+    event_data = ctx.event.data
+    room_name = event_data.get("room_name")
+
+    def _sync_post_call_work():
+        from crm.models import CallSession
+        from crm.services.trinity_bridge import dispatch_post_call_to_trinity
+        sess = CallSession.objects.filter(room_name=room_name).first()
+        if not sess:
+            return {"status": "skipped", "reason": "session_not_found"}
+        return dispatch_post_call_to_trinity(sess)
+
+    return await ctx.step.run("execute-coworker-followups", sync_to_async(_sync_post_call_work, thread_sensitive=True))
+
+
 # Expose functions list for Django Inngest serve handler
 all_inngest_functions = [
     fn_dial_campaign_contact,
     fn_start_campaign,
     fn_retry_campaign_contact,
+    fn_coworker_post_call_orchestrator,
 ]
+

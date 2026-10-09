@@ -45,3 +45,30 @@ class CampaignContactAdmin(admin.ModelAdmin):
     search_fields = ('customer_name', 'phone_number', 'call_summary', 'campaign__name')
     readonly_fields = ('created_at', 'updated_at')
 
+
+from .models import CustomerChannelIdentifier, ApprovalRequest, OmnichannelMessage
+
+@admin.register(CustomerChannelIdentifier)
+class CustomerChannelIdentifierAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer_memory', 'channel', 'identifier', 'created_at')
+    list_filter = ('channel', 'created_at')
+    search_fields = ('identifier', 'customer_memory__phone_number', 'customer_memory__customer_name')
+    readonly_fields = ('created_at',)
+
+
+@admin.register(ApprovalRequest)
+class ApprovalRequestAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'user', 'action_type', 'status', 'reviewed_by', 'created_at', 'reviewed_at')
+    list_filter = ('status', 'action_type', 'created_at', 'user')
+    search_fields = ('title', 'description', 'user__username', 'customer_memory__phone_number')
+    readonly_fields = ('created_at', 'updated_at', 'reviewed_at')
+
+
+@admin.register(OmnichannelMessage)
+class OmnichannelMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'channel', 'direction', 'sender', 'recipient', 'status', 'created_at')
+    list_filter = ('channel', 'direction', 'status', 'created_at', 'user')
+    search_fields = ('sender', 'recipient', 'content', 'user__username')
+    readonly_fields = ('created_at',)
+
+

@@ -1,0 +1,565 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}الموظف الرقمي الذكي (Autonomous Digital Coworker) - المنظومة الذكية{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- ==================== Header & Mode Switch Banner ==================== -->
+  <section class="bg-gradient-to-r from-[#2B140D] via-[#4A111F] to-[#1F0C08] text-white rounded-3xl p-6 shadow-2xl border border-[#D4AF37]/30 relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-wrap justify-between items-center gap-6">
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🤖</span>
+          <h1 class="text-xl md:text-2xl font-black text-white">الموظف الرقمي الذكي المستقل (Autonomous AI Coworker)</h1>
+        </div>
+        <p class="text-xs md:text-sm text-[#EADBC8] max-w-2xl leading-relaxed">
+          تحويل المنظومة من مجرد كول سنتر ذكي يتلقى المكالمات إلى <strong class="text-[#D4AF37]">موظف رقمي متكامل</strong> يمتلك ذاكرة عميقة، ينفذ مهام المبيعات والدعم عبر الواتساب والتيليجرام والهاتف، مع بوابات موافقة مشروطة لقرارات الإدارة.
+        </p>
+      </div>
+
+      <!-- Mode Switch Widget -->
+      <div class="bg-black/30 backdrop-blur-md border border-white/15 p-3 rounded-2xl flex flex-col items-end gap-2.5">
+        <span class="text-[11px] text-[#EADBC8] font-bold">نمط تشغيل النظام الحالي:</span>
+        <div class="inline-flex p-1 rounded-xl bg-white/10 border border-white/10" id="mode-toggle-group">
+          <button 
+            type="button" 
+            onclick="switchOperatingMode('call_center_only')" 
+            id="btn-mode-cc"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 {% if coworker_config.service_mode == 'call_center_only' %}bg-[#680E23] text-white shadow{% else %}text-[#EADBC8] hover:text-white{% endif %}"
+          >
+            <span>🎧</span>
+            <span>كول سنتر فقط</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="switchOperatingMode('digital_coworker')" 
+            id="btn-mode-dc"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 {% if coworker_config.service_mode == 'digital_coworker' %}bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow{% else %}text-[#EADBC8] hover:text-white{% endif %}"
+          >
+            <span>🤖</span>
+            <span>موظف رقمي شامل</span>
+          </button>
+        </div>
+        <span id="current-mode-badge" class="text-[10px] font-mono px-2 py-0.5 rounded-full {% if coworker_config.service_mode == 'digital_coworker' %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% endif %}">
+          {% if coworker_config.service_mode == 'digital_coworker' %}● النمط المستقل نشط{% else %}● نمط الكول سنتر المعتاد{% endif %}
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Navigation Subtabs ==================== -->
+  <div class="flex items-center gap-2 border-b border-[#EAE3D9] pb-2 text-xs font-bold overflow-x-auto">
+    <button type="button" onclick="switchCoworkerTab('identity')" id="tab-btn-identity" class="coworker-subtab-btn px-4 py-2.5 rounded-xl bg-[#680E23] text-white shadow-sm flex items-center gap-2">
+      <span>👤</span>
+      <span>الهوية والدور الذكي</span>
+    </button>
+    <button type="button" onclick="switchCoworkerTab('channels')" id="tab-btn-channels" class="coworker-subtab-btn px-4 py-2.5 rounded-xl text-[#6E645D] hover:text-[#1C1917] hover:bg-white/60 transition flex items-center gap-2">
+      <span>🌐</span>
+      <span>قنوات التواصل (واتساب وتيليجرام)</span>
+    </button>
+    <button type="button" onclick="switchCoworkerTab('approvals')" id="tab-btn-approvals" class="coworker-subtab-btn px-4 py-2.5 rounded-xl text-[#6E645D] hover:text-[#1C1917] hover:bg-white/60 transition flex items-center gap-2 relative">
+      <span>🚨</span>
+      <span>بوابات الموافقة (Approval Gates)</span>
+      <span id="pending-approvals-count" class="hidden px-1.5 py-0.2 text-[10px] bg-rose-600 text-white rounded-full">0</span>
+    </button>
+    <button type="button" onclick="switchCoworkerTab('timeline')" id="tab-btn-timeline" class="coworker-subtab-btn px-4 py-2.5 rounded-xl text-[#6E645D] hover:text-[#1C1917] hover:bg-white/60 transition flex items-center gap-2">
+      <span>📜</span>
+      <span>سجل المحادثات الموحد (Omnichannel)</span>
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: Identity & Role ==================== -->
+  <div id="tab-content-identity" class="coworker-tab-panel space-y-6">
+    <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-sm space-y-6">
+      <div class="flex justify-between items-center border-b border-[#EAE3D9] pb-4">
+        <div>
+          <h2 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+            <span>🎭</span>
+            تحديد هوية وسلطة الموظف الرقمي
+          </h2>
+          <p class="text-xs text-[#6E645D] mt-0.5">ضبط الاسم الوظيفي، المهام الرئيسية، ومستوى الاستقلالية الممنوح للموظف.</p>
+        </div>
+        <button type="button" onclick="saveCoworkerConfig()" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#841832] text-white text-xs font-bold shadow-md transition flex items-center gap-2">
+          <span>💾</span>
+          <span>حفظ التعديلات</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Coworker Name -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-[#2D2825]">اسم الموظف الذكي:</label>
+          <input 
+            type="text" 
+            id="cfg-coworker-name" 
+            value="{{ coworker_config.coworker_name|default:'سارة - الموظف الرقمي الذكي' }}"
+            class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3.5 py-2.5 text-xs text-[#1C1917] focus:ring-1 focus:ring-[#680E23]"
+          />
+        </div>
+
+        <!-- Role Choices -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-[#2D2825]">الدور الوظيفي الرئيسي:</label>
+          <select 
+            id="cfg-coworker-role" 
+            class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3.5 py-2.5 text-xs text-[#1C1917] focus:ring-1 focus:ring-[#680E23]"
+          >
+            <option value="sdr" {% if coworker_config.coworker_role == 'sdr' %}selected{% endif %}>مبيعات وتأهيل عملاء (AI SDR & Sales)</option>
+            <option value="support" {% if coworker_config.coworker_role == 'support' %}selected{% endif %}>دعم وعمليات ولوجستيات (Operations & Support)</option>
+            <option value="collections" {% if coworker_config.coworker_role == 'collections' %}selected{% endif %}>تحصيل ومتابعات مالية (Collections & Retention)</option>
+            <option value="executive_assistant" {% if coworker_config.coworker_role == 'executive_assistant' %}selected{% endif %}>مساعد تنفيذي وإداري شامل (Executive Assistant)</option>
+            <option value="custom" {% if coworker_config.coworker_role == 'custom' %}selected{% endif %}>دور مخصص (Custom Role)</option>
+          </select>
+        </div>
+
+        <!-- Autonomy Level -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-[#2D2825]">مستوى الاستقلالية وصلاحيات القرار:</label>
+          <select 
+            id="cfg-autonomy-level" 
+            class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3.5 py-2.5 text-xs text-[#1C1917] focus:ring-1 focus:ring-[#680E23]"
+          >
+            <option value="conditional_approval" {% if coworker_config.autonomy_level == 'conditional_approval' %}selected{% endif %}>استقلالية ذكية مع بوابات موافقة (Conditional Approval Gates)</option>
+            <option value="full_autonomy" {% if coworker_config.autonomy_level == 'full_autonomy' %}selected{% endif %}>استقلالية كاملة مع سقف مالي محدد (Full Autonomy)</option>
+            <option value="draft_first" {% if coworker_config.autonomy_level == 'draft_first' %}selected{% endif %}>نمط المسودة الدائمة (Draft-First Mode)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Custom Prompt Instructions -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-[#2D2825]">تعليمات السلوك المستقل (Autonomous Work Guidelines):</label>
+        <textarea 
+          id="cfg-custom-instructions" 
+          rows="4" 
+          placeholder="اكتب توجيهات الموظف الذكي عند التعامل مع العملاء عبر الواتساب والهاتف..."
+          class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl p-3.5 text-xs text-[#1C1917] focus:ring-1 focus:ring-[#680E23]"
+        >{{ coworker_config.custom_instructions|default:'' }}</textarea>
+      </div>
+
+      <!-- Automation Toggles -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] cursor-pointer">
+          <input type="checkbox" id="cfg-auto-call-followup" class="w-4 h-4 text-[#680E23] rounded" {% if coworker_config.auto_call_followup_enabled %}checked{% endif %}>
+          <div>
+            <p class="text-xs font-bold text-[#1C1917]">متابعة تلقائية بعد المكالمة</p>
+            <p class="text-[10px] text-[#6E645D]">إرسال ملخص عبر الواتساب فور انتهاء المكالمة</p>
+          </div>
+        </label>
+        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] cursor-pointer">
+          <input type="checkbox" id="cfg-proactive-actions" class="w-4 h-4 text-[#680E23] rounded" {% if coworker_config.proactive_actions_enabled %}checked{% endif %}>
+          <div>
+            <p class="text-xs font-bold text-[#1C1917]">إجراءات استباقية (Proactive)</p>
+            <p class="text-[10px] text-[#6E645D]">اقتراح عروض ومتابعة العملاء المتوقفين</p>
+          </div>
+        </label>
+        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] cursor-pointer">
+          <input type="checkbox" id="cfg-is-active" class="w-4 h-4 text-[#680E23] rounded" {% if coworker_config.is_active %}checked{% endif %}>
+          <div>
+            <p class="text-xs font-bold text-[#1C1917]">تفعيل الموظف للعمل</p>
+            <p class="text-[10px] text-[#6E645D]">تشغيل الاستجابة والأحداث اللحظية</p>
+          </div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: Channels (WhatsApp & Telegram) ==================== -->
+  <div id="tab-content-channels" class="coworker-tab-panel space-y-6 hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Telegram Approval Bot Setup -->
+      <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-[#EAE3D9] pb-3">
+          <span class="text-2xl">✈️</span>
+          <div>
+            <h3 class="text-sm font-bold text-[#1C1917]">بوت تيليجرام لبوابات الموافقة اللحظية</h3>
+            <p class="text-[11px] text-[#6E645D]">يرسل إشعارات فورية للمدير مع أزرار [✅ موافقة] و [❌ رفض].</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-[#2D2825] mb-1">Telegram Bot Token:</label>
+            <input 
+              type="password" 
+              id="cfg-telegram-bot-token" 
+              placeholder="e.g. 7123456789:AAHq_Abc123xyz"
+              value="{{ coworker_config.telegram_bot_token|default:'' }}"
+              class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs font-mono text-[#1C1917]"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#2D2825] mb-1">معرف شات المدير (Manager Chat ID):</label>
+            <input 
+              type="text" 
+              id="cfg-telegram-chat-id" 
+              placeholder="e.g. 987654321"
+              value="{{ coworker_config.telegram_manager_chat_id|default:'' }}"
+              class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs font-mono text-[#1C1917]"
+            />
+          </div>
+          <div class="pt-2 flex justify-between items-center">
+            <span class="text-[11px] text-[#6E645D]">WebHook Endpoint: <code class="bg-[#FAF7F2] px-1 py-0.5 rounded text-[#680E23]">/api/crm/telegram/webhook/</code></span>
+            <button type="button" onclick="saveCoworkerConfig()" class="px-4 py-2 bg-[#680E23] text-white rounded-xl text-xs font-bold hover:bg-[#841832] transition">
+              حفظ إعدادات تيليجرام
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp Multi-Mode (Meta Cloud & Evolution QR) -->
+      <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-[#EAE3D9] pb-3">
+          <span class="text-2xl">💬</span>
+          <div>
+            <h3 class="text-sm font-bold text-[#1C1917]">ربط الواتساب (WhatsApp Integration)</h3>
+            <p class="text-[11px] text-[#6E645D]">اختر بين ربط Meta Cloud الرسمي أو مسح كود QR عبر جهازك.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 border-b border-[#EAE3D9] pb-2 text-xs">
+          <label class="flex items-center gap-2 cursor-pointer font-bold text-[#2D2825]">
+            <input type="radio" name="wa_mode" value="meta_cloud" onchange="toggleWaMode('meta_cloud')" {% if coworker_config.whatsapp_mode != 'qr_code' %}checked{% endif %}>
+            <span>Meta Cloud API (الربط السحابي)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer font-bold text-[#2D2825] mr-4">
+            <input type="radio" name="wa_mode" value="qr_code" onchange="toggleWaMode('qr_code')" {% if coworker_config.whatsapp_mode == 'qr_code' %}checked{% endif %}>
+            <span>مسح كود QR محلي</span>
+          </label>
+        </div>
+
+        <!-- Meta Cloud Fields -->
+        <div id="wa-meta-box" class="space-y-3 {% if coworker_config.whatsapp_mode == 'qr_code' %}hidden{% endif %}">
+          <div>
+            <label class="block text-xs font-bold text-[#2D2825] mb-1">Phone Number ID (Meta):</label>
+            <input 
+              type="text" 
+              id="cfg-wa-phone-id" 
+              placeholder="e.g. 109876543210987"
+              value="{{ coworker_config.whatsapp_phone_number_id|default:'' }}"
+              class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs font-mono text-[#1C1917]"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#2D2825] mb-1">Access Token (Permanent / System User):</label>
+            <input 
+              type="password" 
+              id="cfg-wa-token" 
+              placeholder="Bearer Token..."
+              value="{{ coworker_config.whatsapp_access_token|default:'' }}"
+              class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs font-mono text-[#1C1917]"
+            />
+          </div>
+        </div>
+
+        <!-- QR Code Pairing Box -->
+        <div id="wa-qr-box" class="space-y-3 {% if coworker_config.whatsapp_mode != 'qr_code' %}hidden{% endif %}">
+          <div class="flex items-center justify-center p-4 bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl min-h-[160px]" id="qr-container">
+            <div class="text-center space-y-2">
+              <span class="text-4xl block">📱</span>
+              <p class="text-xs text-[#6E645D]">اضغط على الزر أدناه لتوليد كود المسح اللحظي</p>
+            </div>
+          </div>
+          <button type="button" onclick="generateQrSession()" class="w-full py-2 bg-[#D4AF37] hover:bg-[#c5a880] text-[#4A0817] font-bold rounded-xl text-xs transition shadow">
+            🔄 توليد كود مسح QR جديد
+          </button>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button type="button" onclick="saveCoworkerConfig()" class="px-4 py-2 bg-[#680E23] text-white rounded-xl text-xs font-bold hover:bg-[#841832] transition">
+            حفظ إعدادات الواتساب
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: Approval Gates ==================== -->
+  <div id="tab-content-approvals" class="coworker-tab-panel space-y-4 hidden">
+    <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex flex-wrap justify-between items-center gap-4 border-b border-[#EAE3D9] pb-4">
+        <div>
+          <h2 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+            <span>🚨</span>
+            طابور بوابات الموافقة الإدارية (Pending Approval Requests)
+          </h2>
+          <p class="text-xs text-[#6E645D] mt-0.5">الطلبات الحساسة (خصومات خاصة، استرجاع، إلغاء عقود) التي تتطلب موافقة يدوية من المدير.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="approvals-filter-status" onchange="loadApprovalsList()" class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-xs text-[#1C1917]">
+            <option value="pending">المعلقة فقط (Pending)</option>
+            <option value="executed">المنفذة (Executed)</option>
+            <option value="rejected">المرفوضة (Rejected)</option>
+            <option value="">جميع الحالات</option>
+          </select>
+          <button type="button" onclick="loadApprovalsList()" class="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#EAE3D9] border border-[#DDD5C7] text-xs font-semibold rounded-xl transition">
+            تحديث القائمة
+          </button>
+        </div>
+      </div>
+
+      <!-- Approvals List Container -->
+      <div id="approvals-list-container" class="space-y-3 min-h-[140px]">
+        <div class="text-center py-8 text-xs text-[#6E645D]">جاري تحميل طلبات الموافقة...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 4: Omnichannel Timeline ==================== -->
+  <div id="tab-content-timeline" class="coworker-tab-panel space-y-4 hidden">
+    <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex flex-wrap justify-between items-center gap-4 border-b border-[#EAE3D9] pb-4">
+        <div>
+          <h2 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+            <span>📜</span>
+            سجل التفاعلات الموحد متعدد القنوات (Omnichannel Audit Log)
+          </h2>
+          <p class="text-xs text-[#6E645D] mt-0.5">شريط زمني شامل لكافة المكالمات الصوتية، رسائل الواتساب، التيليجرام، والإيميلات لكل عميل.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="timeline-search-phone" 
+            placeholder="بحث برقم الهاتف e.g. +201..."
+            class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-xs font-mono text-[#1C1917] w-48"
+          />
+          <button type="button" onclick="loadTimelineMessages()" class="px-4 py-1.5 bg-[#680E23] text-white text-xs font-bold rounded-xl hover:bg-[#841832] transition">
+            بحث
+          </button>
+        </div>
+      </div>
+
+      <!-- Timeline List -->
+      <div id="timeline-list-container" class="space-y-2.5 min-h-[160px]">
+        <div class="text-center py-8 text-xs text-[#6E645D]">جاري تحميل سجل المحادثات...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Interactive JavaScript Client -->
+<script>
+  let activeTab = 'identity';
+
+  function switchCoworkerTab(tabName) {
+    activeTab = tabName;
+    document.querySelectorAll('.coworker-subtab-btn').forEach(btn => {
+      btn.className = 'coworker-subtab-btn px-4 py-2.5 rounded-xl text-[#6E645D] hover:text-[#1C1917] hover:bg-white/60 transition flex items-center gap-2';
+    });
+    document.querySelectorAll('.coworker-tab-panel').forEach(p => p.classList.add('hidden'));
+
+    const activeBtn = document.getElementById('tab-btn-' + tabName);
+    if (activeBtn) activeBtn.className = 'coworker-subtab-btn px-4 py-2.5 rounded-xl bg-[#680E23] text-white shadow-sm flex items-center gap-2';
+
+    const panel = document.getElementById('tab-content-' + tabName);
+    if (panel) panel.classList.remove('hidden');
+
+    if (tabName === 'approvals') loadApprovalsList();
+    if (tabName === 'timeline') loadTimelineMessages();
+  }
+
+  function toggleWaMode(mode) {
+    if (mode === 'meta_cloud') {
+      document.getElementById('wa-meta-box').classList.remove('hidden');
+      document.getElementById('wa-qr-box').classList.add('hidden');
+    } else {
+      document.getElementById('wa-meta-box').classList.add('hidden');
+      document.getElementById('wa-qr-box').classList.remove('hidden');
+    }
+  }
+
+  async function switchOperatingMode(newMode) {
+    try {
+      const resp = await fetch('/api/crm/coworker/config/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service_mode: newMode })
+      });
+      const data = await resp.json();
+      if (data.status === 'success') {
+        const isDc = (newMode === 'digital_coworker');
+        const ccBtn = document.getElementById('btn-mode-cc');
+        const dcBtn = document.getElementById('btn-mode-dc');
+        const badge = document.getElementById('current-mode-badge');
+
+        if (isDc) {
+          dcBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow';
+          ccBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-[#EADBC8] hover:text-white';
+          badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+          badge.textContent = '● النمط المستقل نشط';
+        } else {
+          ccBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-[#680E23] text-white shadow';
+          dcBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-[#EADBC8] hover:text-white';
+          badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+          badge.textContent = '● نمط الكول سنتر المعتاد';
+        }
+        alert('تم تغيير نمط التشغيل بنجاح إلى: ' + (isDc ? 'الموظف الرقمي الذكي المستقل' : 'كول سنتر فقط'));
+      }
+    } catch (e) {
+      alert('خطأ أثناء التبديل: ' + e);
+    }
+  }
+
+  async function saveCoworkerConfig() {
+    const waRadio = document.querySelector('input[name="wa_mode"]:checked');
+    const waMode = waRadio ? waRadio.value : 'meta_cloud';
+
+    const payload = {
+      coworker_name: document.getElementById('cfg-coworker-name').value,
+      coworker_role: document.getElementById('cfg-coworker-role').value,
+      autonomy_level: document.getElementById('cfg-autonomy-level').value,
+      custom_instructions: document.getElementById('cfg-custom-instructions').value,
+      auto_call_followup_enabled: document.getElementById('cfg-auto-call-followup').checked,
+      proactive_actions_enabled: document.getElementById('cfg-proactive-actions').checked,
+      is_active: document.getElementById('cfg-is-active').checked,
+      telegram_bot_token: document.getElementById('cfg-telegram-bot-token').value,
+      telegram_manager_chat_id: document.getElementById('cfg-telegram-chat-id').value,
+      whatsapp_mode: waMode,
+      whatsapp_phone_number_id: document.getElementById('cfg-wa-phone-id').value,
+      whatsapp_access_token: document.getElementById('cfg-wa-token').value,
+    };
+
+    try {
+      const resp = await fetch('/api/crm/coworker/config/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (data.status === 'success') {
+        alert('✅ تم حفظ كافة إعدادات الموظف الرقمي وقنوات التواصل بنجاح!');
+      } else {
+        alert('فشل الحفظ: ' + (data.message || 'خطأ غير معروف'));
+      }
+    } catch (e) {
+      alert('حدث خطأ في الاتصال: ' + e);
+    }
+  }
+
+  async function generateQrSession() {
+    const cont = document.getElementById('qr-container');
+    cont.innerHTML = '<div class="text-xs text-[#680E23] font-bold">جاري طلب كود المسح من الخادم...</div>';
+    try {
+      const res = await fetch('/api/crm/whatsapp/qr/');
+      const data = await res.json();
+      if (data.qr_code) {
+        if (data.qr_code.startsWith('data:image')) {
+          cont.innerHTML = `<img src="${data.qr_code}" class="max-w-[180px] max-h-[180px] rounded-xl shadow border border-[#DDD5C7]" />`;
+        } else {
+          cont.innerHTML = `<div class="p-4 bg-white rounded-xl font-mono text-xs break-all">${data.qr_code}</div>`;
+        }
+      } else {
+        cont.innerHTML = '<div class="text-xs text-rose-600">تعذر توليد كود QR حالياً.</div>';
+      }
+    } catch (e) {
+      cont.innerHTML = `<div class="text-xs text-rose-600">خطأ: ${e}</div>`;
+    }
+  }
+
+  async function loadApprovalsList() {
+    const cont = document.getElementById('approvals-list-container');
+    const status = document.getElementById('approvals-filter-status').value;
+    try {
+      const res = await fetch(`/api/crm/coworker/approvals/?status=${status}`);
+      const data = await res.json();
+      const list = data.approvals || [];
+
+      if (list.length === 0) {
+        cont.innerHTML = '<div class="text-center py-8 text-xs text-[#6E645D]">لا توجد طلبات موافقة مسجلة تحت هذه الحالة.</div>';
+        return;
+      }
+
+      cont.innerHTML = list.map(a => {
+        const isPending = (a.status === 'pending');
+        const badgeColor = isPending ? 'bg-amber-100 text-amber-800 border-amber-300' : (a.status === 'executed' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300');
+        const statusLabel = isPending ? 'معلق (Pending)' : (a.status === 'executed' ? 'تمت الموافقة والتنفيذ' : 'مرفوض');
+
+        return `
+          <div class="p-4 rounded-2xl border border-[#EAE3D9] bg-[#FAF7F2]/50 hover:bg-white transition space-y-3">
+            <div class="flex flex-wrap justify-between items-start gap-2">
+              <div>
+                <span class="text-xs font-bold text-[#1C1917] block">${a.title}</span>
+                <span class="text-[11px] text-[#6E645D]">${a.description}</span>
+              </div>
+              <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${badgeColor}">${statusLabel}</span>
+            </div>
+            ${isPending ? `
+              <div class="flex items-center gap-2 pt-2 border-t border-[#EAE3D9]">
+                <button type="button" onclick="decideApproval(${a.id}, 'approved')" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                  ✅ موافقة فورية
+                </button>
+                <button type="button" onclick="decideApproval(${a.id}, 'rejected')" class="px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                  ❌ رفض الطلب
+                </button>
+              </div>
+            ` : `
+              <div class="text-[11px] text-[#6E645D] pt-1">تمت المراجعة: ${a.decided_at || ''} بواسطة: ${a.decided_by || 'المدير'}</div>
+            `}
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      cont.innerHTML = `<div class="text-rose-600 text-xs">فشل التحميل: ${e}</div>`;
+    }
+  }
+
+  async function decideApproval(id, decision) {
+    if (!confirm(decision === 'approved' ? 'هل أنت متأكد من الموافقة على الطلب وتنفيذه آلياً؟' : 'هل أنت متأكد من رفض الطلب؟')) return;
+    try {
+      const res = await fetch('/api/crm/coworker/approvals/decide/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approval_id: id, decision: decision })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('تم تنفيذ الإجراء بنجاح!');
+        loadApprovalsList();
+      } else {
+        alert('فشل الإجراء: ' + (data.message || 'خطأ'));
+      }
+    } catch (e) {
+      alert('خطأ: ' + e);
+    }
+  }
+
+  async function loadTimelineMessages() {
+    const cont = document.getElementById('timeline-list-container');
+    const phone = document.getElementById('timeline-search-phone').value.trim();
+    try {
+      const res = await fetch(`/api/crm/omnichannel/messages/?phone=${encodeURIComponent(phone)}`);
+      const data = await res.json();
+      const list = data.messages || [];
+
+      if (list.length === 0) {
+        cont.innerHTML = '<div class="text-center py-8 text-xs text-[#6E645D]">لا توجد تفاعلات مسجلة.</div>';
+        return;
+      }
+
+      cont.innerHTML = list.map(m => {
+        const channelIcons = { phone: '📞', whatsapp: '💬', telegram: '✈️', email: '✉️' };
+        const icon = channelIcons[m.channel] || '📄';
+        return `
+          <div class="flex items-start gap-3 p-3 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] text-xs">
+            <span class="text-lg shrink-0">${icon}</span>
+            <div class="flex-1 space-y-0.5">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-[#1C1917]">${m.channel.toUpperCase()} (${m.direction}) - ${m.recipient}</span>
+                <span class="text-[10px] text-[#6E645D] font-mono">${m.created_at}</span>
+              </div>
+              <p class="text-[#2D2825] leading-relaxed">${m.content}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      cont.innerHTML = `<div class="text-rose-600 text-xs">فشل التحميل: ${e}</div>`;
+    }
+  }
+</script>
+{% endblock %}

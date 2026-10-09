@@ -92,6 +92,7 @@ urlpatterns = [
     path('call-center/', views.callcenter_page_view, name='callcenter_page'),
     path('telephony/', views.telephony_page_view, name='telephony_page'),
     path('partner/', views.partner_page_view, name='partner_page'),
+    path('coworker/', views.coworker_page_view, name='coworker_page'),
 ]
 
 

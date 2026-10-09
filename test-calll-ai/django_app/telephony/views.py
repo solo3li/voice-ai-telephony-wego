@@ -273,11 +273,30 @@ def delete_outbound_trunk(request, trunk_id):
 
 
 @csrf_exempt
-@login_required(login_url='/login/')
 def trigger_ai_outbound_call(request):
     """Initiate an autonomous outbound AI call to a destination phone number or internal extension."""
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "طريقة الطلب غير مسموحة"}, status=405)
+
+    from common.auth import verify_internal_api_key
+    target_user = None
+
+    if getattr(request, 'user', None) and request.user.is_authenticated:
+        target_user = request.user
+    elif verify_internal_api_key(request):
+        # Allow Trinity / Internal service to specify tenant
+        try:
+            body_data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            t_id = body_data.get('tenant_id') or body_data.get('user_id')
+            if t_id:
+                target_user = User.objects.filter(id=t_id).first()
+            if not target_user:
+                target_user = User.objects.filter(is_superuser=True).first()
+        except Exception:
+            pass
+
+    if not target_user:
+        return JsonResponse({"status": "error", "message": "المصادقة مطلوبة لبدء المكالمة"}, status=401)
 
     try:
         if request.content_type == 'application/json':
@@ -292,7 +311,7 @@ def trigger_ai_outbound_call(request):
         gateway_id = data.get('gateway_id')
 
         res = initiate_outbound_call(
-            user=request.user,
+            user=target_user,
             phone_number=raw_phone,
             call_goal=call_goal,
             profile_id=profile_id,
@@ -303,6 +322,7 @@ def trigger_ai_outbound_call(request):
         return JsonResponse(res, status=http_status)
 
     except Exception as e:
+
         logger.error(f"Error triggering AI outbound call: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": f"فشل بدء المكالمة الصادرة: {str(e)}"}, status=500)
 

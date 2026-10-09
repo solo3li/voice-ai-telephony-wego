@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import AgentProfile, UserMCPServer, SystemSetting, AgentToolCallLog, TenantLiveContext
+from .models import AgentProfile, UserMCPServer, SystemSetting, AgentToolCallLog, TenantLiveContext, DigitalCoworkerConfig
+
+@admin.register(DigitalCoworkerConfig)
+class DigitalCoworkerConfigAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'coworker_name', 'service_mode', 'coworker_role', 'autonomy_level', 'whatsapp_mode', 'is_active', 'updated_at')
+    list_filter = ('service_mode', 'autonomy_level', 'whatsapp_mode', 'is_active')
+    search_fields = ('user__username', 'coworker_name', 'custom_instructions')
+    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(SystemSetting)
 class SystemSettingAdmin(admin.ModelAdmin):

@@ -452,6 +452,13 @@ def api_internal_save_call_session_and_memory(request):
 
         logger.info(f"Successfully saved CallSession #{session.id} and updated CustomerMemory for ({user.id}, {caller_phone})")
 
+        # 5. Dispatch post-call event to Trinity / Digital Coworker Event Engine
+        try:
+            from crm.services.trinity_bridge import dispatch_post_call_to_trinity
+            dispatch_post_call_to_trinity(session)
+        except Exception as trinity_err:
+            logger.warning(f"Error dispatching post-call to Trinity: {trinity_err}")
+
         return JsonResponse({
             "status": "success",
             "session_id": session.id,
@@ -565,4 +572,331 @@ def list_all_calls(request):
     except Exception as e:
         logger.error(f"Error in list_all_calls: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+# ==================== Digital Coworker & Omnichannel Views ====================
+
+def _resolve_crm_user(request):
+    """Resolve user from session authentication or internal/API authorization header."""
+    if getattr(request, 'user', None) and request.user.is_authenticated:
+        return request.user
+    if verify_internal_api_key(request):
+        tenant_id = request.headers.get('X-Tenant-Id') or request.GET.get('tenant_id')
+        if not tenant_id and request.body:
+            try:
+                body_data = json.loads(request.body.decode('utf-8'))
+                tenant_id = body_data.get('tenant_id')
+            except Exception:
+                pass
+        if tenant_id:
+            return User.objects.filter(id=tenant_id).first()
+        return User.objects.filter(is_superuser=True).first()
+    return None
+
+
+@csrf_exempt
+def api_coworker_config(request):
+    """Retrieve or update Digital Coworker configuration for the tenant."""
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    from agents.models import DigitalCoworkerConfig
+    cfg = DigitalCoworkerConfig.get_or_create_config(user)
+
+    if request.method == 'GET':
+        return JsonResponse({"status": "success", "config": cfg.to_dict()})
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+            if 'service_mode' in data:
+                cfg.service_mode = data['service_mode']
+            if 'coworker_name' in data:
+                cfg.coworker_name = str(data['coworker_name']).strip()
+            if 'coworker_role' in data:
+                cfg.coworker_role = str(data['coworker_role']).strip()
+            if 'autonomy_level' in data:
+                cfg.autonomy_level = data['autonomy_level']
+            if 'telegram_bot_token' in data:
+                cfg.telegram_bot_token = str(data['telegram_bot_token']).strip()
+            if 'telegram_manager_chat_id' in data:
+                cfg.telegram_manager_chat_id = str(data['telegram_manager_chat_id']).strip()
+            if 'whatsapp_mode' in data:
+                cfg.whatsapp_mode = data['whatsapp_mode']
+            if 'whatsapp_phone_number_id' in data:
+                cfg.whatsapp_phone_number_id = str(data['whatsapp_phone_number_id']).strip()
+            if 'whatsapp_access_token' in data:
+                cfg.whatsapp_access_token = str(data['whatsapp_access_token']).strip()
+            if 'whatsapp_instance_name' in data:
+                cfg.whatsapp_instance_name = str(data['whatsapp_instance_name']).strip()
+            if 'agent_profile_id' in data:
+                profile_id = data['agent_profile_id']
+                if profile_id:
+                    from agents.models import AgentProfile
+                    cfg.agent_profile = AgentProfile.objects.filter(id=profile_id, user=user).first()
+                else:
+                    cfg.agent_profile = None
+            if 'max_budget_per_day' in data and data['max_budget_per_day'] is not None:
+                from decimal import Decimal
+                try:
+                    cfg.max_budget_per_day = Decimal(str(data['max_budget_per_day']))
+                except Exception:
+                    pass
+            if 'daily_calls_limit' in data and data['daily_calls_limit'] is not None:
+                try:
+                    cfg.daily_calls_limit = int(data['daily_calls_limit'])
+                except Exception:
+                    pass
+            if 'whatsapp_evolution_api_url' in data:
+                cfg.whatsapp_evolution_api_url = str(data['whatsapp_evolution_api_url']).strip()
+            if 'whatsapp_evolution_api_key' in data:
+                cfg.whatsapp_evolution_api_key = str(data['whatsapp_evolution_api_key']).strip()
+            if 'email_followups_enabled' in data:
+                cfg.email_followups_enabled = bool(data['email_followups_enabled'])
+            if 'email_from_address' in data:
+                cfg.email_from_address = str(data['email_from_address']).strip()
+            if 'email_sender_name' in data:
+                cfg.email_sender_name = str(data['email_sender_name']).strip()
+            if 'auto_call_followup_enabled' in data:
+                cfg.auto_call_followup_enabled = bool(data['auto_call_followup_enabled'])
+            if 'auto_whatsapp_followup_enabled' in data:
+                cfg.auto_whatsapp_followup_enabled = bool(data['auto_whatsapp_followup_enabled'])
+            if 'proactive_actions_enabled' in data:
+                cfg.proactive_actions_enabled = bool(data['proactive_actions_enabled'])
+            if 'custom_instructions' in data:
+                cfg.custom_instructions = str(data['custom_instructions'])
+            if 'approval_rules' in data and isinstance(data['approval_rules'], list):
+                cfg.approval_rules = data['approval_rules']
+            if 'is_active' in data:
+                cfg.is_active = bool(data['is_active'])
+
+            cfg.save()
+            return JsonResponse({"status": "success", "config": cfg.to_dict()})
+        except Exception as e:
+            logger.error(f"Error updating coworker config: {e}", exc_info=True)
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def api_coworker_approvals_list(request):
+    """List pending and historical approval gate requests."""
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    from crm.models import ApprovalRequest
+    approvals = ApprovalRequest.objects.filter(user=user)
+    status_filter = request.GET.get('status', '').strip()
+    if status_filter:
+        approvals = approvals.filter(status=status_filter)
+
+    action_type = request.GET.get('action_type', '').strip()
+    if action_type:
+        approvals = approvals.filter(action_type=action_type)
+
+    limit = int(request.GET.get('limit', 50))
+    results = [a.to_dict() for a in approvals[:limit]]
+    return JsonResponse({
+        "status": "success",
+        "approvals": results,
+        "count": len(results)
+    })
+
+
+@csrf_exempt
+def api_coworker_approval_action(request):
+    """Review and decide on an approval request (Approve or Reject)."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        approval_id = data.get('approval_id')
+        decision = data.get('decision')
+        reason = data.get('reason', '')
+
+        if not approval_id or decision not in ('approved', 'rejected'):
+            return JsonResponse({"status": "error", "message": "approval_id and valid decision ('approved' or 'rejected') required"}, status=400)
+
+        from crm.services.approval_gate import execute_approval_decision
+        result = execute_approval_decision(
+            approval_id=approval_id,
+            decision=decision,
+            reviewer=user,
+            reason=reason
+        )
+        return JsonResponse(result)
+    except Exception as e:
+        logger.error(f"Error handling approval action: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_whatsapp_send(request):
+    """Send WhatsApp message to destination number."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        phone = data.get('recipient_phone') or data.get('to_phone') or data.get('phone')
+        message = data.get('message') or data.get('text')
+        if not phone or not message:
+            return JsonResponse({"status": "error", "message": "phone and message are required"}, status=400)
+
+        from crm.services.whatsapp import send_whatsapp_message
+        res = send_whatsapp_message(to_phone=phone, message=message, tenant_user=user)
+        return JsonResponse(res)
+    except Exception as e:
+        logger.error(f"Error sending WhatsApp: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_whatsapp_qr(request):
+    """Retrieve or generate pairing QR code for Evolution API WhatsApp session."""
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    from crm.services.whatsapp import generate_qr_code_session
+    instance_name = request.GET.get('instance_name', '')
+    res = generate_qr_code_session(tenant_user=user, instance_name=instance_name)
+    return JsonResponse(res)
+
+
+@csrf_exempt
+def api_telegram_webhook(request):
+    """Telegram Bot Webhook endpoint handling interactive approval callbacks."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    try:
+        update = json.loads(request.body.decode('utf-8')) if request.body else {}
+        cb = update.get('callback_query')
+        if cb:
+            cb_id = cb.get('id')
+            cb_data = cb.get('data', '')
+            from_user = (cb.get('from') or {}).get('first_name', 'Telegram User')
+
+            if ':' in cb_data:
+                action_code, approval_id_str = cb_data.split(':', 1)
+                if approval_id_str.isdigit():
+                    appr_id = int(approval_id_str)
+                    decision = 'approved' if action_code == 'appr' else 'rejected'
+                    from crm.services.approval_gate import execute_approval_decision
+                    execute_approval_decision(
+                        approval_id=appr_id,
+                        decision=decision,
+                        reason=f"Decided via Telegram by {from_user}"
+                    )
+
+            return JsonResponse({"status": "ok", "callback_query_id": cb_id})
+
+        return JsonResponse({"status": "ignored", "reason": "No callback query in update"})
+    except Exception as e:
+        logger.error(f"Telegram webhook handling error: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_omnichannel_messages_list(request):
+    """List omnichannel messages audit trail (Phone, WhatsApp, Telegram, Email)."""
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    from crm.models import OmnichannelMessage
+    messages = OmnichannelMessage.objects.filter(user=user)
+    phone = request.GET.get('phone', '').strip()
+    if phone:
+        from telephony.views import normalize_phone_number
+        clean_phone = normalize_phone_number(phone)
+        messages = messages.filter(Q(recipient__icontains=clean_phone) | Q(sender__icontains=clean_phone))
+
+    channel = request.GET.get('channel', '').strip()
+    if channel:
+        messages = messages.filter(channel=channel)
+
+    limit = int(request.GET.get('limit', 100))
+    results = [m.to_dict() for m in messages[:limit]]
+    return JsonResponse({
+        "status": "success",
+        "messages": results,
+        "count": len(results)
+    })
+
+
+@csrf_exempt
+def api_execute_coworker_tool(request):
+    """Unified Coworker Tool Dispatcher for FastMCP, Trinity, and Autonomous Workers."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    user = _resolve_crm_user(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
+
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        tool_name = data.get('tool_name') or data.get('tool')
+        params = data.get('params') or data.get('arguments') or {}
+
+        if tool_name == 'call_customer':
+            from telephony.views import trigger_ai_outbound_call
+            return trigger_ai_outbound_call(request)
+
+        elif tool_name == 'send_whatsapp':
+            from crm.services.whatsapp import send_whatsapp_message
+            dest = params.get('destination_phone') or params.get('phone')
+            msg = params.get('message') or params.get('text')
+            res = send_whatsapp_message(to_phone=dest, message=msg, tenant_user=user)
+            return JsonResponse({"status": "success", "result": res})
+
+        elif tool_name == 'send_email':
+            from crm.services.email_service import send_email_followup
+            email = params.get('recipient_email') or params.get('email')
+            subj = params.get('subject', 'Follow-up from Assistant')
+            body = params.get('body', '')
+            res = send_email_followup(recipient_email=email, subject=subj, body=body, tenant_user=user)
+            return JsonResponse({"status": "success", "result": res})
+
+        elif tool_name == 'request_approval':
+            from crm.services.approval_gate import create_approval_request
+            appr = create_approval_request(
+                user=user,
+                action_type=params.get('action_type', 'general_review'),
+                title=params.get('title', 'طلب موافقة جديد'),
+                description=params.get('description', ''),
+                payload=params.get('payload', {})
+            )
+            return JsonResponse({"status": "success", "approval": appr.to_dict()})
+
+        elif tool_name == 'lookup_customer':
+            dest = params.get('phone') or params.get('destination_phone') or ''
+            from crm.models import CustomerMemory, OmnichannelMessage
+            mem = CustomerMemory.objects.filter(user=user, phone_number__icontains=dest).first() if dest else None
+            recent_msgs = OmnichannelMessage.objects.filter(user=user, recipient__icontains=dest)[:10] if dest else []
+            return JsonResponse({
+                "status": "success",
+                "customer": mem.to_dict() if mem else None,
+                "recent_messages": [m.to_dict() for m in recent_msgs]
+            })
+
+        return JsonResponse({"status": "error", "message": f"Unknown tool: '{tool_name}'"}, status=400)
+    except Exception as e:
+        logger.error(f"Error executing coworker tool: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
 

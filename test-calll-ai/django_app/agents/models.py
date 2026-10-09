@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -326,6 +327,128 @@ class TenantLiveContext(models.Model):
             "size_bytes": self.size_bytes,
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S") if self.updated_at else None,
         }
+
+
+class DigitalCoworkerConfig(models.Model):
+    SERVICE_MODE_CHOICES = [
+        ('call_center_only', 'كول سنتر ذكي فقط (Smart Call Center Only)'),
+        ('digital_coworker', 'موظف رقمي ذكي شامل (Autonomous Digital Coworker)'),
+    ]
+
+    COWORKER_ROLE_CHOICES = [
+        ('sdr', 'موظف مبيعات وتأهيل عملاء (AI SDR & Sales Development)'),
+        ('support', 'موظف دعم وعمليات ولوجستيات (Operations & Support)'),
+        ('collections', 'موظف تحصيل ومتابعات مالية (Collections & Retention)'),
+        ('executive_assistant', 'مساعد تنفيذي وإداري شامل (Executive Assistant)'),
+        ('custom', 'دور مخصص (Custom Role)'),
+    ]
+
+    AUTONOMY_LEVEL_CHOICES = [
+        ('conditional_approval', 'استقلالية ذكية مع بوابات موافقة (Conditional Approval Gates)'),
+        ('full_autonomy', 'استقلالية كاملة مع قيود صارمة (Full Autonomy with Strict Budget)'),
+        ('draft_first', 'نمط المسودة الدائمة (Draft-First Mode)'),
+    ]
+
+    WHATSAPP_MODE_CHOICES = [
+        ('meta_cloud', 'Meta Cloud API (الربط الرسمي للشركات)'),
+        ('qr_code', 'محرك مسح QR Code (Evolution API / Baileys)'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='coworker_config', verbose_name="المستأجر / الشركة")
+    service_mode = models.CharField(max_length=32, choices=SERVICE_MODE_CHOICES, default='call_center_only', verbose_name="نمط الخدمة")
+    coworker_name = models.CharField(max_length=100, default='المساعد الرقمي الذكي', verbose_name="اسم الموظف الذكي")
+    coworker_role = models.CharField(max_length=120, default='sdr', blank=True, verbose_name="الدور الوظيفي")
+    autonomy_level = models.CharField(max_length=64, default='conditional_approval', blank=True, verbose_name="مستوى الاستقلالية")
+    # Voice Profile & Autonomy Budget
+    agent_profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='coworker_configs', verbose_name="الشخصية الصوتية للموظف الذكي")
+    max_budget_per_day = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('50.00'), verbose_name="الحد الأقصى للإنفاق اليومي ($)")
+    daily_calls_limit = models.PositiveIntegerField(default=100, verbose_name="الحد الأقصى للمكالمات اليومية")
+
+    # Telegram Approval Gate Bot Settings
+    telegram_bot_token = models.CharField(max_length=200, blank=True, default='', verbose_name="رمز توكن بوت تيليجرام")
+    telegram_manager_chat_id = models.CharField(max_length=64, blank=True, default='', verbose_name="معرف شات المدير (Chat ID)")
+    
+    # WhatsApp Integration Settings
+    whatsapp_mode = models.CharField(max_length=32, choices=WHATSAPP_MODE_CHOICES, default='meta_cloud', verbose_name="مزود خدمة الواتساب")
+    whatsapp_phone_number_id = models.CharField(max_length=64, blank=True, default='', verbose_name="Phone Number ID (Meta)")
+    whatsapp_access_token = models.CharField(max_length=500, blank=True, default='', verbose_name="Access Token (Meta)")
+    whatsapp_evolution_api_url = models.CharField(max_length=255, blank=True, default='', verbose_name="رابط خادم Evolution API")
+    whatsapp_evolution_api_key = models.CharField(max_length=255, blank=True, default='', verbose_name="مفتاح API لخادم Evolution")
+    whatsapp_instance_name = models.CharField(max_length=100, blank=True, default='', verbose_name="اسم الجلسة / Instance (QR)")
+    whatsapp_qr_code = models.TextField(blank=True, default='', verbose_name="كود QR اللحظي للمسح")
+    is_whatsapp_connected = models.BooleanField(default=False, verbose_name="حالة اتصال الواتساب")
+    
+    # Email Follow-up Settings
+    email_followups_enabled = models.BooleanField(default=True, verbose_name="تمكين المتابعة بالبريد الإلكتروني")
+    email_from_address = models.CharField(max_length=120, blank=True, default='', verbose_name="عنوان البريد الإلكتروني للمرسل")
+    email_sender_name = models.CharField(max_length=120, blank=True, default='', verbose_name="اسم المرسل في الإيميل")
+
+    # Call-as-a-Tool & Autonomous Follow-up Settings
+    auto_call_followup_enabled = models.BooleanField(default=True, verbose_name="تمكين الموظف من إجراء مكالمات متابعة ذاتية")
+    auto_whatsapp_followup_enabled = models.BooleanField(default=True, verbose_name="تمكين المتابعة بالواتساب تلقائياً")
+    proactive_actions_enabled = models.BooleanField(default=True, verbose_name="تمكين الإجراءات الاستباقية")
+    custom_instructions = models.TextField(blank=True, default='', verbose_name="تعليمات السلوك المستقل")
+    approval_rules = models.JSONField(default=list, blank=True, verbose_name="قواعد بوابات الموافقة المشروطة")
+    is_active = models.BooleanField(default=True, verbose_name="حالة تفعيل الموظف الذكي")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "إعدادات الموظف الذكي الشامل"
+        verbose_name_plural = "إعدادات الموظفين الأذكياء (Digital Coworkers)"
+
+    def __str__(self):
+        role_lbl = self.get_coworker_role_display() if hasattr(self, 'get_coworker_role_display') else self.coworker_role
+        return f"{self.user.username} - {self.get_service_mode_display()} ({role_lbl})"
+
+    @classmethod
+    def get_or_create_config(cls, user: User) -> "DigitalCoworkerConfig":
+        cfg, _ = cls.objects.get_or_create(user=user)
+        return cfg
+
+    def to_dict(self):
+        role_lbl = self.get_coworker_role_display() if hasattr(self, 'get_coworker_role_display') else self.coworker_role
+        auto_lbl = self.get_autonomy_level_display() if hasattr(self, 'get_autonomy_level_display') else self.autonomy_level
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "service_mode": self.service_mode,
+            "service_mode_display": self.get_service_mode_display(),
+            "coworker_name": self.coworker_name,
+            "coworker_role": self.coworker_role,
+            "coworker_role_display": role_lbl,
+            "autonomy_level": self.autonomy_level,
+            "autonomy_level_display": auto_lbl,
+            "agent_profile_id": self.agent_profile_id,
+            "agent_profile_name": self.agent_profile.name if self.agent_profile else None,
+            "max_budget_per_day": float(self.max_budget_per_day) if self.max_budget_per_day is not None else 50.0,
+            "daily_calls_limit": self.daily_calls_limit,
+            "telegram_bot_token": f"{self.telegram_bot_token[:10]}..." if self.telegram_bot_token else "",
+            "telegram_manager_chat_id": self.telegram_manager_chat_id,
+            "has_telegram": bool(self.telegram_bot_token and self.telegram_manager_chat_id),
+            "whatsapp_mode": self.whatsapp_mode,
+            "whatsapp_mode_display": self.get_whatsapp_mode_display(),
+            "whatsapp_phone_number_id": self.whatsapp_phone_number_id,
+            "whatsapp_access_token": f"{self.whatsapp_access_token[:8]}..." if self.whatsapp_access_token else "",
+            "is_whatsapp_connected": self.is_whatsapp_connected,
+            "whatsapp_evolution_api_url": self.whatsapp_evolution_api_url,
+            "whatsapp_evolution_api_key": f"{self.whatsapp_evolution_api_key[:6]}..." if self.whatsapp_evolution_api_key else "",
+            "whatsapp_instance_name": self.whatsapp_instance_name,
+            "has_whatsapp": bool((self.whatsapp_mode == 'meta_cloud' and self.whatsapp_access_token) or (self.whatsapp_mode == 'qr_code' and self.is_whatsapp_connected)),
+            "email_followups_enabled": self.email_followups_enabled,
+            "email_from_address": self.email_from_address,
+            "email_sender_name": self.email_sender_name,
+            "auto_call_followup_enabled": self.auto_call_followup_enabled,
+            "auto_whatsapp_followup_enabled": self.auto_whatsapp_followup_enabled,
+            "proactive_actions_enabled": self.proactive_actions_enabled,
+            "custom_instructions": self.custom_instructions,
+            "approval_rules": self.approval_rules or [],
+            "is_active": self.is_active,
+            "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S") if self.updated_at else None,
+        }
+
+
 
 
 

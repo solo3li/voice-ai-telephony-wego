@@ -894,6 +894,21 @@ def business_hours_page_view(request):
 
 
 @login_required
+def coworker_page_view(request):
+    """Render dedicated Autonomous Digital Coworker management page."""
+    from agents.models import DigitalCoworkerConfig
+    cfg = DigitalCoworkerConfig.get_or_create_config(request.user)
+    context = {
+        'page_title': 'الموظف الرقمي الذكي المستقل',
+        'page_icon': '🤖',
+        'active_nav': 'coworker',
+        'coworker_config': cfg.to_dict(),
+    }
+    return render(request, 'voice_assistant/pages/coworker.html', context)
+
+
+
+@login_required
 def get_business_hours(request):
     """GET /api/business-hours/ - Retrieve user business hours configuration."""
     from telephony.models import BusinessHoursSchedule

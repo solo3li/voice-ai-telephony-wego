@@ -48,6 +48,31 @@ http:
       tls:
         certResolver: "letsencrypt"
 
+    trinity-router:
+      rule: "Host(`trinity.169.58.32.179.nip.io`) || Host(`coworker.169.58.32.179.nip.io`)"
+      entryPoints:
+        - "websecure"
+      middlewares:
+        - "trinity-auth"
+      service: "trinity-service"
+      tls:
+        certResolver: "letsencrypt"
+
+  middlewares:
+    trinity-auth:
+      forwardAuth:
+        address: "http://django:8000/api/auth/verify-session/"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "X-Forwarded-User"
+          - "X-User-Id"
+          - "X-User-Name"
+          - "X-User-Email"
+          - "X-Tenant-Id"
+          - "X-Service-Mode"
+          - "X-Coworker-Role"
+          - "X-Autonomy-Level"
+
   services:
     django-service:
       loadBalancer:
@@ -78,3 +103,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://minio:9000"
+
+    trinity-service:
+      loadBalancer:
+        servers:
+          - url: "http://trinity:8000"
+

@@ -22,4 +22,15 @@ urlpatterns = [
     path('campaigns/<int:campaign_id>/reset/', campaign_views.api_reset_campaign_contacts, name='api_reset_campaign_contacts'),
     path('campaigns/<int:campaign_id>/export/', campaign_views.api_export_campaign_contacts, name='api_export_campaign_contacts'),
     path('campaigns/contacts/<int:contact_id>/dial/', campaign_views.api_dial_single_contact, name='api_dial_single_contact'),
+
+    # Digital Coworker, Approval Gates & Omnichannel
+    path('coworker/config/', views.api_coworker_config, name='api_coworker_config'),
+    path('coworker/approvals/', views.api_coworker_approvals_list, name='api_coworker_approvals_list'),
+    path('coworker/approvals/decide/', views.api_coworker_approval_action, name='api_coworker_approval_action'),
+    path('coworker/tool/execute/', views.api_execute_coworker_tool, name='api_execute_coworker_tool'),
+    path('whatsapp/send/', views.api_whatsapp_send, name='api_whatsapp_send'),
+    path('whatsapp/qr/', views.api_whatsapp_qr, name='api_whatsapp_qr'),
+    path('telegram/webhook/', views.api_telegram_webhook, name='api_telegram_webhook'),
+    path('omnichannel/messages/', views.api_omnichannel_messages_list, name='api_omnichannel_messages_list'),
 ]
+

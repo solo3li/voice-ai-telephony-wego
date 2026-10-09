@@ -9,6 +9,7 @@ from call_center.inngest_jobs import all_call_center_inngest_functions
 from knowledge.inngest_jobs import all_knowledge_inngest_functions
 from partners.inngest_jobs import all_partner_inngest_functions
 from agents.inngest_jobs import all_agent_inngest_functions
+from common import session_bridge
 
 combined_inngest_functions = (
     list(crm_inngest_functions)
@@ -58,6 +59,8 @@ urlpatterns = [
     path('api/billing/', include('billing.urls')),
     path('api/partner/v1/', include('partners.urls')),
     path('api/v1/', include('developer.urls')),
+    path('api/auth/verify-session/', session_bridge.verify_session_view, name='verify_session'),
+    path('api/auth/trinity-sso/', session_bridge.sso_token_exchange_view, name='trinity_sso'),
     path('', include('voice_assistant.urls')),
 ]
 

@@ -194,6 +194,27 @@ services:
     networks:
       - voice_net
 
+  trinity:
+    image: python:3.11-slim
+    container_name: voice_trinity
+    restart: unless-stopped
+    profiles:
+      - coworker_engine
+    volumes:
+      - ./django_app:/app
+    working_dir: /app
+    command: ["python", "-u", "crm/services/trinity_service.py"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_API_URL=http://django:8000
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-voice_internal_secret_key_2026}
+      - PORT=8000
+    depends_on:
+      - redis
+      - django
+    networks:
+      - voice_net
+
 volumes:
   pgdata:
   media_data:

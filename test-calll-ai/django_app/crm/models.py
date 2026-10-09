@@ -1,5 +1,7 @@
+from typing import Optional, Tuple
 from django.db import models
 from django.contrib.auth.models import User
+
 
 class CustomerMemory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_memories')
@@ -335,6 +337,168 @@ class CampaignContact(models.Model):
             "duration_seconds": self.duration_seconds,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }
+
+
+class CustomerChannelIdentifier(models.Model):
+    """Links customer Phone-First E.164 anchor to other channels (WhatsApp, Telegram, Email)."""
+    CHANNEL_CHOICES = [
+        ('whatsapp', 'واتساب (WhatsApp)'),
+        ('telegram', 'تيليجرام (Telegram)'),
+        ('email', 'بريد إلكتروني (Email)'),
+    ]
+
+    customer_memory = models.ForeignKey(CustomerMemory, on_delete=models.CASCADE, related_name='channel_identifiers', verbose_name="ذاكرة العميل")
+    channel = models.CharField(max_length=32, choices=CHANNEL_CHOICES, db_index=True, verbose_name="قناة التواصل")
+    identifier = models.CharField(max_length=255, db_index=True, verbose_name="المعرف (رقم/إيميل/Chat ID)")
+    is_verified = models.BooleanField(default=True, verbose_name="تم التحقق منه")
+    metadata = models.JSONField(default=dict, blank=True, verbose_name="بيانات إضافية")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'crm_customerchannelidentifier'
+        unique_together = ('customer_memory', 'channel', 'identifier')
+        verbose_name = "معرف قناة العميل"
+        verbose_name_plural = "معرفات قنوات العملاء (Omnichannel Identifiers)"
+
+    def __str__(self):
+        return f"{self.customer_memory.phone_number} -> [{self.channel}] {self.identifier}"
+
+    @classmethod
+    def resolve_customer(cls, user: User, channel: str, identifier: str) -> tuple[Optional[CustomerMemory], bool]:
+        """Resolve CustomerMemory from any channel identifier or create placeholder."""
+        cleaned_id = str(identifier).strip()
+        link = cls.objects.filter(customer_memory__user=user, channel=channel, identifier=cleaned_id).select_related('customer_memory').first()
+        if link:
+            return link.customer_memory, False
+
+        # If channel is whatsapp, try matching by phone_number directly
+        if channel == 'whatsapp':
+            from telephony.views import normalize_phone_number
+            norm_phone = normalize_phone_number(cleaned_id)
+            mem = CustomerMemory.objects.filter(user=user, phone_number=norm_phone).first()
+            if mem:
+                cls.objects.get_or_create(customer_memory=mem, channel='whatsapp', identifier=cleaned_id)
+                return mem, False
+
+        return None, True
+
+
+class ApprovalRequest(models.Model):
+    """Conditional Approval Gate for sensitive Digital Coworker actions."""
+    STATUS_CHOICES = [
+        ('pending', 'قيد انتظار الموافقة (Pending)'),
+        ('approved', 'تمت الموافقة (Approved)'),
+        ('rejected', 'مرفوض (Rejected)'),
+        ('executed', 'تم التنفيذ بنجاح (Executed)'),
+        ('failed', 'فشل التنفيذ (Failed)'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='approval_requests', verbose_name="المستأجر / الشركة")
+    customer_memory = models.ForeignKey(CustomerMemory, on_delete=models.SET_NULL, null=True, blank=True, related_name='approval_requests', verbose_name="العميل المعني")
+    action_type = models.CharField(max_length=64, db_index=True, verbose_name="نوع الإجراء (Action Type)")
+    title = models.CharField(max_length=255, verbose_name="عنوان الطلب")
+    description = models.TextField(verbose_name="تفاصيل القرار ومبرراته")
+    payload = models.JSONField(default=dict, blank=True, verbose_name="بيانات التنفيذ البرمجية (Payload)")
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='pending', db_index=True, verbose_name="حالة الطلب")
+    
+    # Telegram tracking
+    telegram_message_id = models.CharField(max_length=128, blank=True, default='', verbose_name="معرف رسالة تيليجرام")
+    telegram_chat_id = models.CharField(max_length=64, blank=True, default='', verbose_name="معرف شات تيليجرام")
+    
+    # Decision audit
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_approvals', verbose_name="تمت المراجعة بواسطة")
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ المراجعة")
+    decision_reason = models.TextField(blank=True, default='', verbose_name="ملاحظات المعتمد")
+    execution_result = models.JSONField(default=dict, blank=True, verbose_name="نتيجة التنفيذ")
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الطلب")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'crm_approvalrequest'
+        ordering = ['-created_at']
+        verbose_name = "طلب موافقة مشروطة"
+        verbose_name_plural = "بوابات الموافقة الذكية (Approval Gates)"
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.title} - {self.user.username}"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "customer_phone": self.customer_memory.phone_number if self.customer_memory else "",
+            "customer_name": self.customer_memory.customer_name if self.customer_memory else "",
+            "action_type": self.action_type,
+            "title": self.title,
+            "description": self.description,
+            "payload": self.payload or {},
+            "status": self.status,
+            "status_display": self.get_status_display(),
+            "telegram_message_id": self.telegram_message_id,
+            "decision_reason": self.decision_reason,
+            "execution_result": self.execution_result or {},
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "reviewed_at": self.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if self.reviewed_at else None,
+        }
+
+
+class OmnichannelMessage(models.Model):
+    """Audit log of all multi-channel inbound/outbound communications."""
+    CHANNEL_CHOICES = [
+        ('whatsapp', 'واتساب (WhatsApp)'),
+        ('telegram', 'تيليجرام (Telegram)'),
+        ('email', 'بريد إلكتروني (Email)'),
+        ('phone', 'مكالمة هاتفية (Phone)'),
+    ]
+
+    DIRECTION_CHOICES = [
+        ('inbound', 'وارد (Inbound)'),
+        ('outbound', 'صادر (Outbound)'),
+    ]
+
+    STATUS_CHOICES = [
+        ('sent', 'تم الإرسال'),
+        ('delivered', 'تم التوصيل'),
+        ('read', 'تمت القراءة'),
+        ('failed', 'فشل'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='omnichannel_messages', verbose_name="المستأجر / الشركة")
+    customer_memory = models.ForeignKey(CustomerMemory, on_delete=models.SET_NULL, null=True, blank=True, related_name='omnichannel_messages', verbose_name="ذاكرة العميل")
+    channel = models.CharField(max_length=32, choices=CHANNEL_CHOICES, db_index=True, verbose_name="القناة")
+    direction = models.CharField(max_length=16, choices=DIRECTION_CHOICES, default='outbound', verbose_name="الاتجاه")
+    sender = models.CharField(max_length=255, default='', verbose_name="المرسل")
+    recipient = models.CharField(max_length=255, default='', verbose_name="المستلم")
+    content = models.TextField(verbose_name="محتوى الرسالة")
+    metadata = models.JSONField(default=dict, blank=True, verbose_name="بيانات وصفية")
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='delivered', verbose_name="الحالة")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'crm_omnichannelmessage'
+        ordering = ['-created_at']
+        verbose_name = "رسالة متعددة القنوات"
+        verbose_name_plural = "سجل رسائل القنوات الشاملة (Omnichannel Messages)"
+
+    def __str__(self):
+        return f"[{self.channel}] {self.direction}: {self.sender} -> {self.recipient}"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "channel": self.channel,
+            "direction": self.direction,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "content": self.content,
+            "metadata": self.metadata or {},
+            "status": self.status,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
 
 
 
