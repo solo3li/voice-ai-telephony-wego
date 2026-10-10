@@ -8002,13 +8002,28 @@
     async function startCurrentCampaign() {
       if (!currentCampaignId) return;
 
-      if (!hasActiveOutboundGateway) {
+      const channel = currentCampaignData ? currentCampaignData.channel : 'calls';
+
+      if (['calls', 'hybrid'].includes(channel) && !hasActiveOutboundGateway) {
         showToast('لا يمكن بدء الحملة: لا يوجد خط اتصال صادر (SIP Trunk) مفعل.', 'error');
         alert('تنبيه هام: لا يوجد مسار اتصال صادر (SIP Trunk) مفعل حالياً في حسابك.\n\nيرجى التوجه لتبويب "الربط الهاتفي والسنترال" وإعداد خط صادر أولاً للتمكن من الاتصال بالعملاء.');
         return;
       }
 
-      if (!confirm('هل تريد بالتأكيد بدء حملة الاتصال التلقائي الآن؟ سيتم جدولة المكالمات وتوزيعها عبر Inngest وفق معدل التزامن المحدد.')) {
+      if (['whatsapp', 'hybrid'].includes(channel) && !hasWhatsAppConnected) {
+        showToast('لا يمكن بدء الحملة: حساب الواتساب غير متصل.', 'error');
+        alert('تنبيه هام: حساب الواتساب غير متصل حالياً (Evolution API).\n\nيرجى التوجه لتبويب "الواتساب والذكاء الاصطناعي" ومسح كود الربط أولاً.');
+        return;
+      }
+
+      let promptMsg = 'هل تريد بالتأكيد بدء حملة الاتصال التلقائي الآن؟ سيتم جدولة المكالمات وتوزيعها عبر Inngest وفق معدل التزامن المحدد.';
+      if (channel === 'whatsapp') {
+        promptMsg = 'هل تريد بالتأكيد بدء إرسال رسائل الواتساب الذكية لكافة العملاء في الحملة الآن؟';
+      } else if (channel === 'hybrid') {
+        promptMsg = 'هل تريد بالتأكيد بدء الحملة الهجينة (اتصال أولاً ومتابعة فورية بالواتساب) الآن؟';
+      }
+
+      if (!confirm(promptMsg)) {
         return;
       }
 
