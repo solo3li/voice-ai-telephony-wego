@@ -231,8 +231,9 @@ def load_assistant_persona(user_id: int) -> str:
         f"قواعد اللهجة: {dialect_rule}",
         "قواعد المحادثة في شات الواتساب:",
         "1. تحدث بشكل طبيعي وإنساني وواضح ومريح للقراءة في الواتساب.",
-        "2. استدعِ الأدوات البرمجية فوراً للبحث في المستندات أو فحص الأسعار والفروع والطلبات والمنيو دون أي تخمين.",
-        "3. الذاكرة الموحدة: أنت تعرف كل ما دار بين العميل وبيننا في المكالمات الهاتفية والشات، أكمل معه الحوار بسلاسة دون أن تطلب منه إعادة الكلام.",
+        "2. ⛔ حظر قاطع للرسائل التمهيدية: ممنوع تماماً ونهائياً إرسال أي رسائل تمهيدية أو وعود مثل: 'هبحثلك في المستندات'، 'لحظة واحدة وهجيبلك التفاصيل'، 'ثواني أشوفلك'، 'عشان أقدر أديلك أسعار هشوف النظام'. هذا شات، والعميل ينتظر الإجابة الشافية مباشرة، ولا تذكر له خطوات بحثك الداخلية أو أنك تبحث في مستندات إطلاقاً.",
+        "3. استدعِ أداة البحث في المستندات (search_knowledge_base) أو الأدوات البرمجية فوراً في صمت وبشكل آلي دون إرسال أي نص تمهيدي، ثم قدّم الإجابة المباشرة والنهائية الكاملة والشافية في ردك.",
+        "4. الذاكرة الموحدة: أنت تعرف كل ما دار بين العميل وبيننا في المكالمات الهاتفية والشات، أكمل معه الحوار بسلاسة دون أن تطلب منه إعادة الكلام.",
     ]
     if prof.custom_instructions:
         instructions.append(f"توجيهات إضافية خاصة بالمنشأة:\n{prof.custom_instructions}")
@@ -291,6 +292,14 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
 
     # ---------------- Mode A: Inbound WhatsApp Interactive Employee ----------------
     if trigger_type == "inbound_whatsapp":
+        # Send typing indicator (composing) immediately so customer sees "يكتب الآن..." on WhatsApp
+        try:
+            from .evolution_client import send_whatsapp_presence
+            instance_name = f"user_{user_id}"
+            send_whatsapp_presence(phone, "composing", delay_ms=2500, instance_name=instance_name)
+        except Exception as p_err:
+            logger.debug(f"Could not send typing presence: {p_err}")
+
         # 1. Build Tools (RAG + Memory + MCP Tools)
         mcp_decls, mcp_tool_map = load_user_mcp_tools(user_id)
 
@@ -332,8 +341,9 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
             f"{persona_prompt}\n"
             f"{memory_context}\n"
             f"أنت تتحدث الآن مع العميل عبر الواتساب (رقمه: {phone}، اسمه: {c_name}).\n"
-            f"إذا سأل العميل عن منتجات، أسعار، فروع، طلبات، أو معلومات من المستندات، استدعِ الأداة المناسبة فوراً.\n"
-            f"أجب بشكل طبيعي وودود ومباشر."
+            f"⛔ تنبيه حاسم وصارم: ممنوع منعاً باتاً ونهائياً إرسال أي رسائل تمهيدية أو وعود للعميل (مثل: 'هبحثلك في المستندات' أو 'لحظة واحدة وهجيبلك التفاصيل' أو 'ثواني أشوفلك'). هذا تطبيق شات، والعميل ينتظر الإجابة المباشرة ولا تذكر له خطوات بحثك الداخلية أو أنك تبحث في مستندات إطلاقاً.\n"
+            f"إذا كان سؤال العميل يتطلب معرفة أسعار أو باقات أو خدمات أو أي تفاصيل من قاعدة المعرفة: يجب عليك استدعاء أداة (search_knowledge_base) فوراً وبصمت تام في نفس اللحظة بدون إرسال أي نص تمهيدي.\n"
+            f"قدّم الإجابة المباشرة الشافية الكاملة للعميل بعد استخراج البيانات من الأداة مباشرة في رسالة واحدة."
         )
 
         # 3. Build Rich Conversation History (Last 25 messages for deep conversational context)
@@ -445,8 +455,37 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
                     continue
                 else:
                     # Model produced text answer
-                    final_answer = resp.text.strip() if resp.text else ""
-                    break
+                    candidate_text = resp.text.strip() if resp.text else ""
+
+                    # Intercept any filler promises to search documents
+                    filler_triggers = [
+                        "هبحثلك", "أبحثلك", "سأبحث", "هبحث في", "ابحث في", "سأقوم بالبحث",
+                        "المستندات الرسمية", "المستندات بتاعتنا", "مستندات المنشأة",
+                        "لحظة واحدة وهجيبلك", "ثواني وهجيبلك", "لحظة وهشوفلك", "ثواني أشوفلك",
+                        "لحظة واحدة من فضلك وهجيبلك", "عشان أقدر أديلك تفاصيل دقيقة", "هجيبلك كل المعلومات"
+                    ]
+                    is_filler = any(trig in candidate_text for trig in filler_triggers)
+
+                    if is_filler and turn < 2:
+                        logger.warning(f"Intercepted filler research promise from Gemini: '{candidate_text[:80]}'. Executing silent RAG search...")
+                        t_output = execute_knowledge_base_search(user_id, inbound_msg)
+                        tools_invoked.append({"name": "search_knowledge_base", "args": {"query": inbound_msg}, "auto_intercepted": True})
+
+                        # Feed the knowledge result back to Gemini with a strict directive for direct final answer
+                        contents.append(types.Content(
+                            role="user",
+                            parts=[types.Part.from_text(
+                                text=(
+                                    f"[توجيه فوري للنظام]: ممنوع إرسال رسائل تمهيدية أو وعود للعميل. هذه نتائج المستندات الرسمية الموثقة:\n"
+                                    f"{t_output}\n"
+                                    f"المطلوب: أجب العميل الآن فوراً بالإجابة النهائية المباشرة الكاملة والشافية عن سؤاله بالأسلوب المصري الطبيعي، دون ذكر أنك قمت بالبحث ودون أي عبارات تمهيدية."
+                                )
+                            )]
+                        ))
+                        continue
+                    else:
+                        final_answer = candidate_text
+                        break
 
             if not final_answer:
                 final_answer = "أهلاً بك يا فندم! تحت أمرك، تحب أساعدك في إيه؟"

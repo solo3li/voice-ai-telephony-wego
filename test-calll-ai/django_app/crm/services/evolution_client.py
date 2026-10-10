@@ -113,6 +113,35 @@ def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEF
         return {"status": "error", "ok": False, "error": str(e)}
 
 
+def send_whatsapp_presence(phone_number: str, presence: str = "composing", delay_ms: int = 1200, instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
+    """
+    Send chat presence status (e.g. 'composing' for typing indicator) to Evolution API.
+    """
+    target_number = phone_number.strip()
+    if "@" not in target_number:
+        clean_phone = "".join(ch for ch in target_number if ch.isdigit())
+        if not clean_phone:
+            return {"status": "error", "ok": False, "error": "Invalid phone number"}
+        target_number = clean_phone
+    else:
+        target_number = target_number.replace("+", "")
+
+    url = f"{EVOLUTION_API_URL}/chat/sendPresence/{instance_name}"
+    payload = {
+        "number": target_number,
+        "presence": presence,
+        "delay": delay_ms
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=get_headers(), timeout=3.0)
+        if resp.status_code in (200, 201):
+            return {"status": "success", "ok": True, "data": resp.json() if resp.text else {}}
+        return {"status": "error", "ok": False, "error": resp.text, "status_code": resp.status_code}
+    except Exception as e:
+        logger.debug(f"Exception sending WhatsApp presence: {e}")
+        return {"status": "error", "ok": False, "error": str(e)}
+
+
 def logout_instance(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
     """Disconnect and log out the WhatsApp session."""
     url = f"{EVOLUTION_API_URL}/instance/logout/{instance_name}"
