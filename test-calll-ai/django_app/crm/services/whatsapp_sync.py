@@ -65,6 +65,29 @@ def normalize_jid_to_identifier(remote_jid: str) -> str:
     return remote_jid
 
 
+def format_phone_display(phone_str: str, raw_jid: str = "") -> str:
+    """Format phone number nicely (e.g. +20 101 943 1866)."""
+    clean = "".join(ch for ch in (phone_str or "") if ch.isdigit())
+    if clean.startswith("01") and len(clean) == 11:
+        clean = "2" + clean  # Convert local 01X to international 201X
+    if clean.startswith("20") and len(clean) >= 12:
+        country = clean[:2]
+        op = clean[2:5]
+        p1 = clean[5:8]
+        p2 = clean[8:]
+        return f"+{country} {op} {p1} {p2}"
+    elif len(clean) >= 10:
+        return f"+{clean[:3]} {clean[3:6]} {clean[6:]}"
+    elif clean:
+        return f"+{clean}"
+    
+    if raw_jid and "@g.us" in raw_jid:
+        return "👥 مجموعة واتساب"
+    elif raw_jid and "@lid" in raw_jid:
+        return "📱 حساب واتساب مباشر"
+    return "📱 حساب واتساب"
+
+
 def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat: int = 40) -> dict:
     """
     Sync all genuine WhatsApp chats and recent messages from evolution_db into Django CRM.
@@ -134,6 +157,33 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     "pic_url": pic_url or ""
                 }
 
+        # 2.5 Build reverse phone lookup from @s.whatsapp.net contacts
+        cur.execute('''
+            SELECT "remoteJid", "pushName"
+            FROM "Contact"
+            WHERE "instanceId" = %s
+              AND "remoteJid" LIKE '%%@s.whatsapp.net'
+              AND "pushName" IS NOT NULL AND "pushName" != '';
+        ''', (instance_id,))
+        phone_by_name = {}
+        for r_jid, p_name in cur.fetchall():
+            p_clean = r_jid.split('@')[0]
+            nm = p_name.strip()
+            phone_by_name[nm.lower()] = p_clean
+            phone_by_name[nm] = p_clean
+
+        known_aliases = {
+            "201108124794": {"name": "أنا (ملاحظات شخصية)", "phone": "201108124794"},
+            "172108650950843@lid": {"name": "أنا (جهاز مرتبط)", "phone": "201091121410"},
+            "82120160620664@lid": {"name": "دعم CommPeak (VoIP)", "phone": ""},
+            "81007378182162@lid": {"name": "عميل استفسار النماذج والتكلفة", "phone": ""},
+            "85512832475186@lid": {"name": "عميل استفسار Gemini Pro", "phone": ""},
+            "30460696637668@lid": {"name": "عميل استفسار Business SIP", "phone": ""},
+            "120363419022376600@g.us": {"name": "Real estate استفسار", "phone": ""},
+            "120363414016924957@g.us": {"name": "Student Housing – El Shorouk☀", "phone": ""},
+            "0": {"name": "واتساب الرسمي", "phone": "0"},
+        }
+
         # 3. Fetch latest messages per chat using SQL Window Function (last N messages)
         cur.execute('''
             WITH ranked_messages AS (
@@ -195,20 +245,31 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
             if not identifier:
                 continue
 
-            # Determine best contact name
-            info = contact_map.get(r_jid, {})
-            name = info.get("name") or (push_name if not from_me else "") or ""
-            if not name:
-                clean_digits = "".join(ch for ch in identifier if ch.isdigit())
-                name = (
-                    existing_memories.get(identifier) 
-                    or existing_memories.get(clean_digits) 
-                    or existing_memories.get(f"+{clean_digits}")
-                    or ""
-                )
+            # Determine best contact name and real phone
+            alias = known_aliases.get(identifier) or known_aliases.get(r_jid)
+            if alias:
+                name = alias["name"]
+                real_phone = alias.get("phone", "")
+            else:
+                info = contact_map.get(r_jid, {})
+                name = info.get("name") or (push_name if not from_me else "") or ""
+                if not name:
+                    clean_digits = "".join(ch for ch in identifier if ch.isdigit())
+                    name = (
+                        existing_memories.get(identifier) 
+                        or existing_memories.get(clean_digits) 
+                        or existing_memories.get(f"+{clean_digits}")
+                        or ""
+                    )
+                if not name:
+                    if r_jid.endswith("@g.us"):
+                        name = "مجموعة واتساب"
+                    else:
+                        name = "عميل واتساب جديد"
 
-            if not name and r_jid.endswith("@g.us"):
-                name = "مجموعة واتساب"
+                real_phone = phone_by_name.get(name.lower().strip()) or phone_by_name.get(name.strip()) or ""
+                if not real_phone and "@" not in identifier and identifier.isdigit():
+                    real_phone = identifier
 
             text = extract_message_text(msg_content, msg_type)
             if not text:
@@ -221,10 +282,14 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                 chats_data[identifier] = {
                     "raw_jid": r_jid,
                     "customer_name": name,
+                    "real_phone": real_phone,
                     "messages": []
                 }
-            elif name and not chats_data[identifier]["customer_name"]:
-                chats_data[identifier]["customer_name"] = name
+            else:
+                if name and chats_data[identifier]["customer_name"] in ("", "عميل واتساب جديد"):
+                    chats_data[identifier]["customer_name"] = name
+                if real_phone and not chats_data[identifier].get("real_phone"):
+                    chats_data[identifier]["real_phone"] = real_phone
 
             chats_data[identifier]["messages"].append({
                 "direction": direction,
@@ -242,6 +307,7 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
             messages_to_create = []
             for identifier, c_info in chats_data.items():
                 c_name = c_info["customer_name"]
+                c_real_phone = c_info.get("real_phone", "")
                 for msg in c_info["messages"]:
                     om_msg = OmnichannelMessage(
                         user=user,
@@ -263,8 +329,12 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     phone_number=identifier,
                     defaults={"customer_name": c_name}
                 )
-                if c_name and not mem.customer_name:
-                    mem.customer_name = c_name
+                mem.customer_name = c_name
+                prof = mem.permanent_profile or {}
+                if c_real_phone:
+                    prof["real_phone"] = c_real_phone
+                prof["display_phone"] = format_phone_display(c_real_phone, identifier)
+                mem.permanent_profile = prof
 
                 wm = mem.whatsapp_memory or {}
                 wm["ai_auto_reply_enabled"] = True  # AI active by default for all chats!

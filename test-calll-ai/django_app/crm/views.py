@@ -645,6 +645,29 @@ def api_whatsapp_messages(request):
     })
 
 
+def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tuple:
+    """Helper to return (customer_name, display_phone, real_phone)"""
+    from .services.whatsapp_sync import format_phone_display
+    prof = (mem.permanent_profile or {}) if mem else {}
+    c_name = (mem.customer_name if mem else '') or prof.get('customer_name') or (last_msg.customer_name if last_msg else '')
+    clean_p = phone_number.strip()
+    
+    # If no friendly name, fallback to friendly labels
+    if not c_name or c_name == clean_p:
+        if clean_p.endswith('@g.us'):
+            c_name = "مجموعة واتساب"
+        elif clean_p == '0':
+            c_name = "واتساب الرسمي"
+        elif clean_p == '201108124794':
+            c_name = "أنا (ملاحظات شخصية)"
+        else:
+            c_name = "عميل واتساب جديد"
+
+    real_phone = prof.get('real_phone') or (clean_p if ('@' not in clean_p and clean_p.isdigit()) else '')
+    display_phone = prof.get('display_phone') or format_phone_display(real_phone, clean_p)
+    return c_name, display_phone, real_phone
+
+
 @login_required(login_url='/login/')
 def api_whatsapp_conversations(request):
     """List all WhatsApp conversations grouped by customer/phone (WhatsApp Web Inbox format)."""
@@ -669,13 +692,15 @@ def api_whatsapp_conversations(request):
         p = t['phone_number']
         last_msg = OmnichannelMessage.objects.filter(user=request.user, phone_number=p).order_by('-created_at').first()
         mem = memories.get(p)
-        c_name = (mem.customer_name if mem else '') or (last_msg.customer_name if last_msg else '') or p
+        c_name, display_phone, real_phone = _resolve_contact_display(p, mem, last_msg)
         wm = mem.whatsapp_memory or {} if mem else {}
         ai_active = wm.get("ai_auto_reply_enabled", True)
 
         results.append({
             "phone_number": p,
             "customer_name": c_name,
+            "display_phone": display_phone,
+            "real_phone": real_phone,
             "last_message": {
                 "text": last_msg.message_text if last_msg else "",
                 "direction": last_msg.direction if last_msg else "inbound",
@@ -700,13 +725,15 @@ def api_whatsapp_conversation_messages(request, phone_number):
     from .models import OmnichannelMessage, CustomerMemory
     clean_phone = phone_number.strip()
 
-    msgs = OmnichannelMessage.objects.filter(
+    msgs_qs = OmnichannelMessage.objects.filter(
         user=request.user,
         phone_number=clean_phone
-    ).order_by('created_at')[:150]
+    ).order_by('created_at')
 
+    msgs = list(msgs_qs[:150])
     mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
-    c_name = (mem.customer_name if mem else '') or ''
+    last_msg = msgs[-1] if msgs else None
+    c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
     wm = mem.whatsapp_memory or {} if mem else {}
     cm = mem.call_memory or {} if mem else {}
 
@@ -714,11 +741,58 @@ def api_whatsapp_conversation_messages(request, phone_number):
         "status": "success",
         "phone_number": clean_phone,
         "customer_name": c_name,
+        "display_phone": display_phone,
+        "real_phone": real_phone,
         "ai_active": wm.get("ai_auto_reply_enabled", True),
         "call_summary": cm.get("last_call_summary") or (mem.last_interaction_summary if mem else ""),
         "total_calls_count": mem.total_calls_count if mem else 0,
         "messages": [m.to_dict() for m in msgs]
     })
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_update_contact(request, phone_number):
+    """Update contact name and phone number directly from the UI."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        from .models import OmnichannelMessage, CustomerMemory
+        from .services.whatsapp_sync import format_phone_display
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        new_name = str(data.get("name") or data.get("customer_name") or "").strip()
+        new_phone = str(data.get("phone") or data.get("real_phone") or "").strip()
+
+        clean_phone = phone_number.strip()
+        mem, _ = CustomerMemory.objects.get_or_create(
+            user=request.user,
+            phone_number=clean_phone
+        )
+        if new_name:
+            mem.customer_name = new_name
+            OmnichannelMessage.objects.filter(user=request.user, phone_number=clean_phone).update(customer_name=new_name)
+
+        prof = mem.permanent_profile or {}
+        if new_name:
+            prof["customer_name"] = new_name
+        if new_phone:
+            prof["real_phone"] = new_phone
+            prof["display_phone"] = format_phone_display(new_phone, clean_phone)
+
+        mem.permanent_profile = prof
+        mem.save()
+
+        disp_phone = prof.get("display_phone") or format_phone_display(prof.get("real_phone", ""), clean_phone)
+
+        return JsonResponse({
+            "status": "success",
+            "customer_name": mem.customer_name,
+            "display_phone": disp_phone,
+            "real_phone": prof.get("real_phone", "")
+        })
+    except Exception as e:
+        logger.error(f"Error updating contact: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 @csrf_exempt

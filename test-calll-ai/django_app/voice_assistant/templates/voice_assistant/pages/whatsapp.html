@@ -172,7 +172,10 @@
             <div>
               <div class="flex items-center gap-2">
                 <h3 id="chat-active-name" class="font-bold text-sm text-[#1C1917]">-</h3>
-                <span id="chat-active-phone" class="font-mono text-xs text-[#6E645D] bg-white px-2 py-0.5 rounded-lg border border-[#DDD5C7]">-</span>
+                <span id="chat-active-phone" class="font-mono text-xs text-[#6E645D] bg-white px-2 py-0.5 rounded-lg border border-[#DDD5C7] dir-ltr">-</span>
+                <button type="button" onclick="openEditContactModal()" class="text-[11px] bg-[#EAE3D9]/70 hover:bg-[#EAE3D9] text-[#680E23] px-2 py-0.5 rounded-lg border border-[#DDD5C7] font-semibold flex items-center gap-1 transition" title="تعديل اسم أو رقم العميل">
+                  <span>✏️</span> تعديل
+                </button>
               </div>
               <div class="flex items-center gap-2 mt-0.5 text-[11px]">
                 <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-full bg-rose-50 text-[#680E23] border border-rose-200 font-semibold cursor-pointer" onclick="toggleCallSummary()">
@@ -308,6 +311,59 @@
   </div>
 </div>
 
+<!-- ==================== Edit Contact Modal ==================== -->
+<div id="modal-edit-contact" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-sm w-full border border-[#EAE3D9] shadow-2xl p-6 space-y-4 text-right">
+    <div class="flex items-center justify-between border-b border-[#EAE3D9] pb-3">
+      <h3 class="font-bold text-sm text-[#1C1917] flex items-center gap-2">
+        <span>✏️</span> تعديل بيانات العميل
+      </h3>
+      <button type="button" onclick="closeEditContactModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+    </div>
+
+    <form id="edit-contact-form" onsubmit="submitSaveContact(event)" class="space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-[#443D39] mb-1">اسم العميل / النشاط:</label>
+        <input 
+          type="text" 
+          id="edit-contact-name" 
+          placeholder="مثال: أحمد السيد / شركة النور" 
+          required 
+          class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs text-[#1C1917] focus:ring-2 focus:ring-[#680E23] focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block font-bold text-[#443D39] mb-1">رقم هاتف العميل (الصريح):</label>
+        <input 
+          type="text" 
+          id="edit-contact-phone" 
+          placeholder="مثال: 01019431866 أو 201019431866+" 
+          class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs text-[#1C1917] font-mono dir-ltr text-left focus:ring-2 focus:ring-[#680E23] focus:outline-none"
+        />
+        <p class="text-[10px] text-[#8C827A] mt-1">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#EAE3D9]">
+        <button 
+          type="button" 
+          onclick="closeEditContactModal()" 
+          class="px-4 py-2 rounded-xl border border-[#DDD5C7] text-[#6E645D] hover:bg-[#FAF7F2] transition"
+        >
+          إلغاء
+        </button>
+        <button 
+          type="submit" 
+          id="btn-save-contact"
+          class="px-5 py-2 rounded-xl bg-[#680E23] text-white font-bold hover:bg-[#841832] transition shadow-xs"
+        >
+          حفظ التعديلات
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ==================== Test Modal: Send Simulator ==================== -->
 <div id="test-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-3xl max-w-md w-full border border-[#EAE3D9] shadow-2xl p-6 space-y-4 text-right">
@@ -437,7 +493,9 @@
     if (searchVal) {
       filtered = filtered.filter(c => 
         (c.customer_name && c.customer_name.toLowerCase().includes(searchVal)) ||
-        (c.phone_number && c.phone_number.includes(searchVal)) ||
+        (c.display_phone && c.display_phone.toLowerCase().includes(searchVal)) ||
+        (c.real_phone && c.real_phone.toLowerCase().includes(searchVal)) ||
+        (c.phone_number && c.phone_number.toLowerCase().includes(searchVal)) ||
         (c.last_message && c.last_message.text && c.last_message.text.toLowerCase().includes(searchVal))
       );
     }
@@ -457,7 +515,9 @@
       const isActive = (c.phone_number === currentActivePhone);
       const isAi = c.ai_active;
       const lastMsg = c.last_message || {};
-      const initial = (c.customer_name || c.phone_number || 'U').charAt(0).toUpperCase();
+      const displayName = c.customer_name || 'عميل واتساب جديد';
+      const displayPhone = c.display_phone || c.real_phone || c.phone_number;
+      const initial = displayName.trim().charAt(0).toUpperCase();
 
       // Direction prefix icon
       let dirPrefix = '💬 ';
@@ -485,13 +545,21 @@
             ${escapeHtml(initial)}
           </div>
           <div class="flex-1 min-w-0 space-y-1">
+            <!-- السطر الأول: اسم العميل والوقت -->
             <div class="flex items-center justify-between gap-1">
-              <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(c.customer_name || c.phone_number)}</h4>
+              <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(displayName)}</h4>
               <span class="text-[10px] text-[#8C827A] font-mono shrink-0">${escapeHtml(lastMsg.created_at_time || lastMsg.created_at || '')}</span>
             </div>
+            <!-- السطر الثاني: رقم الهاتف الصريح بتنسيق أنيق وأيقونة هاتف -->
+            <div class="flex items-center gap-1.5 text-[11px] font-mono dir-ltr text-left">
+              <span class="text-xs">📱</span>
+              <span class="font-medium text-[#443D39] truncate">${escapeHtml(displayPhone)}</span>
+            </div>
+            <!-- السطر الثالث: مقتطف آخر رسالة -->
             <p class="text-[11px] text-[#6E645D] truncate leading-tight">
               <span class="font-semibold">${dirPrefix}</span>${escapeHtml(lastMsg.text || 'بدء المحادثة')}
             </p>
+            <!-- السطر الرابع: الشارات وحالة الرد وعدد الرسائل -->
             <div class="flex items-center gap-1.5 pt-0.5">
               ${aiBadge}
               ${callBadge}
@@ -547,9 +615,10 @@
   }
 
   function updateChatHeader(data) {
-    document.getElementById('chat-active-name').textContent = data.customer_name || data.phone_number;
-    document.getElementById('chat-active-phone').textContent = data.phone_number;
-    document.getElementById('chat-active-avatar').textContent = (data.customer_name || data.phone_number).charAt(0).toUpperCase();
+    activeConvMeta = data;
+    document.getElementById('chat-active-name').textContent = data.customer_name || 'عميل واتساب جديد';
+    document.getElementById('chat-active-phone').textContent = data.display_phone || data.real_phone || data.phone_number;
+    document.getElementById('chat-active-avatar').textContent = (data.customer_name || 'U').trim().charAt(0).toUpperCase();
 
     // Call memory history banner
     const callBadge = document.getElementById('chat-call-history-badge');
@@ -609,7 +678,7 @@
             </div>
             <div class="max-w-md sm:max-w-lg bg-white border border-[#DDD5C7] rounded-2xl rounded-tr-xs p-3 shadow-xs space-y-1">
               <div class="flex items-center justify-between gap-3 text-[10px] text-[#6E645D]">
-                <span class="font-bold text-[#1C1917]">${escapeHtml(m.customer_name || 'العميل')}</span>
+                <span class="font-bold text-[#1C1917]">${escapeHtml(m.customer_name || (activeConvMeta && activeConvMeta.customer_name) || 'العميل')}</span>
                 <span class="font-mono">${escapeHtml(m.created_at_time || m.created_at)}</span>
               </div>
               <p class="text-xs text-[#1C1917] whitespace-pre-wrap leading-relaxed">${escapeHtml(m.message_text)}</p>
@@ -898,6 +967,71 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'إرسال التجربة';
+    }
+  }
+
+  // ==================== 6. Edit Contact Modal ====================
+
+  function openEditContactModal() {
+    if (!activeConvMeta) return;
+    const modal = document.getElementById('modal-edit-contact');
+    const nameInput = document.getElementById('edit-contact-name');
+    const phoneInput = document.getElementById('edit-contact-phone');
+
+    // Fill current name (avoid placeholder if default)
+    nameInput.value = (activeConvMeta.customer_name && activeConvMeta.customer_name !== 'عميل واتساب جديد') 
+      ? activeConvMeta.customer_name 
+      : '';
+
+    // Fill current real phone
+    phoneInput.value = activeConvMeta.real_phone || (activeConvMeta.phone_number && !activeConvMeta.phone_number.includes('@') ? activeConvMeta.phone_number : '');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    nameInput.focus();
+  }
+
+  function closeEditContactModal() {
+    const modal = document.getElementById('modal-edit-contact');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  async function submitSaveContact(e) {
+    e.preventDefault();
+    if (!currentActivePhone) return;
+
+    const btn = document.getElementById('btn-save-contact');
+    const name = document.getElementById('edit-contact-name').value.trim();
+    const phone = document.getElementById('edit-contact-phone').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/update-contact/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, phone: phone })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        closeEditContactModal();
+        if (activeConvMeta) {
+          activeConvMeta.customer_name = data.customer_name;
+          activeConvMeta.display_phone = data.display_phone;
+          activeConvMeta.real_phone = data.real_phone;
+          updateChatHeader(activeConvMeta);
+        }
+        await loadConversationsList(false);
+      } else {
+        alert(data.message || 'حدث خطأ أثناء حفظ البيانات');
+      }
+    } catch (err) {
+      alert('خطأ في الاتصال: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ التعديلات';
     }
   }
 
