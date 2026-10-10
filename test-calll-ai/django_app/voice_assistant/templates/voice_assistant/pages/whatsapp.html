@@ -1,315 +1,303 @@
 {% extends 'voice_assistant/base.html' %}
 {% load static %}
 
-{% block title %}واتساب وقنوات التواصل (LangGraph 24/7) - المساعد الصوتي الذكي{% endblock %}
+{% block title %}محادثات الواتساب والموظف الذكي 24/7 - Enterprise Omnichannel{% endblock %}
+
+{% block extra_head %}
+<style>
+  .chat-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #D5C7B5 transparent;
+  }
+  .chat-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background-color: #D5C7B5;
+    border-radius: 9999px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-4">
 
-  <!-- ==================== Header & Overview ==================== -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)]">
-    <div>
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-2xl shadow-md">
-          💬
+  <!-- ==================== Header & Global Controls ==================== -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#EAE3D9] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)]">
+    <div class="flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+        💬
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-lg font-bold text-[#1C1917]">محادثات الواتساب والموظف الذكي 24/7</h1>
+          <span id="gateway-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+            جارٍ التحقق من البوابة...
+          </span>
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-[#1C1917] flex items-center gap-2">
-            واتساب وقنوات التواصل - الموظف الذكي 24/7
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 font-bold border border-emerald-500/20">LangGraph Active</span>
-          </h1>
-          <p class="text-xs text-[#6E645D] mt-1">
-            إدارة بوابة الواتساب عبر Evolution API، متابعة العملاء الذاتية بعد المكالمات، والرد الآلي على الاستفسارات بذاكرة موحدة (Call Memory + WhatsApp Memory).
-          </p>
-        </div>
+        <p class="text-xs text-[#6E645D] mt-0.5">
+          صندوق محادثات الواتساب الموحد (Omnichannel Inbox): استعراض كامل لمحادثات العملاء، مراقبة ردود الذكاء الاصطناعي، والرد البشري المباشر.
+        </p>
       </div>
     </div>
 
-    <!-- Top Action Buttons -->
-    <div class="flex items-center gap-2.5">
+    <!-- Actions -->
+    <div class="flex items-center gap-2 shrink-0">
       <button 
         type="button" 
-        onclick="refreshAllWhatsApp()" 
-        id="btn-refresh-whatsapp"
-        class="px-4 py-2.5 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#2D2825] text-xs font-bold border border-[#DDD5C7] transition flex items-center gap-2 shadow-sm"
+        onclick="openQrModal()" 
+        id="btn-open-qr"
+        class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#2D2825] border border-[#DDD5C7] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+      >
+        <span>📱 ربط واتساب (QR Code)</span>
+      </button>
+
+      <button 
+        type="button" 
+        onclick="loadConversationsList()" 
+        class="p-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#1C1917] border border-[#DDD5C7] text-xs transition shadow-sm"
+        title="تحديث المحادثات"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#680E23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span>تحديث البيانات</span>
       </button>
 
       <button 
         type="button" 
         onclick="openTestModal()" 
-        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#680E23] to-[#4A0817] hover:from-[#841832] hover:to-[#5A0A1D] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#680E23]/20"
+        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#680E23] to-[#4A0817] hover:from-[#841832] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20"
       >
-        <span>⚡ تجربة إرسال / متابعة</span>
+        <span>⚡ تجربة إرسال</span>
       </button>
     </div>
   </div>
 
-  <!-- ==================== Quick Stats Cards ==================== -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Stat 1: Connection Status -->
-    <div class="bg-white border border-[#EAE3D9] rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between text-xs text-[#6E645D] mb-1">
-        <span>حالة البوابة (Evolution API)</span>
-        <span id="stat-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700">فحص...</span>
-      </div>
-      <div class="flex items-center gap-2 mt-2">
-        <span id="stat-status-dot" class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
-        <span id="stat-status-text" class="text-base font-bold text-[#1C1917]">جارٍ التحقق...</span>
-      </div>
-    </div>
+  <!-- ==================== Main Omnichannel Chat Workspace ==================== -->
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[660px] h-[78vh] max-h-[850px]">
 
-    <!-- Stat 2: Outbound Follow-ups -->
-    <div class="bg-white border border-[#EAE3D9] rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between text-xs text-[#6E645D] mb-1">
-        <span>متابعات ما بعد المكالمة</span>
-        <span class="text-emerald-600 font-bold">🤖 صادر</span>
-      </div>
-      <div class="flex items-baseline gap-1 mt-2">
-        <span id="stat-outbound-count" class="text-2xl font-bold text-[#1C1917]">0</span>
-        <span class="text-xs text-[#6E645D]">رسالة مرسلة</span>
-      </div>
-    </div>
-
-    <!-- Stat 3: Inbound Inquiries -->
-    <div class="bg-white border border-[#EAE3D9] rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between text-xs text-[#6E645D] mb-1">
-        <span>استفسارات العملاء الواردة</span>
-        <span class="text-blue-600 font-bold">👤 وارد</span>
-      </div>
-      <div class="flex items-baseline gap-1 mt-2">
-        <span id="stat-inbound-count" class="text-2xl font-bold text-[#1C1917]">0</span>
-        <span class="text-xs text-[#6E645D]">رسالة مستلمة</span>
-      </div>
-    </div>
-
-    <!-- Stat 4: LangGraph Engine -->
-    <div class="bg-white border border-[#EAE3D9] rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between text-xs text-[#6E645D] mb-1">
-        <span>محرك القرار والاستنتاج</span>
-        <span class="text-purple-600 font-bold">24/7 AI</span>
-      </div>
-      <div class="flex items-baseline gap-1 mt-2">
-        <span class="text-base font-bold text-[#680E23]">LangGraph + Gemini</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== Main Grid: QR Code & Workflow ==================== -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-    <!-- Left (Col 5): QR Code Connection Card -->
-    <div class="lg:col-span-5 space-y-4">
-      <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4 relative overflow-hidden">
-        <div class="flex items-center justify-between border-b border-[#EAE3D9] pb-4">
-          <div class="flex items-center gap-2">
-            <span class="text-xl">📱</span>
-            <div>
-              <h2 class="text-sm font-bold text-[#1C1917]">ربط رقم الواتساب (QR Code)</h2>
-              <p class="text-[11px] text-[#6E645D]">امسح الكود عبر تطبيق واتساب لربط رقمك الشخصي أو رقم العمل</p>
-            </div>
-          </div>
-          <span id="conn-pill" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
-            فحص...
-          </span>
+    <!-- ==================== Right Side: Conversations Sidebar (4 cols) ==================== -->
+    <div class="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-[#EAE3D9] flex flex-col bg-[#FAF7F2]/60 min-h-0">
+      
+      <!-- Search & Filters Toolbar -->
+      <div class="p-3.5 border-b border-[#EAE3D9] bg-white space-y-2.5">
+        <div class="relative">
+          <span class="absolute inset-y-0 right-3 flex items-center text-[#8C827A] text-xs">🔍</span>
+          <input 
+            type="text" 
+            id="search-conversations"
+            placeholder="بحث بالاسم أو رقم الهاتف..." 
+            oninput="filterConversations(this.value)"
+            class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl pr-8 pl-3 py-2 text-xs text-[#1C1917] focus:ring-2 focus:ring-[#680E23] focus:outline-none transition"
+          />
         </div>
 
-        <!-- Dynamic QR Code & Connection Container -->
-        <div id="qr-container" class="flex flex-col items-center justify-center p-6 bg-[#FAF7F2] rounded-2xl border border-dashed border-[#DDD5C7] min-h-[300px] text-center space-y-4">
-          <div class="w-12 h-12 rounded-full border-3 border-[#680E23] border-t-transparent animate-spin mx-auto"></div>
-          <p class="text-xs text-[#6E645D]">جارٍ فحص حالة الاتصال بالسيرفر...</p>
-        </div>
-
-        <!-- Connection Action Controls -->
-        <div class="flex items-center justify-between gap-3 pt-2">
+        <div class="flex items-center gap-1 text-[11px] font-semibold">
           <button 
             type="button" 
-            onclick="fetchQRCode(true)" 
-            id="btn-generate-qr"
-            class="flex-1 py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20"
+            onclick="setConvFilter('all', this)" 
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg bg-[#680E23] text-white transition text-center shadow-xs"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
-            <span>توليد كود QR للربط</span>
+            الكل
           </button>
-
           <button 
             type="button" 
-            onclick="disconnectWhatsApp()" 
-            id="btn-disconnect"
-            class="hidden py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition items-center justify-center gap-1.5"
+            onclick="setConvFilter('ai_active', this)" 
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#6E645D] hover:bg-[#EAE3D9] transition text-center"
           >
-            <span>قطع الاتصال</span>
+            🤖 AI نشط
+          </button>
+          <button 
+            type="button" 
+            onclick="setConvFilter('manual', this)" 
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#6E645D] hover:bg-[#EAE3D9] transition text-center"
+          >
+            👤 يدوي
           </button>
         </div>
+      </div>
 
-        <!-- Instructions Accordion / Tips -->
-        <div class="bg-[#F5EFE6]/60 rounded-xl p-3 border border-[#EAE3D9] text-[11px] text-[#443D39] space-y-1.5">
-          <div class="font-bold text-[#680E23] flex items-center gap-1">
-            <span>💡</span> خطوات الربط:
-          </div>
-          <ol class="list-decimal list-inside space-y-1 pr-1 text-[#6E645D]">
-            <li>افتح واتساب على هاتفك > <strong>الأجهزة المرتبطة (Linked Devices)</strong>.</li>
-            <li>اضغط <strong>"ربط جهاز" (Link a device)</strong>.</li>
-            <li>وجّه الكاميرا لمسح رمز QR أعلاه للاتصال الفوري.</li>
-          </ol>
+      <!-- Conversations Scrollable List -->
+      <div id="conversations-list" class="flex-1 overflow-y-auto chat-scroll divide-y divide-[#EAE3D9]/70 min-h-0">
+        <div class="p-8 text-center text-[#6E645D] text-xs">
+          <div class="w-8 h-8 rounded-full border-2 border-[#680E23] border-t-transparent animate-spin mx-auto mb-2"></div>
+          جارٍ تحميل المحادثات...
         </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="p-2.5 border-t border-[#EAE3D9] bg-white text-[11px] text-[#6E645D] flex items-center justify-between px-4">
+        <span>المحادثات النشطة: <strong id="conversations-count" class="text-[#680E23]">0</strong></span>
+        <span class="flex items-center gap-1 text-emerald-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          تحديث تلقائي
+        </span>
       </div>
     </div>
 
-    <!-- Right (Col 7): Architecture & Autonomous LangGraph Engine -->
-    <div class="lg:col-span-7 space-y-4">
-      <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4">
-        <div class="flex items-center justify-between border-b border-[#EAE3D9] pb-4">
-          <div class="flex items-center gap-2">
-            <span class="text-xl">🧠</span>
-            <div>
-              <h2 class="text-sm font-bold text-[#1C1917]">محرك المتابعة الذاتية (LangGraph Autonomous Worker)</h2>
-              <p class="text-[11px] text-[#6E645D]">تكامل ثنائي القنوات مع ذاكرة العميل المستمرة</p>
-            </div>
-          </div>
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-700 border border-purple-500/20">
-            Autonomous StateGraph
-          </span>
+    <!-- ==================== Left Side: Chat Messages Workspace (8 cols) ==================== -->
+    <div class="lg:col-span-8 flex flex-col bg-white min-h-0 relative">
+
+      <!-- State A: Empty State (No conversation selected) -->
+      <div id="chat-empty-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
+        <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center text-3xl shadow-sm">
+          💬
         </div>
-
-        <!-- Architecture Flow Visualizer -->
-        <div class="p-4 bg-gradient-to-br from-[#FAF7F2] to-[#F5EFE6] border border-[#EAE3D9] rounded-2xl space-y-3">
-          <div class="text-xs font-bold text-[#443D39] flex items-center justify-between">
-            <span>مسار القرار الذكي (Graph Pipeline)</span>
-            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">مباشر وبدون وسيط</span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-center text-xs">
-            <!-- Step 1 -->
-            <div class="p-3 bg-white rounded-xl border border-[#DDD5C7] shadow-sm space-y-1">
-              <div class="text-lg">📞 / 📥</div>
-              <div class="font-bold text-[#1C1917]">1. محفز الحدث</div>
-              <p class="text-[10px] text-[#6E645D]">انتهاء مكالمة هاتفية أو رسالة واتساب واردة من العميل.</p>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="p-3 bg-white rounded-xl border border-[#DDD5C7] shadow-sm space-y-1">
-              <div class="text-lg">⚖️</div>
-              <div class="font-bold text-[#680E23]">2. تقييم LangGraph</div>
-              <p class="text-[10px] text-[#6E645D]">فحص Call Memory + WhatsApp Memory واستنتاج هل يلزم الرد.</p>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="p-3 bg-white rounded-xl border border-[#DDD5C7] shadow-sm space-y-1">
-              <div class="text-lg">💬</div>
-              <div class="font-bold text-emerald-700">3. الإرسال الذاتي</div>
-              <p class="text-[10px] text-[#6E645D]">صياغة رسالة احترافية وإرسالها فوراً وحفظها في الذاكرة.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Memory Separation Details -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div class="p-3.5 bg-rose-50/50 border border-rose-100 rounded-xl space-y-1">
-            <div class="font-bold text-[#680E23] flex items-center gap-1.5">
-              <span>🎙️</span> ذاكرة المكالمات (Call Memory)
-            </div>
-            <p class="text-[11px] text-[#6E645D] leading-relaxed">
-              تحتفظ بملخص المكالمة الهاتفية، النية المستخلصة (Intent)، الأسئلة المعلّقة، والوعود التي قطعها المساعد الصوتي أثناء الاتصال.
-            </p>
-          </div>
-
-          <div class="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-xl space-y-1">
-            <div class="font-bold text-emerald-800 flex items-center gap-1.5">
-              <span>💬</span> ذاكرة الواتساب (WhatsApp Memory)
-            </div>
-            <p class="text-[11px] text-[#6E645D] leading-relaxed">
-              تحتفظ بسياق الدردشة النصية، آخر الرسائل المتبادلة، حالة تسليم المتابعات، وتوقيت آخر تفاعل على الواتساب.
-            </p>
-          </div>
-        </div>
-
-        <!-- Feature Capabilities Badge List -->
-        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#EAE3D9] text-[11px] font-semibold text-[#443D39]">
-          <span class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D9]">⚡ إرسال فوري بدون تأخير</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D9]">🔒 عزل تام لكل رقم هاتف</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D9]">🤖 كاشف التكرار لمنع الإزعاج</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D9]">🌐 سياق موحد بين الهاتف والشات</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ==================== Omnichannel Messages Feed ==================== -->
-  <div class="bg-white border border-[#EAE3D9] rounded-3xl p-6 shadow-xl space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EAE3D9] pb-4">
-      <div>
-        <h2 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
-          <span>📜</span> سجل رسائل ومتابعات الواتساب (Live Feed)
-        </h2>
-        <p class="text-[11px] text-[#6E645D] mt-0.5">
-          جميع الرسائل الصادرة والواردة المعالجة بواسطة محرك LangGraph وبوابة Evolution API
+        <h3 class="text-base font-bold text-[#1C1917]">اختر محادثة من القائمة للبدء</h3>
+        <p class="text-xs text-[#6E645D] max-w-sm leading-relaxed">
+          اضغط على أي عميل من القائمة الجانبية للاطلاع على تاريخ المحادثة بالكامل، ومتابعة ردود الموظف الذكي، أو التدخل والرد يدوياً في أي وقت.
         </p>
       </div>
 
-      <!-- Feed Controls -->
-      <div class="flex items-center gap-2">
-        <select 
-          id="filter-direction" 
-          onchange="filterMessages()" 
-          class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-xs text-[#1C1917] focus:ring-1 focus:ring-[#680E23]"
-        >
-          <option value="all">كل الرسائل</option>
-          <option value="outbound">الصادرة فقط (AI Follow-ups)</option>
-          <option value="inbound">الواردة فقط (Customer Inbound)</option>
-        </select>
+      <!-- State B: Active Conversation View -->
+      <div id="chat-active-view" class="hidden flex-1 flex-col min-h-0">
+        
+        <!-- Chat Active Header -->
+        <div class="p-3.5 px-5 border-b border-[#EAE3D9] bg-[#FAF7F2]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-3">
+            <div id="chat-active-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#A3203E] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+              U
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="chat-active-name" class="font-bold text-sm text-[#1C1917]">-</h3>
+                <span id="chat-active-phone" class="font-mono text-xs text-[#6E645D] bg-white px-2 py-0.5 rounded-lg border border-[#DDD5C7]">-</span>
+              </div>
+              <div class="flex items-center gap-2 mt-0.5 text-[11px]">
+                <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-full bg-rose-50 text-[#680E23] border border-rose-200 font-semibold cursor-pointer" onclick="toggleCallSummary()">
+                  📞 مكالمات سابقة مسجلة (اضغط للعرض)
+                </span>
+                <span id="chat-active-status" class="text-emerald-700 font-medium">محادثة نشطة</span>
+              </div>
+            </div>
+          </div>
 
-        <button 
-          type="button" 
-          onclick="loadMessages()" 
-          class="p-2 rounded-xl bg-[#FAF7F2] hover:bg-[#EAE3D9] border border-[#DDD5C7] text-[#1C1917] text-xs transition"
-          title="تحديث السجل"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
+          <!-- Controls: AI Toggle & Actions -->
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              id="btn-toggle-ai"
+              onclick="toggleCurrentAiAutoReply()"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+              title="تفعيل أو إيقاف الرد الآلي للذكاء الاصطناعي لهذا العميل"
+            >
+              <span id="ai-toggle-icon">🤖</span>
+              <span id="ai-toggle-text">الرد الذكي: نشط</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="loadActiveMessages(true)" 
+              class="p-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1C1917] border border-[#DDD5C7] text-xs transition shadow-sm"
+              title="تحديث الرسائل"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#680E23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Call Summary Dropdown Accordion (if customer has call memory) -->
+        <div id="chat-call-summary-banner" class="hidden px-5 py-2.5 bg-rose-50/90 border-b border-rose-200 text-xs text-[#443D39] shrink-0">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="font-bold text-[#680E23]">🎙️ سياق المكالمات الهاتفية السابقة:</span>
+              <p id="chat-call-summary-text" class="text-[11px] text-[#2D2825] mt-1 leading-relaxed">-</p>
+            </div>
+            <button type="button" onclick="toggleCallSummary()" class="text-rose-700 hover:text-rose-900 font-bold">&times;</button>
+          </div>
+        </div>
+
+        <!-- Chat Messages Stream -->
+        <div id="chat-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 chat-scroll bg-[#FAF7F2]/30 min-h-0">
+          <div class="p-8 text-center text-[#6E645D] text-xs">جارٍ جلب المحادثة...</div>
+        </div>
+
+        <!-- Chat Input Composer -->
+        <div class="p-3.5 px-5 border-t border-[#EAE3D9] bg-white shrink-0">
+          <form id="chat-reply-form" onsubmit="sendManualReply(event)" class="space-y-2">
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="chat-reply-input" 
+                placeholder="اكتب رداً يدوياً على العميل عبر الواتساب..." 
+                required
+                autocomplete="off"
+                class="flex-1 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-4 py-2.5 text-xs text-[#1C1917] focus:ring-2 focus:ring-[#680E23] focus:outline-none transition shadow-inner"
+              />
+              <button 
+                type="submit" 
+                id="btn-send-reply" 
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#1EBE5D] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#25D366]/20 shrink-0"
+              >
+                <span>إرسال</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-[#6E645D] px-1">
+              <span>💡 يتم الإرسال فوراً لرقم العميل عبر بوابة Evolution API المربوطة.</span>
+              <span id="reply-status-text" class="text-emerald-700 font-medium"></span>
+            </div>
+          </form>
+        </div>
+
       </div>
+
     </div>
 
-    <!-- Messages Table -->
-    <div class="overflow-x-auto rounded-2xl border border-[#EAE3D9]">
-      <table class="w-full text-right text-xs">
-        <thead class="bg-[#FAF7F2] text-[#443D39] font-bold border-b border-[#EAE3D9]">
-          <tr>
-            <th class="py-3 px-4">الاتجاه</th>
-            <th class="py-3 px-4">رقم الهاتف</th>
-            <th class="py-3 px-4">اسم العميل</th>
-            <th class="py-3 px-4">المحفز / السبب</th>
-            <th class="py-3 px-4">نص الرسالة</th>
-            <th class="py-3 px-4">الحالة</th>
-            <th class="py-3 px-4">التوقيت</th>
-          </tr>
-        </thead>
-        <tbody id="messages-table-body" class="divide-y divide-[#EAE3D9]">
-          <tr>
-            <td colspan="7" class="py-8 text-center text-[#6E645D]">
-              <div class="w-8 h-8 rounded-full border-2 border-[#680E23] border-t-transparent animate-spin mx-auto mb-2"></div>
-              جارٍ تحميل سجل الرسائل...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
 </div>
 {% endblock %}
 
 {% block modals %}
-<!-- ==================== Test Modal: Send / Trigger Followup ==================== -->
+<!-- ==================== QR Code Connection Modal ==================== -->
+<div id="qr-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full border border-[#EAE3D9] shadow-2xl p-6 space-y-4 text-right">
+    <div class="flex items-center justify-between border-b border-[#EAE3D9] pb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📱</span>
+        <div>
+          <h3 class="font-bold text-sm text-[#1C1917]">ربط رقم الواتساب (QR Code)</h3>
+          <p class="text-[11px] text-[#6E645D]">امسح الكود لربط رقمك الشخصي أو رقم العمل</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeQrModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+    </div>
+
+    <!-- QR Container -->
+    <div id="qr-modal-container" class="flex flex-col items-center justify-center p-6 bg-[#FAF7F2] rounded-2xl border border-dashed border-[#DDD5C7] min-h-[280px] text-center space-y-3">
+      <div class="w-10 h-10 rounded-full border-3 border-[#680E23] border-t-transparent animate-spin mx-auto"></div>
+      <p class="text-xs text-[#6E645D]">جارٍ فحص حالة الاتصال بالسيرفر...</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <button 
+        type="button" 
+        onclick="fetchQrCode(true)" 
+        id="btn-generate-qr"
+        class="flex-1 py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20"
+      >
+        <span>توليد كود QR للربط</span>
+      </button>
+
+      <button 
+        type="button" 
+        onclick="disconnectWhatsApp()" 
+        id="btn-disconnect-whatsapp"
+        class="hidden py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition items-center justify-center gap-1.5"
+      >
+        <span>قطع الاتصال</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Test Modal: Send Simulator ==================== -->
 <div id="test-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-3xl max-w-md w-full border border-[#EAE3D9] shadow-2xl p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#EAE3D9] pb-3">
@@ -336,7 +324,7 @@
         <input 
           type="text" 
           id="test-customer-name" 
-          placeholder="مثال: محمد أحمد" 
+          placeholder="مثال: أحمد السيد" 
           class="w-full bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl px-3 py-2 text-xs text-[#1C1917] focus:ring-2 focus:ring-[#680E23] focus:outline-none"
         />
       </div>
@@ -364,18 +352,8 @@
       </div>
 
       <div class="pt-2 flex items-center justify-end gap-2">
-        <button 
-          type="button" 
-          onclick="closeTestModal()" 
-          class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition"
-        >
-          إلغاء
-        </button>
-        <button 
-          type="submit" 
-          id="btn-submit-test" 
-          class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#680E23] to-[#4A0817] hover:from-[#841832] hover:to-[#5A0A1D] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20"
-        >
+        <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition">إلغاء</button>
+        <button type="submit" id="btn-submit-test" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#680E23] to-[#4A0817] hover:from-[#841832] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
           <span>إرسال التجربة</span>
         </button>
       </div>
@@ -386,93 +364,385 @@
 
 {% block extra_scripts %}
 <script>
-  let allMessagesData = [];
+  let conversationsData = [];
+  let currentActivePhone = null;
+  let activeConvMeta = null;
+  let currentFilter = 'all';
   let pollInterval = null;
+  let chatAutoRefreshTimer = null;
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     checkConnectionStatus();
-    loadMessages();
+    loadConversationsList();
+
+    // Auto-refresh chat list every 12 seconds
+    setInterval(() => {
+      loadConversationsList(false);
+      if (currentActivePhone) {
+        loadActiveMessages(false);
+      }
+    }, 12000);
   });
 
-  // ==================== Connection Status & QR Code ====================
+  // ==================== 1. Conversations List (Right Column) ====================
 
-  async function checkConnectionStatus() {
+  async function loadConversationsList(showSpinner = true) {
+    const listEl = document.getElementById('conversations-list');
+    if (showSpinner && conversationsData.length === 0) {
+      listEl.innerHTML = `
+        <div class="p-8 text-center text-[#6E645D] text-xs">
+          <div class="w-8 h-8 rounded-full border-2 border-[#680E23] border-t-transparent animate-spin mx-auto mb-2"></div>
+          جارٍ تحميل المحادثات...
+        </div>
+      `;
+    }
+
     try {
-      const res = await fetch('/api/crm/whatsapp/status/');
+      const res = await fetch('/api/crm/whatsapp/conversations/');
       const data = await res.json();
-      updateStatusUI(data);
-      if (!data.connected) {
-        // Automatically fetch QR code if not connected
-        fetchQRCode(false);
+      if (data.status === 'success') {
+        conversationsData = data.conversations || [];
+        document.getElementById('conversations-count').textContent = conversationsData.length;
+        renderConversationsList(conversationsData);
       }
     } catch (err) {
-      console.error('Error checking WhatsApp status:', err);
-      updateStatusUI({ status: 'error', state: 'disconnected', connected: false });
+      console.error('Error loading conversations:', err);
     }
   }
 
-  function updateStatusUI(data) {
-    const isConnected = data.connected === true || data.state === 'open';
-    const statBadge = document.getElementById('stat-status-badge');
-    const statDot = document.getElementById('stat-status-dot');
-    const statText = document.getElementById('stat-status-text');
-    const connPill = document.getElementById('conn-pill');
-    const btnDisconnect = document.getElementById('btn-disconnect');
-    const qrContainer = document.getElementById('qr-container');
+  function renderConversationsList(convs) {
+    const listEl = document.getElementById('conversations-list');
+    let filtered = convs;
 
-    if (isConnected) {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
-      statBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700';
-      statBadge.textContent = 'متصل';
-      statDot.className = 'w-3 h-3 rounded-full bg-emerald-500';
-      statText.textContent = 'متصل وجاهز للعمل';
-      connPill.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20';
-      connPill.textContent = 'متصل الآن 🟢';
-      btnDisconnect.classList.remove('hidden');
-      btnDisconnect.classList.add('flex');
+    // Apply Filter
+    if (currentFilter === 'ai_active') {
+      filtered = convs.filter(c => c.ai_active);
+    } else if (currentFilter === 'manual') {
+      filtered = convs.filter(c => !c.ai_active);
+    }
 
-      qrContainer.innerHTML = `
-        <div class="space-y-3 py-4">
-          <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
-            ✅
+    // Apply Search
+    const searchVal = document.getElementById('search-conversations').value.trim().toLowerCase();
+    if (searchVal) {
+      filtered = filtered.filter(c => 
+        (c.customer_name && c.customer_name.toLowerCase().includes(searchVal)) ||
+        (c.phone_number && c.phone_number.includes(searchVal)) ||
+        (c.last_message && c.last_message.text && c.last_message.text.toLowerCase().includes(searchVal))
+      );
+    }
+
+    if (!filtered || filtered.length === 0) {
+      listEl.innerHTML = `
+        <div class="p-8 text-center text-[#6E645D] text-xs space-y-1">
+          <div class="text-2xl mb-1">💬</div>
+          <p class="font-bold text-[#1C1917]">لا توجد محادثات مطابقة</p>
+          <p class="text-[11px] text-[#8C827A]">ستظهر المحادثات هنا فور بدء العملاء بمراسلتكم على الواتساب.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(c => {
+      const isActive = (c.phone_number === currentActivePhone);
+      const isAi = c.ai_active;
+      const lastMsg = c.last_message || {};
+      const initial = (c.customer_name || c.phone_number || 'U').charAt(0).toUpperCase();
+
+      // Direction prefix icon
+      let dirPrefix = '💬 ';
+      if (lastMsg.is_ai) dirPrefix = '🤖 ';
+      else if (lastMsg.is_human) dirPrefix = '👤 ';
+
+      const aiBadge = isAi
+        ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 AI</span>'
+        : '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">⏸️ يدوي</span>';
+
+      const callBadge = c.has_call_history 
+        ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-[#680E23] border border-rose-200">📞 مكالمة</span>' 
+        : '';
+
+      const activeClasses = isActive 
+        ? 'bg-white border-r-4 border-r-[#680E23] shadow-sm' 
+        : 'hover:bg-white/80';
+
+      return `
+        <div 
+          onclick="selectConversation('${escapeHtml(c.phone_number)}')" 
+          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${activeClasses}"
+        >
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr ${isActive ? 'from-[#680E23] to-[#841832] text-white' : 'from-[#EAE3D9] to-[#D5C7B5] text-[#443D39]'} font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+            ${escapeHtml(initial)}
           </div>
-          <div class="space-y-1">
-            <h3 class="text-sm font-bold text-[#1C1917]">تم ربط حساب الواتساب بنجاح!</h3>
-            <p class="text-xs text-[#6E645D]">البوابة جاهزة لإرسال واستقبال رسائل المتابعة آلياً عبر LangGraph 24/7.</p>
-          </div>
-          <div class="pt-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              مستمع نشط للرسائل الواردة والمكالمات
-            </span>
+          <div class="flex-1 min-w-0 space-y-1">
+            <div class="flex items-center justify-between gap-1">
+              <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(c.customer_name || c.phone_number)}</h4>
+              <span class="text-[10px] text-[#8C827A] font-mono shrink-0">${escapeHtml(lastMsg.created_at_time || lastMsg.created_at || '')}</span>
+            </div>
+            <p class="text-[11px] text-[#6E645D] truncate leading-tight">
+              <span class="font-semibold">${dirPrefix}</span>${escapeHtml(lastMsg.text || 'بدء المحادثة')}
+            </p>
+            <div class="flex items-center gap-1.5 pt-0.5">
+              ${aiBadge}
+              ${callBadge}
+              <span class="text-[9px] text-[#8C827A] font-mono">(${c.messages_count} رسائل)</span>
+            </div>
           </div>
         </div>
       `;
-    } else {
-      statBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700';
-      statBadge.textContent = 'غير متصل';
-      statDot.className = 'w-3 h-3 rounded-full bg-rose-500';
-      statText.textContent = 'في انتظار الربط';
-      connPill.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-700 border border-rose-500/20';
-      connPill.textContent = 'غير متصل 🔴';
-      btnDisconnect.classList.add('hidden');
-      btnDisconnect.classList.remove('flex');
+    }).join('');
+  }
+
+  function setConvFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.conv-filter-btn').forEach(b => {
+      b.className = 'conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#6E645D] hover:bg-[#EAE3D9] transition text-center';
+    });
+    btn.className = 'conv-filter-btn flex-1 py-1 px-2 rounded-lg bg-[#680E23] text-white transition text-center shadow-xs';
+    renderConversationsList(conversationsData);
+  }
+
+  function filterConversations(val) {
+    renderConversationsList(conversationsData);
+  }
+
+  // ==================== 2. Chat Thread View (Left Column) ====================
+
+  async function selectConversation(phone) {
+    currentActivePhone = phone;
+    renderConversationsList(conversationsData);
+
+    document.getElementById('chat-empty-state').classList.add('hidden');
+    const activeView = document.getElementById('chat-active-view');
+    activeView.classList.remove('hidden');
+    activeView.classList.add('flex');
+
+    await loadActiveMessages(true);
+  }
+
+  async function loadActiveMessages(scrollToBottom = false) {
+    if (!currentActivePhone) return;
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/messages/`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        activeConvMeta = data;
+        updateChatHeader(data);
+        renderChatMessages(data.messages || [], scrollToBottom);
+      }
+    } catch (err) {
+      console.error('Error loading messages for conversation:', err);
     }
   }
 
-  async function fetchQRCode(isUserClick = false) {
-    const qrContainer = document.getElementById('qr-container');
-    const btnGen = document.getElementById('btn-generate-qr');
+  function updateChatHeader(data) {
+    document.getElementById('chat-active-name').textContent = data.customer_name || data.phone_number;
+    document.getElementById('chat-active-phone').textContent = data.phone_number;
+    document.getElementById('chat-active-avatar').textContent = (data.customer_name || data.phone_number).charAt(0).toUpperCase();
 
-    if (isUserClick) {
-      btnGen.disabled = true;
-      btnGen.innerHTML = `
-        <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        <span>جارٍ إنشاء جلسة الربط...</span>
+    // Call memory history banner
+    const callBadge = document.getElementById('chat-call-history-badge');
+    const callBanner = document.getElementById('chat-call-summary-banner');
+    const callText = document.getElementById('chat-call-summary-text');
+    if (data.call_summary) {
+      callBadge.classList.remove('hidden');
+      callText.textContent = data.call_summary;
+    } else {
+      callBadge.classList.add('hidden');
+      callBanner.classList.add('hidden');
+    }
+
+    // AI Toggle Switch Button
+    const btnToggle = document.getElementById('btn-toggle-ai');
+    const toggleIcon = document.getElementById('ai-toggle-icon');
+    const toggleText = document.getElementById('ai-toggle-text');
+
+    if (data.ai_active) {
+      btnToggle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100';
+      toggleIcon.textContent = '🤖';
+      toggleText.textContent = 'الرد الذكي: نشط (اضغط للإيقاف)';
+    } else {
+      btnToggle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100';
+      toggleIcon.textContent = '⏸️';
+      toggleText.textContent = 'وضع الموظف البشري (AI متوقف)';
+    }
+  }
+
+  function toggleCallSummary() {
+    const banner = document.getElementById('chat-call-summary-banner');
+    banner.classList.toggle('hidden');
+  }
+
+  function renderChatMessages(messages, scrollToBottom = false) {
+    const stream = document.getElementById('chat-messages-stream');
+    if (!messages || messages.length === 0) {
+      stream.innerHTML = `
+        <div class="p-8 text-center text-[#6E645D] text-xs">
+          لا توجد رسائل سابقة في هذه المحادثة بعد.
+        </div>
       `;
+      return;
+    }
+
+    stream.innerHTML = messages.map(m => {
+      const isCustomer = (m.direction === 'inbound');
+      const isAi = (m.direction === 'outbound_ai');
+      const isHuman = (m.direction === 'outbound_human');
+
+      if (isCustomer) {
+        // Customer Bubble (Aligned Right in RTL)
+        return `
+          <div class="flex items-start gap-2.5 justify-start">
+            <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200 shadow-2xs">
+              👤
+            </div>
+            <div class="max-w-md sm:max-w-lg bg-white border border-[#DDD5C7] rounded-2xl rounded-tr-xs p-3 shadow-xs space-y-1">
+              <div class="flex items-center justify-between gap-3 text-[10px] text-[#6E645D]">
+                <span class="font-bold text-[#1C1917]">${escapeHtml(m.customer_name || 'العميل')}</span>
+                <span class="font-mono">${escapeHtml(m.created_at_time || m.created_at)}</span>
+              </div>
+              <p class="text-xs text-[#1C1917] whitespace-pre-wrap leading-relaxed">${escapeHtml(m.message_text)}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        // Outbound Bubble (AI or Human Agent - Aligned Left in RTL)
+        const badgeTag = isAi 
+          ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">🤖 الموظف الذكي</span>'
+          : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-200">👤 موظف بشري</span>';
+
+        const bubbleBg = isAi 
+          ? 'bg-gradient-to-br from-[#FAF0F2] to-[#FAF7F2] border border-[#E8CCD2]' 
+          : 'bg-gradient-to-br from-[#F0F4FA] to-[#FAF7F2] border border-[#CCD8E8]';
+
+        const avatarBg = isAi ? 'bg-[#680E23] text-white' : 'bg-blue-600 text-white';
+
+        return `
+          <div class="flex items-start gap-2.5 justify-end">
+            <div class="max-w-md sm:max-w-lg ${bubbleBg} rounded-2xl rounded-tl-xs p-3 shadow-xs space-y-1 text-right">
+              <div class="flex items-center justify-between gap-3 text-[10px] text-[#6E645D]">
+                ${badgeTag}
+                <span class="font-mono">${escapeHtml(m.created_at_time || m.created_at)}</span>
+              </div>
+              <p class="text-xs text-[#1C1917] whitespace-pre-wrap leading-relaxed">${escapeHtml(m.message_text)}</p>
+              <div class="text-left">
+                <span class="text-[9px] text-emerald-700 font-bold">✓ تم الإرسال للواتساب</span>
+              </div>
+            </div>
+            <div class="w-7 h-7 rounded-full ${avatarBg} font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+              ${isAi ? '🤖' : '👤'}
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+
+    if (scrollToBottom) {
+      stream.scrollTop = stream.scrollHeight;
+    }
+  }
+
+  // ==================== 3. Manual Human Reply & AI Switch ====================
+
+  async function sendManualReply(e) {
+    e.preventDefault();
+    if (!currentActivePhone) return;
+
+    const input = document.getElementById('chat-reply-input');
+    const btn = document.getElementById('btn-send-reply');
+    const statusText = document.getElementById('reply-status-text');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    btn.disabled = true;
+    btn.innerHTML = `<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/reply/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        input.value = '';
+        statusText.textContent = '✓ تم إرسال رسالتك بنجاح';
+        setTimeout(() => { statusText.textContent = ''; }, 3000);
+        await loadActiveMessages(true);
+        loadConversationsList(false);
+      } else {
+        alert(data.message || 'فشل إرسال الرسالة');
+      }
+    } catch (err) {
+      alert('خطأ أثناء الإرسال: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>إرسال</span>`;
+    }
+  }
+
+  async function toggleCurrentAiAutoReply() {
+    if (!currentActivePhone) return;
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/toggle-ai/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        if (activeConvMeta) activeConvMeta.ai_active = data.ai_active;
+        updateChatHeader(activeConvMeta);
+        loadConversationsList(false);
+      }
+    } catch (err) {
+      alert('خطأ أثناء تعديل حالة الـ AI: ' + err.message);
+    }
+  }
+
+  // ==================== 4. QR Code & Gateway Session ====================
+
+  async function checkConnectionStatus() {
+    const badge = document.getElementById('gateway-status-badge');
+    try {
+      const res = await fetch('/api/crm/whatsapp/status/');
+      const data = await res.json();
+      const isConn = (data.connected === true || data.state === 'open');
+
+      if (isConn) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20';
+        badge.textContent = 'بوابة الواتساب: متصلة 🟢';
+        document.getElementById('btn-disconnect-whatsapp').classList.remove('hidden');
+        document.getElementById('btn-disconnect-whatsapp').classList.add('flex');
+      } else {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 border border-rose-500/20';
+        badge.textContent = 'بوابة الواتساب: غير متصلة 🔴';
+        document.getElementById('btn-disconnect-whatsapp').classList.add('hidden');
+        document.getElementById('btn-disconnect-whatsapp').classList.remove('flex');
+      }
+    } catch (err) {
+      badge.textContent = 'خطأ في فحص البوابة';
+    }
+  }
+
+  function openQrModal() {
+    document.getElementById('qr-modal').classList.remove('hidden');
+    document.getElementById('qr-modal').classList.add('flex');
+    fetchQrCode(false);
+  }
+
+  function closeQrModal() {
+    document.getElementById('qr-modal').classList.add('hidden');
+    document.getElementById('qr-modal').classList.remove('flex');
+  }
+
+  async function fetchQrCode(isClick = false) {
+    const container = document.getElementById('qr-modal-container');
+    const btn = document.getElementById('btn-generate-qr');
+
+    if (isClick) {
+      btn.disabled = true;
+      btn.textContent = 'جارٍ التوليد...';
     }
 
     try {
@@ -481,176 +751,51 @@
 
       if (data.status === 'success') {
         if (data.connected) {
-          updateStatusUI({ connected: true, state: 'open' });
+          container.innerHTML = `
+            <div class="space-y-2 py-6">
+              <div class="text-4xl">✅</div>
+              <h4 class="font-bold text-sm text-[#1C1917]">واتساب متصل ويعمل بنجاح</h4>
+              <p class="text-xs text-[#6E645D]">البوابة جاهزة لإرسال واستقبال الرسائل على مدار الساعة.</p>
+            </div>
+          `;
+          checkConnectionStatus();
           return;
         }
 
-        const base64Img = data.base64;
-        const code = data.code;
-
-        if (base64Img) {
-          qrContainer.innerHTML = `
-            <div class="space-y-3">
-              <div class="p-2 bg-white rounded-2xl border border-[#DDD5C7] shadow-md inline-block">
-                <img src="${base64Img}" alt="WhatsApp QR Code" class="w-56 h-56 object-contain rounded-xl mx-auto" />
+        if (data.base64) {
+          container.innerHTML = `
+            <div class="space-y-2.5">
+              <div class="p-2 bg-white rounded-2xl border border-[#DDD5C7] inline-block shadow-md">
+                <img src="${data.base64}" alt="QR Code" class="w-52 h-52 object-contain rounded-xl mx-auto" />
               </div>
-              <div class="space-y-1">
-                <p class="text-xs font-bold text-[#1C1917]">امسح الرمز أعلاه بكاميرا واتساب</p>
-                <p class="text-[10px] text-[#6E645D]">يتجدد الرمز تلقائياً للمحافظة على أمان الجلسة.</p>
-              </div>
-            </div>
-          `;
-
-          // Start polling status every 5 seconds until connected
-          if (!pollInterval) {
-            pollInterval = setInterval(async () => {
-              const chk = await fetch('/api/crm/whatsapp/status/');
-              const chkData = await chk.json();
-              if (chkData.connected || chkData.state === 'open') {
-                updateStatusUI(chkData);
-              }
-            }, 5000);
-          }
-        } else if (code) {
-          qrContainer.innerHTML = `
-            <div class="space-y-2 py-4">
-              <p class="text-xs font-bold text-[#1C1917]">رمز الربط النصي (Pairing Code):</p>
-              <div class="px-4 py-2 bg-white font-mono font-bold text-lg rounded-xl border border-[#DDD5C7] text-[#680E23]">
-                ${code}
-              </div>
+              <p class="text-xs font-bold text-[#1C1917]">امسح الكود بكاميرا تطبيق واتساب</p>
+              <p class="text-[10px] text-[#6E645D]">الإعدادات > الأجهزة المرتبطة > ربط جهاز</p>
             </div>
           `;
         }
-      } else {
-        qrContainer.innerHTML = `
-          <div class="text-rose-600 text-xs py-4">
-            <p class="font-bold">تعذر جلب رمز QR حالياً</p>
-            <p class="text-[11px] text-gray-500 mt-1">${data.message || 'يرجى التحقق من تشغيل سيرفر Evolution API'}</p>
-          </div>
-        `;
       }
     } catch (err) {
-      console.error('Error fetching QR:', err);
-      qrContainer.innerHTML = `
-        <div class="text-rose-600 text-xs py-4">
-          <p class="font-bold">حدث خطأ في الاتصال بالبوابة</p>
-          <p class="text-[11px] text-gray-500 mt-1">${err.message}</p>
-        </div>
-      `;
+      container.innerHTML = `<p class="text-xs text-rose-600">تعذر جلب رمز QR: ${err.message}</p>`;
     } finally {
-      if (isUserClick) {
-        btnGen.disabled = false;
-        btnGen.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-          </svg>
-          <span>توليد كود QR للربط</span>
-        `;
+      if (isClick) {
+        btn.disabled = false;
+        btn.textContent = 'توليد كود QR للربط';
       }
     }
   }
 
   async function disconnectWhatsApp() {
-    if (!confirm('هل أنت متأكد من رغبتك في تسجيل الخروج وقطع جلسة الواتساب؟')) return;
+    if (!confirm('هل تريد قطع جلسة الواتساب وتسجيل الخروج؟')) return;
     try {
-      const res = await fetch('/api/crm/whatsapp/disconnect/', { method: 'POST' });
-      const data = await res.json();
-      if (data.status === 'success') {
-        updateStatusUI({ connected: false, state: 'disconnected' });
-        fetchQRCode(false);
-      } else {
-        alert(data.message || 'تعذر قطع الجلسة');
-      }
+      await fetch('/api/crm/whatsapp/disconnect/', { method: 'POST' });
+      checkConnectionStatus();
+      closeQrModal();
     } catch (err) {
-      alert('خطأ أثناء قطع الجلسة: ' + err.message);
+      alert(err.message);
     }
   }
 
-  // ==================== Omnichannel Messages Feed ====================
-
-  async function loadMessages() {
-    try {
-      const res = await fetch('/api/crm/whatsapp/messages/?limit=100');
-      const data = await res.json();
-      if (data.status === 'success') {
-        allMessagesData = data.messages || [];
-        updateStatsFromMessages(allMessagesData);
-        renderMessages(allMessagesData);
-      }
-    } catch (err) {
-      console.error('Error loading messages:', err);
-    }
-  }
-
-  function updateStatsFromMessages(msgs) {
-    let outbound = 0;
-    let inbound = 0;
-    msgs.forEach(m => {
-      if (m.direction === 'outbound') outbound++;
-      else if (m.direction === 'inbound') inbound++;
-    });
-    document.getElementById('stat-outbound-count').textContent = outbound;
-    document.getElementById('stat-inbound-count').textContent = inbound;
-  }
-
-  function renderMessages(msgs) {
-    const tbody = document.getElementById('messages-table-body');
-    if (!msgs || msgs.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="py-8 text-center text-[#6E645D]">
-            <div class="text-2xl mb-1">💬</div>
-            لا توجد رسائل مسجلة بعد. عند انتهاء أول مكالمة أو استلام رسالة، ستظهر هنا فوراً.
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = msgs.map(m => {
-      const isOut = m.direction === 'outbound';
-      const dirBadge = isOut 
-        ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">🤖 صادر (AI)</span>'
-        : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-700 border border-blue-500/20">👤 وارد (عميل)</span>';
-
-      const reason = (m.metadata && (m.metadata.trigger || m.metadata.reason)) || (isOut ? 'متابعة ذكية' : 'استفسار عميل');
-
-      const statusBadge = m.status === 'sent' 
-        ? '<span class="text-emerald-600 font-bold">✓ مُرسل</span>' 
-        : (m.status === 'received' ? '<span class="text-blue-600 font-bold">مُستلم</span>' : '<span class="text-gray-500">تم المعالجة</span>');
-
-      const timeStr = m.created_at ? new Date(m.created_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : 'الآن';
-
-      return `
-        <tr class="hover:bg-[#FAF7F2]/60 transition">
-          <td class="py-3 px-4 font-semibold">${dirBadge}</td>
-          <td class="py-3 px-4 font-mono font-bold text-[#1C1917]">${m.phone_number || '-'}</td>
-          <td class="py-3 px-4 text-[#443D39]">${m.customer_name || 'عميل'}</td>
-          <td class="py-3 px-4 text-[11px] text-[#680E23] font-medium">${reason}</td>
-          <td class="py-3 px-4 text-[#1C1917] max-w-xs truncate" title="${m.message_text}">${m.message_text}</td>
-          <td class="py-3 px-4 text-[11px]">${statusBadge}</td>
-          <td class="py-3 px-4 text-[11px] text-[#6E645D] font-mono">${timeStr}</td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  function filterMessages() {
-    const val = document.getElementById('filter-direction').value;
-    if (val === 'all') {
-      renderMessages(allMessagesData);
-    } else {
-      const filtered = allMessagesData.filter(m => m.direction === val);
-      renderMessages(filtered);
-    }
-  }
-
-  function refreshAllWhatsApp() {
-    checkConnectionStatus();
-    loadMessages();
-  }
-
-  // ==================== Test Modal ====================
+  // ==================== 5. Simulator Modal ====================
 
   function openTestModal() {
     document.getElementById('test-modal').classList.remove('hidden');
@@ -663,36 +808,23 @@
   }
 
   function toggleTestType(val) {
-    const customGroup = document.getElementById('test-custom-msg-group');
-    if (val === 'direct_message') {
-      customGroup.classList.remove('hidden');
-    } else {
-      customGroup.classList.add('hidden');
-    }
+    document.getElementById('test-custom-msg-group').classList.toggle('hidden', val !== 'direct_message');
   }
 
   async function submitTestWhatsApp(e) {
     e.preventDefault();
     const phone = document.getElementById('test-phone').value.trim();
-    const customerName = document.getElementById('test-customer-name').value.trim();
-    const testType = document.getElementById('test-type').value;
-    const customMsg = document.getElementById('test-message-text').value.trim();
+    const cName = document.getElementById('test-customer-name').value.trim();
+    const type = document.getElementById('test-type').value;
+    const msg = document.getElementById('test-message-text').value.trim();
     const btn = document.getElementById('btn-submit-test');
 
     btn.disabled = true;
     btn.textContent = 'جارٍ التنفيذ...';
 
     try {
-      let endpoint = '';
-      let bodyData = {};
-
-      if (testType === 'langgraph_followup') {
-        endpoint = '/api/crm/whatsapp/trigger-followup/';
-        bodyData = { phone: phone, customer_name: customerName };
-      } else {
-        endpoint = '/api/crm/whatsapp/send-test/';
-        bodyData = { phone: phone, message: customMsg, trigger: 'manual_test' };
-      }
+      let endpoint = (type === 'langgraph_followup') ? '/api/crm/whatsapp/trigger-followup/' : '/api/crm/whatsapp/send-test/';
+      let bodyData = (type === 'langgraph_followup') ? { phone: phone, customer_name: cName } : { phone: phone, message: msg };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -702,18 +834,31 @@
       const data = await res.json();
 
       if (data.status === 'success') {
-        alert(data.message || 'تم تنفيذ العملية بنجاح!');
+        alert(data.message || 'تم التنفيذ بنجاح!');
         closeTestModal();
-        setTimeout(loadMessages, 1500);
+        setTimeout(() => {
+          loadConversationsList();
+          if (currentActivePhone === phone) loadActiveMessages(true);
+        }, 1500);
       } else {
-        alert(data.message || 'حدث خطأ أثناء التنفيذ');
+        alert(data.message || 'حدث خطأ');
       }
     } catch (err) {
-      alert('خطأ: ' + err.message);
+      alert(err.message);
     } finally {
       btn.disabled = false;
       btn.textContent = 'إرسال التجربة';
     }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 </script>
 {% endblock %}

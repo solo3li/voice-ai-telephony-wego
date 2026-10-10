@@ -336,17 +336,24 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
             f"أجب بشكل طبيعي وودود ومباشر."
         )
 
-        # 3. Build Conversation History
+        # 3. Build Rich Conversation History (Last 25 messages for deep conversational context)
         contents = []
-        recent_msgs = wa_mem.get("last_messages", [])
-        # Add past context turns (skip the very last one if it matches current inbound_msg)
-        for m in recent_msgs[-6:]:
-            txt = m.get("text", "").strip()
+        db_history = list(
+            OmnichannelMessage.objects.filter(user_id=user_id, phone_number=phone)
+            .order_by('-created_at')[:25]
+        )
+        db_history.reverse()
+
+        for m in db_history:
+            txt = m.message_text.strip()
             if not txt:
                 continue
-            if m.get("sender") == "customer" and txt != inbound_msg:
+            # Skip if it is the current incoming message at the end
+            if m.direction == "inbound":
+                if txt == inbound_msg and m == db_history[-1]:
+                    continue
                 contents.append(types.Content(role="user", parts=[types.Part.from_text(text=txt)]))
-            elif m.get("sender") == "ai":
+            else:
                 contents.append(types.Content(role="model", parts=[types.Part.from_text(text=txt)]))
 
         # Add the current user message

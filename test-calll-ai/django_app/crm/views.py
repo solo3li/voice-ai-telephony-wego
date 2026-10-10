@@ -645,6 +645,170 @@ def api_whatsapp_messages(request):
     })
 
 
+@login_required(login_url='/login/')
+def api_whatsapp_conversations(request):
+    """List all WhatsApp conversations grouped by customer/phone (WhatsApp Web Inbox format)."""
+    from .models import OmnichannelMessage, CustomerMemory
+    from django.db.models import Max, Count
+
+    threads = (
+        OmnichannelMessage.objects.filter(user=request.user)
+        .values('phone_number')
+        .annotate(
+            last_message_at=Max('created_at'),
+            messages_count=Count('id')
+        )
+        .order_by('-last_message_at')
+    )
+
+    phones = [t['phone_number'] for t in threads]
+    memories = {m.phone_number: m for m in CustomerMemory.objects.filter(user=request.user, phone_number__in=phones)}
+
+    results = []
+    for t in threads:
+        p = t['phone_number']
+        last_msg = OmnichannelMessage.objects.filter(user=request.user, phone_number=p).order_by('-created_at').first()
+        mem = memories.get(p)
+        c_name = (mem.customer_name if mem else '') or (last_msg.customer_name if last_msg else '') or p
+        wm = mem.whatsapp_memory or {} if mem else {}
+        ai_active = wm.get("ai_auto_reply_enabled", True)
+
+        results.append({
+            "phone_number": p,
+            "customer_name": c_name,
+            "last_message": {
+                "text": last_msg.message_text if last_msg else "",
+                "direction": last_msg.direction if last_msg else "inbound",
+                "is_outbound": last_msg.direction in ('outbound_ai', 'outbound_human', 'outbound') if last_msg else False,
+                "is_ai": last_msg.direction == 'outbound_ai' if last_msg else False,
+                "is_human": last_msg.direction == 'outbound_human' if last_msg else False,
+                "created_at": last_msg.created_at.strftime("%Y-%m-%d %H:%M") if last_msg else "",
+                "created_at_time": last_msg.created_at.strftime("%I:%M %p") if last_msg else "",
+                "created_at_iso": last_msg.created_at.isoformat() if last_msg else "",
+            },
+            "messages_count": t['messages_count'],
+            "ai_active": ai_active,
+            "has_call_history": bool(mem and mem.total_calls_count > 0)
+        })
+
+    return JsonResponse({"status": "success", "conversations": results})
+
+
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_messages(request, phone_number):
+    """Get full message thread for a specific customer phone number."""
+    from .models import OmnichannelMessage, CustomerMemory
+    clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+
+    msgs = OmnichannelMessage.objects.filter(
+        user=request.user,
+        phone_number=clean_phone
+    ).order_by('created_at')[:150]
+
+    mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
+    c_name = (mem.customer_name if mem else '') or ''
+    wm = mem.whatsapp_memory or {} if mem else {}
+    cm = mem.call_memory or {} if mem else {}
+
+    return JsonResponse({
+        "status": "success",
+        "phone_number": clean_phone,
+        "customer_name": c_name,
+        "ai_active": wm.get("ai_auto_reply_enabled", True),
+        "call_summary": cm.get("last_call_summary") or (mem.last_interaction_summary if mem else ""),
+        "total_calls_count": mem.total_calls_count if mem else 0,
+        "messages": [m.to_dict() for m in msgs]
+    })
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_reply(request, phone_number):
+    """Manual human agent reply sent directly from the chat interface to WhatsApp."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        text = str(data.get("message", "")).strip()
+        if not text:
+            return JsonResponse({"status": "error", "message": "نص الرسالة مطلوب"}, status=400)
+
+        clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+        instance_name = f"user_{request.user.id}"
+        from .services.evolution_client import send_whatsapp_message
+        from .models import OmnichannelMessage, CustomerMemory
+
+        send_res = send_whatsapp_message(clean_phone, text, instance_name)
+
+        mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
+        c_name = mem.customer_name if mem else ""
+
+        msg = OmnichannelMessage.objects.create(
+            user=request.user,
+            phone_number=clean_phone,
+            customer_name=c_name,
+            channel="whatsapp",
+            direction="outbound_human",
+            message_text=text,
+            metadata={"send_result": send_res, "manual_reply": True}
+        )
+
+        if mem:
+            wm = mem.whatsapp_memory or {}
+            wm["last_interaction_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            wm["last_sent_message"] = text
+            msgs_list = wm.get("last_messages", [])
+            msgs_list.append({
+                "sender": "human_agent",
+                "text": text,
+                "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")
+            })
+            wm["last_messages"] = msgs_list[-15:]
+            mem.whatsapp_memory = wm
+            mem.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": msg.to_dict(),
+            "send_result": send_res
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_toggle_ai(request, phone_number):
+    """Toggle AI auto-reply on/off for this specific customer conversation (Human takeover)."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+        from .models import CustomerMemory
+        mem, _ = CustomerMemory.objects.get_or_create(user=request.user, phone_number=clean_phone)
+        wm = mem.whatsapp_memory or {}
+
+        if "ai_active" in data:
+            new_state = bool(data["ai_active"])
+        else:
+            current = wm.get("ai_auto_reply_enabled", True)
+            new_state = not current
+
+        wm["ai_auto_reply_enabled"] = new_state
+        mem.whatsapp_memory = wm
+        mem.save()
+
+        return JsonResponse({
+            "status": "success",
+            "phone_number": clean_phone,
+            "ai_active": new_state,
+            "message": "تم تفعيل الرد الآلي للذكاء الاصطناعي لهذا العميل" if new_state else "تم إيقاف الرد الآلي وتحويل المحادثة للموظف البشري"
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
 @csrf_exempt
 @login_required(login_url='/login/')
 def api_whatsapp_send_test(request):
@@ -782,7 +946,12 @@ def api_whatsapp_webhook(request):
                 mem.customer_name = push_name
             mem.save()
 
-            # 3. Trigger LangGraph in background thread
+            # 3. Check if AI auto-reply is active for this customer (Human takeover check)
+            if wm.get("ai_auto_reply_enabled", True) is False:
+                logger.info(f"AI auto-reply is paused for {clean_phone} (Human takeover active). Skipping LangGraph dispatch.")
+                return JsonResponse({"status": "received", "action": "ai_paused_manual_takeover"})
+
+            # 4. Trigger LangGraph in background thread
             import threading
             from .services.langgraph_worker import run_autonomous_followup
             threading.Thread(

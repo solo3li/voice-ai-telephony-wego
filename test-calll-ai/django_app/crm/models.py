@@ -128,10 +128,16 @@ class OmnichannelMessage(models.Model):
             "customer_name": self.customer_name,
             "channel": self.channel,
             "direction": self.direction,
+            "is_outbound": self.direction in ('outbound_ai', 'outbound_human', 'outbound'),
+            "is_ai": self.direction == 'outbound_ai',
+            "is_human": self.direction == 'outbound_human',
             "message_text": self.message_text,
             "is_followup": self.is_followup,
             "followup_reason": self.followup_reason,
+            "metadata": self.metadata or {},
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
+            "created_at_time": self.created_at.strftime("%I:%M %p"),
+            "created_at_iso": self.created_at.isoformat(),
         }
 
 
