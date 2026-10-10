@@ -84,6 +84,12 @@ def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEF
     if not clean_phone:
         return {"status": "error", "ok": False, "error": "Invalid phone number"}
 
+    # Check connection state first
+    stat = get_connection_status(instance_name)
+    if not stat.get("connected") and stat.get("state") != "open":
+        logger.info(f"Skipping Evolution send to {clean_phone}: instance '{instance_name}' is not connected (state: {stat.get('state')}).")
+        return {"status": "not_connected", "ok": False, "error": f"WhatsApp instance '{instance_name}' is not paired. Please scan QR code in dashboard."}
+
     url = f"{EVOLUTION_API_URL}/message/sendText/{instance_name}"
     payload = {
         "number": clean_phone,
@@ -92,7 +98,7 @@ def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEF
         "linkPreview": True
     }
     try:
-        resp = requests.post(url, json=payload, headers=get_headers(), timeout=12.0)
+        resp = requests.post(url, json=payload, headers=get_headers(), timeout=6.0)
         if resp.status_code in (200, 201):
             return {"status": "success", "ok": True, "data": resp.json()}
         logger.error(f"Failed to send WhatsApp message to {clean_phone}: ({resp.status_code}) {resp.text}")

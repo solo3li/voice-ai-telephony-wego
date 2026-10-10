@@ -76,11 +76,21 @@ class CustomerMemory(models.Model):
         wm = self.whatsapp_memory or {}
         wa_sum = wm.get("conversation_summary")
         if wa_sum:
-            parts.append(f"[ذاكرة رسائل الواتساب]: {wa_sum}")
+            parts.append(f"[ذاكرة وسياق محادثات الواتساب السابقة]: {wa_sum}")
         if wm.get("customer_stage"):
             parts.append(f"[مرحلة متابعة العميل]: {wm.get('customer_stage')}")
         if wm.get("last_received_message"):
-            parts.append(f"[آخر رسالة من العميل]: {wm.get('last_received_message')}")
+            parts.append(f"[آخر رسالة كتبها العميل على الواتساب]: {wm.get('last_received_message')}")
+        if wm.get("last_sent_message"):
+            parts.append(f"[آخر رد أرسله المساعد للعميل على الواتساب]: {wm.get('last_sent_message')}")
+
+        # Directive for proactive voice greeting
+        if wa_sum or wm.get("last_received_message"):
+            topic = wa_sum or wm.get("last_received_message")
+            parts.append(
+                f"[توجيه استباقي ومبادر للتحية عبر الهاتف]: العميل تواصل معنا على الواتساب بخصوص ({topic}). "
+                f"بادر في بداية المكالمة بلباقة واحترافية بالربط مع شات الواتساب الأخير (مثال: 'أهلاً بك يا فندم! بخصوص اللي كنا بنتكلم فيه على الواتساب...') لإظهار متابعتك واهتمامك الفوري به!"
+            )
 
         if not parts:
             return ""

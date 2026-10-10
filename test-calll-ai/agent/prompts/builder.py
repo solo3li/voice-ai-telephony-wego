@@ -106,7 +106,13 @@ def build_dynamic_system_instruction(
     verbosity_instruction = VERBOSITY_INSTRUCTIONS.get(verbosity, VERBOSITY_INSTRUCTIONS["balanced"])
 
     # 6. Memory context
-    memory_text = f"\n8. {memory_card}\nتوجيه حاسم للمساعد بخصوص سياق الذاكرة: الذاكرة السابقة هي للتعرف على العميل وتفضيلاته وعنوانه فقط للترحيب به. يُمنع منعاً باتاً وحاسماً أن تفترض أن أي عطل فني أو مشكلة ذُكرت في ملخص تواصل سابق ما زالت قائمة الآن! السيستم يعمل بالكامل في المكالمة الحالية، ويجب دائماً تنفيذ الأدوات البرمجية ومساعدة العميل دون أي افتراضات مسبقة.\n" if memory_card else ""
+    memory_text = (
+        f"\n8. {memory_card}\n"
+        f"قواعد الربط الذكي العابر للقنوات (Cross-Channel Omnichannel Continuity):\n"
+        f"  - إذا تضمنت ذاكرة العميل تفاعلاً على الواتساب أو توجيهاً بالربط، فبادر في بداية المكالمة بلباقة واحترافية بالربط مع آخر موضوع تم التحدث فيه على الواتساب لإظهار اهتمامك ومتابعتك المباشرة له.\n"
+        f"  - إذا قال المتصل 'أنا كنت باعتلكم على الواتساب'، راجع ذاكرة الواتساب وأجب منه مباشرة دون أي تردد.\n"
+        f"  - يُمنع منعاً باتاً وحاسماً أن تفترض أن أي عطل فني ذُكر في تواصل سابق ما زال قائماً الآن. السيستم يعمل بالكامل في المكالمة الحالية، ويجب دائماً تنفيذ الأدوات البرمجية ومساعدة العميل دون أي افتراضات مسبقة.\n"
+    ) if memory_card else ""
 
     # 7. Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
     live_context_text = format_live_context_for_prompt(live_context) if live_context else ""
