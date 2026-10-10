@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 class CustomerMemory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_memories')
-    phone_number = models.CharField(max_length=32, db_index=True, default='web_dashboard')
+    phone_number = models.CharField(max_length=64, db_index=True, default='web_dashboard')
     customer_name = models.CharField(max_length=120, blank=True, default='')
     permanent_profile = models.JSONField(default=dict, blank=True)
     last_interaction_summary = models.TextField(blank=True, default='')
@@ -105,7 +105,7 @@ class OmnichannelMessage(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='omnichannel_messages')
-    phone_number = models.CharField(max_length=32, db_index=True)
+    phone_number = models.CharField(max_length=64, db_index=True)
     customer_name = models.CharField(max_length=120, blank=True, default='')
     channel = models.CharField(max_length=32, default='whatsapp')
     direction = models.CharField(max_length=20, choices=DIRECTION_CHOICES, default='outbound_ai')

@@ -696,9 +696,9 @@ def api_whatsapp_conversations(request):
 
 @login_required(login_url='/login/')
 def api_whatsapp_conversation_messages(request, phone_number):
-    """Get full message thread for a specific customer phone number."""
+    """Get full message thread for a specific customer phone number or WhatsApp JID."""
     from .models import OmnichannelMessage, CustomerMemory
-    clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+    clean_phone = phone_number.strip()
 
     msgs = OmnichannelMessage.objects.filter(
         user=request.user,
@@ -733,7 +733,7 @@ def api_whatsapp_conversation_reply(request, phone_number):
         if not text:
             return JsonResponse({"status": "error", "message": "نص الرسالة مطلوب"}, status=400)
 
-        clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+        clean_phone = phone_number.strip()
         instance_name = f"user_{request.user.id}"
         from .services.evolution_client import send_whatsapp_message
         from .models import OmnichannelMessage, CustomerMemory
@@ -784,7 +784,7 @@ def api_whatsapp_conversation_toggle_ai(request, phone_number):
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     try:
         data = json.loads(request.body.decode('utf-8')) if request.body else {}
-        clean_phone = "".join(ch for ch in phone_number if ch.isdigit()) or phone_number
+        clean_phone = phone_number.strip()
         from .models import CustomerMemory
         mem, _ = CustomerMemory.objects.get_or_create(user=request.user, phone_number=clean_phone)
         wm = mem.whatsapp_memory or {}
@@ -806,6 +806,25 @@ def api_whatsapp_conversation_toggle_ai(request, phone_number):
             "message": "تم تفعيل الرد الآلي للذكاء الاصطناعي لهذا العميل" if new_state else "تم إيقاف الرد الآلي وتحويل المحادثة للموظف البشري"
         })
     except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_sync(request):
+    """Sync all genuine WhatsApp chats and messages directly from Evolution API / evolution_db."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        from .services.whatsapp_sync import sync_whatsapp_data
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        clean_old = bool(data.get("clean_old", True))
+        max_messages = int(data.get("max_messages", 40))
+
+        res = sync_whatsapp_data(request.user, clean_old=clean_old, max_messages_per_chat=max_messages)
+        return JsonResponse(res)
+    except Exception as e:
+        logger.error(f"Error in api_whatsapp_sync: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -902,7 +921,8 @@ def api_whatsapp_webhook(request):
                 return JsonResponse({"status": "ignored", "reason": "outbound_message"})
 
             remote_jid = key.get("remoteJid", "")
-            clean_phone = remote_jid.split("@")[0].replace("+", "")
+            from .services.whatsapp_sync import normalize_jid_to_identifier
+            clean_phone = normalize_jid_to_identifier(remote_jid)
             push_name = data.get("pushName") or ""
 
             message_content = data.get("message", {})

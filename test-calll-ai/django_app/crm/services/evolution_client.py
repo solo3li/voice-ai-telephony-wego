@@ -79,20 +79,25 @@ def get_qr_code(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
 
 
 def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
-    """Send text message to WhatsApp recipient."""
-    clean_phone = "".join(ch for ch in phone_number if ch.isdigit())
-    if not clean_phone:
-        return {"status": "error", "ok": False, "error": "Invalid phone number"}
+    """Send text message to WhatsApp recipient (supports both standard numbers and @lid/@g.us JIDs)."""
+    target_number = phone_number.strip()
+    if "@" not in target_number:
+        clean_phone = "".join(ch for ch in target_number if ch.isdigit())
+        if not clean_phone:
+            return {"status": "error", "ok": False, "error": "Invalid phone number"}
+        target_number = clean_phone
+    else:
+        target_number = target_number.replace("+", "")
 
     # Check connection state first
     stat = get_connection_status(instance_name)
     if not stat.get("connected") and stat.get("state") != "open":
-        logger.info(f"Skipping Evolution send to {clean_phone}: instance '{instance_name}' is not connected (state: {stat.get('state')}).")
+        logger.info(f"Skipping Evolution send to {target_number}: instance '{instance_name}' is not connected (state: {stat.get('state')}).")
         return {"status": "not_connected", "ok": False, "error": f"WhatsApp instance '{instance_name}' is not paired. Please scan QR code in dashboard."}
 
     url = f"{EVOLUTION_API_URL}/message/sendText/{instance_name}"
     payload = {
-        "number": clean_phone,
+        "number": target_number,
         "text": text,
         "delay": 1200,
         "linkPreview": True
@@ -101,7 +106,7 @@ def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEF
         resp = requests.post(url, json=payload, headers=get_headers(), timeout=6.0)
         if resp.status_code in (200, 201):
             return {"status": "success", "ok": True, "data": resp.json()}
-        logger.error(f"Failed to send WhatsApp message to {clean_phone}: ({resp.status_code}) {resp.text}")
+        logger.error(f"Failed to send WhatsApp message to {target_number}: ({resp.status_code}) {resp.text}")
         return {"status": "error", "ok": False, "error": resp.text, "status_code": resp.status_code}
     except Exception as e:
         logger.error(f"Exception sending WhatsApp message: {e}")

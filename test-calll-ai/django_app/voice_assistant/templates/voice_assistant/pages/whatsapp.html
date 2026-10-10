@@ -45,6 +45,17 @@
     <div class="flex items-center gap-2 shrink-0">
       <button 
         type="button" 
+        onclick="syncRealWhatsappChats()" 
+        id="btn-sync-whatsapp"
+        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-700/20"
+        title="مزامنة كافة محادثات ورسائل هاتفك الحقيقية المسجلة في واتساب"
+      >
+        <span id="sync-icon">🔄</span>
+        <span id="sync-text">مزامنة شات الهاتف</span>
+      </button>
+
+      <button 
+        type="button" 
         onclick="openQrModal()" 
         id="btn-open-qr"
         class="px-3.5 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#2D2825] border border-[#DDD5C7] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
@@ -667,8 +678,14 @@
 
       if (data.status === 'success') {
         input.value = '';
-        statusText.textContent = '✓ تم إرسال رسالتك بنجاح';
-        setTimeout(() => { statusText.textContent = ''; }, 3000);
+        if (data.send_result && data.send_result.ok === false) {
+          statusText.className = "text-amber-500 font-medium";
+          statusText.textContent = '⚠️ حُفظت محلياً، تعذر التسليم للواتساب: ' + (data.send_result.error || '');
+        } else {
+          statusText.className = "text-emerald-500 font-medium";
+          statusText.textContent = '✓ تم إرسال رسالتك وتوصيلها للواتساب بنجاح';
+        }
+        setTimeout(() => { statusText.textContent = ''; statusText.className = "text-stone-400"; }, 4000);
         await loadActiveMessages(true);
         loadConversationsList(false);
       } else {
@@ -722,6 +739,39 @@
       }
     } catch (err) {
       badge.textContent = 'خطأ في فحص البوابة';
+    }
+  }
+
+  async function syncRealWhatsappChats() {
+    const btn = document.getElementById('btn-sync-whatsapp');
+    const syncText = document.getElementById('sync-text');
+    const syncIcon = document.getElementById('sync-icon');
+    if (btn) btn.disabled = true;
+    if (syncText) syncText.textContent = 'جارٍ المزامنة...';
+    if (syncIcon) syncIcon.classList.add('animate-spin');
+
+    try {
+      const res = await fetch('/api/crm/whatsapp/sync/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clean_old: true, max_messages: 40 })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('✅ ' + data.message);
+        await loadConversationsList(true);
+        if (conversationsData && conversationsData.length > 0) {
+          selectConversation(conversationsData[0].phone_number);
+        }
+      } else {
+        alert('⚠️ ' + (data.message || 'حدث خطأ أثناء المزامنة'));
+      }
+    } catch (err) {
+      alert('❌ خطأ في الاتصال بالسيرفر: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+      if (syncText) syncText.textContent = 'مزامنة شات الهاتف';
+      if (syncIcon) syncIcon.classList.remove('animate-spin');
     }
   }
 
