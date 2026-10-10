@@ -752,6 +752,15 @@ def api_internal_agent_bootstrap(request):
         from agents.live_context_service import get_user_live_context_cached, format_live_context_for_prompt
         live_ctx_data = get_user_live_context_cached(user.id)
 
+        # 6. Knowledge Documents Manifest (titles of indexed documents)
+        knowledge_manifest = []
+        try:
+            from knowledge.models import Document
+            docs = Document.objects.filter(user=user, status='ready').values('id', 'title')[:15]
+            knowledge_manifest = [{"id": d["id"], "title": d["title"]} for d in docs]
+        except Exception as k_err:
+            logger.warning(f"Error loading knowledge manifest for user {user.id}: {k_err}")
+
         return JsonResponse({
             "status": "success",
             "user_id": user.id,
@@ -762,6 +771,7 @@ def api_internal_agent_bootstrap(request):
             "partner_info": partner_info,
             "call_queues": queues_list,
             "live_context": live_ctx_data,
+            "knowledge_manifest": knowledge_manifest,
             "is_internal_test": is_internal_test,
             "caller_extension": caller_ext or ""
         })

@@ -190,15 +190,20 @@ async def run_agent_session(
         except Exception as e:
             logger.debug(f"Redis live_context fallback error: {e}")
 
+    knowledge_manifest = bootstrap.get("knowledge_manifest", []) if bootstrap else []
+    if knowledge_manifest:
+        logger.info(f"Loaded knowledge manifest with {len(knowledge_manifest)} indexed documents for user {user_id}")
+
     system_instruction_text = build_dynamic_system_instruction(
         active_profile,
         memory_card_text,
         queue_context=queue_context,
         outbound_context=outbound_context,
         call_queues=call_queues,
-        live_context=live_context
+        live_context=live_context,
+        knowledge_manifest=knowledge_manifest
     )
-    logger.info(f"Dynamic system instruction compiled (length={len(system_instruction_text)} chars, live_context={bool(live_context)})")
+    logger.info(f"Dynamic system instruction compiled (length={len(system_instruction_text)} chars, live_context={bool(live_context)}, docs={len(knowledge_manifest)})")
 
     live_config = types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],

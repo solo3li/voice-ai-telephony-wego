@@ -11,7 +11,8 @@ def build_dynamic_system_instruction(
     queue_context: Optional[Dict[str, Any]] = None,
     outbound_context: Optional[Dict[str, Any]] = None,
     call_queues: Optional[List[Dict[str, Any]]] = None,
-    live_context: Optional[Dict[str, Any]] = None
+    live_context: Optional[Dict[str, Any]] = None,
+    knowledge_manifest: Optional[List[Dict[str, Any]]] = None
 ) -> str:
     """Construct dynamic prompt incorporating dialect, gender, role, style, memory, queue fallback context, outbound context, and strict guardrails."""
     gender = profile.get("gender", "female")
@@ -110,7 +111,18 @@ def build_dynamic_system_instruction(
     # 7. Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
     live_context_text = format_live_context_for_prompt(live_context) if live_context else ""
 
-    # 8. Off-topic response rule (custom or default)
+    # 8. Knowledge Manifest (indexed documents awareness)
+    manifest_text = ""
+    if knowledge_manifest:
+        doc_titles = [str(d.get("title", "")).strip() for d in knowledge_manifest if d.get("title")]
+        if doc_titles:
+            titles_str = "، ".join(f"«{t}»" for t in doc_titles[:15])
+            manifest_text = (
+                f"\nقاعدة المعرفة والمستندات الرسمية المعتمدة للمنشأة:\n"
+                f"- أنت مزود بمستندات رسمية مرفوعة ومفهرسة تغطي الموضوعات التالية: [{titles_str}].\n"
+            )
+
+    # 9. Off-topic response rule (custom or default)
     if off_topic_response:
         off_topic_rule = (
             f"قل هذه الرسالة تحديداً بلهجتك الطبيعية وبأسلوبك، "
@@ -137,7 +149,12 @@ def build_dynamic_system_instruction(
 3. أدوات الـ API وخوادم الأدوات (MCP): أنت مزود بمجموعة من الأدوات البرمجية الخاصة بأنشطة وخدمات المؤسسة. اقرأ وصف كل أداة ومدخلاتها بدقة، واستدعِ الأداة المناسبة فوراً بناءً على ما يطلبه المتصل وسياق وظيفته دون أي تخمين أو افتراضات مسبقة.
    - إلزامية الاستدعاء اللحظي للأدوات (Live Tool Execution): عندما يطلب المتصل معرفة السعر أو الإجمالي أو الفاتورة، استدعِ أداة 'preview_order' فوراً. وعندما يطلب تأكيد الأوردر أو اعتماده، استدعِ أداة 'create_callcenter_order' فوراً. وعندما يسأل عن حالة طلبه، استدعِ أداة 'track_order' فوراً.
    - حظر افتراض الأعطال من الذاكرة: يُمنع منعاً باتاً افتراض وجود عطل أو تهنيج بالسيستم بناءً على أي مكالمة سابقة أو ملخص سابق. الاعتذار عن مشكلة في السيستم مسموح فقط وفقط إذا استدعيت الأداة في المكالمة الحالية ورجعت بخطأ حقيقي.
-4. أدوات المستندات وذاكرة العملاء: لما يسألك المتصل عن أي معلومة تخص مستندات أو سياسات أو خدمات النشاط، استدعِ أداة search_knowledge_base. وإذا ذكر المتصل اسمه أو رقمه الهاتفي للتعرف عليه أو متابعة حسابه أو طلباته، استدعِ أداة lookup_customer_memory فوراً لاسترجاع بياناته وسياقه.
+4. أدوات المستندات وقاعدة المعرفة (قاعدة الاستدعاء الجراحي الذكي للحفاظ على السرعة الفائقة):
+   - في الحوارات العادية والتحيات والمجاملات والتأكيدات الإجرائية (مثل 'أهلاً'، 'تمام'، 'شكراً'): رد فورياً وبشكل طبيعي بأعلى سرعة وبدون استدعاء أي أداة (0 تأخير).
+   - إذا طرح المتصل سؤالاً أو استفساراً يمس تفاصيل العمل، السياسات، الأسعار، أو الموضوعات المذكورة في المستندات المعتمدة:
+     أ. ألقِ عبارة تفاعلية سريعة وموجزة بلهجتك الطبيعية (مثل: 'حاضر يا فندم، ثواني أشوف لحضرتك...' أو 'تمام يا فندم، لحظة معايا...').
+     ب. واستدعِ أداة 'search_knowledge_base' فوراً مع كتابة السؤال الدقيق في 'query' لاستخراج المعلومة المؤكدة، دون انتظار أن يطلب منك العميل فحص الملفات!
+   - إذا ذكر المتصل اسمه أو رقمه الهاتفي للتعرف عليه أو متابعة حسابه أو طلباته، استدعِ أداة 'lookup_customer_memory' فوراً لاسترجاع بياناته وسياقه.
 5. الإجابة من نتائج الأدوات الناجحة: لخص نتائج الأداة الناجحة للمستخدم بأسلوبك ولهجتك المحددة، بوضوح وأرقام دقيقة ومباشرة وطبيعية.
 6. الاعتذار الإجباري الصارم عن الأسئلة خارج النطاق: لو سألك عن أي حاجة عامة ملهاش أداة ولا موجودة في المستندات ولا تخص طوابير وأقسام الدعم المتاحة (زي أسئلة عامة تماماً خارج نطاق الخدمة المحددة): {off_topic_rule}\n   يُمنع منعاً باتاً تقديم أي إجابة خارج نطاق عملك أو التفتي في مجالات لا تخصك.
 7. قاعدة التعامل الصارم مع أخطاء وفشل الأدوات والأنظمة الخارجية (حاسمة وإلزامية ولا تقبل أي استثناء):
@@ -145,7 +162,7 @@ def build_dynamic_system_instruction(
      أ. اعترف للمتصل فوراً وبشكل صريح وواضح بالمشكلة واعتذر له بلباقة شديدة بلهجتك (مثال: 'بعتذر لحضرتك جداً يا فندم، السيستم حالياً فيه مشكلة ومش قادر يسجل الأوردر' أو 'بعتذر لك جداً، للأسف مفيش أوردر مسجل بهذا الرقم في سجلاتنا' أو 'بعتذر لحضرتك، النظام أخد وقت ومردش').
      ب. يُمنع منعاً باتاً وحاسماً أن تدّعي نجاح العملية أو تقول 'تم تسجيل طلبك' أو 'تم تأكيد الأوردر' أو تؤلف وتخترع بيانات وهمية إذا فشلت الأداة أو أرجعت خطأ!
      ج. اعرض على المتصل فوراً الحلول البديلة المتاحة: اقترح عليه إعادة المحاولة لاحقاً، أو عرض تحويل مكالمته لموظف خدمة العملاء إذا توفر قسم متاح.{welcome_text}{custom_text}
-{verbosity_instruction}{memory_text}{live_context_text}"""
+{verbosity_instruction}{memory_text}{live_context_text}{manifest_text}"""
 
     if call_queues:
         q_lines = []

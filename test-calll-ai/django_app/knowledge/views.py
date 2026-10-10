@@ -216,11 +216,24 @@ def api_internal_rag_search(request):
 
         query_vec = embed_res.embeddings[0].values
 
-        # 2. Similarity search using pgvector CosineDistance
-        chunks = DocumentChunk.objects.filter(user_id=user_id) \
-            .annotate(distance=CosineDistance('embedding', query_vec)) \
-            .filter(distance__lte=0.50) \
+        # 2. Similarity search using pgvector CosineDistance (relaxed threshold: 0.65)
+        chunks = list(
+            DocumentChunk.objects.filter(user_id=user_id)
+            .annotate(distance=CosineDistance('embedding', query_vec))
+            .filter(distance__lte=0.65)
             .order_by('distance')[:top_k]
+        )
+
+        # 3. Hybrid Search: Keyword fallback if semantic distance yielded no chunks
+        if not chunks:
+            from django.db.models import Q
+            stopwords = {'ما', 'هو', 'هي', 'هل', 'من', 'عن', 'في', 'إلى', 'على', 'مع', 'لو', 'عندكم', 'أنا', 'عاوز', 'عايز', 'إيه', 'ليه', 'كام', 'فين'}
+            clean_words = [w for w in query.replace('؟', ' ').replace('،', ' ').split() if len(w) >= 3 and w.lower() not in stopwords]
+            if clean_words:
+                kw_q = Q()
+                for word in clean_words[:5]:
+                    kw_q |= Q(content__icontains=word)
+                chunks = list(DocumentChunk.objects.filter(user_id=user_id).filter(kw_q)[:top_k])
 
         if not chunks:
             has_any = DocumentChunk.objects.filter(user_id=user_id).exists()
