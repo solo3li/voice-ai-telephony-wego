@@ -465,6 +465,14 @@ def api_internal_save_call_session_and_memory(request):
                     campaign.update_metrics()
                     broadcast_campaign_update(campaign.id, "contact_updated", contact.to_dict())
                     logger.info(f"Updated CampaignContact #{contact.id} ({contact.phone_number}) as {contact.call_status} / {contact.interest_level}")
+
+                    # Hybrid Campaign: Send WhatsApp follow-up if hybrid
+                    if campaign.channel == 'hybrid' and contact.whatsapp_status in ['pending', 'failed']:
+                        from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+                        try:
+                            send_campaign_contact_whatsapp(contact.id)
+                        except Exception as hw_err:
+                            logger.warning(f"Error in hybrid campaign WhatsApp follow-up dispatch: {hw_err}")
                 else:
                     contact.call_status = 'no_answer'
                     contact.interest_level = 'unreached'
@@ -473,6 +481,14 @@ def api_internal_save_call_session_and_memory(request):
                     campaign.update_metrics()
                     broadcast_campaign_update(campaign.id, "contact_updated", contact.to_dict())
                     logger.info(f"Updated CampaignContact #{contact.id} ({contact.phone_number}) as {contact.call_status} / {contact.interest_level}")
+
+                    # Hybrid Campaign: Send WhatsApp on missed call if hybrid
+                    if campaign.channel == 'hybrid' and contact.whatsapp_status in ['pending', 'failed']:
+                        from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+                        try:
+                            send_campaign_contact_whatsapp(contact.id)
+                        except Exception as hw_err:
+                            logger.warning(f"Error in hybrid campaign WhatsApp missed-call dispatch: {hw_err}")
 
                     # Automatically schedule durable retry if retries left
                     schedule_contact_retry(contact.id)

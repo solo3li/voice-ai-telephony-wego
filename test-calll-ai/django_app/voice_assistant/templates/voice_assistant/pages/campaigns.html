@@ -36,7 +36,7 @@
       </div>
 
       <!-- Quick Stats Row -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div class="p-4 rounded-2xl bg-[#FBF9F5] border border-[#EAE3D9] text-center">
           <span class="text-xs text-[#6E645D] font-medium block">إجمالي الحملات</span>
           <span id="camp-stat-total-campaigns" class="text-2xl font-black text-[#1C1917] mt-1 block">0</span>
@@ -45,23 +45,27 @@
           <span class="text-xs text-[#6E645D] font-medium block">إجمالي جهات الاتصال</span>
           <span id="camp-stat-total-contacts" class="text-2xl font-black text-[#680E23] mt-1 block">0</span>
         </div>
-        <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 text-center">
-          <span class="text-xs text-amber-800 font-medium block">معدل التزامن المسموح (Limit)</span>
-          <span id="camp-stat-concurrency-limit" class="text-2xl font-black text-amber-900 mt-1 block">1 مكالمة</span>
+        <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/70 text-center">
+          <span class="text-xs text-emerald-800 font-medium block">تم الرد هاتفياً</span>
+          <span id="camp-stat-answered-contacts" class="text-2xl font-black text-emerald-900 mt-1 block">0</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/70 text-center">
+          <span class="text-xs text-teal-800 font-medium block">رسائل واتساب مرسلة 💬</span>
+          <span id="camp-stat-whatsapp-sent" class="text-2xl font-black text-teal-900 mt-1 block">0</span>
         </div>
         <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200/60 text-center">
-          <span class="text-xs text-rose-800 font-medium block">عملاء مهتمون (🔥 Hot Leads)</span>
+          <span class="text-xs text-rose-800 font-medium block">عملاء مهتمون (🔥 Leads)</span>
           <span id="camp-stat-total-hot" class="text-2xl font-black text-rose-900 mt-1 block">0</span>
         </div>
       </div>
 
-      <!-- Outbound Gateway Missing Warning Banner -->
+      <!-- Outbound Gateway Missing Warning Banner (SIP Trunk) -->
       <div id="camp-no-gateway-alert" class="hidden p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-900 text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div class="flex items-center gap-2.5">
           <span class="text-xl">⚠️</span>
           <div>
-            <strong class="block text-amber-950">تنبيه هام: لا يوجد مسار اتصال صادر (SIP Trunk) مفعل حالياً</strong>
-            <span class="text-[11px] text-amber-800">لن يتم الاتصال بالعملاء حتى تقوم بإعداد وتفعيل خط اتصال صادر (سحابي أو سنترال PBX) من تبويب الربط الهاتفي.</span>
+            <strong class="block text-amber-950">تنبيه: لا يوجد مسار اتصال صادر (SIP Trunk) مفعل حالياً</strong>
+            <span class="text-[11px] text-amber-800">لإجراء المكالمات الهاتفية، يرجى تفعيل خط اتصال صادر من تبويب الربط الهاتفي والسنترال.</span>
           </div>
         </div>
         <a href="{% url 'voice_assistant:room' %}?tab=telephony" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
@@ -70,14 +74,30 @@
         </a>
       </div>
 
+      <!-- WhatsApp Disconnected Warning Banner -->
+      <div id="camp-no-whatsapp-alert" class="hidden p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-emerald-950 text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">💬</span>
+          <div>
+            <strong class="block text-emerald-950">تنبيه: حساب الواتساب غير متصل حالياً (Evolution API)</strong>
+            <span class="text-[11px] text-emerald-800">لإرسال رسائل الواتساب للحملة، يرجى ربط ومسح كود الواتساب (QR Code) أولاً من تبويب الواتساب.</span>
+          </div>
+        </div>
+        <a href="{% url 'voice_assistant:room' %}?tab=whatsapp" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+          <span>📲</span>
+          <span>ربط حساب الواتساب</span>
+        </a>
+      </div>
+
       <!-- Active Campaign Selector & Controls -->
       <div id="campaign-active-panel" class="p-5 rounded-2xl bg-[#FBF9F5] border border-[#EAE3D9] space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
             <span class="text-sm font-bold text-[#1C1917]">اختر الحملة:</span>
             <select id="campaign-select" onchange="onCampaignSelected(this.value)" class="px-3 py-1.5 rounded-xl border border-[#DDD5C7] text-xs font-semibold bg-white text-[#1C1917] focus:ring-2 focus:ring-[#680E23]/30 min-w-[220px]">
               <option value="">جارِ تحميل الحملات...</option>
             </select>
+            <span id="camp-channel-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">📞 مكالمات</span>
             <span id="camp-status-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">مسودة</span>
           </div>
 
@@ -85,7 +105,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" id="btn-start-campaign" onclick="startCurrentCampaign()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <span>▶️</span>
-              <span>بدء الاتصال التلقائي</span>
+              <span id="btn-start-campaign-label">بدء التنفيذ التلقائي</span>
             </button>
             <button type="button" id="btn-pause-campaign" onclick="pauseCurrentCampaign()" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <span>⏸️</span>
@@ -110,7 +130,7 @@
         <div class="space-y-2">
           <div class="flex justify-between items-center text-xs text-[#6E645D]">
             <span>نسبة الإنجاز: <strong id="camp-progress-text" class="text-[#1C1917]">0% (0 / 0)</strong></span>
-            <span>المساعد: <strong id="camp-agent-name" class="text-[#680E23]">-</strong> | محاولات الإعادة: <strong id="camp-max-retries">1</strong></span>
+            <span>القناة: <strong id="camp-channel-text" class="text-[#680E23]">مكالمات</strong> | المساعد: <strong id="camp-agent-name" class="text-[#1C1917]">-</strong></span>
           </div>
           <div class="w-full h-2.5 rounded-full bg-[#EAE3D9] overflow-hidden">
             <div id="camp-progress-bar" class="h-full bg-gradient-to-r from-[#680E23] to-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -126,6 +146,7 @@
             <button type="button" onclick="filterCampaignContacts('all')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#680E23] text-white font-semibold transition" data-filter="all">الكل (<span id="count-filter-all">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('pending')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#F5EFE6] text-[#6E645D] hover:bg-[#EAE3D9] font-semibold transition" data-filter="pending">في الانتظار (<span id="count-filter-pending">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('answered')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#F5EFE6] text-[#6E645D] hover:bg-[#EAE3D9] font-semibold transition" data-filter="answered">تم الرد (<span id="count-filter-answered">0</span>)</button>
+            <button type="button" onclick="filterCampaignContacts('wa_sent')" class="camp-filter-btn px-3 py-1 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 font-semibold transition" data-filter="wa_sent">💬 تم إرسال واتساب (<span id="count-filter-wa-sent">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('hot')" class="camp-filter-btn px-3 py-1 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 font-semibold transition" data-filter="hot">🔥 مهتم جداً (<span id="count-filter-hot">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('warm')" class="camp-filter-btn px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 font-semibold transition" data-filter="warm">🟡 متابعة (<span id="count-filter-warm">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('cold')" class="camp-filter-btn px-3 py-1 rounded-xl bg-slate-50 text-slate-800 border border-slate-200 font-semibold transition" data-filter="cold">❄️ غير مهتم (<span id="count-filter-cold">0</span>)</button>
@@ -145,16 +166,17 @@
               <tr class="bg-[#FBF9F5] border-b border-[#EAE3D9] text-[#6E645D] font-bold">
                 <th class="py-3 px-4 text-start">العميل</th>
                 <th class="py-3 px-3 text-start">الهاتف</th>
-                <th class="py-3 px-3 text-start">الحالة</th>
+                <th class="py-3 px-3 text-start">المكالمة</th>
+                <th class="py-3 px-3 text-start">الواتساب</th>
                 <th class="py-3 px-3 text-start">التصنيف (AI)</th>
-                <th class="py-3 px-4 text-start">ملخص المكالمة</th>
+                <th class="py-3 px-4 text-start">ملخص المكالمة / رسالة الواتساب</th>
                 <th class="py-3 px-3 text-start">بيانات إضافية</th>
                 <th class="py-3 px-3 text-center">إجراءات</th>
               </tr>
             </thead>
             <tbody id="camp-contacts-tbody" class="divide-y divide-[#EAE3D9] bg-white">
               <tr>
-                <td colspan="7" class="text-center py-8 text-[#8C827A]">اختر حملة أو قم بإنشاء حملة جديدة لرفع وعرض العملاء.</td>
+                <td colspan="8" class="text-center py-8 text-[#8C827A]">اختر حملة أو قم بإنشاء حملة جديدة لرفع وعرض العملاء.</td>
               </tr>
             </tbody>
           </table>
@@ -171,8 +193,8 @@
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-[#FAF0F2] text-[#680E23] flex items-center justify-center text-base font-bold">🚀</div>
         <div>
-          <h3 class="text-base font-bold text-[#1C1917]">إنشاء حملة اتصال ورفع قائمة العملاء</h3>
-          <p class="text-[11px] text-[#6E645D]">ارفع ملف العملاء وحدد سيناريو المكالمة لفرزهم وتنظيمهم في الـ CRM</p>
+          <h3 class="text-base font-bold text-[#1C1917]">إنشاء حملة تسويق وتواصل جديدة</h3>
+          <p class="text-[11px] text-[#6E645D]">حدد قناة الحملة (مكالمات، واتساب، أو هجينة) وارفع قائمة العملاء لفرزهم وتنظيمهم</p>
         </div>
       </div>
       <button type="button" onclick="closeNewCampaignModal()" class="text-[#6E645D] hover:text-[#2D2825] text-lg font-bold">&times;</button>
@@ -181,25 +203,71 @@
     <form id="create-campaign-form" onsubmit="submitNewCampaign(event)" class="space-y-4">
       <div>
         <label class="block font-bold text-[#443D39] mb-1">اسم الحملة *</label>
-        <input type="text" id="camp-input-name" required placeholder="مثال: حملة تجديد الاشتراكات - سبتمبر 2026" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]" />
+        <input type="text" id="camp-input-name" required placeholder="مثال: حملة تجديد الاشتراكات وعروض نهاية العام" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]" />
       </div>
 
+      <!-- Channel Selector Radio Cards -->
       <div>
+        <label class="block font-bold text-[#443D39] mb-1.5">نوع وقناة الحملة *</label>
+        <div class="grid grid-cols-3 gap-2.5">
+          <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-[#680E23] bg-[#FAF0F2] cursor-pointer transition text-center" id="card-channel-calls">
+            <input type="radio" name="camp_channel" value="calls" checked onchange="onCampaignChannelChanged('calls')" class="hidden" />
+            <span class="text-xl mb-1">📞</span>
+            <strong class="text-xs text-[#680E23] block">مكالمات فقط</strong>
+            <span class="text-[10px] text-[#8C827A] mt-0.5 leading-tight">اتصال صوتي آلي بالذكاء الاصطناعي</span>
+          </label>
+
+          <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border border-[#DDD5C7] bg-[#FAF7F2] hover:border-emerald-500 cursor-pointer transition text-center" id="card-channel-whatsapp">
+            <input type="radio" name="camp_channel" value="whatsapp" onchange="onCampaignChannelChanged('whatsapp')" class="hidden" />
+            <span class="text-xl mb-1">💬</span>
+            <strong class="text-xs text-[#1C1917] block">واتساب فقط</strong>
+            <span class="text-[10px] text-[#8C827A] mt-0.5 leading-tight">رسائل مخصصة فورية بـ Gemini</span>
+          </label>
+
+          <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border border-[#DDD5C7] bg-[#FAF7F2] hover:border-purple-500 cursor-pointer transition text-center" id="card-channel-hybrid">
+            <input type="radio" name="camp_channel" value="hybrid" onchange="onCampaignChannelChanged('hybrid')" class="hidden" />
+            <span class="text-xl mb-1">⚡</span>
+            <strong class="text-xs text-[#1C1917] block">هجينة (مكالمات + واتساب)</strong>
+            <span class="text-[10px] text-[#8C827A] mt-0.5 leading-tight">اتصال أولاً ومتابعة فورية بالواتساب</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Agent Profile (Calls / Hybrid) -->
+      <div id="container-camp-agent">
         <label class="block font-bold text-[#443D39] mb-1">المساعد الصوتي المنفذ للحملة</label>
         <select id="camp-input-agent" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23]">
           <option value="">المساعد الافتراضي</option>
         </select>
       </div>
 
-      <div>
+      <!-- Call Prompt Container (Calls / Hybrid) -->
+      <div id="container-call-prompt">
         <div class="flex justify-between items-center mb-1">
-          <label class="font-bold text-[#443D39]">سيناريو وتوجيهات المكالمة (Call Scenario Prompt) *</label>
+          <label class="font-bold text-[#443D39]">سيناريو وهدف المكالمة (Call Scenario Prompt) *</label>
           <span class="text-[10px] text-[#680E23] font-medium">مرن لكافة المجالات</span>
         </div>
-        <textarea id="camp-input-prompt" rows="3" required placeholder="أنت ممثل خدمة العملاء أو المبيعات..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23] font-sans"></textarea>
-        <p class="text-[10px] text-[#8C827A] mt-1">يمكنك استخدام المتغيرات مثل {name} داخل السيناريو وسيتم استبدالها ببيانات كل عميل تلقائياً.</p>
+        <textarea id="camp-input-prompt" rows="3" placeholder="أنت ممثل خدمة العملاء أو المبيعات..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] font-sans"></textarea>
+        <p class="text-[10px] text-[#8C827A] mt-1">استخدم المتغيرات مثل {name} لدمج بيانات كل عميل تلقائياً في المكالمة.</p>
       </div>
 
+      <!-- WhatsApp Prompt Container (WhatsApp / Hybrid) -->
+      <div id="container-whatsapp-prompt" class="hidden">
+        <div class="flex justify-between items-center mb-1">
+          <label class="font-bold text-[#443D39] flex items-center gap-1.5">
+            <span>💬</span>
+            <span>توجيهات ورسالة الواتساب المخصصة (WhatsApp Prompt) *</span>
+          </label>
+          <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Gemini 2.5 Flash</span>
+        </div>
+        <textarea id="camp-input-wa-prompt" rows="3" placeholder="اكتب نص الرسالة أو حدد التوجيهات والعرض المطلوب ليقوم الذكاء الاصطناعي بصياغة رسالة احترافية ومخصصة لكل عميل..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-emerald-600 font-sans"></textarea>
+        <div class="mt-1 flex flex-wrap items-center justify-between gap-1 text-[10px] text-[#8C827A]">
+          <span>يدعم المتغيرات: <code class="font-mono text-[#680E23] bg-[#FAF0F2] px-1 rounded">{name}</code>, <code class="font-mono text-[#680E23] bg-[#FAF0F2] px-1 rounded">{phone}</code> أو أي حقل من الملف.</span>
+          <span class="text-emerald-700 font-medium">يصيغ الذكاء الاصطناعي الرسائل بأسلوب ودود ومناسب للمنصة.</span>
+        </div>
+      </div>
+
+      <!-- File Upload Zone -->
       <div>
         <label class="block font-bold text-[#443D39] mb-1">ملف بيانات العملاء (Excel, CSV, TXT, JSON) *</label>
         <div id="camp-file-dropzone" class="border-2 border-dashed border-[#DDD5C7] hover:border-[#680E23] rounded-2xl p-4 text-center cursor-pointer transition bg-[#FAF7F2]/60 hover:bg-[#FAF0F2]/50">
@@ -216,7 +284,8 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 pt-1">
+      <!-- Retries (for Calls / Hybrid) -->
+      <div id="container-camp-retries" class="grid grid-cols-2 gap-3 pt-1">
         <div>
           <label class="block font-medium text-[#443D39] mb-1">محاولات الإعادة في حال عدم الرد</label>
           <input type="number" id="camp-input-retries" value="1" min="0" max="5" class="w-full px-3 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917]" />
@@ -230,9 +299,9 @@
       <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-[11px] flex items-start gap-2">
         <span class="text-base">⚡</span>
         <div>
-          <span class="font-bold">إدارة التزامن عبر Inngest:</span>
+          <span class="font-bold">إدارة الجدولة والتزامن الذكي عبر Inngest:</span>
           <p class="mt-0.5 text-[10px] text-amber-800">
-            يتم تنظيم عدد المكالمات المتوازية تلقائياً بحسب الحد المسموح لحسابك (<strong id="camp-modal-limit-text">1 مكالمة متزامنة</strong>).
+            يتم تنظيم العمليات المتوازية تلقائياً بحسب الحد المسموح لحسابك (<strong id="camp-modal-limit-text">1 مكالمة متزامنة</strong>) مع فواصل آمنة لمنع الحظر.
           </p>
         </div>
       </div>
@@ -265,28 +334,42 @@
     </div>
 
     <div class="space-y-3">
-      <div class="flex items-center justify-between p-3 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9]">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D9] text-center">
         <div>
           <span class="text-[10px] text-[#6E645D] block">حالة الاتصال</span>
           <span id="contact-modal-status" class="font-bold text-[#1C1917] mt-0.5 block">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-[#6E645D] block">حالة الواتساب</span>
+          <span id="contact-modal-wa-status" class="font-bold text-[#1C1917] mt-0.5 block">-</span>
         </div>
         <div>
           <span class="text-[10px] text-[#6E645D] block">تصنيف الاهتمام (AI)</span>
           <span id="contact-modal-interest" class="font-bold text-[#1C1917] mt-0.5 block">-</span>
         </div>
         <div>
-          <span class="text-[10px] text-[#6E645D] block">المدة</span>
-          <span id="contact-modal-duration" class="font-bold text-[#1C1917] mt-0.5 block">0 ثانية</span>
-        </div>
-        <div>
-          <span class="text-[10px] text-[#6E645D] block">المحاولات</span>
+          <span class="text-[10px] text-[#6E645D] block">محاولات الاتصال</span>
           <span id="contact-modal-retries" class="font-bold text-[#1C1917] mt-0.5 block">0</span>
+        </div>
+      </div>
+
+      <!-- WhatsApp Sent Message Box -->
+      <div id="contact-modal-wa-box" class="hidden">
+        <div class="flex justify-between items-center mb-1">
+          <h4 class="font-bold text-teal-900 flex items-center gap-1">
+            <span>💬</span>
+            <span>رسالة الواتساب المرسلة:</span>
+          </h4>
+          <span id="contact-modal-wa-time" class="text-[10px] text-teal-700 font-mono">-</span>
+        </div>
+        <div id="contact-modal-wa-text" class="p-3 rounded-xl bg-teal-50/70 border border-teal-200 text-teal-950 leading-relaxed whitespace-pre-wrap font-sans">
+          -
         </div>
       </div>
 
       <div>
         <h4 class="font-bold text-[#1C1917] mb-1">ملخص المكالمة:</h4>
-        <div id="contact-modal-summary" class="p-3 rounded-xl bg-white border border-[#EAE3D9] text-[#443D39] leading-relaxed whitespace-pre-wrap">لا يوجد ملخص بعد.</div>
+        <div id="contact-modal-summary" class="p-3 rounded-xl bg-white border border-[#EAE3D9] text-[#443D39] leading-relaxed whitespace-pre-wrap">لا يوجد ملخص مكالمة بعد.</div>
       </div>
 
       <div>
@@ -305,10 +388,16 @@
     </div>
 
     <div class="flex items-center justify-between pt-3 border-t border-[#EAE3D9]">
-      <button type="button" id="contact-modal-dial-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
-        <span>📞</span>
-        <span>اتصال الآن</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button type="button" id="contact-modal-dial-btn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
+          <span>📞</span>
+          <span>اتصال الآن</span>
+        </button>
+        <button type="button" id="contact-modal-wa-btn" class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
+          <span>💬</span>
+          <span>إرسال واتساب</span>
+        </button>
+      </div>
       <button type="button" onclick="closeContactModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] font-medium transition">إغلاق</button>
     </div>
   </div>

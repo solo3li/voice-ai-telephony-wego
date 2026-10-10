@@ -37,7 +37,12 @@ def api_upload_and_create_campaign(request):
         if not campaign_name:
             campaign_name = f"حملة {uploaded_file.name} - {datetime.now().strftime('%Y/%m/%d %H:%M')}"
 
+        channel = request.POST.get('channel', 'calls').strip()
+        if channel not in ['calls', 'whatsapp', 'hybrid']:
+            channel = 'calls'
+
         call_prompt = request.POST.get('call_prompt', '').strip()
+        whatsapp_prompt = request.POST.get('whatsapp_prompt', '').strip()
         profile_id = request.POST.get('agent_profile_id')
         agent_profile = AgentProfile.objects.filter(id=profile_id, user=request.user).first() if profile_id else None
 
@@ -64,8 +69,10 @@ def api_upload_and_create_campaign(request):
         campaign = OutboundCampaign.objects.create(
             user=request.user,
             name=campaign_name,
+            channel=channel,
             agent_profile=agent_profile,
             call_prompt=call_prompt,
+            whatsapp_prompt=whatsapp_prompt,
             max_retries=max(0, min(5, max_retries)),
             retry_delay_minutes=max(1, min(1440, retry_delay)),
             gateway_type=gateway_type,
@@ -81,6 +88,7 @@ def api_upload_and_create_campaign(request):
                 phone_number=c.get("phone_number"),
                 attributes=c.get("attributes", {}),
                 call_status='pending',
+                whatsapp_status='pending',
                 interest_level='uncontacted'
             )
             for c in valid_contacts
@@ -107,13 +115,20 @@ def api_upload_and_create_campaign(request):
 def api_list_campaigns(request):
     """List all outbound campaigns for the authenticated user."""
     from telephony.services import check_has_active_outbound_gateway
+    from crm.services.evolution_client import get_connection_status
     campaigns = OutboundCampaign.objects.filter(user=request.user)
     limit = UserCampaignLimit.get_limit_for_user(request.user)
     has_gw, _, _, _, _ = check_has_active_outbound_gateway(user=request.user)
+
+    instance_name = f"user_{request.user.id}"
+    wa_stat = get_connection_status(instance_name)
+    has_wa = bool(wa_stat.get("connected") or wa_stat.get("state") == "open")
+
     return JsonResponse({
         "status": "success",
         "user_concurrency_limit": limit,
         "has_outbound_gateway": has_gw,
+        "has_whatsapp_connected": has_wa,
         "campaigns": [c.to_dict() for c in campaigns]
     })
 
@@ -122,6 +137,7 @@ def api_list_campaigns(request):
 def api_get_campaign_detail(request, campaign_id):
     """Retrieve campaign details and filtered CRM contact list."""
     from telephony.services import check_has_active_outbound_gateway
+    from crm.services.evolution_client import get_connection_status
     campaign = get_object_or_404(OutboundCampaign, id=campaign_id, user=request.user)
     contacts_qs = campaign.contacts.all()
 
@@ -131,10 +147,21 @@ def api_get_campaign_detail(request, campaign_id):
         gateway_id=campaign.gateway_id
     )
 
+    instance_name = f"user_{request.user.id}"
+    wa_stat = get_connection_status(instance_name)
+    has_wa = bool(wa_stat.get("connected") or wa_stat.get("state") == "open")
+
     # Filters
     call_status = request.GET.get('call_status', '').strip()
     if call_status and call_status != 'all':
         contacts_qs = contacts_qs.filter(call_status=call_status)
+
+    wa_filter = request.GET.get('whatsapp_status', '').strip()
+    if wa_filter and wa_filter != 'all':
+        if wa_filter == 'sent':
+            contacts_qs = contacts_qs.filter(whatsapp_status__in=['sent', 'delivered', 'replied'])
+        else:
+            contacts_qs = contacts_qs.filter(whatsapp_status=wa_filter)
 
     interest = request.GET.get('interest', '').strip()
     if interest and interest != 'all':
@@ -157,6 +184,7 @@ def api_get_campaign_detail(request, campaign_id):
         "campaign": campaign.to_dict(),
         "user_concurrency_limit": UserCampaignLimit.get_limit_for_user(request.user),
         "has_outbound_gateway": has_gw,
+        "has_whatsapp_connected": has_wa,
         "contacts": contacts_data,
         "total_filtered": contacts_qs.count()
     })
@@ -164,43 +192,63 @@ def api_get_campaign_detail(request, campaign_id):
 
 @login_required(login_url='/login/')
 def api_start_campaign(request, campaign_id):
-    """Start or resume the auto-dialer for an outbound campaign via Inngest."""
+    """Start or resume the campaign (Calls, WhatsApp, or Hybrid) via Inngest."""
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
     campaign = get_object_or_404(OutboundCampaign, id=campaign_id, user=request.user)
 
-    # 1. Strict Pre-flight Check: Verify Outbound SIP Trunk / Gateway exists BEFORE doing anything
-    from telephony.services import check_has_active_outbound_gateway
-    has_gw, _, _, _, err_msg = check_has_active_outbound_gateway(
-        user=request.user,
-        gateway_type=campaign.gateway_type,
-        gateway_id=campaign.gateway_id
-    )
-    if not has_gw:
-        return JsonResponse({
-            "status": "error",
-            "code": "no_outbound_gateway",
-            "message": "لا يمكن بدء الحملة: لا يوجد خط اتصال صادر (SIP Trunk) مفعل في حسابك. يرجى إعداد وتفعيل خط صادر أولاً من تبويب 'الربط الهاتفي والسنترال' لتتمكن من إجراء المكالمات الصادرة."
-        }, status=422)
+    # 1. Pre-flight Checks:
+    # If calls are involved (calls or hybrid), check Outbound SIP Trunk
+    if campaign.channel in ['calls', 'hybrid']:
+        from telephony.services import check_has_active_outbound_gateway
+        has_gw, _, _, _, err_msg = check_has_active_outbound_gateway(
+            user=request.user,
+            gateway_type=campaign.gateway_type,
+            gateway_id=campaign.gateway_id
+        )
+        if not has_gw:
+            return JsonResponse({
+                "status": "error",
+                "code": "no_outbound_gateway",
+                "message": "لا يمكن بدء الحملة: لا يوجد خط اتصال صادر (SIP Trunk) مفعل في حسابك. يرجى إعداد وتفعيل خط صادر أولاً من تبويب 'الربط الهاتفي والسنترال' لتتمكن من إجراء المكالمات."
+            }, status=422)
+
+    # If WhatsApp is involved (whatsapp or hybrid), check Evolution API instance connection
+    if campaign.channel in ['whatsapp', 'hybrid']:
+        from crm.services.evolution_client import get_connection_status
+        instance_name = f"user_{request.user.id}"
+        wa_stat = get_connection_status(instance_name)
+        if not (wa_stat.get("connected") or wa_stat.get("state") == "open"):
+            return JsonResponse({
+                "status": "error",
+                "code": "no_whatsapp_connected",
+                "message": "لا يمكن بدء الحملة: حساب الواتساب غير متصل في لوحة التحكم (Evolution API). يرجى ربط الواتساب أولاً من تبويب 'الواتساب والذكاء الاصطناعي' قبل الإطلاق."
+            }, status=422)
 
     limit = UserCampaignLimit.get_limit_for_user(request.user)
 
     campaign.status = 'running'
     campaign.save(update_fields=['status', 'updated_at'])
 
-    pending_contacts = list(campaign.contacts.filter(call_status='pending').values_list('id', flat=True))
+    if campaign.channel == 'whatsapp':
+        pending_contacts = list(campaign.contacts.filter(whatsapp_status='pending').values_list('id', flat=True))
+        event_name = "campaign/contact.whatsapp"
+    else:
+        pending_contacts = list(campaign.contacts.filter(call_status='pending').values_list('id', flat=True))
+        event_name = "campaign/contact.dial"
+
     if not pending_contacts:
         return JsonResponse({
             "status": "error",
-            "message": "لا يوجد عملاء في قائمة الانتظار للاتصال بهم في هذه الحملة."
+            "message": "لا يوجد عملاء في قائمة الانتظار للبدء بهم في هذه الحملة."
         }, status=400)
 
     try:
         from asgiref.sync import async_to_sync
         events = [
             inngest.Event(
-                name="campaign/contact.dial",
+                name=event_name,
                 data={
                     "campaign_id": campaign.id,
                     "contact_id": cid,
@@ -213,12 +261,14 @@ def api_start_campaign(request, campaign_id):
         async_to_sync(inngest_client.send)(events)
         broadcast_campaign_update(campaign.id, "campaign_started", {
             "queued": len(pending_contacts),
-            "concurrency_limit": limit
+            "concurrency_limit": limit,
+            "channel": campaign.channel
         })
 
+        action_desc = "إرسال رسائل الواتساب لـ" if campaign.channel == 'whatsapp' else "الاتصال بـ"
         return JsonResponse({
             "status": "success",
-            "message": f"تم بدء الحملة بنجاح وجدولة الاتصال بـ {len(pending_contacts)} عميل بمعدل تزامن ({limit} مكالمات متزامنة).",
+            "message": f"تم بدء الحملة بنجاح وجدولة {action_desc} {len(pending_contacts)} عميل.",
             "campaign": campaign.to_dict()
         })
     except Exception as e:
@@ -248,7 +298,7 @@ def api_pause_campaign(request, campaign_id):
 def api_reset_campaign_contacts(request, campaign_id):
     """
     Resets all contacts in a campaign back to 'pending',
-    zeroes retries and clears failure summaries, setting campaign back to 'draft'.
+    zeroes retries and clears summaries, setting campaign back to 'draft'.
     """
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
@@ -257,8 +307,11 @@ def api_reset_campaign_contacts(request, campaign_id):
     campaign.status = 'draft'
     campaign.save(update_fields=['status', 'updated_at'])
 
-    updated_count = campaign.contacts.filter(call_status__in=['failed', 'busy', 'no_answer', 'in_progress']).update(
+    updated_count = campaign.contacts.all().update(
         call_status='pending',
+        whatsapp_status='pending',
+        whatsapp_message_text='',
+        whatsapp_sent_at=None,
         interest_level='uncontacted',
         retries_count=0,
         call_summary='',
@@ -268,7 +321,7 @@ def api_reset_campaign_contacts(request, campaign_id):
 
     return JsonResponse({
         "status": "success",
-        "message": f"تمت إعادة تعيين {updated_count} عميل لحالة 'في الانتظار' بنجاح وجاهزيتهم للاتصال.",
+        "message": f"تمت إعادة تعيين {updated_count} جهة اتصال لحالة 'في الانتظار' بنجاح وجاهزيتهم للتنفيذ.",
         "campaign": campaign.to_dict()
     })
 
@@ -317,6 +370,43 @@ def api_dial_single_contact(request, contact_id):
     except Exception as e:
         logger.exception("Error manually dialing contact")
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required(login_url='/login/')
+def api_send_single_contact_whatsapp(request, contact_id):
+    """Manually trigger WhatsApp message generation and delivery for a single contact."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    contact = get_object_or_404(CampaignContact, id=contact_id, campaign__user=request.user)
+
+    from crm.services.evolution_client import get_connection_status
+    instance_name = f"user_{request.user.id}"
+    conn_stat = get_connection_status(instance_name)
+    if not (conn_stat.get("connected") or conn_stat.get("state") == "open"):
+        return JsonResponse({
+            "status": "error",
+            "code": "no_whatsapp_connected",
+            "message": "لا يمكن إرسال الرسالة: حساب الواتساب غير متصل في لوحة التحكم (Evolution API). يرجى ربط الواتساب أولاً من تبويب 'الواتساب والذكاء الاصطناعي'."
+        }, status=422)
+
+    from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+    res = send_campaign_contact_whatsapp(contact.id)
+
+    if res.get("status") == "success":
+        contact.refresh_from_db()
+        return JsonResponse({
+            "status": "success",
+            "message": f"تم إرسال رسالة الواتساب بنجاح إلى '{contact.customer_name}' ({contact.phone_number}).",
+            "contact": contact.to_dict(),
+            "message_text": res.get("message_text")
+        })
+    else:
+        err = res.get("error") or res.get("message") or "فشل إرسال الرسالة"
+        return JsonResponse({
+            "status": "error",
+            "message": f"تعذر إرسال رسالة الواتساب: {err}"
+        }, status=400)
 
 
 @login_required(login_url='/login/')

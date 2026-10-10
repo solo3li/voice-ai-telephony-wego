@@ -654,6 +654,12 @@ def livekit_webhook(request):
                     contact.save(update_fields=['call_status', 'interest_level', 'call_summary', 'call_session', 'updated_at'])
                     contact.campaign.update_metrics()
                     schedule_contact_retry(contact.id)
+                    if contact.campaign.channel == 'hybrid' and contact.whatsapp_status in ['pending', 'failed']:
+                        from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+                        try:
+                            send_campaign_contact_whatsapp(contact.id)
+                        except Exception as hw_err:
+                            logger.warning(f"Error in hybrid WhatsApp trigger on room_finished: {hw_err}")
         except Exception as rf_err:
             logger.warning(f"Error handling room_finished cleanup for room '{room_name}': {rf_err}")
 

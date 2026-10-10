@@ -261,15 +261,23 @@ class UserCampaignLimit(models.Model):
 class OutboundCampaign(models.Model):
     STATUS_CHOICES = [
         ('draft', 'مسودة / جاهزة للاتصال'),
-        ('running', 'قيد الاتصال الآلي'),
+        ('running', 'قيد التنفيذ الآلي'),
         ('paused', 'متوقف مؤقتاً'),
         ('completed', 'مكتملة'),
     ]
 
+    CHANNEL_CHOICES = [
+        ('calls', 'مكالمات فقط'),
+        ('whatsapp', 'واتساب فقط'),
+        ('hybrid', 'هجينة (مكالمات + واتساب)'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outbound_campaigns')
     name = models.CharField(max_length=200, verbose_name="اسم الحملة")
+    channel = models.CharField(max_length=32, choices=CHANNEL_CHOICES, default='calls', verbose_name="قناة الحملة")
     agent_profile = models.ForeignKey('agents.AgentProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='campaigns')
     call_prompt = models.TextField(blank=True, default='', verbose_name="سيناريو وهدف المكالمة المخصص (Prompt)")
+    whatsapp_prompt = models.TextField(blank=True, default='', verbose_name="سيناريو ورسالة الواتساب المخصصة (WhatsApp Prompt)")
     max_retries = models.PositiveIntegerField(default=1, verbose_name="الحد الأقصى لمحاولات إعادة الاتصال")
     retry_delay_minutes = models.PositiveIntegerField(default=15, verbose_name="المدة بالدقائق قبل إعادة المحاولة")
     gateway_type = models.CharField(max_length=32, default='auto')
@@ -279,6 +287,7 @@ class OutboundCampaign(models.Model):
     total_contacts = models.PositiveIntegerField(default=0)
     completed_contacts = models.PositiveIntegerField(default=0)
     answered_contacts = models.PositiveIntegerField(default=0)
+    whatsapp_sent_contacts = models.PositiveIntegerField(default=0)
     hot_leads_count = models.PositiveIntegerField(default=0)
     warm_leads_count = models.PositiveIntegerField(default=0)
     cold_leads_count = models.PositiveIntegerField(default=0)
@@ -288,44 +297,70 @@ class OutboundCampaign(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = "حملة اتصالات صادرة"
-        verbose_name_plural = "حملات الاتصالات الصادرة"
+        verbose_name = "حملة اتصالات وتسويق صادر"
+        verbose_name_plural = "حملات الاتصالات والتسويق الصادر"
 
     def __str__(self):
-        return f"حملة: {self.name} ({self.get_status_display()}) - {self.user.username}"
+        return f"حملة: {self.name} ({self.get_channel_display()} - {self.get_status_display()}) - {self.user.username}"
 
     def update_metrics(self):
         self.total_contacts = self.contacts.count()
-        # Contact is completed only if answered OR if all retry attempts have been exhausted
-        self.completed_contacts = self.contacts.filter(
-            models.Q(call_status='answered') |
-            models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
-        ).count()
         self.answered_contacts = self.contacts.filter(call_status='answered').count()
+        self.whatsapp_sent_contacts = self.contacts.filter(whatsapp_status__in=['sent', 'delivered', 'replied']).count()
         self.hot_leads_count = self.contacts.filter(interest_level='hot').count()
         self.warm_leads_count = self.contacts.filter(interest_level='warm').count()
         self.cold_leads_count = self.contacts.filter(interest_level='cold').count()
 
-        # Check if there are still pending contacts or contacts eligible for retry
-        has_pending_work = self.contacts.filter(
-            models.Q(call_status__in=['pending', 'in_progress']) |
-            (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
-        ).exists()
+        if self.channel == 'whatsapp':
+            self.completed_contacts = self.contacts.filter(
+                whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped']
+            ).count()
+            has_pending_work = self.contacts.filter(whatsapp_status__in=['pending', 'in_progress']).exists()
+        elif self.channel == 'hybrid':
+            self.completed_contacts = self.contacts.filter(
+                (
+                    models.Q(call_status='answered') |
+                    models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
+                ) &
+                models.Q(whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped'])
+            ).count()
+            has_pending_work = self.contacts.filter(
+                models.Q(call_status__in=['pending', 'in_progress']) |
+                models.Q(whatsapp_status__in=['pending', 'in_progress']) |
+                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
+            ).exists()
+        else:  # calls
+            self.completed_contacts = self.contacts.filter(
+                models.Q(call_status='answered') |
+                models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
+            ).count()
+            has_pending_work = self.contacts.filter(
+                models.Q(call_status__in=['pending', 'in_progress']) |
+                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
+            ).exists()
 
         if self.total_contacts > 0 and not has_pending_work and self.status == 'running':
             self.status = 'completed'
         self.save(update_fields=[
-            'total_contacts', 'completed_contacts', 'answered_contacts',
+            'total_contacts', 'completed_contacts', 'answered_contacts', 'whatsapp_sent_contacts',
             'hot_leads_count', 'warm_leads_count', 'cold_leads_count', 'status', 'updated_at'
         ])
 
     def to_dict(self):
+        pending_count = (
+            self.contacts.filter(whatsapp_status='pending').count()
+            if self.channel == 'whatsapp'
+            else self.contacts.filter(call_status='pending').count()
+        )
         return {
             "id": self.id,
             "name": self.name,
+            "channel": self.channel,
+            "channel_display": self.get_channel_display(),
             "agent_profile_id": self.agent_profile_id,
             "agent_profile_name": self.agent_profile.name if self.agent_profile else "المساعد الافتراضي",
             "call_prompt": self.call_prompt or "",
+            "whatsapp_prompt": self.whatsapp_prompt or "",
             "max_retries": self.max_retries,
             "retry_delay_minutes": self.retry_delay_minutes,
             "gateway_type": self.gateway_type,
@@ -334,10 +369,16 @@ class OutboundCampaign(models.Model):
             "status_display": self.get_status_display(),
             "total_contacts": self.total_contacts,
             "completed_contacts": self.completed_contacts,
+            "completed_calls": self.completed_contacts,
             "answered_contacts": self.answered_contacts,
+            "whatsapp_sent_contacts": self.whatsapp_sent_contacts,
             "hot_leads_count": self.hot_leads_count,
+            "hot_leads": self.hot_leads_count,
             "warm_leads_count": self.warm_leads_count,
+            "warm_leads": self.warm_leads_count,
             "cold_leads_count": self.cold_leads_count,
+            "cold_leads": self.cold_leads_count,
+            "pending_calls": pending_count,
             "progress_percent": round((self.completed_contacts / self.total_contacts * 100), 1) if self.total_contacts > 0 else 0,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M"),
@@ -354,6 +395,16 @@ class CampaignContact(models.Model):
         ('failed', 'فشل الاتصال / غير متاح'),
     ]
 
+    WHATSAPP_STATUS_CHOICES = [
+        ('pending', 'في الانتظار'),
+        ('in_progress', 'جارِ الإرسال'),
+        ('sent', 'تم الإرسال'),
+        ('delivered', 'تم التسليم'),
+        ('replied', 'تم الرد والتفاعل'),
+        ('failed', 'فشل الإرسال'),
+        ('skipped', 'تم التخطي'),
+    ]
+
     INTEREST_CHOICES = [
         ('uncontacted', 'لم يتحدد بعد'),
         ('hot', '🔥 مهتم جداً / جاهز للمرحلة التالية'),
@@ -368,6 +419,9 @@ class CampaignContact(models.Model):
     customer_name = models.CharField(max_length=150, blank=True, default='')
     attributes = models.JSONField(default=dict, blank=True, help_text="بيانات العميل الإضافية من الملف")
     call_status = models.CharField(max_length=32, choices=CALL_STATUS_CHOICES, default='pending', db_index=True)
+    whatsapp_status = models.CharField(max_length=32, choices=WHATSAPP_STATUS_CHOICES, default='pending', db_index=True)
+    whatsapp_message_text = models.TextField(blank=True, default='', verbose_name="رسالة الواتساب المرسلة")
+    whatsapp_sent_at = models.DateTimeField(null=True, blank=True)
     interest_level = models.CharField(max_length=32, choices=INTEREST_CHOICES, default='uncontacted', db_index=True)
     call_summary = models.TextField(blank=True, default='')
     extracted_data = models.JSONField(default=dict, blank=True, help_text="البيانات المستخرجة بالذكاء الاصطناعي")
@@ -397,6 +451,10 @@ class CampaignContact(models.Model):
             "attributes": self.attributes or {},
             "call_status": self.call_status,
             "call_status_display": self.get_call_status_display(),
+            "whatsapp_status": self.whatsapp_status,
+            "whatsapp_status_display": self.get_whatsapp_status_display(),
+            "whatsapp_message_text": self.whatsapp_message_text or "",
+            "whatsapp_sent_at": self.whatsapp_sent_at.strftime("%Y-%m-%d %H:%M") if self.whatsapp_sent_at else None,
             "interest_level": self.interest_level,
             "interest_level_display": self.get_interest_level_display(),
             "call_summary": self.call_summary or "",

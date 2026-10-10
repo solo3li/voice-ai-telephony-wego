@@ -103,6 +103,12 @@ def _initiate_contact_call_sync(contact_id: int) -> dict:
                 contact.call_summary = dial_res.get("message") or "فشل الاتصال بالمزود الخارجي"
                 contact.save(update_fields=['call_status', 'interest_level', 'call_summary', 'updated_at'])
                 schedule_contact_retry(contact.id)
+                if campaign.channel == 'hybrid' and contact.whatsapp_status in ['pending', 'failed']:
+                    from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+                    try:
+                        send_campaign_contact_whatsapp(contact.id)
+                    except Exception as hw_err:
+                        logger.warning(f"Error dispatching hybrid WhatsApp on dial failure: {hw_err}")
                 return {"status": "error", "message": dial_res.get("message")}
     except Exception as err:
         logger.exception(f"Error in _initiate_contact_call_sync for contact {contact_id}")
@@ -182,15 +188,25 @@ def _queue_contacts_sync(campaign_id: int) -> dict:
     campaign.save(update_fields=['status', 'updated_at'])
 
     limit = UserCampaignLimit.get_limit_for_user(campaign.user)
-    pending_contacts = list(campaign.contacts.filter(call_status='pending').values_list('id', flat=True))
-    logger.info(f"Queuing {len(pending_contacts)} contacts for campaign {campaign.id} (user concurrency limit: {limit})")
+
+    if campaign.channel == 'whatsapp':
+        pending_contacts = list(campaign.contacts.filter(whatsapp_status='pending').values_list('id', flat=True))
+        event_name = "campaign/contact.whatsapp"
+    else:
+        pending_contacts = list(campaign.contacts.filter(call_status='pending').values_list('id', flat=True))
+        event_name = "campaign/contact.dial"
+
+    logger.info(f"Queuing {len(pending_contacts)} contacts for {campaign.channel} campaign {campaign.id} (user concurrency limit: {limit})")
 
     events_data = [
         {
-            "campaign_id": campaign.id,
-            "contact_id": cid,
-            "user_id": campaign.user_id,
-            "concurrency_limit": limit
+            "event_name": event_name,
+            "data": {
+                "campaign_id": campaign.id,
+                "contact_id": cid,
+                "user_id": campaign.user_id,
+                "concurrency_limit": limit
+            }
         }
         for cid in pending_contacts
     ]
@@ -198,7 +214,8 @@ def _queue_contacts_sync(campaign_id: int) -> dict:
         "events_data": events_data,
         "concurrency_limit": limit,
         "queued_count": len(pending_contacts),
-        "campaign_id": campaign.id
+        "campaign_id": campaign.id,
+        "channel": campaign.channel
     }
 
 
@@ -225,6 +242,30 @@ async def fn_dial_campaign_contact(ctx: inngest.Context) -> dict:
         return {"status": "aborted", "reason": "no_outbound_gateway", "contact_id": contact_id}
 
     return {"status": "dispatched", "contact_id": contact_id, "call_result": call_result}
+
+
+@inngest_client.create_function(
+    fn_id="send-campaign-whatsapp",
+    trigger=inngest.TriggerEvent(event="campaign/contact.whatsapp"),
+    concurrency=[inngest.Concurrency(limit=5, key="event.data.user_id")],
+)
+async def fn_send_campaign_whatsapp(ctx: inngest.Context) -> dict:
+    """
+    Inngest background job to formulate and send a personalized WhatsApp message
+    for a campaign contact via Evolution API and Gemini.
+    """
+    event_data = ctx.event.data
+    contact_id = event_data.get("contact_id")
+
+    # Anti-ban / Rate-limit pacing delay (1.2 seconds)
+    await ctx.step.sleep("pacing-delay", timedelta(seconds=1.2))
+
+    async def step_send_whatsapp():
+        from crm.services.campaign_whatsapp import send_campaign_contact_whatsapp
+        return await sync_to_async(send_campaign_contact_whatsapp, thread_sensitive=True)(contact_id)
+
+    res = await ctx.step.run("send-whatsapp", step_send_whatsapp)
+    return {"status": "completed", "contact_id": contact_id, "result": res}
 
 
 @inngest_client.create_function(
@@ -294,7 +335,7 @@ async def fn_retry_campaign_contact(ctx: inngest.Context) -> dict:
 async def fn_start_campaign(ctx: inngest.Context) -> dict:
     """
     Orchestrator function to kick off an outbound campaign by emitting
-    individual contact dial events respecting user limits.
+    individual contact events (dial or whatsapp) respecting user limits.
     """
     event_data = ctx.event.data
     campaign_id = event_data.get("campaign_id")
@@ -303,8 +344,8 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
         res = await sync_to_async(_queue_contacts_sync, thread_sensitive=True)(campaign_id)
         events_to_send = [
             inngest.Event(
-                name="campaign/contact.dial",
-                data=d
+                name=d["event_name"],
+                data=d["data"]
             )
             for d in res.get("events_data", [])
         ]
@@ -314,7 +355,8 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
 
         broadcast_campaign_update(res.get("campaign_id"), "campaign_started", {
             "total_queued": res.get("queued_count"),
-            "concurrency_limit": res.get("concurrency_limit")
+            "concurrency_limit": res.get("concurrency_limit"),
+            "channel": res.get("channel")
         })
 
         return {"queued_count": res.get("queued_count"), "concurrency_limit": res.get("concurrency_limit")}
@@ -325,6 +367,7 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
 # Expose functions list for Django Inngest serve handler
 all_inngest_functions = [
     fn_dial_campaign_contact,
+    fn_send_campaign_whatsapp,
     fn_start_campaign,
     fn_retry_campaign_contact,
 ]
