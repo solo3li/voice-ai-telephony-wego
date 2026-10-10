@@ -9,6 +9,8 @@ class CustomerMemory(models.Model):
     last_interaction_summary = models.TextField(blank=True, default='')
     last_interaction_at = models.DateTimeField(null=True, blank=True)
     total_calls_count = models.PositiveIntegerField(default=0)
+    call_memory = models.JSONField(default=dict, blank=True)
+    whatsapp_memory = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -34,40 +36,93 @@ class CustomerMemory(models.Model):
             "last_interaction_summary": self.last_interaction_summary or "",
             "last_interaction_at": self.last_interaction_at.strftime("%Y-%m-%d %H:%M") if self.last_interaction_at else None,
             "total_calls_count": self.total_calls_count,
+            "call_memory": self.call_memory or {},
+            "whatsapp_memory": self.whatsapp_memory or {},
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M"),
         }
 
     def format_for_system_instruction(self) -> str:
-        """Format the two-tier memory into a compact ~100-150 token block."""
+        """Format the unified two-tier memory (call + whatsapp) into a compact block for Gemini."""
         parts = []
         prof = self.permanent_profile or {}
-        if prof:
-            items = []
-            name_val = self.customer_name or prof.get("customer_name")
-            if name_val:
-                items.append(f"اسم العميل: {name_val}")
-            phone_val = self.phone_number if self.phone_number != 'web_dashboard' else prof.get("phone")
-            if phone_val:
-                items.append(f"الهاتف: {phone_val}")
-            if prof.get("city") or prof.get("address"):
-                items.append(f"العنوان/المدينة: {prof.get('city') or prof.get('address')}")
-            if prof.get("preferences"):
-                prefs = prof['preferences']
-                if isinstance(prefs, list):
-                    prefs = "، ".join(str(p) for p in prefs)
-                items.append(f"الاهتمامات والتفضيلات: {prefs}")
-            if prof.get("notes"):
-                items.append(f"ملاحظات: {prof['notes']}")
-            if items:
-                parts.append("البيانات الدائمة للعميل:\n- " + "\n- ".join(items))
+        items = []
+        name_val = self.customer_name or prof.get("customer_name")
+        if name_val:
+            items.append(f"اسم العميل: {name_val}")
+        phone_val = self.phone_number if self.phone_number != 'web_dashboard' else prof.get("phone")
+        if phone_val:
+            items.append(f"الهاتف: {phone_val}")
+        if prof.get("city") or prof.get("address"):
+            items.append(f"العنوان/المدينة: {prof.get('city') or prof.get('address')}")
+        if prof.get("preferences"):
+            prefs = prof['preferences']
+            if isinstance(prefs, list):
+                prefs = "، ".join(str(p) for p in prefs)
+            items.append(f"الاهتمامات والتفضيلات: {prefs}")
+        if prof.get("notes"):
+            items.append(f"ملاحظات: {prof['notes']}")
+        if items:
+            parts.append("البيانات الدائمة للعميل:\n- " + "\n- ".join(items))
 
-        if self.last_interaction_summary:
-            time_str = self.last_interaction_at.strftime("%Y-%m-%d %H:%M") if self.last_interaction_at else "مكالمة سابقة"
-            parts.append(f"الذاكرة اللحظية من آخر تواصل ({time_str}):\n{self.last_interaction_summary}")
+        # 1. Call Memory
+        cm = self.call_memory or {}
+        call_sum = cm.get("last_call_summary") or self.last_interaction_summary
+        if call_sum:
+            parts.append(f"[ذاكرة المكالمات الصوتية]: {call_sum}")
+        if cm.get("agreed_next_steps"):
+            parts.append(f"[ما تم الاتفاق عليه هاتفياً]: {cm.get('agreed_next_steps')}")
+
+        # 2. WhatsApp Memory
+        wm = self.whatsapp_memory or {}
+        wa_sum = wm.get("conversation_summary")
+        if wa_sum:
+            parts.append(f"[ذاكرة رسائل الواتساب]: {wa_sum}")
+        if wm.get("customer_stage"):
+            parts.append(f"[مرحلة متابعة العميل]: {wm.get('customer_stage')}")
+        if wm.get("last_received_message"):
+            parts.append(f"[آخر رسالة من العميل]: {wm.get('last_received_message')}")
 
         if not parts:
             return ""
-        return "سياق وذاكرة العميل التراكمية (استخدمها بذكاء وعفوية للتذكر دون سردها للمستخدم كقائمة):\n" + "\n\n".join(parts)
+        return "سياق وذاكرة العميل التراكمية (هاتف + واتساب) (استخدمها بذكاء وعفوية للتذكر دون سردها للمستخدم كقائمة):\n" + "\n\n".join(parts)
+
+
+class OmnichannelMessage(models.Model):
+    DIRECTION_CHOICES = [
+        ('inbound', 'وارد من العميل'),
+        ('outbound_ai', 'صادر من الذكاء الاصطناعي'),
+        ('outbound_human', 'صادر من موظف بشري'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='omnichannel_messages')
+    phone_number = models.CharField(max_length=32, db_index=True)
+    customer_name = models.CharField(max_length=120, blank=True, default='')
+    channel = models.CharField(max_length=32, default='whatsapp')
+    direction = models.CharField(max_length=20, choices=DIRECTION_CHOICES, default='outbound_ai')
+    message_text = models.TextField()
+    is_followup = models.BooleanField(default=False)
+    followup_reason = models.CharField(max_length=120, blank=True, default='')
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.channel}:{self.direction}] {self.phone_number}: {self.message_text[:30]}"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "phone_number": self.phone_number,
+            "customer_name": self.customer_name,
+            "channel": self.channel,
+            "direction": self.direction,
+            "message_text": self.message_text,
+            "is_followup": self.is_followup,
+            "followup_reason": self.followup_reason,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
+        }
 
 
 class CallSession(models.Model):

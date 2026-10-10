@@ -194,6 +194,30 @@ services:
     networks:
       - voice_net
 
+  evolution_api:
+    image: evoapicloud/evolution-api:v2.1.2
+    container_name: voice_evolution_api
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=8080
+      - SERVER_URL=http://evolution_api:8080
+      - AUTHENTICATION_API_KEY=evolution_secret_key_123
+      - CONFIG_SESSION_PHONE_CLIENT=Ubuntu
+      - CONFIG_SESSION_PHONE_NAME=Chrome
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1043857760
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER:-voice_user}:${POSTGRES_PASSWORD:-voice_password_123}@voice_postgres:5432/evolution_db
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379/2
+    depends_on:
+      - voice_postgres
+      - redis
+    networks:
+      voice_net:
+        aliases:
+          - evolution_api
+
 volumes:
   pgdata:
   media_data:

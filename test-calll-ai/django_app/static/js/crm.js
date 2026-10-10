@@ -101,28 +101,73 @@ async function loadCustomerMemory(phone) {
       }
     }
 
-    // 2. Render Immediate Summary
-    const immEl = document.getElementById('memory-immediate-content');
+    // 2. Render Call Memory
+    const callEl = document.getElementById('memory-call-content');
     const badgeEl = document.getElementById('memory-calls-badge');
     if (badgeEl) {
-      badgeEl.innerText = `${memory.total_calls_count || 0} مكالمات مسجلة`;
+      badgeEl.innerText = `${memory.total_calls_count || 0} مكالمات`;
     }
 
-    if (immEl) {
-      if (memory.last_interaction_summary) {
-        const timeStr = memory.last_interaction_at || 'مكالمة سابقة';
-        immEl.innerHTML = `
-          <div class="space-y-1.5">
-            <div class="text-[10px] text-[#6E645D]">📅 آخر تواصل: <span class="text-[#680E23] font-mono">${escapeHtml(timeStr)}</span></div>
-            <p class="text-[#2D2825] leading-relaxed bg-[#FAF7F2] p-2.5 rounded-xl border border-[#E8CCD2]/40">
-              ${escapeHtml(memory.last_interaction_summary)}
+    const cm = memory.call_memory || {};
+    if (callEl) {
+      const callSummary = cm.last_call_summary || memory.last_interaction_summary;
+      if (callSummary) {
+        const timeStr = cm.last_call_at || memory.last_interaction_at || 'مكالمة سابقة';
+        let callHtml = `
+          <div class="space-y-2">
+            <div class="text-[10px] text-[#6E645D]">📅 آخر مكالمة: <span class="text-[#680E23] font-mono">${escapeHtml(timeStr)}</span></div>
+            <p class="text-[#2D2825] leading-relaxed bg-white p-2.5 rounded-xl border border-[#DDD5C7] shadow-sm">
+              ${escapeHtml(callSummary)}
             </p>
+        `;
+        if (cm.intent) {
+          callHtml += `<div class="text-[11px]"><span class="font-bold text-[#680E23]">🎯 النية:</span> <span class="text-[#1C1917]">${escapeHtml(cm.intent)}</span></div>`;
+        }
+        if (cm.customer_sentiment) {
+          callHtml += `<div class="text-[11px]"><span class="font-bold text-[#680E23]">😊 الانطباع:</span> <span class="text-[#1C1917]">${escapeHtml(cm.customer_sentiment)}</span></div>`;
+        }
+        if (cm.agreed_next_steps) {
+          callHtml += `<div class="text-[11px] bg-rose-50/80 p-2 rounded-lg border border-rose-100 text-rose-900"><span class="font-bold">🤝 ما تم الاتفاق عليه:</span> ${escapeHtml(cm.agreed_next_steps)}</div>`;
+        }
+        callHtml += `</div>`;
+        callEl.innerHTML = callHtml;
+      } else {
+        callEl.innerHTML = `
+          <div class="text-center py-4 text-[#8C827A]">
+            لا توجد مكالمات هاتفية مسجلة لهذا الرقم حتى الآن.
           </div>
         `;
+      }
+    }
+
+    // 3. Render WhatsApp Memory
+    const waEl = document.getElementById('memory-whatsapp-content');
+    const wm = memory.whatsapp_memory || {};
+    if (waEl) {
+      if (wm.conversation_summary || wm.last_received_message || wm.last_sent_message) {
+        const timeStr = wm.last_interaction_at || 'مؤخراً';
+        let waHtml = `
+          <div class="space-y-2">
+            <div class="text-[10px] text-[#6E645D]">📅 آخر تفاعل شات: <span class="text-emerald-700 font-mono">${escapeHtml(timeStr)}</span></div>
+        `;
+        if (wm.customer_stage) {
+          waHtml += `<div class="text-[11px]"><span class="font-bold text-emerald-800">📊 مرحلة العميل:</span> <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${escapeHtml(wm.customer_stage)}</span></div>`;
+        }
+        if (wm.conversation_summary) {
+          waHtml += `<p class="text-[#2D2825] leading-relaxed bg-white p-2.5 rounded-xl border border-[#DDD5C7] shadow-sm">${escapeHtml(wm.conversation_summary)}</p>`;
+        }
+        if (wm.last_received_message) {
+          waHtml += `<div class="text-[11px] bg-blue-50/80 p-2 rounded-lg border border-blue-100 text-blue-900"><span class="font-bold">📥 آخر رسالة واردة:</span> ${escapeHtml(wm.last_received_message)}</div>`;
+        }
+        if (wm.last_sent_message) {
+          waHtml += `<div class="text-[11px] bg-emerald-50/80 p-2 rounded-lg border border-emerald-100 text-emerald-900"><span class="font-bold">🤖 آخر رد مرسل:</span> ${escapeHtml(wm.last_sent_message)}</div>`;
+        }
+        waHtml += `</div>`;
+        waEl.innerHTML = waHtml;
       } else {
-        immEl.innerHTML = `
+        waEl.innerHTML = `
           <div class="text-center py-4 text-[#8C827A]">
-            لا يوجد ملخص لمكالمة سابقة حتى الآن لهذا الرقم.
+            لا توجد محادثات واتساب مسجلة بعد لهذا الرقم.
           </div>
         `;
       }

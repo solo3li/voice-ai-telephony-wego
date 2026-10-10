@@ -22,4 +22,13 @@ urlpatterns = [
     path('campaigns/<int:campaign_id>/reset/', campaign_views.api_reset_campaign_contacts, name='api_reset_campaign_contacts'),
     path('campaigns/<int:campaign_id>/export/', campaign_views.api_export_campaign_contacts, name='api_export_campaign_contacts'),
     path('campaigns/contacts/<int:contact_id>/dial/', campaign_views.api_dial_single_contact, name='api_dial_single_contact'),
+
+    # Evolution API WhatsApp & Omnichannel Endpoints
+    path('whatsapp/status/', views.api_whatsapp_status, name='api_whatsapp_status'),
+    path('whatsapp/connect/', views.api_whatsapp_connect, name='api_whatsapp_connect'),
+    path('whatsapp/disconnect/', views.api_whatsapp_disconnect, name='api_whatsapp_disconnect'),
+    path('whatsapp/messages/', views.api_whatsapp_messages, name='api_whatsapp_messages'),
+    path('whatsapp/send-test/', views.api_whatsapp_send_test, name='api_whatsapp_send_test'),
+    path('whatsapp/trigger-followup/', views.api_whatsapp_trigger_followup, name='api_whatsapp_trigger_followup'),
+    path('whatsapp/webhook/', views.api_whatsapp_webhook, name='api_whatsapp_webhook'),
 ]

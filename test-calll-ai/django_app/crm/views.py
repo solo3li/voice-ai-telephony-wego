@@ -396,7 +396,36 @@ def api_internal_save_call_session_and_memory(request):
                 memory.last_interaction_summary = summary
             memory.last_interaction_at = now_dt
             memory.total_calls_count = (memory.total_calls_count or 0) + 1
+
+            # Enrich call_memory with structured call recap
+            cm = memory.call_memory or {}
+            cm["last_call_summary"] = summary
+            cm["last_call_at"] = now_dt.strftime("%Y-%m-%d %H:%M")
+            cm["total_calls_count"] = memory.total_calls_count
+            if isinstance(permanent_profile, dict) and permanent_profile.get("agreed_next_steps"):
+                cm["agreed_next_steps"] = permanent_profile.get("agreed_next_steps")
+            memory.call_memory = cm
             memory.save()
+
+            # Trigger LangGraph autonomous follow-up in background thread
+            try:
+                import threading
+                from crm.services.langgraph_worker import run_autonomous_followup
+                threading.Thread(
+                    target=run_autonomous_followup,
+                    kwargs={
+                        "user_id": user.id,
+                        "phone_number": caller_phone,
+                        "trigger_type": "post_call",
+                        "call_summary": summary,
+                        "call_transcript": transcript_text,
+                        "customer_name": customer_name,
+                    },
+                    daemon=True
+                ).start()
+                logger.info(f"Dispatched LangGraph autonomous follow-up for caller {caller_phone}")
+            except Exception as lg_err:
+                logger.warning(f"Failed to dispatch LangGraph follow-up: {lg_err}")
 
         # 3. Check and update matching CampaignContact
         try:
@@ -565,4 +594,215 @@ def list_all_calls(request):
     except Exception as e:
         logger.error(f"Error in list_all_calls: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+# ==================== Evolution API WhatsApp Omnichannel ====================
+
+@login_required(login_url='/login/')
+def api_whatsapp_status(request):
+    """Get Evolution API WhatsApp connection status."""
+    from .services.evolution_client import get_connection_status
+    instance_name = f"user_{request.user.id}"
+    res = get_connection_status(instance_name)
+    return JsonResponse(res)
+
+
+@login_required(login_url='/login/')
+def api_whatsapp_connect(request):
+    """Fetch QR code for pairing WhatsApp."""
+    from .services.evolution_client import get_qr_code, configure_instance_webhook
+    instance_name = f"user_{request.user.id}"
+    res = get_qr_code(instance_name)
+
+    # Configure webhook back to Django
+    try:
+        webhook_url = f"http://django:8000/api/crm/whatsapp/webhook/?tenant_id={request.user.id}"
+        configure_instance_webhook(webhook_url, instance_name)
+    except Exception as wh_err:
+        logger.warning(f"Could not configure webhook: {wh_err}")
+
+    return JsonResponse(res)
+
+
+@login_required(login_url='/login/')
+def api_whatsapp_disconnect(request):
+    """Disconnect WhatsApp session."""
+    from .services.evolution_client import logout_instance
+    instance_name = f"user_{request.user.id}"
+    res = logout_instance(instance_name)
+    return JsonResponse(res)
+
+
+@login_required(login_url='/login/')
+def api_whatsapp_messages(request):
+    """List recent Omnichannel messages for this user."""
+    from .models import OmnichannelMessage
+    limit = int(request.GET.get('limit', 50))
+    msgs = OmnichannelMessage.objects.filter(user=request.user).order_by('-created_at')[:limit]
+    return JsonResponse({
+        "status": "success",
+        "messages": [m.to_dict() for m in msgs]
+    })
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_send_test(request):
+    """Send a direct WhatsApp test message."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        phone = data.get("phone", "").strip()
+        text = data.get("message", "").strip()
+        trigger = data.get("trigger", "manual_test")
+
+        if not phone:
+            return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+        instance_name = f"user_{request.user.id}"
+        from .services.evolution_client import send_whatsapp_message
+        from .models import OmnichannelMessage
+
+        if not text:
+            text = "مرحباً بك! هذه رسالة تجريبية من الموظف الذكي عبر Evolution API و LangGraph 🚀"
+
+        res = send_whatsapp_message(phone, text, instance_name)
+        if res.get("status") == "success":
+            OmnichannelMessage.objects.create(
+                user=request.user,
+                phone_number=phone,
+                channel="whatsapp",
+                direction="outbound",
+                message_text=text,
+                status="sent",
+                metadata={"test": True, "trigger": trigger}
+            )
+        return JsonResponse(res)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_trigger_followup(request):
+    """Trigger LangGraph autonomous follow-up on demand for a customer number."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        phone = data.get("phone", "").strip()
+        if not phone:
+            return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+        from .services.langgraph_worker import run_autonomous_followup
+        import threading
+        threading.Thread(
+            target=run_autonomous_followup,
+            kwargs={
+                "user_id": request.user.id,
+                "phone_number": phone,
+                "trigger_type": "scheduled_followup",
+                "customer_name": data.get("customer_name", ""),
+            },
+            daemon=True
+        ).start()
+        return JsonResponse({"status": "success", "message": "تم تشغيل محرك LangGraph الذكي للمتابعة بنجاح!"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_whatsapp_webhook(request):
+    """
+    Handle inbound Evolution API webhooks.
+    Triggers LangGraph autonomous response for inbound customer messages.
+    """
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    try:
+        tenant_id = request.GET.get('tenant_id')
+        user = User.objects.filter(id=int(tenant_id)).first() if tenant_id and tenant_id.isdigit() else None
+        if not user:
+            user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+
+        body = json.loads(request.body.decode('utf-8')) if request.body else {}
+        event = body.get("event")
+
+        if event == "messages.upsert":
+            data = body.get("data", {})
+            key = data.get("key", {})
+            from_me = key.get("fromMe", False)
+            if from_me:
+                return JsonResponse({"status": "ignored", "reason": "outbound_message"})
+
+            remote_jid = key.get("remoteJid", "")
+            clean_phone = remote_jid.split("@")[0].replace("+", "")
+            push_name = data.get("pushName") or ""
+
+            message_content = data.get("message", {})
+            msg_text = (
+                message_content.get("conversation")
+                or message_content.get("extendedTextMessage", {}).get("text")
+                or ""
+            ).strip()
+
+            if not msg_text or not clean_phone:
+                return JsonResponse({"status": "ignored", "reason": "empty_content_or_phone"})
+
+            logger.info(f"Received inbound WhatsApp message from {clean_phone} ({push_name}): {msg_text[:60]}")
+
+            # 1. Log inbound message
+            from .models import OmnichannelMessage, CustomerMemory
+            OmnichannelMessage.objects.create(
+                user=user,
+                phone_number=clean_phone,
+                customer_name=push_name,
+                channel="whatsapp",
+                direction="inbound",
+                message_text=msg_text,
+                metadata={"raw_data": data}
+            )
+
+            # 2. Update CustomerMemory whatsapp_memory
+            mem, _ = CustomerMemory.objects.get_or_create(
+                user=user,
+                phone_number=clean_phone,
+                defaults={"customer_name": push_name}
+            )
+            wm = mem.whatsapp_memory or {}
+            wm["last_received_message"] = msg_text
+            wm["last_interaction_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            msgs_list = wm.get("last_messages", [])
+            msgs_list.append({"sender": "customer", "text": msg_text, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")})
+            wm["last_messages"] = msgs_list[-6:]
+            mem.whatsapp_memory = wm
+            if push_name and not mem.customer_name:
+                mem.customer_name = push_name
+            mem.save()
+
+            # 3. Trigger LangGraph in background thread
+            import threading
+            from .services.langgraph_worker import run_autonomous_followup
+            threading.Thread(
+                target=run_autonomous_followup,
+                kwargs={
+                    "user_id": user.id,
+                    "phone_number": clean_phone,
+                    "trigger_type": "inbound_whatsapp",
+                    "inbound_message": msg_text,
+                    "customer_name": push_name,
+                },
+                daemon=True
+            ).start()
+
+            return JsonResponse({"status": "success", "action": "langgraph_dispatched"})
+
+        return JsonResponse({"status": "received", "event": event})
+
+    except Exception as e:
+        logger.error(f"Error handling Evolution API webhook: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
 

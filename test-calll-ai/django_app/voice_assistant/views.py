@@ -795,6 +795,17 @@ def crm_page_view(request):
 
 
 @login_required
+def whatsapp_page_view(request):
+    """Render dedicated WhatsApp & Omnichannel 24/7 Follow-up page."""
+    context = {
+        'page_title': 'واتساب ومتابعة الذكاء الاصطناعي 24/7',
+        'page_icon': '💬',
+        'active_nav': 'whatsapp',
+    }
+    return render(request, 'voice_assistant/pages/whatsapp.html', context)
+
+
+@login_required
 def rag_page_view(request):
     """Render dedicated Knowledge Base RAG page."""
     context = {

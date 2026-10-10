@@ -73,34 +73,50 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 text-xs">
-        <!-- Permanent Memory Card -->
+      <!-- Two-Tier Customer Channels (Call Memory & WhatsApp Memory) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5 text-xs">
+        <!-- 1. Permanent Profile Card -->
         <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl p-4 space-y-3">
           <div class="flex justify-between items-center pb-2 border-b border-[#DDD5C7]">
             <h3 class="font-bold text-[#2D2825] flex items-center gap-2">
               <span class="text-[#680E23]">📌</span>
-              الذاكرة الدائمة (Permanent Profile)
+              الملف والبيانات الدائمة
             </h3>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2]/80 text-[#680E23] border border-[#EAE3D9]">تراكمية ومحدثة</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2]/80 text-[#680E23] border border-[#EAE3D9]">تراكمية</span>
           </div>
 
           <div id="memory-permanent-content" class="space-y-2 text-[#443D39]">
-            <div class="text-center py-4 text-[#8C827A]">جاري تحميل الذاكرة الدائمة...</div>
+            <div class="text-center py-4 text-[#8C827A]">جاري تحميل البيانات الدائمة...</div>
           </div>
         </div>
 
-        <!-- Immediate Working Memory Card -->
+        <!-- 2. Call Memory Card -->
         <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl p-4 space-y-3">
           <div class="flex justify-between items-center pb-2 border-b border-[#DDD5C7]">
             <h3 class="font-bold text-[#2D2825] flex items-center gap-2">
-              <span class="text-[#680E23]">⏱️</span>
-              الذاكرة اللحظية (آخر مكالمة)
+              <span class="text-[#680E23]">📞</span>
+              ذاكرة المكالمات (Call Memory)
             </h3>
-            <span id="memory-calls-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9]">0 مكالمات مسجلة</span>
+            <span id="memory-calls-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">0 مكالمات</span>
           </div>
 
-          <div id="memory-immediate-content" class="space-y-2 text-[#443D39]">
-            <div class="text-center py-4 text-[#8C827A]">جاري تحميل ملخص آخر مكالمة...</div>
+          <div id="memory-call-content" class="space-y-2 text-[#443D39]">
+            <div class="text-center py-4 text-[#8C827A]">جاري تحميل ذاكرة المكالمات...</div>
+          </div>
+        </div>
+
+        <!-- 3. WhatsApp Memory Card -->
+        <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#DDD5C7]">
+            <h3 class="font-bold text-[#2D2825] flex items-center gap-2">
+              <span class="text-emerald-700">💬</span>
+              ذاكرة الواتساب (WhatsApp Memory)
+            </h3>
+            <span id="memory-wa-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">24/7 نشط</span>
+          </div>
+
+          <div id="memory-whatsapp-content" class="space-y-2 text-[#443D39]">
+            <div class="text-center py-4 text-[#8C827A]">جاري تحميل ذاكرة الواتساب...</div>
           </div>
         </div>
       </div>
