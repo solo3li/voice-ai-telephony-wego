@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Max, Count
 from django.http import HttpResponse, JsonResponse as _DjangoJsonResponse
 
 def JsonResponse(data, *args, **kwargs):
@@ -88,8 +88,16 @@ from agents.views import fetch_mcp_tools_sync
 from agents.mcp_service import test_mcp_connection_sync, test_mcp_tool_sync
 from billing.models import UserWallet, BillingConfig, BillingTransaction
 from call_center.models import EmployeeProfile, EmployeeCallLog, CallQueue, QueueMembership
-from crm.models import CustomerMemory, CallSession, OutboundCampaign, CampaignContact, UserCampaignLimit
-from crm.inngest_jobs import inngest_client, broadcast_campaign_update
+from crm.models import (
+    CustomerMemory, CallSession, OutboundCampaign, CampaignContact,
+    UserCampaignLimit, DoNotCallEntry, OmnichannelMessage
+)
+from crm.inngest_jobs import inngest_client, broadcast_campaign_update, dispatch_whatsapp_followup_job
+from crm.services.evolution_client import (
+    get_connection_status, get_qr_code, logout_instance,
+    send_whatsapp_message, configure_instance_webhook
+)
+from crm.services.whatsapp_sync import format_phone_display
 from knowledge.models import Document, DocumentChunk
 from telephony.models import OutboundSIPTrunk, InboundPBXTrunk, BusinessHoursSchedule
 from telephony.services import initiate_outbound_call
@@ -1764,18 +1772,27 @@ def api_user_campaigns(request):
             except Exception:
                 pass
 
-        if request.FILES:
-            return JsonResponse({
-                "status": "error",
-                "code": "direct_file_upload_disabled",
-                "message": "تم إلغاء رفع الملفات المباشرة للحملات من الـ API. يرجى تزويد رابط خارجي مباشر لملف Excel/CSV عبر 'file_url' أو إرسال مصفوفة جهات الاتصال عبر 'contacts'."
-            }, status=400)
-
+        uploaded_file = request.FILES.get('file') or request.FILES.get('contacts_file')
         name = str(data.get('name') or '').strip()
         file_url = str(data.get('file_url') or '').strip()
         contacts_to_create = []
 
-        if file_url:
+        if uploaded_file:
+            try:
+                file_bytes = uploaded_file.read()
+                parse_res = parse_leads_file(file_bytes, uploaded_file.name)
+                if parse_res.get("status") != "success":
+                    return JsonResponse({"status": "error", "message": parse_res.get("message", "فشل تحليل ملف جهات الاتصال المرفوع")}, status=400)
+                valid_contacts = parse_res.get("valid_contacts", [])
+                if not valid_contacts:
+                    return JsonResponse({"status": "error", "message": "لم يتم العثور على أي أرقام هواتف صالحة داخل الملف المرفوع."}, status=400)
+                contacts_to_create = valid_contacts
+                if not name:
+                    name = f"حملة {uploaded_file.name} - {timezone.now().strftime('%Y/%m/%d %H:%M')}"
+            except Exception as e:
+                logger.error(f"Error parsing uploaded campaign file: {e}", exc_info=True)
+                return JsonResponse({"status": "error", "message": f"تعذر قراءة ومعالجة الملف المرفوع: {str(e)}"}, status=400)
+        elif file_url:
             try:
                 parsed_url = urlparse(file_url)
                 url_path = unquote(parsed_url.path)
@@ -1830,13 +1847,36 @@ def api_user_campaigns(request):
         if not contacts_to_create:
             return JsonResponse({
                 "status": "error",
-                "message": "يجب تزويد رابط مباشر لملف جهات الاتصال (file_url) بصيغة Excel/CSV، أو مصفوفة جهات الاتصال (contacts) تحتوي على أرقام هواتف صالحة."
+                "message": "يرجى تزويد ملف جهات اتصال (file) بصيغة Excel/CSV أو رابط مباشر (file_url) أو مصفوفة جهات الاتصال (contacts) تحتوي على أرقام هواتف صالحة."
+            }, status=400)
+
+        # Tenant-local DNC Filtering
+        filtered_contacts = []
+        dnc_skipped_count = 0
+        for c in contacts_to_create:
+            c_phone = c.get('phone_number') or ''
+            if DoNotCallEntry.is_blacklisted(user_id=request.user.id, phone_number=c_phone):
+                dnc_skipped_count += 1
+                continue
+            filtered_contacts.append(c)
+
+        if not filtered_contacts:
+            return JsonResponse({
+                "status": "error",
+                "code": "all_contacts_in_dnc",
+                "message": f"جميع جهات الاتصال المستخرجة ({dnc_skipped_count}) موجودة في قائمة عدم الاتصال (DNC).",
+                "dnc_skipped_count": dnc_skipped_count
             }, status=400)
 
         if not name:
             name = f"حملة جهات اتصال - {timezone.now().strftime('%Y/%m/%d %H:%M')}"
 
+        channel = str(data.get('channel') or 'calls').strip()
+        if channel not in ['calls', 'whatsapp', 'hybrid']:
+            channel = 'calls'
+
         call_prompt = str(data.get('call_prompt') or '').strip()
+        whatsapp_prompt = str(data.get('whatsapp_prompt') or '').strip()
         profile_id = data.get('agent_profile_id')
         agent_profile = AgentProfile.objects.filter(id=profile_id, user=request.user).first() if profile_id else None
 
@@ -1857,8 +1897,10 @@ def api_user_campaigns(request):
         campaign = OutboundCampaign.objects.create(
             user=request.user,
             name=name,
+            channel=channel,
             agent_profile=agent_profile,
             call_prompt=call_prompt,
+            whatsapp_prompt=whatsapp_prompt,
             max_retries=max_retries,
             retry_delay_minutes=retry_delay_minutes,
             gateway_type=gateway_type,
@@ -1873,9 +1915,10 @@ def api_user_campaigns(request):
                 phone_number=c.get("phone_number"),
                 attributes=c.get("attributes", {}),
                 call_status='pending',
+                whatsapp_status='pending',
                 interest_level='uncontacted'
             )
-            for c in contacts_to_create
+            for c in filtered_contacts
         ]
         CampaignContact.objects.bulk_create(contact_objs)
         campaign.update_metrics()
@@ -1883,7 +1926,10 @@ def api_user_campaigns(request):
         return JsonResponse({
             "status": "success",
             "message": "تم إنشاء حملة الاتصال بنجاح",
-            "campaign": campaign.to_dict()
+            "campaign": campaign.to_dict(),
+            "total_extracted": len(contacts_to_create),
+            "dnc_skipped_count": dnc_skipped_count,
+            "contacts_imported_count": len(filtered_contacts)
         }, status=201)
 
 
@@ -2845,6 +2891,629 @@ def api_user_live_context(request):
         })
 
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+
+def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tuple:
+    prof = (mem.permanent_profile or {}) if mem else {}
+    c_name = (mem.customer_name if mem else '') or prof.get('customer_name') or (last_msg.customer_name if last_msg else '')
+    clean_p = phone_number.strip()
+    if not c_name or c_name == clean_p:
+        if clean_p.endswith('@g.us'):
+            c_name = "مجموعة واتساب"
+        elif clean_p == '0':
+            c_name = "واتساب الرسمي"
+        elif clean_p == '201108124794':
+            c_name = "أنا (ملاحظات شخصية)"
+        else:
+            c_name = "عميل واتساب جديد"
+    real_phone = prof.get('real_phone') or (clean_p if ('@' not in clean_p and clean_p.isdigit()) else '')
+    display_phone = prof.get('display_phone') or format_phone_display(real_phone, clean_p)
+    return c_name, display_phone, real_phone
+
+
+# =========================================================================
+# User RESTful Campaigns Upload Contacts API
+# =========================================================================
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="upload_user_campaign_contacts",
+    summary="رفع واستيراد جهات اتصال لحملة قائمة أو جديدة (CSV / Excel / JSON)",
+    description="استيراد جهات اتصال من ملف أو مصفوفة JSON وتطبيق فلترة DNC تلقائياً.",
+    tags=["10. حملات الاتصال والعملاء (Campaigns)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+@user_api_key_required
+def api_user_campaigns_upload_contacts(request):
+    """
+    POST /api/v1/campaigns/upload-contacts/
+    Accepts CSV/Excel/JSON file or contacts list.
+    If 'campaign_id' is supplied, appends contacts to existing campaign.
+    Otherwise creates a new campaign.
+    """
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    campaign_id = data.get('campaign_id') or request.POST.get('campaign_id')
+    if not campaign_id:
+        return api_user_campaigns(request)
+
+    campaign = get_object_or_404(OutboundCampaign, id=campaign_id, user=request.user)
+
+    uploaded_file = request.FILES.get('file') or request.FILES.get('contacts_file')
+    contacts_to_create = []
+
+    if uploaded_file:
+        try:
+            file_bytes = uploaded_file.read()
+            parse_res = parse_leads_file(file_bytes, uploaded_file.name)
+            if parse_res.get("status") != "success":
+                return JsonResponse({"status": "error", "message": parse_res.get("message", "فشل تحليل الملف المرفوع")}, status=400)
+            contacts_to_create = parse_res.get("valid_contacts", [])
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"تعذر قراءة الملف المرفوع: {str(e)}"}, status=400)
+    else:
+        raw_contacts = data.get('contacts')
+        if isinstance(raw_contacts, str):
+            try:
+                raw_contacts = json.loads(raw_contacts)
+            except Exception:
+                raw_contacts = []
+        if isinstance(raw_contacts, list) and raw_contacts:
+            for item in raw_contacts:
+                if not isinstance(item, dict):
+                    continue
+                phone = normalize_phone(item.get('phone_number') or item.get('phone') or '')
+                if not is_valid_phone(phone):
+                    phone = str(item.get('phone_number') or item.get('phone') or '').strip()
+                if not phone:
+                    continue
+                name_val = str(item.get('name') or item.get('customer_name') or '').strip()
+                contacts_to_create.append({
+                    "customer_name": name_val or f"عميل ({phone})",
+                    "phone_number": phone,
+                    "attributes": item.get('attributes') or {}
+                })
+
+    if not contacts_to_create:
+        return JsonResponse({"status": "error", "message": "لم يتم العثور على أي جهات اتصال صالحة للإضافة."}, status=400)
+
+    filtered_contacts = []
+    dnc_skipped_count = 0
+    for c in contacts_to_create:
+        c_phone = c.get('phone_number') or ''
+        if DoNotCallEntry.is_blacklisted(user_id=request.user.id, phone_number=c_phone):
+            dnc_skipped_count += 1
+            continue
+        filtered_contacts.append(c)
+
+    if not filtered_contacts:
+        return JsonResponse({
+            "status": "error",
+            "code": "all_contacts_in_dnc",
+            "message": f"جميع جهات الاتصال المستخرجة ({dnc_skipped_count}) موجودة في قائمة عدم الاتصال (DNC).",
+            "dnc_skipped_count": dnc_skipped_count
+        }, status=400)
+
+    contact_objs = [
+        CampaignContact(
+            campaign=campaign,
+            customer_name=c.get("customer_name") or f"عميل ({c.get('phone_number')})",
+            phone_number=c.get("phone_number"),
+            attributes=c.get("attributes", {}),
+            call_status='pending',
+            whatsapp_status='pending',
+            interest_level='uncontacted'
+        )
+        for c in filtered_contacts
+    ]
+    CampaignContact.objects.bulk_create(contact_objs)
+    campaign.update_metrics()
+
+    return JsonResponse({
+        "status": "success",
+        "message": f"تمت إضافة {len(filtered_contacts)} جهة اتصال إلى الحملة بنجاح.",
+        "campaign": campaign.to_dict(),
+        "total_extracted": len(contacts_to_create),
+        "dnc_skipped_count": dnc_skipped_count,
+        "contacts_imported_count": len(filtered_contacts)
+    })
+
+
+# =========================================================================
+# User RESTful Do Not Call (DNC List) Management APIs
+# =========================================================================
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="list_user_dnc_entries",
+    summary="استعراض قائمة الأرقام المحظورة (DNC List)",
+    description="استعراض قائمة الأرقام الممنوعة من الاتصال للمؤسسة مع البحث والترقيم.",
+    tags=["14. قائمة عدم الاتصال (DNC List)"]
+)
+@extend_schema(
+    methods=['POST'],
+    operation_id="create_user_dnc_entry",
+    summary="إضافة رقم إلى قائمة عدم الاتصال (DNC)",
+    description="إضافة رقم هاتف جديد لمنع الاتصال به في جميع الحملات.",
+    tags=["14. قائمة عدم الاتصال (DNC List)"]
+)
+@api_view(['GET', 'POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser, MultiPartParser])
+@user_api_key_required
+def api_user_dnc(request):
+    """
+    GET & POST /api/v1/dnc/
+    List or add phone numbers to the tenant's Do Not Call list.
+    """
+    if request.method == 'GET':
+        qs = DoNotCallEntry.objects.filter(user=request.user)
+        q = request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(Q(phone_number__icontains=q) | Q(customer_name__icontains=q) | Q(reason__icontains=q))
+
+        page = int(request.GET.get('page', 1))
+        page_size = min(100, max(1, int(request.GET.get('page_size', 20))))
+        paginator = Paginator(qs, page_size)
+        page_obj = paginator.get_page(page)
+
+        return JsonResponse({
+            "status": "success",
+            "total": paginator.count,
+            "num_pages": paginator.num_pages,
+            "current_page": page,
+            "dnc_entries": [e.to_dict() for e in page_obj]
+        })
+
+    elif request.method == 'POST':
+        data = request.data if hasattr(request, 'data') and request.data else {}
+        if not data and request.body:
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+            except Exception:
+                pass
+
+        phone = str(data.get("phone_number") or data.get("phone") or "").strip()
+        customer_name = str(data.get("customer_name") or data.get("name") or "").strip()
+        reason = str(data.get("reason") or "طلب العميل عدم الاتصال (DNC)").strip()
+
+        if not phone:
+            return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+        clean_phone = normalize_phone(phone) or phone
+        entry, created = DoNotCallEntry.objects.update_or_create(
+            user=request.user,
+            phone_number=clean_phone,
+            defaults={
+                "customer_name": customer_name,
+                "reason": reason,
+                "is_global": False
+            }
+        )
+        return JsonResponse({
+            "status": "success",
+            "message": "تمت إضافة الرقم إلى قائمة عدم الاتصال (DNC) بنجاح!",
+            "entry": entry.to_dict(),
+            "created": created
+        }, status=201 if created else 200)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="check_user_dnc_entry",
+    summary="فحص رقم في قائمة عدم الاتصال (DNC Check)",
+    description="التحقق السريع مما إذا كان رقم الهاتف مدرجاً ضمن قائمة الحظر أم لا.",
+    tags=["14. قائمة عدم الاتصال (DNC List)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_dnc_check(request):
+    """
+    POST /api/v1/dnc/check/
+    Check if a specific phone number is blacklisted in tenant's DNC list.
+    """
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    phone = str(data.get("phone_number") or data.get("phone") or "").strip()
+    if not phone:
+        return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+    clean_phone = normalize_phone(phone) or phone
+    is_blacklisted = DoNotCallEntry.is_blacklisted(user_id=request.user.id, phone_number=clean_phone)
+    entry = DoNotCallEntry.objects.filter(user=request.user, phone_number=clean_phone).first()
+
+    return JsonResponse({
+        "status": "success",
+        "phone_number": clean_phone,
+        "is_blacklisted": is_blacklisted,
+        "entry": entry.to_dict() if entry else None
+    })
+
+
+@extend_schema(
+    methods=['GET', 'DELETE'],
+    operation_id="detail_user_dnc_entry",
+    summary="استعراض أو حذف رقم من قائمة عدم الاتصال",
+    tags=["14. قائمة عدم الاتصال (DNC List)"]
+)
+@api_view(['GET', 'DELETE'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_dnc_detail(request, entry_id):
+    """
+    GET & DELETE /api/v1/dnc/<entry_id>/
+    Retrieve or remove a phone number from the tenant's DNC list.
+    """
+    entry = get_object_or_404(DoNotCallEntry, id=entry_id, user=request.user)
+    if request.method == 'GET':
+        return JsonResponse({"status": "success", "entry": entry.to_dict()})
+    elif request.method == 'DELETE':
+        entry.delete()
+        return JsonResponse({"status": "success", "message": "تم حذف الرقم من قائمة عدم الاتصال بنجاح!"})
+
+
+# =========================================================================
+# User RESTful WhatsApp & Omnichannel Management APIs
+# =========================================================================
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="get_user_whatsapp_status",
+    summary="حالة اتصال الواتساب (WhatsApp Status)",
+    description="فحص حالة اتصال ومزامنة واتساب عبر Evolution API.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_status(request):
+    """GET /api/v1/whatsapp/status/"""
+    instance_name = f"user_{request.user.id}"
+    res = get_connection_status(instance_name)
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="connect_user_whatsapp",
+    summary="بدء ربط الواتساب وتوليد رمز QR",
+    description="توليد رمز QR أو Pairing Code لربط هاتف المؤسسة بالواتساب.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_connect(request):
+    """POST /api/v1/whatsapp/connect/"""
+    instance_name = f"user_{request.user.id}"
+    res = get_qr_code(instance_name)
+
+    # Configure inbound webhook
+    try:
+        webhook_url = f"http://django:8000/api/crm/whatsapp/webhook/?tenant_id={request.user.id}"
+        configure_instance_webhook(webhook_url, instance_name)
+    except Exception as wh_err:
+        logger.warning(f"Could not configure webhook for {instance_name}: {wh_err}")
+
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="disconnect_user_whatsapp",
+    summary="فصل جلسة الواتساب (Logout)",
+    description="تسجيل الخروج وفصل ربط هاتف الواتساب للمؤسسة.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_disconnect(request):
+    """POST /api/v1/whatsapp/disconnect/"""
+    instance_name = f"user_{request.user.id}"
+    res = logout_instance(instance_name)
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="list_user_whatsapp_conversations",
+    summary="استعراض محادثات الواتساب (Inbox)",
+    description="استعراض قائمة المحادثات والرسائل الأخيرة ومؤشرات الذكاء الاصطناعي.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_conversations(request):
+    """GET /api/v1/whatsapp/conversations/"""
+    threads = (
+        OmnichannelMessage.objects.filter(user=request.user)
+        .values('phone_number')
+        .annotate(
+            last_message_at=Max('created_at'),
+            messages_count=Count('id')
+        )
+        .order_by('-last_message_at')
+    )
+
+    q = request.GET.get('q', '').strip()
+    if q:
+        threads = threads.filter(Q(phone_number__icontains=q) | Q(customer_name__icontains=q))
+
+    page = int(request.GET.get('page', 1))
+    page_size = min(100, max(1, int(request.GET.get('page_size', 30))))
+    paginator = Paginator(threads, page_size)
+    page_obj = paginator.get_page(page)
+
+    phones = [t['phone_number'] for t in page_obj]
+    memories = {m.phone_number: m for m in CustomerMemory.objects.filter(user=request.user, phone_number__in=phones)}
+
+    results = []
+    for t in page_obj:
+        p = t['phone_number']
+        last_msg = OmnichannelMessage.objects.filter(user=request.user, phone_number=p).order_by('-created_at').first()
+        mem = memories.get(p)
+        c_name, display_phone, real_phone = _resolve_contact_display(p, mem, last_msg)
+        wm = mem.whatsapp_memory or {} if mem else {}
+        ai_active = wm.get("ai_auto_reply_enabled", True)
+
+        results.append({
+            "phone_number": p,
+            "customer_name": c_name,
+            "display_phone": display_phone,
+            "real_phone": real_phone,
+            "last_message": {
+                "text": last_msg.message_text if last_msg else "",
+                "direction": last_msg.direction if last_msg else "inbound",
+                "is_outbound": last_msg.direction in ('outbound_ai', 'outbound_human', 'outbound') if last_msg else False,
+                "is_ai": last_msg.direction == 'outbound_ai' if last_msg else False,
+                "is_human": last_msg.direction == 'outbound_human' if last_msg else False,
+                "created_at": last_msg.created_at.strftime("%Y-%m-%d %H:%M") if last_msg else "",
+                "created_at_time": last_msg.created_at.strftime("%I:%M %p") if last_msg else "",
+                "created_at_iso": last_msg.created_at.isoformat() if last_msg else "",
+            },
+            "messages_count": t['messages_count'],
+            "ai_active": ai_active,
+            "has_call_history": bool(mem and mem.total_calls_count > 0)
+        })
+
+    return JsonResponse({
+        "status": "success",
+        "total": paginator.count,
+        "num_pages": paginator.num_pages,
+        "current_page": page,
+        "conversations": results
+    })
+
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="get_user_whatsapp_conversation_messages",
+    summary="جلب سجل رسائل محادثة واتساب محددة",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_conversation_messages(request, phone):
+    """GET /api/v1/whatsapp/conversations/<phone>/messages/"""
+    clean_phone = phone.strip()
+    limit = min(200, max(1, int(request.GET.get('limit', 50))))
+    msgs_qs = OmnichannelMessage.objects.filter(
+        user=request.user,
+        phone_number=clean_phone
+    ).order_by('-created_at')[:limit]
+
+    msgs = list(reversed(msgs_qs))
+    mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
+    last_msg = msgs[-1] if msgs else None
+    c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
+    wm = mem.whatsapp_memory or {} if mem else {}
+
+    return JsonResponse({
+        "status": "success",
+        "phone_number": clean_phone,
+        "customer_name": c_name,
+        "display_phone": display_phone,
+        "real_phone": real_phone,
+        "ai_active": wm.get("ai_auto_reply_enabled", True),
+        "total_messages": len(msgs),
+        "messages": [m.to_dict() for m in msgs]
+    })
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="reply_user_whatsapp_conversation",
+    summary="إرسال رد يدوي لمحادثة واتساب",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_reply(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/reply/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    text = str(data.get("message") or "").strip()
+    if not text:
+        return JsonResponse({"status": "error", "message": "نص الرسالة مطلوب"}, status=400)
+
+    clean_phone = phone.strip()
+    instance_name = f"user_{request.user.id}"
+    send_res = send_whatsapp_message(clean_phone, text, instance_name)
+
+    mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
+    c_name = mem.customer_name if mem else ""
+
+    msg = OmnichannelMessage.objects.create(
+        user=request.user,
+        phone_number=clean_phone,
+        customer_name=c_name,
+        channel='whatsapp',
+        direction='outbound_human',
+        message_text=text,
+        metadata={"evolution_response": send_res}
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "message": "تم إرسال الرسالة بنجاح",
+        "sent_message": msg.to_dict(),
+        "delivery": send_res
+    })
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="toggle_user_whatsapp_conversation_ai",
+    summary="تفعيل أو تعطيل الرد الذكي لمحادثة واتساب",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_toggle_ai(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/toggle-ai/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    clean_phone = phone.strip()
+    mem, _ = CustomerMemory.objects.get_or_create(user=request.user, phone_number=clean_phone)
+    wm = mem.whatsapp_memory or {}
+
+    if "ai_active" in data:
+        new_state = bool(data["ai_active"])
+    else:
+        current = wm.get("ai_auto_reply_enabled", True)
+        new_state = not current
+
+    wm["ai_auto_reply_enabled"] = new_state
+    mem.whatsapp_memory = wm
+    mem.save(update_fields=['whatsapp_memory'])
+
+    return JsonResponse({
+        "status": "success",
+        "phone_number": clean_phone,
+        "ai_active": new_state,
+        "message": f"تم {'تفعيل' if new_state else 'إيقاف'} الرد الذكي التلقائي بنجاح لهذه المحادثة."
+    })
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="send_user_whatsapp_direct",
+    summary="إرسال رسالة واتساب مباشرة لرقم هاتف",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_send(request):
+    """POST /api/v1/whatsapp/send/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    phone = str(data.get("phone") or data.get("phone_number") or "").strip()
+    text = str(data.get("message") or "").strip()
+
+    if not phone:
+        return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+    if not text:
+        return JsonResponse({"status": "error", "message": "نص الرسالة مطلوب"}, status=400)
+
+    instance_name = f"user_{request.user.id}"
+    send_res = send_whatsapp_message(phone, text, instance_name)
+
+    mem = CustomerMemory.objects.filter(user=request.user, phone_number=phone).first()
+    c_name = mem.customer_name if mem else ""
+
+    msg = OmnichannelMessage.objects.create(
+        user=request.user,
+        phone_number=phone,
+        customer_name=c_name,
+        channel='whatsapp',
+        direction='outbound_human',
+        message_text=text,
+        metadata={"evolution_response": send_res}
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "message": "تم إرسال رسالة الواتساب بنجاح",
+        "sent_message": msg.to_dict(),
+        "delivery": send_res
+    })
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="trigger_user_whatsapp_followup",
+    summary="إطلاق متابعة آلية بعد المكالمة (Followup)",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_followup(request):
+    """POST /api/v1/whatsapp/followup/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    phone = str(data.get("phone") or data.get("phone_number") or "").strip()
+    if not phone:
+        return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+    customer_name = str(data.get("customer_name") or "").strip()
+    trigger_type = str(data.get("trigger_type") or "scheduled_followup").strip()
+
+    dispatch_whatsapp_followup_job(
+        user_id=request.user.id,
+        phone_number=phone,
+        trigger_type=trigger_type,
+        customer_name=customer_name
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "message": "تم إرسال مهمة المتابعة الذكية عبر الواتساب بنجاح!"
+    })
 
 
 

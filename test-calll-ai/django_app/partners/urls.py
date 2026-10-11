@@ -61,6 +61,7 @@ urlpatterns = [
 
     # Managed Client Campaigns (Inngest Powered)
     path('clients/<int:client_id>/campaigns/', views.api_partner_client_campaigns, name='api_partner_client_campaigns'),
+    path('clients/<int:client_id>/campaigns/upload-contacts/', views.api_partner_client_campaigns_upload_contacts, name='api_partner_client_campaigns_upload_contacts'),
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/', views.api_partner_client_campaign_detail, name='api_partner_client_campaign_detail'),
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/start/', views.api_partner_client_campaign_start, name='api_partner_client_campaign_start'),
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/pause/', views.api_partner_client_campaign_pause, name='api_partner_client_campaign_pause'),
@@ -68,6 +69,22 @@ urlpatterns = [
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/export/', views.api_partner_client_campaign_export, name='api_partner_client_campaign_export'),
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/contacts/<int:contact_id>/', views.api_partner_client_campaign_contact_detail, name='api_partner_client_campaign_contact_detail'),
     path('clients/<int:client_id>/campaigns/<int:campaign_id>/contacts/<int:contact_id>/dial/', views.api_partner_client_campaign_contact_dial, name='api_partner_client_campaign_contact_dial'),
+
+    # Managed Client Do Not Call (DNC List) Engine
+    path('clients/<int:client_id>/dnc/', views.api_partner_client_dnc, name='api_partner_client_dnc'),
+    path('clients/<int:client_id>/dnc/check/', views.api_partner_client_dnc_check, name='api_partner_client_dnc_check'),
+    path('clients/<int:client_id>/dnc/<int:entry_id>/', views.api_partner_client_dnc_detail, name='api_partner_client_dnc_detail'),
+
+    # Managed Client WhatsApp & Omnichannel Management
+    path('clients/<int:client_id>/whatsapp/status/', views.api_partner_client_whatsapp_status, name='api_partner_client_whatsapp_status'),
+    path('clients/<int:client_id>/whatsapp/connect/', views.api_partner_client_whatsapp_connect, name='api_partner_client_whatsapp_connect'),
+    path('clients/<int:client_id>/whatsapp/disconnect/', views.api_partner_client_whatsapp_disconnect, name='api_partner_client_whatsapp_disconnect'),
+    path('clients/<int:client_id>/whatsapp/conversations/', views.api_partner_client_whatsapp_conversations, name='api_partner_client_whatsapp_conversations'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/messages/', views.api_partner_client_whatsapp_conversation_messages, name='api_partner_client_whatsapp_conversation_messages'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/reply/', views.api_partner_client_whatsapp_conversation_reply, name='api_partner_client_whatsapp_conversation_reply'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/toggle-ai/', views.api_partner_client_whatsapp_conversation_toggle_ai, name='api_partner_client_whatsapp_conversation_toggle_ai'),
+    path('clients/<int:client_id>/whatsapp/send/', views.api_partner_client_whatsapp_send, name='api_partner_client_whatsapp_send'),
+    path('clients/<int:client_id>/whatsapp/followup/', views.api_partner_client_whatsapp_followup, name='api_partner_client_whatsapp_followup'),
 
     # Managed Client Business Hours & Off-Hours Schedule
     path('clients/<int:client_id>/business-hours/', views.api_partner_client_business_hours, name='api_partner_client_business_hours'),

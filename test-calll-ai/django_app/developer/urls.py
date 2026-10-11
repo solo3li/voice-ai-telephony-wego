@@ -62,6 +62,7 @@ urlpatterns = [
 
     # Campaigns & Outbound Calling (Inngest Powered)
     path('campaigns/', views.api_user_campaigns, name='developer_campaigns'),
+    path('campaigns/upload-contacts/', views.api_user_campaigns_upload_contacts, name='developer_campaigns_upload_contacts'),
     path('campaigns/<int:campaign_id>/', views.api_user_campaign_detail, name='developer_campaign_detail'),
     path('campaigns/<int:campaign_id>/start/', views.api_user_campaign_start, name='developer_campaign_start'),
     path('campaigns/<int:campaign_id>/pause/', views.api_user_campaign_pause, name='developer_campaign_pause'),
@@ -69,6 +70,22 @@ urlpatterns = [
     path('campaigns/<int:campaign_id>/export/', views.api_user_campaign_export, name='developer_campaign_export'),
     path('campaigns/<int:campaign_id>/contacts/<int:contact_id>/', views.api_user_campaign_contact_detail, name='developer_campaign_contact_detail'),
     path('campaigns/<int:campaign_id>/contacts/<int:contact_id>/dial/', views.api_user_campaign_contact_dial, name='developer_campaign_contact_dial'),
+
+    # Do Not Call (DNC List) Engine
+    path('dnc/', views.api_user_dnc, name='developer_dnc'),
+    path('dnc/check/', views.api_user_dnc_check, name='developer_dnc_check'),
+    path('dnc/<int:entry_id>/', views.api_user_dnc_detail, name='developer_dnc_detail'),
+
+    # WhatsApp & Omnichannel Management
+    path('whatsapp/status/', views.api_user_whatsapp_status, name='developer_whatsapp_status'),
+    path('whatsapp/connect/', views.api_user_whatsapp_connect, name='developer_whatsapp_connect'),
+    path('whatsapp/disconnect/', views.api_user_whatsapp_disconnect, name='developer_whatsapp_disconnect'),
+    path('whatsapp/conversations/', views.api_user_whatsapp_conversations, name='developer_whatsapp_conversations'),
+    path('whatsapp/conversations/<str:phone>/messages/', views.api_user_whatsapp_conversation_messages, name='developer_whatsapp_conversation_messages'),
+    path('whatsapp/conversations/<str:phone>/reply/', views.api_user_whatsapp_conversation_reply, name='developer_whatsapp_conversation_reply'),
+    path('whatsapp/conversations/<str:phone>/toggle-ai/', views.api_user_whatsapp_conversation_toggle_ai, name='developer_whatsapp_conversation_toggle_ai'),
+    path('whatsapp/send/', views.api_user_whatsapp_send, name='developer_whatsapp_send'),
+    path('whatsapp/followup/', views.api_user_whatsapp_followup, name='developer_whatsapp_followup'),
 
     # Business Hours & Off-Hours Schedule
     path('business-hours/', views.api_user_business_hours, name='developer_business_hours'),
