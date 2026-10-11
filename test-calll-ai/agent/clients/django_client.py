@@ -161,12 +161,51 @@ def fetch_agent_bootstrap_sync(user_id: int, caller_phone: str = "web_dashboard"
 
 # ==================== Knowledge RAG API ====================
 
-async def query_knowledge_base_async(query: str, user_id: int, genai_client=None, top_k: int = 4) -> str:
-    """Query user's documents semantically via Django Knowledge RAG API non-blockingly."""
+def _resolve_rag_args(arg1=None, arg2=None, genai_client=None, top_k=4, **kwargs):
+    """Normalize and resolve (query, user_id) or (user_id, query) robustly."""
+    uid = kwargs.get("user_id")
+    q = kwargs.get("query")
+
+    if uid is None and q is None:
+        if isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit() and not (isinstance(arg2, str) and arg2.isdigit())):
+            uid, q = arg1, arg2
+        elif isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit()):
+            q, uid = arg1, arg2
+        else:
+            q, uid = arg1, arg2
+    elif uid is None:
+        if isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit()):
+            uid = arg1
+        elif isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit()):
+            uid = arg2
+    elif q is None:
+        if arg1 is not None and not (isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit())):
+            q = arg1
+        elif arg2 is not None and not (isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit())):
+            q = arg2
+
+    try:
+        clean_user_id = int(uid) if uid is not None else None
+    except (ValueError, TypeError):
+        clean_user_id = None
+
+    clean_query = str(q or "").strip()
+
     if isinstance(genai_client, int) and top_k == 4:
         top_k = genai_client
+
+    return clean_query, clean_user_id, top_k
+
+async def query_knowledge_base_async(arg1=None, arg2=None, genai_client=None, top_k: int = 4, **kwargs) -> str:
+    """Query user's documents semantically via Django Knowledge RAG API non-blockingly.
+    Supports (query, user_id) or (user_id, query) or kwargs.
+    """
+    query, user_id, top_k = _resolve_rag_args(arg1, arg2, genai_client=genai_client, top_k=top_k, **kwargs)
     if not user_id:
         return "لا توجد مستندات مرفوعة لهذا المستخدم."
+    if not query:
+        return "يرجى تحديد سؤال للبحث في المستندات."
+
     url = f"{DJANGO_API_URL}/api/knowledge/internal/rag/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -190,10 +229,16 @@ async def query_knowledge_base_async(query: str, user_id: int, genai_client=None
         logger.error(f"Failed to query knowledge API asynchronously: {e}")
         return f"حدث خطأ أثناء البحث في المستندات: {e}"
 
-def query_knowledge_base_sync(query: str, user_id: int, genai_client=None, top_k: int = 4) -> str:
-    """Query user's documents semantically via Django Knowledge RAG API synchronously."""
+def query_knowledge_base_sync(arg1=None, arg2=None, genai_client=None, top_k: int = 4, **kwargs) -> str:
+    """Query user's documents semantically via Django Knowledge RAG API synchronously.
+    Supports (query, user_id) or (user_id, query) or kwargs.
+    """
+    query, user_id, top_k = _resolve_rag_args(arg1, arg2, genai_client=genai_client, top_k=top_k, **kwargs)
     if not user_id:
         return "لا توجد مستندات مرفوعة لهذا المستخدم."
+    if not query:
+        return "يرجى تحديد سؤال للبحث في المستندات."
+
     try:
         url = f"{DJANGO_API_URL}/api/knowledge/internal/rag/"
         headers = {
@@ -373,8 +418,36 @@ def fetch_customer_memory_sync(user_id: int, caller_phone: str = "web_dashboard"
         return {"phone_number": caller_phone, "permanent_profile": {}, "last_interaction_summary": "", "card_text": "", "total_calls_count": 0}
 
 
-async def lookup_customer_memory_async(user_id: int, query: str) -> dict:
+def _resolve_memory_args(arg1=None, arg2=None, **kwargs):
+    uid = kwargs.get("user_id")
+    q = kwargs.get("query")
+    if uid is None and q is None:
+        if isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit()):
+            uid, q = arg1, arg2
+        elif isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit()):
+            q, uid = arg1, arg2
+        else:
+            uid, q = arg1, arg2
+    elif uid is None:
+        if isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit()):
+            uid = arg1
+        elif isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit()):
+            uid = arg2
+    elif q is None:
+        if arg1 is not None and not (isinstance(arg1, (int, float)) or (isinstance(arg1, str) and arg1.isdigit())):
+            q = arg1
+        elif arg2 is not None and not (isinstance(arg2, (int, float)) or (isinstance(arg2, str) and str(arg2).isdigit())):
+            q = arg2
+    try:
+        clean_user_id = int(uid) if uid is not None else None
+    except (ValueError, TypeError):
+        clean_user_id = None
+    clean_query = str(q or "").strip()
+    return clean_user_id, clean_query
+
+async def lookup_customer_memory_async(arg1=None, arg2=None, **kwargs) -> dict:
     """Lookup customer memory in Django CRM by name or phone query non-blockingly."""
+    user_id, query = _resolve_memory_args(arg1, arg2, **kwargs)
     if not user_id or not query:
         return {"status": "error", "found": False, "message": "query and user_id are required"}
     url = f"{DJANGO_API_URL}/api/crm/internal/memory/"
@@ -396,8 +469,9 @@ async def lookup_customer_memory_async(user_id: int, query: str) -> dict:
         return {"status": "error", "found": False, "message": str(e)}
 
 
-def lookup_customer_memory_sync(user_id: int, query: str) -> dict:
+def lookup_customer_memory_sync(arg1=None, arg2=None, **kwargs) -> dict:
     """Lookup customer memory in Django CRM synchronously."""
+    user_id, query = _resolve_memory_args(arg1, arg2, **kwargs)
     if not user_id or not query:
         return {"status": "error", "found": False, "message": "query and user_id are required"}
     try:

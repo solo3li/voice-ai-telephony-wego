@@ -204,19 +204,22 @@ async def entrypoint(ctx: JobContext):
     @llm.function_tool(
         description="البحث الدلالي الموثوق في قاعدة المعرفة والمستندات الرسمية للمنشأة. استدعِ هذه الأداة فوراً عند ورود أي سؤال عن خدمات أو سياسات أو أسعار أو معلومات عمل مذكورة في المستندات لاستخراج الإجابة الحقيقية الدقيقة."
     )
-    async def search_knowledge_base(query: str) -> str:
+    async def search_knowledge_base(query: str = "", **kwargs) -> str:
         """Search tenant knowledge base documents."""
+        search_query = str(query or kwargs.get("search_query") or kwargs.get("q") or kwargs.get("question") or "").strip()
         if not user_id:
             return "لا تتوفر مستندات مسجلة لهذا الحساب."
-        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري البحث في المستندات عن: {query}")
+        if not search_query:
+            return "يرجى تحديد موضوع السؤال للبحث في المستندات."
+        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري البحث في المستندات عن: {search_query}")
         try:
-            results = await query_knowledge_base_async(user_id, query)
+            results = await query_knowledge_base_async(query=search_query, user_id=user_id)
             txt = "\n\n".join(results) if isinstance(results, list) else str(results)
-            await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم العثور على معلومات ذات صلة بـ: {query}")
+            await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم العثور على معلومات ذات صلة بـ: {search_query}")
             return txt or "لم يتم العثور على نصوص مطابقة في قاعدة المعرفة."
         except Exception as e:
             logger.error(f"Error querying knowledge base: {e}")
-            return f"حدث خطأ أثناء البحث: {e}"
+            return "لم يتم العثور على معلومات مطابقة في قاعدة المعرفة حالياً."
 
     tools.append(search_knowledge_base)
 
@@ -224,19 +227,22 @@ async def entrypoint(ctx: JobContext):
     @llm.function_tool(
         description="البحث في سجل وذاكرة العملاء بالاسم أو برقم الهاتف لاسترجاع بيانات العميل وتفضيلاته وعنوانه وسجل تواصله السابق مع المؤسسة لمساعدته بشكل مخصص."
     )
-    async def lookup_customer_memory(identifier: str) -> str:
+    async def lookup_customer_memory(identifier: str = "", **kwargs) -> str:
         """Lookup customer memory profile."""
+        search_id = str(identifier or kwargs.get("phone") or kwargs.get("phone_number") or kwargs.get("name") or kwargs.get("query") or "").strip()
         if not user_id:
             return "سجل العملاء غير مفعل."
-        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري استرجاع بيانات العميل: {identifier}")
+        if not search_id:
+            return "يرجى تحديد اسم العميل أو رقم هاتفه للبحث."
+        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري استرجاع بيانات العميل: {search_id}")
         try:
-            mem = await lookup_customer_memory_async(user_id, identifier)
+            mem = await lookup_customer_memory_async(user_id=user_id, query=search_id)
             card = mem.get("card_text") or "لا توجد بيانات سابقة مسجلة لهذا العميل."
             await notify_centrifugo_async(channel_name, "agent_tool_done", "تم استرجاع ملف العميل بنجاح")
             return card
         except Exception as e:
             logger.error(f"Error looking up customer memory: {e}")
-            return f"فشل استرجاع ملف العميل: {e}"
+            return "لا توجد بيانات سابقة مسجلة لهذا العميل."
 
     tools.append(lookup_customer_memory)
 
@@ -250,22 +256,24 @@ async def entrypoint(ctx: JobContext):
         @llm.function_tool(
             description=f"تحويل المكالمة الجارية إلى أحد طوابير الموظفين البشريين التابعة للمؤسسة. الأقسام المتاحة: [{q_descriptions}]. الأكواد المتاحة: {q_codes}. استدعِ الأداة مع كتابة ملخص سبب التحويل في حقل reason."
         )
-        async def transfer_to_queue(queue_code: str, reason: str = "") -> str:
+        async def transfer_to_queue(queue_code: str = "", reason: str = "", **kwargs) -> str:
             """Transfer caller to human department queue."""
-            await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تحويل المكالمة إلى قسم ({queue_code})...")
+            q_code = str(queue_code or kwargs.get("queue") or kwargs.get("code") or kwargs.get("department") or "").strip()
+            r_reason = str(reason or kwargs.get("note") or kwargs.get("summary") or "").strip()
+            await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تحويل المكالمة إلى قسم ({q_code})...")
             try:
                 await execute_ai_transfer_and_hold(
                     room_name=ctx.room.name,
                     user_id=user_id or 1,
-                    queue_code=queue_code,
-                    reason=reason,
+                    queue_code=q_code,
+                    reason=r_reason,
                     caller_phone=caller_phone,
                 )
-                await notify_centrifugo_async(channel_name, "agent_transferring", f"تم تحويل المكالمة بنجاح إلى قسم ({queue_code})")
+                await notify_centrifugo_async(channel_name, "agent_transferring", f"تم تحويل المكالمة بنجاح إلى قسم ({q_code})")
                 return "تم تحويل المكالمة بنجاح، جاري وضع العميل على الانتظار وتحويله لممثل القسم."
             except Exception as e:
-                logger.error(f"Error transferring call to queue {queue_code}: {e}")
-                return f"تعذر إتمام التحويل حالياً: {e}"
+                logger.error(f"Error transferring call to queue {q_code}: {e}")
+                return "تعذر إتمام التحويل حالياً، يرجى المحاولة لاحقاً."
 
         tools.append(transfer_to_queue)
 
@@ -285,7 +293,7 @@ async def entrypoint(ctx: JobContext):
                 async def mcp_tool(**kwargs) -> str:
                     await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})...")
                     try:
-                        res = await execute_mcp_tool_call(url, name, kwargs, token)
+                        res = await execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=kwargs)
                         await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})")
                         return json.dumps(res, ensure_ascii=False) if isinstance(res, (dict, list)) else str(res)
                     except Exception as ex:

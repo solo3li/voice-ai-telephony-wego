@@ -189,42 +189,52 @@ def api_internal_rag_search(request):
 
     try:
         data = json.loads(request.body.decode('utf-8')) if request.body else {}
-        user_id = data.get('user_id')
-        query = str(data.get('query', '')).strip()
+        user_id_raw = data.get('user_id')
+        query_raw = data.get('query', '')
         top_k = int(data.get('top_k', 3))
+
+        # Auto-detect if parameters were passed inverted
+        if isinstance(user_id_raw, str) and not user_id_raw.isdigit() and str(query_raw).strip().isdigit():
+            user_id_raw, query_raw = query_raw, user_id_raw
+
+        try:
+            user_id = int(user_id_raw) if user_id_raw is not None else None
+        except (ValueError, TypeError):
+            user_id = None
+
+        query = str(query_raw or '').strip()
+
+        if not user_id:
+            return JsonResponse({"status": "error", "message": "Valid numeric user_id is required"}, status=400)
 
         if not query:
             return JsonResponse({"status": "error", "message": "query is required"}, status=400)
 
         api_key = SystemSetting.get_gemini_api_key()
-        if not api_key or api_key.startswith("your_"):
-            return JsonResponse({
-                "status": "success",
-                "text": "لم يتم ضبط مفتاح Google Gemini API في لوحة تحكم النظام بعد.",
-                "matches": []
-            })
+        chunks = []
 
-        # 1. Generate query embedding with Gemini
-        client = genai.Client(api_key=api_key)
-        embed_res = client.models.embed_content(
-            model="gemini-embedding-001",
-            contents=query,
-            config=types.EmbedContentConfig(output_dimensionality=768)
-        )
-        if not embed_res or not embed_res.embeddings:
-            return JsonResponse({"status": "error", "message": "Failed to generate query embedding"}, status=500)
+        # 1. Generate query embedding with Gemini (if API key is valid)
+        if api_key and not api_key.startswith("your_"):
+            try:
+                client = genai.Client(api_key=api_key)
+                embed_res = client.models.embed_content(
+                    model="gemini-embedding-001",
+                    contents=query,
+                    config=types.EmbedContentConfig(output_dimensionality=768)
+                )
+                if embed_res and embed_res.embeddings:
+                    query_vec = embed_res.embeddings[0].values
+                    # 2. Similarity search using pgvector CosineDistance (relaxed threshold: 0.65)
+                    chunks = list(
+                        DocumentChunk.objects.filter(user_id=user_id)
+                        .annotate(distance=CosineDistance('embedding', query_vec))
+                        .filter(distance__lte=0.65)
+                        .order_by('distance')[:top_k]
+                    )
+            except Exception as embed_err:
+                logger.warning(f"Embedding search failed, falling back to keyword search: {embed_err}")
 
-        query_vec = embed_res.embeddings[0].values
-
-        # 2. Similarity search using pgvector CosineDistance (relaxed threshold: 0.65)
-        chunks = list(
-            DocumentChunk.objects.filter(user_id=user_id)
-            .annotate(distance=CosineDistance('embedding', query_vec))
-            .filter(distance__lte=0.65)
-            .order_by('distance')[:top_k]
-        )
-
-        # 3. Hybrid Search: Keyword fallback if semantic distance yielded no chunks
+        # 3. Hybrid Search: Keyword fallback if semantic distance yielded no chunks or embedding failed
         if not chunks:
             from django.db.models import Q
             stopwords = {'ما', 'هو', 'هي', 'هل', 'من', 'عن', 'في', 'إلى', 'على', 'مع', 'لو', 'عندكم', 'أنا', 'عاوز', 'عايز', 'إيه', 'ليه', 'كام', 'فين'}
@@ -234,6 +244,8 @@ def api_internal_rag_search(request):
                 for word in clean_words[:5]:
                     kw_q |= Q(content__icontains=word)
                 chunks = list(DocumentChunk.objects.filter(user_id=user_id).filter(kw_q)[:top_k])
+            if not chunks:
+                chunks = list(DocumentChunk.objects.filter(user_id=user_id, content__icontains=query[:50])[:top_k])
 
         if not chunks:
             has_any = DocumentChunk.objects.filter(user_id=user_id).exists()

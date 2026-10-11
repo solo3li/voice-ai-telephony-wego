@@ -120,8 +120,17 @@ def api_internal_get_customer_memory(request):
         if raw_phone.startswith(' ') and not caller_phone.startswith('+'):
             caller_phone = '+' + caller_phone
 
+        # Defensive handling of user_id / query inverted
+        try:
+            user_id = int(user_id) if user_id is not None else None
+        except (ValueError, TypeError):
+            if isinstance(user_id, str) and not user_id.isdigit() and str(query).strip().isdigit():
+                user_id, query = int(query), user_id
+            else:
+                user_id = None
+
         if not user_id:
-            return JsonResponse({"status": "error", "message": "user_id is required"}, status=400)
+            return JsonResponse({"status": "error", "message": "Valid numeric user_id is required"}, status=400)
 
         memory = None
         # 1. Search by query/identifier if provided

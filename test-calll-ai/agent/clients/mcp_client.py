@@ -39,22 +39,43 @@ class MCPToolResult(dict):
         return self.get("result", "")
 
 
-async def execute_mcp_tool_call(server_url: str, auth_token: str, tool_name: str, arguments: dict) -> MCPToolResult:
-    """Execute tool call on external MCP SSE server with strict timeout and comprehensive error detection."""
+async def execute_mcp_tool_call(server_url: str, auth_token: str = "", tool_name: str = "", arguments: dict = None, **kwargs) -> MCPToolResult:
+    """Execute tool call on external MCP SSE server with strict timeout and comprehensive error detection.
+    Supports either (server_url, auth_token, tool_name, arguments) or (server_url, tool_name, arguments, auth_token) or kwargs.
+    """
     from mcp import ClientSession
     from mcp.client.sse import sse_client
 
-    headers = {}
-    if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+    # Auto-detect if parameters were passed in alternative order: (server_url, tool_name, arguments, auth_token)
+    token = kwargs.get("token") or kwargs.get("auth_token") or auth_token or ""
+    t_name = kwargs.get("tool_name") or kwargs.get("name") or tool_name or ""
+    args = kwargs.get("arguments") or kwargs.get("args") or kwargs.get("kwargs") or arguments
 
-    logger.info(f"Connecting to MCP SSE at {server_url} to call '{tool_name}' with {arguments}")
+    if isinstance(auth_token, str) and isinstance(tool_name, dict) and args is None:
+        # Called as (server_url, tool_name, arguments)
+        t_name = auth_token
+        args = tool_name
+        token = kwargs.get("token", "")
+    elif isinstance(t_name, dict) and isinstance(args, str):
+        # Called as (server_url, tool_name, arguments, token) where arguments was dict
+        args, t_name = t_name, args
+
+    if args is None:
+        args = {}
+    if not isinstance(args, dict):
+        args = {}
+
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    logger.info(f"Connecting to MCP SSE at {server_url} to call '{t_name}' with {args}")
     try:
         async def _call():
             async with sse_client(server_url, headers=headers) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.call_tool(tool_name, arguments=arguments)
+                    result = await session.call_tool(t_name, arguments=args)
                     out_texts = []
                     for c in result.content:
                         if hasattr(c, "text"):
