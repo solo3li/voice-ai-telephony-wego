@@ -112,10 +112,26 @@
         <!-- Persona Role -->
         <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="block font-semibold text-[#443D39]">الدور والشخصية (كتابة حرة)</label>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">تخصيص حر</span>
+            <label class="block font-semibold text-[#443D39]">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="openCustomRolesModal()" class="text-[10px] px-2 py-0.5 rounded-full bg-white hover:bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] transition font-bold flex items-center gap-1">
+                <span>📚</span> مكتبة أدوار المؤسسة (<span id="custom-roles-count">0</span>)
+              </button>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">20 تخصص جاهز</span>
+            </div>
           </div>
-          <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+          <div class="space-y-1.5">
+            <select id="field-role-preset" onchange="handleRolePresetSelect(this.value, 'field')" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs font-semibold focus:outline-none focus:border-[#680E23]">
+              <option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك المخصصة --</option>
+            </select>
+            <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+            <div class="flex justify-between items-center pt-1">
+              <span id="role-selection-status" class="text-[10px] text-[#8C827A]">يمكنك التعديل على النص بحرية تامة</span>
+              <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-[10px] text-[#680E23] hover:underline font-bold flex items-center gap-1">
+                <span>💾</span> حفظ النص الحالي كدور مخصص في مكتبتي
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Speaking Style & Pacing -->
@@ -258,7 +274,13 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">الدور والشخصية (كتابة حرة)</label>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block font-semibold text-[#443D39]">الدور والشخصية</label>
+            <span class="text-[10px] text-[#680E23] font-semibold">20 دور + أدوارك</span>
+          </div>
+          <select id="new-prof-role-preset" onchange="handleRolePresetSelect(this.value, 'new')" class="w-full px-2.5 py-1.5 mb-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs font-semibold focus:outline-none focus:border-[#680E23]">
+            <option value="">-- اختر دوراً جاهزاً أو اكتب بالأسفل --</option>
+          </select>
           <textarea id="new-prof-role" rows="2" placeholder="اكتب الدور بحرية..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">خدمة عملاء ومبيعات المتجر</textarea>
         </div>
         <div>
@@ -301,6 +323,66 @@
         <button type="submit" id="btn-create-prof" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition">حفظ البروفايل</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: Custom Roles Library -->
+<div id="custom-roles-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📚</span>
+        <div>
+          <h3 class="text-sm font-bold text-[#1C1917]">مكتبة أدوار الذكاء الاصطناعي المخصصة للمؤسسة</h3>
+          <p class="text-[10px] text-[#8C827A]">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeCustomRolesModal()" class="text-[#6E645D] hover:text-[#2D2825] text-lg font-bold">&times;</button>
+    </div>
+
+    <div class="overflow-y-auto space-y-4 flex-1 pr-1">
+      <!-- Saved Roles List -->
+      <div>
+        <h4 class="font-bold text-[#1C1917] mb-2 flex items-center justify-between">
+          <span>الأدوار المخصصة المحفوظة (<span id="modal-roles-count">0</span>)</span>
+        </h4>
+        <div id="modal-custom-roles-list" class="space-y-2">
+          <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+            لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
+          </div>
+        </div>
+      </div>
+
+      <!-- Add / Edit Custom Role Form -->
+      <div class="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EAE3D9] space-y-3">
+        <h4 class="font-bold text-[#680E23] flex items-center gap-1.5">
+          <span>➕</span> إضافة دور مخصص جديد للمكتبة
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-semibold text-[#443D39] mb-1">اسم الدور *</label>
+            <input type="text" id="cr-modal-name" placeholder="مثال: منسق حجوزات شاليهات الساحل" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+          </div>
+          <div>
+            <label class="block font-semibold text-[#443D39] mb-1">القطاع أو التصنيف</label>
+            <input type="text" id="cr-modal-industry" placeholder="مثال: سياحة وضيافة، عيادات..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">وصف مختصر (للإشارة)</label>
+          <input type="text" id="cr-modal-desc" placeholder="مثال: الرد على استفسارات الأسعار والمساحات وتأكيد الحجز المبدئي" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+        </div>
+        <div>
+          <label class="block font-semibold text-[#443D39] mb-1">نص التوجيه والبرومبت المخصص للدور *</label>
+          <textarea id="cr-modal-prompt" rows="3" placeholder="دورك هو... ترحب بالعملاء بأسلوب... تشرح لهم... وتسجل بياناتهم..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" onclick="submitNewCustomRoleFromModal()" id="btn-save-custom-role" class="px-4 py-2 bg-[#680E23] hover:bg-[#7E152F] text-white rounded-xl font-bold transition flex items-center gap-1.5">
+            <span>💾</span> حفظ الدور في المكتبة
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
