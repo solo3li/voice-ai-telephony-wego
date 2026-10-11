@@ -204,11 +204,15 @@ async def entrypoint(ctx: JobContext):
     @llm.function_tool(
         description="البحث الدلالي الموثوق في قاعدة المعرفة والمستندات الرسمية للمنشأة. استدعِ هذه الأداة فوراً عند ورود أي سؤال عن خدمات أو سياسات أو أسعار أو معلومات عمل مذكورة في المستندات لاستخراج الإجابة الحقيقية الدقيقة."
     )
-    async def search_knowledge_base(query: str = "", **kwargs) -> str:
-        """Search tenant knowledge base documents."""
-        search_query = str(query or kwargs.get("search_query") or kwargs.get("q") or kwargs.get("question") or "").strip()
+    async def search_knowledge_base(query: str) -> str:
+        """Search tenant knowledge base documents.
+
+        Args:
+            query: موضوع أو سؤال البحث في المستندات.
+        """
         if not user_id:
             return "لا تتوفر مستندات مسجلة لهذا الحساب."
+        search_query = str(query or "").strip()
         if not search_query:
             return "يرجى تحديد موضوع السؤال للبحث في المستندات."
         await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري البحث في المستندات عن: {search_query}")
@@ -227,11 +231,15 @@ async def entrypoint(ctx: JobContext):
     @llm.function_tool(
         description="البحث في سجل وذاكرة العملاء بالاسم أو برقم الهاتف لاسترجاع بيانات العميل وتفضيلاته وعنوانه وسجل تواصله السابق مع المؤسسة لمساعدته بشكل مخصص."
     )
-    async def lookup_customer_memory(identifier: str = "", **kwargs) -> str:
-        """Lookup customer memory profile."""
-        search_id = str(identifier or kwargs.get("phone") or kwargs.get("phone_number") or kwargs.get("name") or kwargs.get("query") or "").strip()
+    async def lookup_customer_memory(identifier: str) -> str:
+        """Lookup customer memory profile.
+
+        Args:
+            identifier: اسم العميل أو رقم هاتفه.
+        """
         if not user_id:
             return "سجل العملاء غير مفعل."
+        search_id = str(identifier or "").strip()
         if not search_id:
             return "يرجى تحديد اسم العميل أو رقم هاتفه للبحث."
         await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري استرجاع بيانات العميل: {search_id}")
@@ -256,10 +264,15 @@ async def entrypoint(ctx: JobContext):
         @llm.function_tool(
             description=f"تحويل المكالمة الجارية إلى أحد طوابير الموظفين البشريين التابعة للمؤسسة. الأقسام المتاحة: [{q_descriptions}]. الأكواد المتاحة: {q_codes}. استدعِ الأداة مع كتابة ملخص سبب التحويل في حقل reason."
         )
-        async def transfer_to_queue(queue_code: str = "", reason: str = "", **kwargs) -> str:
-            """Transfer caller to human department queue."""
-            q_code = str(queue_code or kwargs.get("queue") or kwargs.get("code") or kwargs.get("department") or "").strip()
-            r_reason = str(reason or kwargs.get("note") or kwargs.get("summary") or "").strip()
+        async def transfer_to_queue(queue_code: str, reason: str = "") -> str:
+            """Transfer caller to human department queue.
+
+            Args:
+                queue_code: كود القسم المطلوب تحويل المكالمة إليه.
+                reason: سبب تحويل المكالمة.
+            """
+            q_code = str(queue_code or "").strip()
+            r_reason = str(reason or "").strip()
             await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تحويل المكالمة إلى قسم ({q_code})...")
             try:
                 await execute_ai_transfer_and_hold(
@@ -285,15 +298,21 @@ async def entrypoint(ctx: JobContext):
         for t in s.get("tools", []):
             t_name = t.get("name")
             t_desc = t.get("description", "")
+            t_schema = t.get("inputSchema")
             if not t_name:
                 continue
 
-            def make_mcp_wrapper(name: str, url: str, token: str, desc: str):
-                @llm.function_tool(name=name, description=desc)
-                async def mcp_tool(**kwargs) -> str:
+            def make_mcp_wrapper(name: str, url: str, token: str, desc: str, input_schema: Any):
+                raw_schema = {
+                    "name": name,
+                    "description": desc or f"Execute tool {name}",
+                    "parameters": input_schema if isinstance(input_schema, dict) and input_schema.get("type") == "object" else {"type": "object", "properties": {}}
+                }
+                @llm.function_tool(raw_schema=raw_schema)
+                async def mcp_tool(raw_args: dict) -> str:
                     await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})...")
                     try:
-                        res = await execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=kwargs)
+                        res = await execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=raw_args)
                         await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})")
                         return json.dumps(res, ensure_ascii=False) if isinstance(res, (dict, list)) else str(res)
                     except Exception as ex:
@@ -302,7 +321,7 @@ async def entrypoint(ctx: JobContext):
 
                 return mcp_tool
 
-            tools.append(make_mcp_wrapper(t_name, s_url, s_token, t_desc))
+            tools.append(make_mcp_wrapper(t_name, s_url, s_token, t_desc, t_schema))
 
     logger.info(f"[LiveKit Agent] Initialized {len(tools)} tools for room '{room_name}'")
 
