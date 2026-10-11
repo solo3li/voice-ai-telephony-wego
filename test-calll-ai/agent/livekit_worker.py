@@ -372,7 +372,18 @@ async def entrypoint(ctx: JobContext):
         output_audio_transcription=output_transcription_cfg,
     )
 
-    session = AgentSession(llm=model)
+    session = AgentSession(
+        llm=model,
+        use_tts_aligned_transcript=False,
+        turn_handling={
+            "interruption": {
+                "enabled": True,
+                "min_duration": 0.8,
+                "min_words": 2,
+                "resume_false_interruption": True,
+            }
+        },
+    )
     agent = Agent(instructions=system_instruction_text, tools=tools)
 
     # 8. Transcripts & Conversation State Tracking
@@ -396,15 +407,8 @@ async def entrypoint(ctx: JobContext):
                 turn_tracker["last_user_text"] = text
                 turn_tracker["assistant_spoke_in_turn"] = False
 
+                # Quiet in-memory tracking for end-of-call memory distillation (Zero live network/Event Loop overhead)
                 conversation_history.append({"role": "user", "text": text})
-                asyncio.create_task(
-                    notify_centrifugo_async(
-                        channel_name,
-                        "user_transcript",
-                        text,
-                        extra={"is_final": True, "created_at": time.time()}
-                    )
-                )
 
     def _extract_item_text(item) -> str:
         if not item:
@@ -435,15 +439,8 @@ async def entrypoint(ctx: JobContext):
             if role == "assistant" and text:
                 turn_tracker["pending_reply"] = False
                 turn_tracker["assistant_spoke_in_turn"] = True
+                # Quiet in-memory tracking for end-of-call memory distillation (Zero live network/Event Loop overhead)
                 conversation_history.append({"role": "assistant", "text": text})
-                asyncio.create_task(
-                    notify_centrifugo_async(
-                        channel_name,
-                        "agent_transcript",
-                        text,
-                        extra={"is_final": True, "created_at": time.time()}
-                    )
-                )
 
     def on_agent_state(ev: AgentStateChangedEvent):
         st = str(getattr(ev, "new_state", getattr(ev, "state", ""))).lower()
