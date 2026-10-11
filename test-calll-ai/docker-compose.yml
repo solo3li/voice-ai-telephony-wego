@@ -23,24 +23,21 @@ services:
       dockerfile: Dockerfile
     container_name: voice_livekit
     restart: unless-stopped
-    command: --config /etc/livekit.yaml --node-ip ${EXTERNAL_IP:-127.0.0.1}
+    network_mode: host
+    command: --config /etc/livekit.yaml --node-ip ${EXTERNAL_IP:-169.58.32.179}
     environment:
-      - LIVEKIT_RTC_NODE_IP=${EXTERNAL_IP:-127.0.0.1}
+      - LIVEKIT_RTC_NODE_IP=${EXTERNAL_IP:-169.58.32.179}
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml:ro
-    ports:
-      - "50000-50020:50000-50020/udp"
-      - "7881:7881"
-      - "7882:7882/udp"
     depends_on:
       - redis
-    networks:
-      - voice_net
 
   redis:
     image: redis:7-alpine
     container_name: voice_redis
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
     networks:
       - voice_net
 
@@ -102,6 +99,8 @@ services:
       - minio
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "livekit:host-gateway"
     networks:
       - voice_net
 
@@ -121,6 +120,8 @@ services:
       - redis
       - livekit
       - centrifugo
+    extra_hosts:
+      - "livekit:host-gateway"
     networks:
       - voice_net
 
@@ -128,28 +129,23 @@ services:
     image: livekit/sip:latest
     container_name: voice_sip
     restart: unless-stopped
+    network_mode: host
     environment:
       SIP_CONFIG_BODY: |
         api_key: devkey
         api_secret: secretkey1234567890abcdef
-        ws_url: ws://livekit:7880
+        ws_url: ws://127.0.0.1:7880
         redis:
-          address: redis:6379
+          address: 127.0.0.1:6379
         sip_port: 5060
-        rtp_port: 10000-10030
-        nat_1_to_1_ip: ${EXTERNAL_IP:-127.0.0.1}
+        rtp_port: 10000-11000
+        nat_1_to_1_ip: ${EXTERNAL_IP:-169.58.32.179}
         use_external_ip: false
         logging:
           level: info
-    ports:
-      - "5060:5060/udp"
-      - "5060:5060/tcp"
-      - "10000-10030:10000-10030/udp"
     depends_on:
       - livekit
       - redis
-    networks:
-      - voice_net
 
   minio:
     image: cgr.dev/chainguard/minio:latest
@@ -191,6 +187,8 @@ services:
       - livekit
       - redis
       - minio
+    extra_hosts:
+      - "livekit:host-gateway"
     networks:
       - voice_net
 
@@ -217,6 +215,37 @@ services:
       voice_net:
         aliases:
           - evolution_api
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: voice_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "livekit:host-gateway"
+    ports:
+      - "9090:9090"
+    networks:
+      - voice_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: voice_grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - voice_net
 
 volumes:
   pgdata:

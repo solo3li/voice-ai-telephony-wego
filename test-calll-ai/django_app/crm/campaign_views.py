@@ -334,6 +334,15 @@ def api_dial_single_contact(request, contact_id):
 
     contact = get_object_or_404(CampaignContact, id=contact_id, campaign__user=request.user)
 
+    # Check DNC (Do Not Call) list
+    from crm.models import DoNotCallEntry
+    if DoNotCallEntry.is_blacklisted(request.user.id, contact.phone_number):
+        return JsonResponse({
+            "status": "error",
+            "code": "dnc_blacklisted",
+            "message": f"لا يمكن إجراء المكالمة: الرقم ({contact.phone_number}) مدرج في قائمة عدم الاتصال (DNC)."
+        }, status=400)
+
     # Strict Pre-flight Check: Verify Outbound SIP Trunk / Gateway exists
     from telephony.services import check_has_active_outbound_gateway
     has_gw, _, _, _, err_msg = check_has_active_outbound_gateway(
@@ -574,3 +583,77 @@ def api_export_campaign_contacts(request, campaign_id):
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
         return response
+
+
+# ==================== Do Not Call (DNC List) Management APIs ====================
+
+@login_required(login_url='/login/')
+def api_list_dnc(request):
+    """List all DNC entries for the authenticated user and global entries."""
+    from crm.models import DoNotCallEntry
+    from django.db.models import Q
+    entries = DoNotCallEntry.objects.filter(
+        Q(user=request.user) | Q(is_global=True)
+    ).order_by('-created_at')
+    return JsonResponse({
+        "status": "success",
+        "dnc_entries": [e.to_dict() for e in entries],
+        "total_count": entries.count()
+    })
+
+
+@login_required(login_url='/login/')
+def api_create_dnc(request):
+    """Add a new phone number to the DNC list."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        from crm.models import DoNotCallEntry
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        phone = data.get("phone_number", "").strip()
+        customer_name = data.get("customer_name", "").strip()
+        reason = data.get("reason", "طلب العميل عدم الاتصال (DNC)").strip()
+        is_global = bool(data.get("is_global", False)) and request.user.is_superuser
+
+        if not phone:
+            return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
+
+        entry, created = DoNotCallEntry.objects.update_or_create(
+            user=request.user,
+            phone_number=phone,
+            defaults={
+                "customer_name": customer_name,
+                "reason": reason,
+                "is_global": is_global
+            }
+        )
+        return JsonResponse({
+            "status": "success",
+            "message": "تم إضافة الرقم إلى قائمة عدم الاتصال (DNC) بنجاح!",
+            "entry": entry.to_dict(),
+            "created": created
+        })
+    except Exception as e:
+        logger.error(f"Error creating DNC entry: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required(login_url='/login/')
+def api_delete_dnc(request, entry_id):
+    """Remove a phone number from the DNC list."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        from crm.models import DoNotCallEntry
+        entry = DoNotCallEntry.objects.filter(id=entry_id).first()
+        if not entry:
+            return JsonResponse({"status": "error", "message": "الرقم غير موجود في القائمة"}, status=404)
+
+        if entry.user_id != request.user.id and not request.user.is_superuser:
+            return JsonResponse({"status": "error", "message": "غير مصرح بحذف هذا الرقم"}, status=403)
+
+        entry.delete()
+        return JsonResponse({"status": "success", "message": "تم حذف الرقم من قائمة عدم الاتصال بنجاح!"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+

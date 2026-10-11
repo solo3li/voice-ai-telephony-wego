@@ -28,6 +28,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             <span>تحديث</span>
           </button>
+          <button type="button" onclick="openDncModal()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold border border-rose-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🚫</span>
+            <span>قائمة عدم الاتصال (DNC)</span>
+          </button>
           <button type="button" onclick="openNewCampaignModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#680E23] to-[#8C1D40] hover:from-[#500B1B] hover:to-[#680E23] text-white text-xs font-bold transition shadow-md flex items-center gap-2">
             <span>➕</span>
             <span>إنشاء حملة جديدة (رفع ملف)</span>
@@ -399,6 +403,75 @@
         </button>
       </div>
       <button type="button" onclick="closeContactModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] font-medium transition">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- DNC (Do Not Call) Management Modal -->
+<div id="dnc-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl border border-[#EAE3D9] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden text-xs">
+    <div class="p-5 border-b border-[#EAE3D9] flex items-center justify-between bg-gradient-to-r from-rose-50/50 to-white">
+      <div>
+        <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+          <span>🚫</span>
+          <span>قائمة عدم الاتصال والمراسلة (DNC List)</span>
+        </h3>
+        <p class="text-[11px] text-[#6E645D] mt-0.5">
+          الأرقام المسجلة هنا سيتم استبعادها وتخطيها تلقائياً من جميع حملات الاتصال والمراسلة لحماية خصوصية العملاء.
+        </p>
+      </div>
+      <button type="button" onclick="closeDncModal()" class="text-[#6E645D] hover:text-[#1C1917] text-lg font-bold">✕</button>
+    </div>
+
+    <!-- Add New DNC Number Form -->
+    <div class="p-4 bg-[#FAF7F2] border-b border-[#EAE3D9]">
+      <form id="add-dnc-form" onsubmit="handleAddDncNumber(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+        <div class="sm:col-span-4">
+          <label class="block text-[10px] font-bold text-[#443D39] mb-1">رقم الهاتف *</label>
+          <input type="text" id="dnc-input-phone" required placeholder="+201012345678" class="w-full px-3 py-1.5 rounded-xl border border-[#DDD5C7] text-xs focus:ring-2 focus:ring-rose-500 font-mono">
+        </div>
+        <div class="sm:col-span-3">
+          <label class="block text-[10px] font-bold text-[#443D39] mb-1">اسم العميل (اختياري)</label>
+          <input type="text" id="dnc-input-name" placeholder="محمد علي" class="w-full px-3 py-1.5 rounded-xl border border-[#DDD5C7] text-xs focus:ring-2 focus:ring-rose-500">
+        </div>
+        <div class="sm:col-span-3">
+          <label class="block text-[10px] font-bold text-[#443D39] mb-1">السبب</label>
+          <input type="text" id="dnc-input-reason" placeholder="طلب عدم الاتصال" class="w-full px-3 py-1.5 rounded-xl border border-[#DDD5C7] text-xs focus:ring-2 focus:ring-rose-500">
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition flex items-center justify-center gap-1 shadow-sm">
+            <span>إضافة</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- DNC List Table -->
+    <div class="p-4 overflow-y-auto flex-1">
+      <div id="dnc-loading" class="text-center py-8 text-[#6E645D]">جاري تحميل قائمة الأرقام المحظورة...</div>
+      <div id="dnc-empty" class="hidden text-center py-8 text-[#6E645D]">
+        <span class="text-2xl block mb-1">✅</span>
+        لا توجد أي أرقام في قائمة عدم الاتصال حالياً.
+      </div>
+      <table id="dnc-table" class="hidden w-full text-start border-collapse text-xs">
+        <thead>
+          <tr class="border-b border-[#EAE3D9] text-[#6E645D]">
+            <th class="py-2 px-3 text-start">رقم الهاتف</th>
+            <th class="py-2 px-3 text-start">اسم العميل</th>
+            <th class="py-2 px-3 text-start">السبب</th>
+            <th class="py-2 px-3 text-start">تاريخ الحظر</th>
+            <th class="py-2 px-3 text-center">إجراء</th>
+          </tr>
+        </thead>
+        <tbody id="dnc-table-body" class="divide-y divide-[#EAE3D9]">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="p-3 border-t border-[#EAE3D9] flex justify-between items-center bg-[#FBF9F5]">
+      <span id="dnc-total-count" class="text-[11px] text-[#6E645D] font-medium">إجمالي الأرقام: 0</span>
+      <button type="button" onclick="closeDncModal()" class="px-4 py-1.5 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] font-medium transition">إغلاق</button>
     </div>
   </div>
 </div>

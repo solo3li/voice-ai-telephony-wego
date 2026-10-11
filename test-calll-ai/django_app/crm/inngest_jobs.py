@@ -41,6 +41,23 @@ def _initiate_contact_call_sync(contact_id: int) -> dict:
             logger.info(f"Campaign {campaign.id} is {campaign.status}. Skipping contact {contact.id}")
             return {"status": "skipped", "reason": f"Campaign is {campaign.status}"}
 
+        # Check DNC (Do Not Call) list
+        from crm.models import DoNotCallEntry
+        if DoNotCallEntry.is_blacklisted(campaign.user_id, contact.phone_number):
+            logger.info(f"[DNC] Contact {contact.id} ({contact.phone_number}) is in DNC list. Skipping call.")
+            contact.call_status = 'skipped_dnc'
+            contact.interest_level = 'cold'
+            contact.call_summary = 'تم تخطي المكالمة لأن الرقم مسجل في قائمة عدم الاتصال (DNC).'
+            contact.save(update_fields=['call_status', 'interest_level', 'call_summary', 'updated_at'])
+            campaign.update_metrics()
+            broadcast_campaign_update(campaign.id, "contact_skipped_dnc", {
+                "contact_id": contact.id,
+                "phone": contact.phone_number,
+                "name": contact.customer_name,
+                "reason": "DNC"
+            })
+            return {"status": "skipped_dnc", "reason": "Phone number is in DNC list"}
+
         contact.call_status = 'in_progress'
         contact.last_attempt_at = datetime.now(timezone.utc)
         contact.save(update_fields=['call_status', 'last_attempt_at', 'updated_at'])
@@ -364,10 +381,91 @@ async def fn_start_campaign(ctx: inngest.Context) -> dict:
     return await ctx.step.run("queue-contacts", step_queue_contacts)
 
 
+@inngest_client.create_function(
+    fn_id="crm-process-whatsapp-followup",
+    name="CRM: Process Autonomous WhatsApp Followup & Chat",
+    trigger=inngest.TriggerEvent(event="crm/whatsapp.followup_requested"),
+    retries=2,
+)
+async def fn_process_whatsapp_followup(ctx: inngest.Context):
+    """Executes LangGraph autonomous omnichannel followup or chat reply via Inngest."""
+    event_data = ctx.event.data
+    user_id = event_data.get("user_id")
+    phone_number = event_data.get("phone_number")
+    trigger_type = event_data.get("trigger_type", "inbound_whatsapp")
+    inbound_message = event_data.get("inbound_message", "")
+    customer_name = event_data.get("customer_name", "")
+    call_transcript = event_data.get("call_transcript", "")
+    call_summary = event_data.get("call_summary", "")
+
+    async def step_run_langgraph():
+        from crm.services.langgraph_worker import run_autonomous_followup
+        return await sync_to_async(run_autonomous_followup, thread_sensitive=True)(
+            user_id=user_id,
+            phone_number=phone_number,
+            trigger_type=trigger_type,
+            call_transcript=call_transcript,
+            call_summary=call_summary,
+            inbound_message=inbound_message,
+            customer_name=customer_name,
+        )
+
+    return await ctx.step.run("execute-langgraph", step_run_langgraph)
+
+
+def dispatch_whatsapp_followup_job(
+    user_id: int,
+    phone_number: str,
+    trigger_type: str = "inbound_whatsapp",
+    inbound_message: str = "",
+    customer_name: str = "",
+    call_transcript: str = "",
+    call_summary: str = ""
+):
+    """Dispatches a durable Inngest background job for LangGraph followup with robust fallback."""
+    from asgiref.sync import async_to_sync
+    evt = inngest.Event(
+        name="crm/whatsapp.followup_requested",
+        data={
+            "user_id": user_id,
+            "phone_number": phone_number,
+            "trigger_type": trigger_type,
+            "inbound_message": inbound_message,
+            "customer_name": customer_name,
+            "call_transcript": call_transcript,
+            "call_summary": call_summary,
+        }
+    )
+    try:
+        async_to_sync(inngest_client.send)([evt])
+        logger.info(f"Successfully dispatched Inngest job for WhatsApp followup ({phone_number})")
+        return {"status": "inngest_dispatched"}
+    except Exception as e:
+        logger.warning(f"Inngest dispatch failed ({e}), executing thread fallback: {e}")
+        from crm.services.langgraph_worker import run_autonomous_followup
+        import threading
+        threading.Thread(
+            target=run_autonomous_followup,
+            kwargs={
+                "user_id": user_id,
+                "phone_number": phone_number,
+                "trigger_type": trigger_type,
+                "inbound_message": inbound_message,
+                "customer_name": customer_name,
+                "call_transcript": call_transcript,
+                "call_summary": call_summary,
+            },
+            daemon=True
+        ).start()
+        return {"status": "thread_fallback"}
+
+
 # Expose functions list for Django Inngest serve handler
 all_inngest_functions = [
     fn_dial_campaign_contact,
     fn_send_campaign_whatsapp,
     fn_start_campaign,
     fn_retry_campaign_contact,
+    fn_process_whatsapp_followup,
 ]
+

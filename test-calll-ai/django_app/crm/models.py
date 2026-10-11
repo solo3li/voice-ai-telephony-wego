@@ -313,30 +313,30 @@ class OutboundCampaign(models.Model):
 
         if self.channel == 'whatsapp':
             self.completed_contacts = self.contacts.filter(
-                whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped']
+                whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped', 'skipped_dnc']
             ).count()
             has_pending_work = self.contacts.filter(whatsapp_status__in=['pending', 'in_progress']).exists()
         elif self.channel == 'hybrid':
             self.completed_contacts = self.contacts.filter(
                 (
-                    models.Q(call_status='answered') |
+                    models.Q(call_status__in=['answered', 'skipped_dnc']) |
                     models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
                 ) &
-                models.Q(whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped'])
+                models.Q(whatsapp_status__in=['sent', 'delivered', 'replied', 'failed', 'skipped', 'skipped_dnc'])
             ).count()
             has_pending_work = self.contacts.filter(
                 models.Q(call_status__in=['pending', 'in_progress']) |
                 models.Q(whatsapp_status__in=['pending', 'in_progress']) |
-                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
+                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status__in=['answered', 'skipped_dnc']))
             ).exists()
         else:  # calls
             self.completed_contacts = self.contacts.filter(
-                models.Q(call_status='answered') |
+                models.Q(call_status__in=['answered', 'skipped_dnc']) |
                 models.Q(retries_count__gte=self.max_retries, call_status__in=['busy', 'no_answer', 'failed'])
             ).count()
             has_pending_work = self.contacts.filter(
                 models.Q(call_status__in=['pending', 'in_progress']) |
-                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status='answered'))
+                (models.Q(retries_count__lt=self.max_retries) & ~models.Q(call_status__in=['answered', 'skipped_dnc']))
             ).exists()
 
         if self.total_contacts > 0 and not has_pending_work and self.status == 'running':
@@ -393,6 +393,7 @@ class CampaignContact(models.Model):
         ('busy', 'مشغول'),
         ('no_answer', 'لم يرد'),
         ('failed', 'فشل الاتصال / غير متاح'),
+        ('skipped_dnc', 'تم التخطي (قائمة عدم الاتصال DNC)'),
     ]
 
     WHATSAPP_STATUS_CHOICES = [
@@ -403,6 +404,7 @@ class CampaignContact(models.Model):
         ('replied', 'تم الرد والتفاعل'),
         ('failed', 'فشل الإرسال'),
         ('skipped', 'تم التخطي'),
+        ('skipped_dnc', 'تم التخطي (قائمة عدم المراسلة DNC)'),
     ]
 
     INTEREST_CHOICES = [
@@ -464,6 +466,51 @@ class CampaignContact(models.Model):
             "duration_seconds": self.duration_seconds,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }
+
+
+class DoNotCallEntry(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dnc_entries', verbose_name="المستخدم")
+    phone_number = models.CharField(max_length=64, db_index=True, verbose_name="رقم الهاتف المحظور")
+    customer_name = models.CharField(max_length=120, blank=True, default='', verbose_name="اسم العميل")
+    reason = models.CharField(max_length=255, blank=True, default='طلب العميل عدم الاتصال (DNC)', verbose_name="سبب الحظر")
+    is_global = models.BooleanField(default=False, verbose_name="حظر شامل للمنصة")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإضافة")
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('user', 'phone_number')
+        verbose_name = "رقم في قائمة عدم الاتصال (DNC)"
+        verbose_name_plural = "قائمة عدم الاتصال (DNC Entries)"
+
+    def __str__(self):
+        display = self.customer_name or self.phone_number
+        return f"[DNC] {display} ({self.phone_number})"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "phone_number": self.phone_number,
+            "customer_name": self.customer_name or "",
+            "reason": self.reason or "",
+            "is_global": self.is_global,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
+        }
+
+    @classmethod
+    def is_blacklisted(cls, user_id: int, phone_number: str) -> bool:
+        """Check if phone number is in user's DNC list or in global DNC list."""
+        if not phone_number:
+            return False
+        clean = "".join(ch for ch in str(phone_number) if ch.isdigit())
+        if not clean:
+            return False
+        from django.db.models import Q
+        q = Q(phone_number=phone_number)
+        if len(clean) >= 7:
+            q |= Q(phone_number__endswith=clean[-8:])
+        return cls.objects.filter(Q(user_id=user_id) | Q(is_global=True)).filter(q).exists()
+
 
 
 

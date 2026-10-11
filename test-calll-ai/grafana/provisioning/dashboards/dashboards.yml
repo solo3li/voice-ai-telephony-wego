@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'Telephony & AI Voice Dashboards'
+    orgId: 1
+    folder: 'Voice Telephony'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards

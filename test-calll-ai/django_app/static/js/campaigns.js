@@ -916,3 +916,128 @@ function closeContactModal() {
 document.addEventListener('DOMContentLoaded', () => {
   loadCampaignsList();
 });
+
+// ==================== Do Not Call (DNC List) Handlers ====================
+
+function openDncModal() {
+  const modal = document.getElementById('dnc-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    loadDncList();
+  }
+}
+
+function closeDncModal() {
+  const modal = document.getElementById('dnc-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadDncList() {
+  const loadingEl = document.getElementById('dnc-loading');
+  const emptyEl = document.getElementById('dnc-empty');
+  const tableEl = document.getElementById('dnc-table');
+  const tbodyEl = document.getElementById('dnc-table-body');
+  const countEl = document.getElementById('dnc-total-count');
+
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (tableEl) tableEl.classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/crm/dnc/');
+    const data = await res.json();
+    if (loadingEl) loadingEl.classList.add('hidden');
+
+    if (data.status === 'success') {
+      const entries = data.dnc_entries || [];
+      if (countEl) countEl.innerText = `إجمالي الأرقام المحظورة: ${entries.length}`;
+
+      if (entries.length === 0) {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      if (tbodyEl) {
+        tbodyEl.innerHTML = entries.map(e => `
+          <tr class="hover:bg-rose-50/30 transition">
+            <td class="py-2.5 px-3 font-mono font-bold text-rose-900">${escapeHtml(e.phone_number)}</td>
+            <td class="py-2.5 px-3 text-[#1C1917] font-medium">${escapeHtml(e.customer_name || '-')}</td>
+            <td class="py-2.5 px-3 text-[#6E645D]">${escapeHtml(e.reason || '-')}</td>
+            <td class="py-2.5 px-3 text-[#8C827A] font-mono text-[11px]">${escapeHtml(e.created_at || '-')}</td>
+            <td class="py-2.5 px-3 text-center">
+              <button type="button" onclick="deleteDncNumber(${e.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition text-[11px]">
+                فك الحظر 🗑️
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+      if (tableEl) tableEl.classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error('Error loading DNC list:', err);
+    if (loadingEl) loadingEl.innerText = 'تعذر تحميل قائمة عدم الاتصال: ' + err.message;
+  }
+}
+
+async function handleAddDncNumber(e) {
+  e.preventDefault();
+  const phone = document.getElementById('dnc-input-phone')?.value.trim();
+  const name = document.getElementById('dnc-input-name')?.value.trim();
+  const reason = document.getElementById('dnc-input-reason')?.value.trim();
+
+  if (!phone) {
+    alert('يرجى إدخال رقم الهاتف.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/crm/dnc/create/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({
+        phone_number: phone,
+        customer_name: name,
+        reason: reason
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      if (typeof showToast === 'function') showToast(data.message, 'success');
+      document.getElementById('add-dnc-form')?.reset();
+      loadDncList();
+    } else {
+      alert(data.message || 'فشلت إضافة الرقم');
+    }
+  } catch (err) {
+    console.error('Error adding DNC number:', err);
+    alert('حدث خطأ أثناء إضافة الرقم: ' + err.message);
+  }
+}
+
+async function deleteDncNumber(entryId) {
+  if (!confirm('هل أنت متأكد من فك الحظر وإزالة هذا الرقم من قائمة عدم الاتصال؟')) return;
+
+  try {
+    const res = await fetch(`/api/crm/dnc/${entryId}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      if (typeof showToast === 'function') showToast(data.message, 'success');
+      loadDncList();
+    } else {
+      alert(data.message || 'فشل حذف الرقم');
+    }
+  } catch (err) {
+    console.error('Error deleting DNC number:', err);
+    alert('حدث خطأ أثناء حذف الرقم: ' + err.message);
+  }
+}
+

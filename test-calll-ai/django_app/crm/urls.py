@@ -24,6 +24,11 @@ urlpatterns = [
     path('campaigns/contacts/<int:contact_id>/dial/', campaign_views.api_dial_single_contact, name='api_dial_single_contact'),
     path('campaigns/contacts/<int:contact_id>/whatsapp/', campaign_views.api_send_single_contact_whatsapp, name='api_send_single_contact_whatsapp'),
 
+    # Do Not Call (DNC List) Endpoints
+    path('dnc/', campaign_views.api_list_dnc, name='api_list_dnc'),
+    path('dnc/create/', campaign_views.api_create_dnc, name='api_create_dnc'),
+    path('dnc/<int:entry_id>/delete/', campaign_views.api_delete_dnc, name='api_delete_dnc'),
+
     # Evolution API WhatsApp & Omnichannel Endpoints
     path('whatsapp/status/', views.api_whatsapp_status, name='api_whatsapp_status'),
     path('whatsapp/connect/', views.api_whatsapp_connect, name='api_whatsapp_connect'),

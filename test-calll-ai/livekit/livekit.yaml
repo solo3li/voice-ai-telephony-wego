@@ -4,16 +4,18 @@ bind_addresses:
 rtc:
   tcp_port: 7881
   port_range_start: 50000
-  port_range_end: 50020
+  port_range_end: 51000
   use_external_ip: true
   node_ip: "169.58.32.179"
 redis:
-  address: redis:6379
+  address: 127.0.0.1:6379
 keys:
   devkey: "secretkey1234567890abcdef"
 webhook:
   api_key: "devkey"
   urls:
-    - "http://django:8000/api/livekit/webhook/"
+    - "http://127.0.0.1:8000/api/livekit/webhook/"
 logging:
   level: info
+prometheus_port: 6789
+

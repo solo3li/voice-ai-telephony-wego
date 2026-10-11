@@ -5,7 +5,7 @@ import logging
 import asyncio
 import redis
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -715,4 +715,59 @@ def delete_tenant_did(request, did_id):
     num = did_obj.phone_number
     did_obj.delete()
     return JsonResponse({"status": "success", "message": f"تم حذف الرقم {num} بنجاح"})
+
+
+def api_telephony_metrics(request):
+    """
+    Expose Prometheus text format metrics for Prometheus scraper.
+    Reports active calls, total calls, duration, campaigns, DNC count, and wallet balances.
+    """
+    from crm.models import CallSession, OutboundCampaign, DoNotCallEntry, OmnichannelMessage
+    from billing.models import UserWallet
+    from django.db.models import Sum
+
+    total_calls = CallSession.objects.count()
+    active_calls = CallSession.objects.filter(ended_at__isnull=True).count()
+    completed_calls = CallSession.objects.filter(ended_at__isnull=False).count()
+    total_duration = CallSession.objects.aggregate(s=Sum('duration_seconds'))['s'] or 0
+    total_billed_mins = CallSession.objects.aggregate(s=Sum('billed_minutes'))['s'] or 0
+    total_dnc = DoNotCallEntry.objects.count()
+    total_campaigns = OutboundCampaign.objects.count()
+    running_campaigns = OutboundCampaign.objects.filter(status='running').count()
+    total_wa_messages = OmnichannelMessage.objects.count()
+
+    lines = [
+        "# HELP telephony_active_calls Current ongoing calls",
+        "# TYPE telephony_active_calls gauge",
+        f"telephony_active_calls {active_calls}",
+        "",
+        "# HELP telephony_calls_total Total calls processed",
+        "# TYPE telephony_calls_total counter",
+        f"telephony_calls_total {total_calls}",
+        f'telephony_calls_completed_total {completed_calls}',
+        "",
+        "# HELP telephony_duration_seconds_total Total call duration in seconds",
+        "# TYPE telephony_duration_seconds_total counter",
+        f"telephony_duration_seconds_total {total_duration}",
+        "",
+        "# HELP telephony_billed_minutes_total Total billed minutes",
+        "# TYPE telephony_billed_minutes_total counter",
+        f"telephony_billed_minutes_total {total_billed_mins}",
+        "",
+        "# HELP telephony_dnc_entries_total Blacklisted DNC numbers",
+        "# TYPE telephony_dnc_entries_total gauge",
+        f"telephony_dnc_entries_total {total_dnc}",
+        "",
+        "# HELP telephony_campaigns_total Outbound campaigns count",
+        "# TYPE telephony_campaigns_total gauge",
+        f"telephony_campaigns_total {total_campaigns}",
+        f"telephony_campaigns_running {running_campaigns}",
+        "",
+        "# HELP telephony_omnichannel_messages_total Total WhatsApp messages",
+        "# TYPE telephony_omnichannel_messages_total counter",
+        f"telephony_omnichannel_messages_total {total_wa_messages}",
+        ""
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; version=0.0.4; charset=utf-8")
+
 

@@ -15,4 +15,5 @@ urlpatterns = [
     path('dids/', views.list_tenant_dids, name='list_tenant_dids'),
     path('dids/save/', views.save_tenant_did, name='save_tenant_did'),
     path('dids/<int:did_id>/delete/', views.delete_tenant_did, name='delete_tenant_did'),
+    path('metrics/', views.api_telephony_metrics, name='api_telephony_metrics'),
 ]

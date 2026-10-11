@@ -407,25 +407,20 @@ def api_internal_save_call_session_and_memory(request):
             memory.call_memory = cm
             memory.save()
 
-            # Trigger LangGraph autonomous follow-up in background thread
+            # Trigger LangGraph autonomous follow-up via durable Inngest job
             try:
-                import threading
-                from crm.services.langgraph_worker import run_autonomous_followup
-                threading.Thread(
-                    target=run_autonomous_followup,
-                    kwargs={
-                        "user_id": user.id,
-                        "phone_number": caller_phone,
-                        "trigger_type": "post_call",
-                        "call_summary": summary,
-                        "call_transcript": transcript_text,
-                        "customer_name": customer_name,
-                    },
-                    daemon=True
-                ).start()
-                logger.info(f"Dispatched LangGraph autonomous follow-up for caller {caller_phone}")
+                from crm.inngest_jobs import dispatch_whatsapp_followup_job
+                dispatch_whatsapp_followup_job(
+                    user_id=user.id,
+                    phone_number=caller_phone,
+                    trigger_type="post_call",
+                    call_summary=summary,
+                    call_transcript=transcript_text,
+                    customer_name=customer_name,
+                )
+                logger.info(f"Dispatched Inngest autonomous follow-up for caller {caller_phone}")
             except Exception as lg_err:
-                logger.warning(f"Failed to dispatch LangGraph follow-up: {lg_err}")
+                logger.warning(f"Failed to dispatch Inngest follow-up: {lg_err}")
 
         # 3. Check and update matching CampaignContact
         try:
@@ -968,19 +963,14 @@ def api_whatsapp_trigger_followup(request):
         if not phone:
             return JsonResponse({"status": "error", "message": "رقم الهاتف مطلوب"}, status=400)
 
-        from .services.langgraph_worker import run_autonomous_followup
-        import threading
-        threading.Thread(
-            target=run_autonomous_followup,
-            kwargs={
-                "user_id": request.user.id,
-                "phone_number": phone,
-                "trigger_type": "scheduled_followup",
-                "customer_name": data.get("customer_name", ""),
-            },
-            daemon=True
-        ).start()
-        return JsonResponse({"status": "success", "message": "تم تشغيل محرك LangGraph الذكي للمتابعة بنجاح!"})
+        from crm.inngest_jobs import dispatch_whatsapp_followup_job
+        dispatch_whatsapp_followup_job(
+            user_id=request.user.id,
+            phone_number=phone,
+            trigger_type="scheduled_followup",
+            customer_name=data.get("customer_name", ""),
+        )
+        return JsonResponse({"status": "success", "message": "تم إرسال مهمة المتابعة الذكية إلى Inngest بنجاح!"})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
@@ -989,7 +979,7 @@ def api_whatsapp_trigger_followup(request):
 def api_whatsapp_webhook(request):
     """
     Handle inbound Evolution API webhooks.
-    Triggers LangGraph autonomous response for inbound customer messages.
+    Triggers LangGraph autonomous response for inbound customer messages via durable Inngest jobs.
     """
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
@@ -1061,22 +1051,17 @@ def api_whatsapp_webhook(request):
                 logger.info(f"AI auto-reply is paused for {clean_phone} (Human takeover active). Skipping LangGraph dispatch.")
                 return JsonResponse({"status": "received", "action": "ai_paused_manual_takeover"})
 
-            # 4. Trigger LangGraph in background thread
-            import threading
-            from .services.langgraph_worker import run_autonomous_followup
-            threading.Thread(
-                target=run_autonomous_followup,
-                kwargs={
-                    "user_id": user.id,
-                    "phone_number": clean_phone,
-                    "trigger_type": "inbound_whatsapp",
-                    "inbound_message": msg_text,
-                    "customer_name": push_name,
-                },
-                daemon=True
-            ).start()
+            # 4. Trigger LangGraph via durable Inngest background job
+            from crm.inngest_jobs import dispatch_whatsapp_followup_job
+            dispatch_whatsapp_followup_job(
+                user_id=user.id,
+                phone_number=clean_phone,
+                trigger_type="inbound_whatsapp",
+                inbound_message=msg_text,
+                customer_name=push_name,
+            )
 
-            return JsonResponse({"status": "success", "action": "langgraph_dispatched"})
+            return JsonResponse({"status": "success", "action": "inngest_dispatched"})
 
         return JsonResponse({"status": "received", "event": event})
 

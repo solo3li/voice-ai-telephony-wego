@@ -57,7 +57,7 @@ http:
     livekit-service:
       loadBalancer:
         servers:
-          - url: "http://livekit:7880"
+          - url: "http://172.17.0.1:7880"
 
     centrifugo-service:
       loadBalancer:

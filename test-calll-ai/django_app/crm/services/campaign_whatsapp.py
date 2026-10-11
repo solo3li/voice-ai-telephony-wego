@@ -124,6 +124,20 @@ def send_campaign_contact_whatsapp(contact_id: int) -> dict:
             logger.info(f"Contact #{contact.id} already received WhatsApp. Skipping.")
             return {"status": "already_sent", "contact_id": contact.id}
 
+        # Check DNC (Do Not Call / Do Not Message) list
+        from crm.models import DoNotCallEntry
+        if DoNotCallEntry.is_blacklisted(campaign.user_id, contact.phone_number):
+            logger.info(f"[DNC] Contact #{contact.id} ({contact.phone_number}) is in DNC list. Skipping WhatsApp.")
+            contact.whatsapp_status = 'skipped_dnc'
+            contact.whatsapp_message_text = "تم تخطي الإرسال لأن الرقم مسجل في قائمة عدم الاتصال (DNC)."
+            contact.save(update_fields=['whatsapp_status', 'whatsapp_message_text', 'updated_at'])
+            campaign.update_metrics()
+            broadcast_campaign_update(campaign.id, "contact_whatsapp_skipped_dnc", {
+                **contact.to_dict(),
+                "reason": "DNC"
+            })
+            return {"status": "skipped_dnc", "contact_id": contact.id, "reason": "Phone number is in DNC list"}
+
         user = campaign.user
         instance_name = f"user_{user.id}"
 
