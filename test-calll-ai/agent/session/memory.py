@@ -15,7 +15,8 @@ async def distill_and_update_memory(
     current_profile: Dict[str, Any],
     caller_phone: str = "web_dashboard",
     genai_client = None,
-    outbound_context: Optional[Dict[str, Any]] = None
+    outbound_context: Optional[Dict[str, Any]] = None,
+    api_key: Optional[str] = None,
 ):
     """Background task to extract permanent profile facts and distill short-term episode summary."""
     try:
@@ -65,18 +66,36 @@ async def distill_and_update_memory(
   }}
 }}"""
 
-        response = await genai_client.aio.models.generate_content(
-            model=GEMINI_FLASH_MODEL,
-            contents=distillation_prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            )
-        )
+        if genai_client is None:
+            try:
+                from google import genai
+                from agent.config import GEMINI_API_KEY
+                active_key = api_key or (current_profile.get("gemini_api_key") if isinstance(current_profile, dict) else None) or GEMINI_API_KEY
+                if active_key and not active_key.startswith("your_"):
+                    genai_client = genai.Client(api_key=active_key)
+            except Exception as client_err:
+                logger.warning(f"Could not initialize genai.Client for memory distillation: {client_err}")
 
-        resp_text = response.text or "{}"
-        data = json.loads(resp_text)
-        summary = data.get("summary", "").strip()
-        new_facts = data.get("new_permanent_facts", {})
+        summary = ""
+        new_facts = {}
+        if genai_client is not None:
+            try:
+                response = await genai_client.aio.models.generate_content(
+                    model=GEMINI_FLASH_MODEL,
+                    contents=distillation_prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+                resp_text = response.text or "{}"
+                data = json.loads(resp_text)
+                summary = data.get("summary", "").strip()
+                new_facts = data.get("new_permanent_facts", {})
+            except Exception as dist_err:
+                logger.warning(f"Distillation LLM error: {dist_err}")
+                summary = f"مكالمة مكتملة ({len(user_msgs)} ردود)."
+        else:
+            summary = f"مكالمة مكتملة ({len(user_msgs)} ردود)."
 
         updated_profile = dict(current_profile or {})
         if new_facts and isinstance(new_facts, dict):

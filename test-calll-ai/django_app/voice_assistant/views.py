@@ -21,6 +21,7 @@ from call_center.models import CallQueue
 from telephony.models import OutboundSIPTrunk
 from crm.models import CallSession
 from telephony.views import _async_dial_sip_participant
+from telephony.agent_dispatch import dispatch_agent_to_room
 
 # Re-export views from domain apps for backward compatibility
 from knowledge.views import (
@@ -577,28 +578,19 @@ def livekit_webhook(request):
                     "timestamp": time.time(),
                 })
 
-            try:
-                r = redis.Redis.from_url(settings.REDIS_URL)
-                job_payload = json.dumps({
-                    "room_name": room_name,
-                    "user_id": user_id,
-                    "caller_phone": caller_phone,
-                    "profile": profile,
-                    "is_queue": is_queue,
-                    "queue_code": queue_code,
-                    "queue_data": queue_data,
-                    "participant_identity": participant_identity,
-                    "is_off_hours": is_off_hours,
-                    "off_hours_data": off_hours_data
-                })
-                r.rpush("agent_jobs", job_payload)
-                if participant_identity.startswith("sip_"):
-                    clean = participant_identity.replace("sip_sip_", "sip_")
-                    r.set(f"agent_room:{participant_identity}", room_name, ex=7200)
-                    r.set(f"agent_room:{clean}", room_name, ex=7200)
-                logger.info(f"Dispatched job {job_payload} to Redis 'agent_jobs' queue.")
-            except Exception as ex:
-                logger.error(f"Failed to dispatch room '{room_name}' to Redis: {ex}")
+            job_payload = {
+                "room_name": room_name,
+                "user_id": user_id,
+                "caller_phone": caller_phone,
+                "profile": profile,
+                "is_queue": is_queue,
+                "queue_code": queue_code,
+                "queue_data": queue_data,
+                "participant_identity": participant_identity,
+                "is_off_hours": is_off_hours,
+                "off_hours_data": off_hours_data
+            }
+            dispatch_agent_to_room(room_name, job_payload)
 
     elif event_type == "participant_left":
         participant_identity = event.participant.identity

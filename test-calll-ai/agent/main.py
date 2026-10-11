@@ -1,10 +1,15 @@
-"""Standalone Voice Agent Service entrypoint with modular architecture.
+"""Standalone Voice Agent Service entrypoint with LiveKit Agents 1.8+ Architecture.
 
-Provides backward-compatible re-exports and runs the background daemon loops.
+Runs the official Multi-Process LiveKit Agents Worker Pool with Gemini 3.8 Multimodal Live API,
+while concurrently maintaining background Redis transfer listeners and legacy dispatch bridges.
 """
 import os
 import sys
 import types
+import asyncio
+import threading
+import json
+import redis.asyncio as aioredis
 
 # Ensure current directory is on sys.path and register 'agent' module alias if needed
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,10 +23,6 @@ if "agent" not in sys.modules:
     agent_pkg.__path__ = [current_dir]
     sys.modules["agent"] = agent_pkg
 
-import asyncio
-import signal
-import redis.asyncio as aioredis
-
 # Core Configuration & Logging
 from agent.config import (
     logger,
@@ -31,6 +32,7 @@ from agent.config import (
     CENTRIFUGO_HTTP_API_URL,
     CENTRIFUGO_API_KEY,
     GEMINI_API_KEY,
+    GEMINI_LIVE_MODEL,
     REDIS_URL,
     DJANGO_API_URL,
     INTERNAL_API_KEY,
@@ -64,6 +66,7 @@ from agent.prompts import (
     build_dynamic_system_instruction,
     DIALECT_RULES_MAP,
     VERBOSITY_INSTRUCTIONS,
+    generate_welcome_greeting,
 )
 
 # Audio Handling
@@ -96,6 +99,11 @@ from agent.workers import (
     run_agent_dispatcher_loop,
 )
 
+# Official LiveKit Worker
+from agent.livekit_worker import main as livekit_worker_main, entrypoint as livekit_entrypoint
+
+from livekit import api
+
 __all__ = [
     # Config
     "logger",
@@ -105,6 +113,7 @@ __all__ = [
     "CENTRIFUGO_HTTP_API_URL",
     "CENTRIFUGO_API_KEY",
     "GEMINI_API_KEY",
+    "GEMINI_LIVE_MODEL",
     "REDIS_URL",
     "DJANGO_API_URL",
     "INTERNAL_API_KEY",
@@ -131,6 +140,7 @@ __all__ = [
     "build_dynamic_system_instruction",
     "DIALECT_RULES_MAP",
     "VERBOSITY_INSTRUCTIONS",
+    "generate_welcome_greeting",
     # Audio
     "stream_user_audio_to_queue",
     "setup_room_audio_listeners",
@@ -149,64 +159,98 @@ __all__ = [
     # Workers & Entrypoint
     "transfer_events_worker",
     "run_agent_dispatcher_loop",
+    "livekit_worker_main",
+    "livekit_entrypoint",
     "main",
 ]
 
 
-async def main():
-    """Main daemon runner for Voice AI Agent service."""
-    logger.info("Starting Modular Standalone Voice Agent Service...")
-    logger.info(f"LiveKit Internal URL: {LIVEKIT_INTERNAL_URL}")
-    logger.info(f"Centrifugo API URL: {CENTRIFUGO_HTTP_API_URL}")
-    logger.info(f"Redis URL: {REDIS_URL}")
-    logger.info(f"Django API URL: {DJANGO_API_URL}")
-
+async def _run_background_services(shutdown_event: asyncio.Event):
+    """Run WebRTC Transfer worker and Redis bridge concurrently in background thread."""
     r = aioredis.from_url(REDIS_URL, decode_responses=True)
-    active_sessions: dict[str, asyncio.Task] = {}
-    shutdown_event = asyncio.Event()
-
-    def handle_signal():
-        logger.info("Received termination signal. Shutting down agent daemon...")
-        shutdown_event.set()
-
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        try:
-            loop.add_signal_handler(sig, handle_signal)
-        except NotImplementedError:
-            pass
-
-    # Launch Transfer Worker and Agent Jobs Dispatcher concurrently
     transfer_task = asyncio.create_task(transfer_events_worker(r, shutdown_event))
-    dispatcher_task = asyncio.create_task(
-        run_agent_dispatcher_loop(r, shutdown_event, active_sessions)
-    )
+
+    async def bridge_legacy_redis_jobs():
+        logger.info("[Bridge] Listening on Redis 'agent_jobs' to forward to LiveKit Native Dispatch...")
+        while not shutdown_event.is_set():
+            try:
+                item = await r.brpop("agent_jobs", timeout=1.0)
+                if item:
+                    _, raw = item
+                    if raw and raw.strip():
+                        raw_str = raw.strip()
+                        parsed = {}
+                        try:
+                            parsed = json.loads(raw_str) if raw_str.startswith("{") else {"room_name": raw_str}
+                        except Exception:
+                            parsed = {"room_name": raw_str}
+                        room_name = parsed.get("room_name", raw_str)
+                        if not room_name:
+                            continue
+
+                        # Deduplicate: avoid forwarding if already dispatched natively
+                        dedup_key = f"agent_dispatched:{room_name}"
+                        if not await r.set(dedup_key, "1", nx=True, ex=60):
+                            logger.info(f"[Bridge] Room '{room_name}' already dispatched. Skipping duplicate.")
+                            continue
+
+                        # Trigger LiveKit Native Agent Dispatch
+                        lk = api.LiveKitAPI(LIVEKIT_INTERNAL_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+                        try:
+                            req = api.CreateAgentDispatchRequest(
+                                agent_name="ai-agent",
+                                room=room_name,
+                                metadata=raw_str if raw_str.startswith("{") else json.dumps(parsed),
+                            )
+                            disp = await lk.agent_dispatch.create_dispatch(req)
+                            logger.info(f"[Bridge] Forwarded Redis job to LiveKit Native Dispatch ({disp.id}) for room '{room_name}'")
+                        except Exception as lk_err:
+                            logger.error(f"[Bridge] LiveKit dispatch error for '{room_name}': {lk_err}")
+                        finally:
+                            await lk.aclose()
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                logger.error(f"[Bridge] Error in legacy Redis bridge: {ex}")
+                await asyncio.sleep(1.0)
+
+    bridge_task = asyncio.create_task(bridge_legacy_redis_jobs())
 
     await shutdown_event.wait()
-
-    logger.info("Stopping dispatcher and transfer workers...")
     transfer_task.cancel()
-    dispatcher_task.cancel()
-    await asyncio.gather(transfer_task, dispatcher_task, return_exceptions=True)
-
-    logger.info(f"Stopping {len(active_sessions)} active agent session tasks...")
-    for rm, t in active_sessions.items():
-        t.cancel()
-    if active_sessions:
-        await asyncio.gather(*active_sessions.values(), return_exceptions=True)
-
-    # Cleanly await any background tasks (like memory distillation)
-    if BACKGROUND_TASKS:
-        logger.info(f"Awaiting {len(BACKGROUND_TASKS)} active background memory tasks...")
-        await asyncio.gather(*BACKGROUND_TASKS, return_exceptions=True)
-
-    await close_http_session()
+    bridge_task.cancel()
+    await asyncio.gather(transfer_task, bridge_task, return_exceptions=True)
     await r.aclose()
-    logger.info("Voice Agent service stopped gracefully.")
+
+
+def start_background_workers_thread() -> tuple[threading.Thread, asyncio.Event]:
+    """Start background WebRTC transfer and Redis bridge tasks in a daemon thread."""
+    shutdown_ev = asyncio.Event()
+
+    def _worker_loop():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(_run_background_services(shutdown_ev))
+        finally:
+            loop.close()
+
+    t = threading.Thread(target=_worker_loop, daemon=True, name="BackgroundServicesThread")
+    t.start()
+    return t, shutdown_ev
+
+
+def main():
+    """Main process entrypoint: starts background thread and LiveKit Worker Pool."""
+    # Start WebRTC transfer worker and Redis bridge in background thread
+    bg_thread, shutdown_ev = start_background_workers_thread()
+
+    # Run Official LiveKit Agents Worker Daemon (Process Isolation pool)
+    try:
+        livekit_worker_main()
+    finally:
+        shutdown_ev.set()
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    main()

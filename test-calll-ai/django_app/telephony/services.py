@@ -11,6 +11,7 @@ from django.conf import settings
 from livekit import api
 
 from .models import OutboundSIPTrunk, InboundPBXTrunk
+from .agent_dispatch import dispatch_agent_to_room
 from agents.models import AgentProfile
 from crm.models import CallSession
 
@@ -328,22 +329,18 @@ def initiate_outbound_call(
             "http_status": 502
         }
 
-    # 7. Push dispatch job to Redis for Voice Assistant agent
-    try:
-        r = redis.Redis.from_url(settings.REDIS_URL)
-        job_payload = {
-            "room_name": room_name,
-            "user_id": user.id,
-            "is_outbound_ai": True,
-            "call_goal": call_goal or default_goal,
-            "destination_phone": normalized_phone,
-            "profile": profile.to_dict() if profile else None,
-            "session_id": session.id,
-            "partner_id": partner.id if partner else None
-        }
-        r.lpush("agent_jobs", json.dumps(job_payload, ensure_ascii=False))
-    except Exception as redis_err:
-        logger.warning(f"Failed to push agent job to Redis: {redis_err}")
+    # 7. Dispatch LiveKit Agent natively
+    job_payload = {
+        "room_name": room_name,
+        "user_id": user.id,
+        "is_outbound_ai": True,
+        "call_goal": call_goal or default_goal,
+        "destination_phone": normalized_phone,
+        "profile": profile.to_dict() if profile else None,
+        "session_id": session.id,
+        "partner_id": partner.id if partner else None
+    }
+    dispatch_agent_to_room(room_name, job_payload)
 
     logger.info(f"Triggered AI Outbound Call to {normalized_phone} via {trunk_name} in room {room_name} (Session {session.id})")
 

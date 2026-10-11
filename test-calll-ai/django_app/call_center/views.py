@@ -24,6 +24,7 @@ from livekit import api
 from .models import EmployeeProfile, CallQueue, QueueMembership, EmployeeCallLog
 from .inngest_jobs import inngest_client
 from telephony.wazo_client import wazo_client
+from telephony.agent_dispatch import dispatch_agent_to_room
 
 logger = logging.getLogger(__name__)
 
@@ -856,23 +857,18 @@ def api_dial_call(request):
                 .with_grants(api.VideoGrants(room_join=True, room=room_name, can_publish=True, can_subscribe=True))
             caller_jwt = token.to_jwt()
 
-            # 4. Dispatch AI agent job to Redis matching web voice assistant room 1:1
-            try:
-                r = redis.Redis.from_url(settings.REDIS_URL)
-                job_payload = json.dumps({
-                    "room_name": room_name,
-                    "user_id": owner_user.id,
-                    "caller_phone": caller_phone,
-                    "profile": profile_dict,
-                    "is_queue": False,
-                    "participant_identity": f"employee_{caller.id}_{caller.extension}",
-                    "is_off_hours": is_off_hours,
-                    "off_hours_data": off_hours_data
-                })
-                r.rpush("agent_jobs", job_payload)
-                logger.info(f"Dispatched AI room '{room_name}' to Redis for employee {caller.display_name} mirrored to owner {owner_user.username} [caller_phone={caller_phone}, off_hours={is_off_hours}]")
-            except Exception as ex:
-                logger.error(f"Failed to dispatch AI test call room '{room_name}' to Redis: {ex}")
+            # 4. Dispatch AI agent natively to room
+            job_payload = {
+                "room_name": room_name,
+                "user_id": owner_user.id,
+                "caller_phone": caller_phone,
+                "profile": profile_dict,
+                "is_queue": False,
+                "participant_identity": f"employee_{caller.id}_{caller.extension}",
+                "is_off_hours": is_off_hours,
+                "off_hours_data": off_hours_data
+            }
+            dispatch_agent_to_room(room_name, job_payload)
 
             # Notify Centrifugo room channel
             if is_off_hours:
