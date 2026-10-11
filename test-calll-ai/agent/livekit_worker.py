@@ -25,8 +25,11 @@ from livekit.agents.voice import (
     UserInputTranscribedEvent,
     ConversationItemAddedEvent,
     AgentStateChangedEvent,
+    AgentFalseInterruptionEvent,
+    ErrorEvent,
 )
 from livekit.plugins.google.realtime import RealtimeModel
+from google.genai import types as genai_types
 
 from agent.config import (
     logger,
@@ -215,12 +218,18 @@ async def entrypoint(ctx: JobContext):
         search_query = str(query or "").strip()
         if not search_query:
             return "يرجى تحديد موضوع السؤال للبحث في المستندات."
-        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري البحث في المستندات عن: {search_query}")
+        asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري البحث في المستندات عن: {search_query}"))
         try:
-            results = await query_knowledge_base_async(query=search_query, user_id=user_id)
+            results = await asyncio.wait_for(
+                query_knowledge_base_async(query=search_query, user_id=user_id),
+                timeout=4.5
+            )
             txt = "\n\n".join(results) if isinstance(results, list) else str(results)
-            await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم العثور على معلومات ذات صلة بـ: {search_query}")
+            asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", f"تم العثور على معلومات ذات صلة بـ: {search_query}"))
             return txt or "لم يتم العثور على نصوص مطابقة في قاعدة المعرفة."
+        except asyncio.TimeoutError:
+            logger.warning(f"Timeout querying knowledge base for '{search_query}'")
+            return "جاري استكمال البحث في المستندات، تفضل بسؤالك التالي."
         except Exception as e:
             logger.error(f"Error querying knowledge base: {e}")
             return "لم يتم العثور على معلومات مطابقة في قاعدة المعرفة حالياً."
@@ -242,12 +251,18 @@ async def entrypoint(ctx: JobContext):
         search_id = str(identifier or "").strip()
         if not search_id:
             return "يرجى تحديد اسم العميل أو رقم هاتفه للبحث."
-        await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري استرجاع بيانات العميل: {search_id}")
+        asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري استرجاع بيانات العميل: {search_id}"))
         try:
-            mem = await lookup_customer_memory_async(user_id=user_id, query=search_id)
+            mem = await asyncio.wait_for(
+                lookup_customer_memory_async(user_id=user_id, query=search_id),
+                timeout=4.0
+            )
             card = mem.get("card_text") or "لا توجد بيانات سابقة مسجلة لهذا العميل."
-            await notify_centrifugo_async(channel_name, "agent_tool_done", "تم استرجاع ملف العميل بنجاح")
+            asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", "تم استرجاع ملف العميل بنجاح"))
             return card
+        except asyncio.TimeoutError:
+            logger.warning(f"Timeout looking up customer memory for '{search_id}'")
+            return "لا توجد بيانات سابقة مسجلة لهذا العميل."
         except Exception as e:
             logger.error(f"Error looking up customer memory: {e}")
             return "لا توجد بيانات سابقة مسجلة لهذا العميل."
@@ -273,17 +288,23 @@ async def entrypoint(ctx: JobContext):
             """
             q_code = str(queue_code or "").strip()
             r_reason = str(reason or "").strip()
-            await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تحويل المكالمة إلى قسم ({q_code})...")
+            asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تحويل المكالمة إلى قسم ({q_code})..."))
             try:
-                await execute_ai_transfer_and_hold(
-                    room_name=ctx.room.name,
-                    user_id=user_id or 1,
-                    queue_code=q_code,
-                    reason=r_reason,
-                    caller_phone=caller_phone,
+                await asyncio.wait_for(
+                    execute_ai_transfer_and_hold(
+                        room_name=ctx.room.name,
+                        user_id=user_id or 1,
+                        queue_code=q_code,
+                        reason=r_reason,
+                        caller_phone=caller_phone,
+                    ),
+                    timeout=4.0
                 )
-                await notify_centrifugo_async(channel_name, "agent_transferring", f"تم تحويل المكالمة بنجاح إلى قسم ({q_code})")
+                asyncio.create_task(notify_centrifugo_async(channel_name, "agent_transferring", f"تم تحويل المكالمة بنجاح إلى قسم ({q_code})"))
                 return "تم تحويل المكالمة بنجاح، جاري وضع العميل على الانتظار وتحويله لممثل القسم."
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout transferring call to queue {q_code}")
+                return "جاري إتمام التحويل، يرجى الانتظار لحظات."
             except Exception as e:
                 logger.error(f"Error transferring call to queue {q_code}: {e}")
                 return "تعذر إتمام التحويل حالياً، يرجى المحاولة لاحقاً."
@@ -310,11 +331,17 @@ async def entrypoint(ctx: JobContext):
                 }
                 @llm.function_tool(raw_schema=raw_schema)
                 async def mcp_tool(raw_args: dict) -> str:
-                    await notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})...")
+                    asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})..."))
                     try:
-                        res = await execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=raw_args)
-                        await notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})")
+                        res = await asyncio.wait_for(
+                            execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=raw_args),
+                            timeout=4.0
+                        )
+                        asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})"))
                         return json.dumps(res, ensure_ascii=False) if isinstance(res, (dict, list)) else str(res)
+                    except asyncio.TimeoutError:
+                        logger.warning(f"Timeout executing MCP tool {name}")
+                        return f"استغرق تنفيذ الإجراء ({name}) وقتاً أطول من المتوقع، جاري متابعته."
                     except Exception as ex:
                         logger.error(f"Error calling MCP tool {name}: {ex}")
                         return f"خطأ أثناء استدعاء الأداة {name}: {ex}"
@@ -325,12 +352,24 @@ async def entrypoint(ctx: JobContext):
 
     logger.info(f"[LiveKit Agent] Initialized {len(tools)} tools for room '{room_name}'")
 
-    # 7. Setup RealtimeModel with Gemini 3.8 Live API
+    # 7. Setup RealtimeModel with Gemini 3.8 Live API, Session Resumption, and Sliding Window Compression
+    resumption_cfg = genai_types.SessionResumptionConfig(transparent=True)
+    compression_cfg = genai_types.ContextWindowCompressionConfig(
+        trigger_tokens=25000,
+        sliding_window=genai_types.SlidingWindow(target_tokens=15000),
+    )
+    input_transcription_cfg = genai_types.AudioTranscriptionConfig()
+    output_transcription_cfg = genai_types.AudioTranscriptionConfig()
+
     model = RealtimeModel(
         model=chosen_model,
         api_key=active_api_key,
         voice=chosen_voice,
         instructions=system_instruction_text,
+        session_resumption=resumption_cfg,
+        context_window_compression=compression_cfg,
+        input_audio_transcription=input_transcription_cfg,
+        output_audio_transcription=output_transcription_cfg,
     )
 
     session = AgentSession(llm=model)
@@ -339,11 +378,24 @@ async def entrypoint(ctx: JobContext):
     # 8. Transcripts & Conversation State Tracking
     conversation_history: List[Dict[str, str]] = []
     call_start_time = time.time()
+    call_active = True
+
+    turn_tracker = {
+        "pending_reply": False,
+        "last_user_turn_ts": 0.0,
+        "last_user_text": "",
+        "assistant_spoke_in_turn": False,
+    }
 
     def on_user_transcript(ev: UserInputTranscribedEvent):
         if ev.is_final and ev.transcript:
             text = ev.transcript.strip()
             if text:
+                turn_tracker["pending_reply"] = True
+                turn_tracker["last_user_turn_ts"] = time.time()
+                turn_tracker["last_user_text"] = text
+                turn_tracker["assistant_spoke_in_turn"] = False
+
                 conversation_history.append({"role": "user", "text": text})
                 asyncio.create_task(
                     notify_centrifugo_async(
@@ -381,6 +433,8 @@ async def entrypoint(ctx: JobContext):
             role = getattr(item, "role", "")
             text = _extract_item_text(item)
             if role == "assistant" and text:
+                turn_tracker["pending_reply"] = False
+                turn_tracker["assistant_spoke_in_turn"] = True
                 conversation_history.append({"role": "assistant", "text": text})
                 asyncio.create_task(
                     notify_centrifugo_async(
@@ -394,18 +448,58 @@ async def entrypoint(ctx: JobContext):
     def on_agent_state(ev: AgentStateChangedEvent):
         st = str(getattr(ev, "new_state", getattr(ev, "state", ""))).lower()
         if "speaking" in st:
+            turn_tracker["pending_reply"] = False
+            turn_tracker["assistant_spoke_in_turn"] = True
             asyncio.create_task(notify_centrifugo_async(channel_name, "agent_speaking", "المساعدة الصوتية تتحدث الآن"))
         elif "thinking" in st:
             asyncio.create_task(notify_centrifugo_async(channel_name, "agent_thinking", "المساعدة الصوتية تفكر..."))
         elif "listening" in st or "idle" in st:
             asyncio.create_task(notify_centrifugo_async(channel_name, "agent_listening", "المساعدة الصوتية تستمع إليك"))
 
+    def on_false_interruption(ev: AgentFalseInterruptionEvent):
+        logger.info(f"[LiveKit Agent] False interruption detected in room '{room_name}'. Audio playback restored.")
+
+    def on_agent_error(ev: ErrorEvent):
+        logger.warning(f"[LiveKit Agent] Voice agent error event in room '{room_name}': {ev}")
+
     session.on("user_input_transcribed", on_user_transcript)
     session.on("conversation_item_added", on_conversation_item)
     session.on("agent_state_changed", on_agent_state)
+    session.on("agent_false_interruption", on_false_interruption)
+    session.on("error", on_agent_error)
+
+    # Background Watchdog: Recovers from empty model responses / silent drops on barge-in
+    async def silent_drop_watchdog():
+        while call_active:
+            await asyncio.sleep(0.5)
+            if not turn_tracker.get("pending_reply"):
+                continue
+            idle_delta = time.time() - turn_tracker.get("last_user_turn_ts", time.time())
+            current_st = str(getattr(session, "agent_state", "")).lower()
+            if idle_delta >= 3.8 and ("idle" in current_st or "listening" in current_st) and not turn_tracker.get("assistant_spoke_in_turn"):
+                logger.warning(f"[Watchdog] Detected silent drop/empty response after {idle_delta:.1f}s for '{turn_tracker.get('last_user_text')}'. Nudging agent...")
+                turn_tracker["pending_reply"] = False
+                turn_tracker["assistant_spoke_in_turn"] = True
+
+                dialect = str(active_profile.get("dialect", "egyptian")).lower()
+                recovery_nudge = "معاك يا فندم، سامعك اتفضل."
+                if "saudi" in dialect or "gulf" in dialect:
+                    recovery_nudge = "سمّ آمرني طال عمرك، أسمعك تفضل."
+                elif "levantine" in dialect:
+                    recovery_nudge = "معك يا غالي، عم بسمعك تفضل."
+
+                try:
+                    await session.say(recovery_nudge)
+                except Exception as ex:
+                    logger.debug(f"[Watchdog] Failed to say recovery nudge: {ex}")
+
+    watchdog_task = asyncio.create_task(silent_drop_watchdog())
 
     # 9. Register Call Cleanup & Memory Distillation Callback
     async def cleanup_and_distill():
+        nonlocal call_active
+        call_active = False
+        watchdog_task.cancel()
         duration = round(time.time() - call_start_time, 2)
         logger.info(f"[LiveKit Agent] Room '{room_name}' ending. Duration: {duration}s, Turns: {len(conversation_history)}")
         await notify_centrifugo_async(channel_name, "agent_stopped", "انتهت المكالمة الصوتية وجاري حفظ ملخص الجلسة...")
