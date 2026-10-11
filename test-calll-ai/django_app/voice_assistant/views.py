@@ -235,6 +235,26 @@ def get_tokens(request):
         algorithm="HS256"
     )
 
+    should_dispatch = request.GET.get('dispatch') in ('1', 'true', 'yes')
+    if should_dispatch:
+        try:
+            job_payload = {
+                "room_name": room_name,
+                "user_id": request.user.id,
+                "caller_phone": custom_phone or 'web_dashboard',
+                "profile": active_profile.to_dict(),
+                "is_queue": False,
+                "queue_code": None,
+                "queue_data": None,
+                "participant_identity": user_identity,
+                "is_off_hours": False,
+                "off_hours_data": None,
+            }
+            dispatch_agent_to_room(room_name, job_payload)
+            logger.info(f"[GET_TOKENS] Proactively dispatched LiveKit Agent to room '{room_name}' for user #{request.user.id}")
+        except Exception as d_err:
+            logger.warning(f"[GET_TOKENS] Proactive agent dispatch error for room '{room_name}': {d_err}")
+
     return JsonResponse({
         "status": "success",
         "room_name": room_name,
@@ -277,7 +297,13 @@ def livekit_webhook(request):
 
     if event_type == "participant_joined":
         participant_identity = event.participant.identity
-        if participant_identity in ("ai-agent", "pipecat-agent"):
+        is_agent = (
+            participant_identity in ("ai-agent", "pipecat-agent")
+            or str(participant_identity).startswith("agent-")
+            or str(participant_identity).startswith("ai-")
+            or getattr(event.participant, "kind", None) in (4, api.ParticipantInfo.Kind.AGENT)
+        )
+        if is_agent:
             logger.info(f"AI agent ({participant_identity}) joined room {room_name}.")
             publish_to_centrifugo(channel, {
                 "event": "agent_connected",
@@ -594,27 +620,42 @@ def livekit_webhook(request):
 
     elif event_type == "participant_left":
         participant_identity = event.participant.identity
-        if participant_identity not in ("ai-agent", "pipecat-agent"):
+        is_agent = (
+            participant_identity in ("ai-agent", "pipecat-agent")
+            or str(participant_identity).startswith("agent-")
+            or str(participant_identity).startswith("ai-")
+            or getattr(event.participant, "kind", None) in (4, api.ParticipantInfo.Kind.AGENT)
+        )
+        if is_agent:
+            logger.info(f"AI agent ({participant_identity}) left room {room_name}.")
             publish_to_centrifugo(channel, {
-                "event": "user_left",
-                "message": "المستخدم غادر الغرفة",
+                "event": "agent_stopped",
+                "message": "غادر المساعد الصوتي الغرفة",
                 "timestamp": time.time(),
             })
-            if participant_identity.startswith("sip_"):
-                try:
-                    clean = participant_identity.replace("sip_sip_", "sip_")
-                    r = redis.Redis.from_url(settings.REDIS_URL)
-                    r.set(f"agent_state:{participant_identity}", "AVAILABLE")
-                    r.set(f"agent_state:{clean}", "AVAILABLE")
-                    r.delete(f"agent_room:{participant_identity}")
-                    r.delete(f"agent_room:{clean}")
-                    publish_to_centrifugo("presence_updates", {
-                        "event": "agent_presence",
-                        "sip_username": participant_identity,
-                        "state": "AVAILABLE"
-                    })
-                except Exception:
-                    pass
+            return HttpResponse("ok")
+
+        publish_to_centrifugo(channel, {
+            "event": "user_left",
+            "message": "المستخدم غادر الغرفة",
+            "timestamp": time.time(),
+        })
+        if participant_identity.startswith("sip_"):
+            try:
+                clean = participant_identity.replace("sip_sip_", "sip_")
+                r = redis.Redis.from_url(settings.REDIS_URL)
+                r.set(f"agent_state:{participant_identity}", "AVAILABLE")
+                r.set(f"agent_state:{clean}", "AVAILABLE")
+                r.delete(f"agent_room:{participant_identity}")
+                r.delete(f"agent_room:{clean}")
+                publish_to_centrifugo("presence_updates", {
+                    "event": "agent_presence",
+                    "sip_username": participant_identity,
+                    "state": "AVAILABLE"
+                })
+            except Exception:
+                pass
+        return HttpResponse("ok")
 
     elif event_type == "room_finished":
         logger.info(f"Room {room_name} finished.")

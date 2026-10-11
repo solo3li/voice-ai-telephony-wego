@@ -3638,8 +3638,14 @@
     let isMuted = false;
     let audioContext = null;
     let micAnalyser = null;
-    let micSource = null;
     let micAnimId = null;
+    let attachedAudios = [];
+
+    function isAgentParticipant(p) {
+      if (!p) return false;
+      const id = (typeof p === 'string' ? p : p.identity) || '';
+      return id.startsWith('agent-') || id === 'ai-agent' || id === 'pipecat-agent' || id.startsWith('ai-') || id.includes('agent');
+    }
 
     // DOM Elements
     const btnStart = document.getElementById('btn-start');
@@ -3771,7 +3777,7 @@
       
       try {
         // 1. Fetch Tokens from Django
-        const res = await fetch('/api/token/?t=' + Date.now());
+        const res = await fetch('/api/token/?dispatch=1&t=' + Date.now());
         const data = await res.json();
         if (data.status !== 'success') {
           if (data.code === 'insufficient_balance' || res.status === 402) {
@@ -3824,11 +3830,19 @@
           lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> LiveKit: متصل';
           callStatus.innerText = 'تم الانضمام للغرفة. جاري تشغيل المساعد الذكي وقاعدة المستندات...';
           subStatus.innerText = 'المساعد الصوتي ينضم الآن...';
+
+          for (const p of livekitRoom.remoteParticipants.values()) {
+            if (isAgentParticipant(p)) {
+              callStatus.innerText = 'المساعد متصل في الغرفة!';
+              subStatus.innerText = 'تحدث الآن بصوتك، المساعد يستمع إليك ويجيب من مستنداتك';
+              break;
+            }
+          }
         });
 
         livekitRoom.on(LivekitClient.RoomEvent.ParticipantConnected, (participant) => {
           console.log('[LiveKit] Participant connected:', participant.identity);
-          if (participant.identity === 'ai-agent' || participant.identity === 'pipecat-agent') {
+          if (isAgentParticipant(participant)) {
             callStatus.innerText = 'المساعد متصل في الغرفة!';
             subStatus.innerText = 'تحدث الآن بصوتك، المساعد يستمع إليك ويجيب من مستنداتك';
           }
@@ -3839,10 +3853,11 @@
           const rem = Array.from(livekitRoom.remoteParticipants.values());
           const remHumans = rem.filter(p => 
             p.identity !== participant.identity && 
-            !p.identity.startsWith('ai-') && 
-            !p.identity.startsWith('pipecat-') && 
+            !isAgentParticipant(p) && 
             !p.identity.startsWith('transfer-') && 
-            !p.identity.startsWith('queue-')
+            !p.identity.startsWith('queue-') &&
+            !p.identity.startsWith('EG_') &&
+            !p.identity.startsWith('egress')
           );
           if (participant.identity.startsWith('employee_') || participant.identity.startsWith('user_')) {
             if (remHumans.length === 0) {
@@ -3856,7 +3871,12 @@
           console.log('[LiveKit] Subscribed to track:', track.kind, participant.identity);
           if (track.kind === LivekitClient.Track.Kind.Audio) {
             const audioElement = track.attach();
+            audioElement.autoplay = true;
+            attachedAudios.push(audioElement);
             document.body.appendChild(audioElement);
+            audioElement.play().catch(e => {
+              console.warn('[LiveKit] Audio autoplay blocked or failed:', e);
+            });
             callStatus.innerText = 'المساعد متصل ويستمع إليك الآن';
             subStatus.innerText = 'تحدث بصوتك مباشرة عبر المايكروفون';
             orb.classList.add('agent-active');
@@ -3870,6 +3890,11 @@
 
         // Connect and enable microphone
         await livekitRoom.connect(data.livekit_url, data.livekit_token);
+        try {
+          await livekitRoom.startAudio();
+        } catch (audioErr) {
+          console.warn('[LiveKit] startAudio warning:', audioErr);
+        }
         await livekitRoom.localParticipant.setMicrophoneEnabled(true, {
           echoCancellation: true,
           noiseSuppression: true,
@@ -3878,8 +3903,11 @@
 
         // Attach local mic to visualizer
         const localAudioTrack = livekitRoom.localParticipant.getTrackPublication(LivekitClient.Track.Source.Microphone);
-        if (localAudioTrack && localAudioTrack.track && localAudioTrack.track.mediaStream) {
-          startMicVisualizer(localAudioTrack.track.mediaStream);
+        if (localAudioTrack && localAudioTrack.track) {
+          const stream = localAudioTrack.track.mediaStream || (localAudioTrack.track.mediaStreamTrack ? new MediaStream([localAudioTrack.track.mediaStreamTrack]) : null);
+          if (stream) {
+            startMicVisualizer(stream);
+          }
         }
 
         btnMute.disabled = false;
@@ -3911,6 +3939,9 @@
         subStatus.innerText = data.message || 'لم يتم الرد، تم إنهاء المكالمة';
         appendTranscript('system', `⚠️ ${data.message || 'لم يتسن للموظفين الرد على المكالمة حالياً'}`);
         cleanupCall();
+      } else if (data.event === 'agent_starting') {
+        callStatus.innerText = 'جاري تهيئة المساعد الصوتي...';
+        subStatus.innerText = data.message || 'جاري تجهيز قاعدة المستندات...';
       } else if (data.event === 'agent_queued') {
         callStatus.innerText = data.message;
       } else if (data.event === 'agent_connected' || data.event === 'agent_ready' || data.event === 'agent_listening') {
@@ -3919,18 +3950,25 @@
         orb.classList.add('agent-active');
       } else if (data.event === 'agent_speaking') {
         subStatus.innerText = 'المساعد يتحدث الآن...';
+      } else if (data.event === 'agent_thinking') {
+        subStatus.innerText = 'المساعد يفكر...';
+      } else if (data.event === 'agent_stopped') {
+        callStatus.innerText = 'المساعد الصوتي غادر الغرفة';
+        subStatus.innerText = data.message || 'انتهت المكالمة';
       } else if (data.event === 'agent_interrupted') {
         callStatus.innerText = 'المساعد يستمع إليك الآن';
         subStatus.innerText = 'المساعد استمع لمقاطعتك وتوقف عن الحديث...';
       } else if (data.event === 'agent_searching_rag') {
         subStatus.innerText = 'جاري البحث الدلالي في مستنداتك...';
         appendTranscript('system', '🔍 جاري البحث الدلالي في مستندات قاعدة المعرفة...');
-      } else if (data.event === 'agent_action_executing') {
+      } else if (data.event === 'agent_action_executing' || data.event === 'agent_tool_executing') {
         subStatus.innerText = data.message;
         appendTranscript('system', `⚙️ ${data.message}`);
-      } else if (data.event === 'transcription_user') {
+      } else if (data.event === 'agent_tool_done') {
+        appendTranscript('system', `✅ ${data.message}`);
+      } else if (data.event === 'transcription_user' || data.event === 'user_transcript') {
         appendTranscript('user', data.message);
-      } else if (data.event === 'transcription_agent') {
+      } else if (data.event === 'transcription_agent' || data.event === 'agent_transcript') {
         appendTranscript('agent', data.message);
       } else if (data.event === 'agent_error') {
         callStatus.innerText = 'تنبيه: ' + data.message;
@@ -3974,6 +4012,14 @@
       if (centrifugeClient) {
         try { centrifugeClient.disconnect(); } catch (e) {}
         centrifugeClient = null;
+      }
+      while (attachedAudios.length > 0) {
+        const el = attachedAudios.pop();
+        try {
+          el.pause();
+          el.srcObject = null;
+          el.remove();
+        } catch (e) {}
       }
       orb.classList.remove('agent-active');
       btnStart.disabled = false;
