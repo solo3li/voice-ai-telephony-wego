@@ -506,19 +506,37 @@ async def entrypoint(ctx: JobContext):
                 {"speaker": "user" if item.get("role") == "user" else "assistant", "text": item.get("text", "")}
                 for item in conversation_history
             ]
-            asyncio.create_task(
-                distill_and_update_memory(
+            try:
+                await asyncio.wait_for(
+                    distill_and_update_memory(
+                        user_id=user_id,
+                        room_name=room_name,
+                        started_at=call_start_time,
+                        messages=dialogue_messages,
+                        current_profile=memory_data.get("card_data") or active_profile or {},
+                        caller_phone=caller_phone,
+                        genai_client=None,
+                        outbound_context=outbound_context,
+                        api_key=active_api_key,
+                    ),
+                    timeout=6.0,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"[LiveKit Agent] Memory distillation timed out for room '{room_name}'. Saving basic session in Django...")
+                lines = [f"{m['speaker']}: {m['text']}" for m in dialogue_messages]
+                await save_call_session_and_update_memory_async(
                     user_id=user_id,
                     room_name=room_name,
                     started_at=call_start_time,
-                    messages=dialogue_messages,
-                    current_profile=memory_data.get("card_data") or active_profile or {},
+                    transcript_text="\n".join(lines),
+                    summary=f"مكالمة صوتية مكتملة ({len(dialogue_messages)} ردود، المدة: {int(duration)} ثانية).",
+                    updated_profile=dict(memory_data.get("card_data") or active_profile or {}),
                     caller_phone=caller_phone,
-                    genai_client=None,
                     outbound_context=outbound_context,
-                    api_key=active_api_key,
+                    duration_seconds=int(duration),
                 )
-            )
+            except Exception as dist_err:
+                logger.error(f"[LiveKit Agent] Error finalizing call memory for room '{room_name}': {dist_err}")
 
     ctx.add_shutdown_callback(cleanup_and_distill)
 

@@ -255,6 +255,24 @@ def get_tokens(request):
         except Exception as d_err:
             logger.warning(f"[GET_TOKENS] Proactive agent dispatch error for room '{room_name}': {d_err}")
 
+    # Ensure CallSession exists immediately so it is instantly visible in CDR
+    try:
+        from crm.models import CallSession
+        from django.utils import timezone
+        CallSession.objects.get_or_create(
+            room_name=room_name,
+            defaults={
+                "user": request.user,
+                "direction": "inbound",
+                "caller_phone": custom_phone or 'web_dashboard',
+                "started_at": timezone.now(),
+                "is_internal_test": room_name.startswith("ai_test_") or "test" in room_name,
+                "summary": "مكالمة جارية عبر واجهة الويب...",
+            }
+        )
+    except Exception as cs_err:
+        logger.warning(f"Failed to pre-create CallSession in get_tokens: {cs_err}")
+
     return JsonResponse({
         "status": "success",
         "room_name": room_name,
@@ -618,6 +636,24 @@ def livekit_webhook(request):
             }
             dispatch_agent_to_room(room_name, job_payload)
 
+            if user_id:
+                try:
+                    from crm.models import CallSession
+                    from django.utils import timezone
+                    CallSession.objects.get_or_create(
+                        room_name=room_name,
+                        defaults={
+                            "user_id": user_id,
+                            "direction": "inbound",
+                            "caller_phone": caller_phone or "web_dashboard",
+                            "started_at": timezone.now(),
+                            "is_internal_test": room_name.startswith("ai_test_") or "test" in room_name,
+                            "summary": "مكالمة جارية..."
+                        }
+                    )
+                except Exception as cs_join_err:
+                    logger.warning(f"Failed to ensure CallSession on participant_joined: {cs_join_err}")
+
     elif event_type == "participant_left":
         participant_identity = event.participant.identity
         is_agent = (
@@ -727,10 +763,39 @@ def livekit_webhook(request):
 
             if r_name and rec_url:
                 try:
+                    import redis
+                    r = redis.Redis.from_url(settings.REDIS_URL)
+                    r.set(f"recording_url:{r_name}", rec_url, ex=7200)
+                except Exception:
+                    pass
+
+                try:
                     from crm.models import CallSession
+                    from django.utils import timezone
                     updated = CallSession.objects.filter(room_name=r_name).update(
                         recording_url=rec_url
                     )
+                    if updated == 0:
+                        extracted_uid = None
+                        if "user_" in r_name:
+                            for part in r_name.split("_"):
+                                if part.isdigit():
+                                    extracted_uid = int(part)
+                                    break
+                        if extracted_uid:
+                            from django.contrib.auth import get_user_model
+                            User = get_user_model()
+                            u = User.objects.filter(id=extracted_uid).first()
+                            if u:
+                                CallSession.objects.create(
+                                    user=u,
+                                    room_name=r_name,
+                                    recording_url=rec_url,
+                                    duration_seconds=duration_sec,
+                                    started_at=timezone.now(),
+                                    summary="تسجيل مكالمة الذكاء الاصطناعي مكتمل.",
+                                )
+                                logger.info(f"Fallback created CallSession for room '{r_name}' with recording '{rec_url}'")
                     logger.info(f"Updated CallSession recording_url for room '{r_name}' ({updated} records updated): {rec_url}")
                 except Exception as db_err:
                     logger.error(f"Error updating CallSession for room '{r_name}': {db_err}")

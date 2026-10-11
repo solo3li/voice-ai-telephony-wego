@@ -30,3 +30,8 @@ def verify_internal_api_key(request: HttpRequest) -> bool:
         return True
 
     return False
+
+
+def get_internal_api_key() -> str:
+    """Return the configured internal API key for inter-service communication."""
+    return getattr(settings, 'INTERNAL_API_KEY', 'voice-internal-secret-token-key-12345')

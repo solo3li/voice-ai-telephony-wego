@@ -1,4 +1,5 @@
 """Background customer memory distillation and profile persistence."""
+import time
 import asyncio
 import json
 from typing import Dict, Any, List, Optional
@@ -21,6 +22,7 @@ async def distill_and_update_memory(
     """Background task to extract permanent profile facts and distill short-term episode summary."""
     try:
         user_msgs = [m for m in messages if m.get("speaker") == "user"]
+        calc_dur = max(1, int(time.time() - started_at)) if started_at else 0
         if not user_msgs or len(messages) < 2:
             logger.info(f"Call in room {room_name} had insufficient user speech turns ({len(messages)}). Finalizing session in Django.")
             await save_call_session_and_update_memory_async(
@@ -32,7 +34,7 @@ async def distill_and_update_memory(
                 updated_profile=dict(current_profile or {}),
                 caller_phone=caller_phone,
                 outbound_context=outbound_context,
-                duration_seconds=0
+                duration_seconds=calc_dur
             )
             return
 
@@ -121,6 +123,7 @@ async def distill_and_update_memory(
 
         logger.info(f"Distillation complete for ({user_id}, {final_phone}). Summary: {summary[:80]}...")
 
+        calc_dur = max(1, int(time.time() - started_at)) if started_at else 0
         await save_call_session_and_update_memory_async(
             user_id=user_id,
             room_name=room_name,
@@ -129,7 +132,8 @@ async def distill_and_update_memory(
             summary=summary,
             updated_profile=updated_profile,
             caller_phone=final_phone,
-            outbound_context=outbound_context
+            outbound_context=outbound_context,
+            duration_seconds=calc_dur
         )
     except Exception as e:
         logger.error(f"Error in distill_and_update_memory for user {user_id}: {e}", exc_info=True)
