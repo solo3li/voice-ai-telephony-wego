@@ -261,6 +261,13 @@ class WazoClient:
                 ],
                 "aor_section_options": [
                     ["max_contacts", "5"]
+                ],
+                "endpoint_section_options": [
+                    ["allow", "!all,alaw,ulaw,g722,opus"],
+                    ["direct_media", "no"],
+                    ["rtp_symmetric", "yes"],
+                    ["force_rport", "yes"],
+                    ["rewrite_contact", "yes"]
                 ]
             }
         try:

@@ -139,6 +139,7 @@ services:
 
   asterisk:
     image: wazoplatform/asterisk:sounds
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile-asterisk
