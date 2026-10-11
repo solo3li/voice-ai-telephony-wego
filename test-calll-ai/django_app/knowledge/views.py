@@ -18,8 +18,42 @@ from common.auth import verify_internal_api_key
 import inngest
 from asgiref.sync import async_to_sync
 from common.inngest_client import inngest_client
+import hashlib
+import redis
 
 logger = logging.getLogger(__name__)
+
+
+def get_redis_client():
+    """Retrieve Redis client for L1 knowledge caching."""
+    redis_url = getattr(settings, 'REDIS_URL', 'redis://redis:6379/0')
+    return redis.from_url(redis_url, decode_responses=True)
+
+
+def get_rag_cache_key(user_id: int, query: str) -> str:
+    """Generate deterministic, normalized multi-tenant cache key for RAG queries."""
+    clean_q = " ".join(
+        str(query or '').lower()
+        .replace('؟', ' ').replace('?', ' ')
+        .replace('،', ' ').replace(',', ' ')
+        .replace('!', ' ').replace('.', ' ')
+        .split()
+    )
+    q_hash = hashlib.sha256(clean_q.encode('utf-8')).hexdigest()[:16]
+    return f"rag:tenant:{user_id}:cache:{q_hash}"
+
+
+def invalidate_tenant_rag_cache(user_id: int):
+    """Purge all L1 Redis RAG cache entries for a specific tenant upon document mutation."""
+    try:
+        r = get_redis_client()
+        pattern = f"rag:tenant:{user_id}:*"
+        keys = r.keys(pattern)
+        if keys:
+            r.delete(*keys)
+            logger.info(f"Invalidated {len(keys)} Redis RAG cache keys for tenant {user_id}")
+    except Exception as ex:
+        logger.warning(f"Failed to invalidate Redis RAG cache for tenant {user_id}: {ex}")
 
 @login_required(login_url='/login/')
 def list_documents(request):
@@ -146,6 +180,7 @@ def upload_document(request):
 
         logger.info(f"Synchronously processed document '{filename}' for user {request.user.username}: {len(chunks)} chunks embedded.")
 
+        invalidate_tenant_rag_cache(request.user.id)
         return JsonResponse({
             "status": "success",
             "message": f"تمت معالجة المستند '{filename}' بنجاح وفهرسة {len(chunks)} مقطعاً دلالياً.",
@@ -171,6 +206,7 @@ def delete_document(request, doc_id):
     doc = get_object_or_404(Document, id=doc_id, user=request.user)
     title = doc.title
     doc.delete()
+    invalidate_tenant_rag_cache(request.user.id)
     logger.info(f"Deleted document '{title}' (id={doc_id}) for user {request.user.username}")
     return JsonResponse({"status": "success", "message": f"تم حذف المستند '{title}' بنجاح."})
 
@@ -209,6 +245,23 @@ def api_internal_rag_search(request):
 
         if not query:
             return JsonResponse({"status": "error", "message": "query is required"}, status=400)
+
+        # 0. Check L1 Redis Cache (Multi-Tenant Isolated)
+        cache_key = get_rag_cache_key(user_id, query)
+        try:
+            r = get_redis_client()
+            cached_raw = r.get(cache_key)
+            if cached_raw:
+                cached_data = json.loads(cached_raw)
+                logger.info(f"[RAG L1 Cache Hit] Instant lookup for tenant {user_id}: '{query[:40]}'")
+                return JsonResponse({
+                    "status": "success",
+                    "text": cached_data.get("text", ""),
+                    "matches": cached_data.get("matches", []),
+                    "source": "redis_l1_cache"
+                })
+        except Exception as cache_check_err:
+            logger.debug(f"Redis cache check skipped: {cache_check_err}")
 
         api_key = SystemSetting.get_gemini_api_key()
         chunks = []
@@ -259,10 +312,23 @@ def api_internal_rag_search(request):
         matches = [c.content for c in chunks]
         formatted_text = "المعلومات الموثقة المستخرجة من مستنداتك:\n" + "\n---\n".join(matches)
 
+        # 4. Save to L1 Redis Cache for this tenant (7-day TTL)
+        try:
+            r = get_redis_client()
+            r.set(
+                cache_key,
+                json.dumps({"text": formatted_text, "matches": matches}, ensure_ascii=False),
+                ex=86400 * 7
+            )
+            logger.info(f"[RAG L1 Cached] Stored result for tenant {user_id}")
+        except Exception as cache_save_err:
+            logger.debug(f"Redis cache save skipped: {cache_save_err}")
+
         return JsonResponse({
             "status": "success",
             "text": formatted_text,
-            "matches": matches
+            "matches": matches,
+            "source": "database_l2"
         })
 
     except Exception as e:

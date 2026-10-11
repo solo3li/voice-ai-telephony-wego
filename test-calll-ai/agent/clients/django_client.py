@@ -1,9 +1,37 @@
 import time
 import json
+import hashlib
 from typing import Optional, Dict, Any, List
 import requests
-from config import DJANGO_API_URL, INTERNAL_API_KEY, logger
+import redis.asyncio as aioredis
+from config import DJANGO_API_URL, INTERNAL_API_KEY, REDIS_URL, logger
 from .http_pool import get_http_session
+
+_redis_aioclient: Optional[aioredis.Redis] = None
+
+
+async def get_async_redis_client():
+    """Retrieve shared async Redis client for sub-millisecond L1 RAG caching."""
+    global _redis_aioclient
+    if _redis_aioclient is None:
+        try:
+            _redis_aioclient = aioredis.from_url(REDIS_URL, decode_responses=True)
+        except Exception as e:
+            logger.debug(f"Redis async client init note: {e}")
+    return _redis_aioclient
+
+
+def get_rag_tenant_cache_key(user_id: int, query: str) -> str:
+    """Generate normalized multi-tenant cache key for RAG queries."""
+    clean_q = " ".join(
+        str(query or '').lower()
+        .replace('؟', ' ').replace('?', ' ')
+        .replace('،', ' ').replace(',', ' ')
+        .replace('!', ' ').replace('.', ' ')
+        .split()
+    )
+    q_hash = hashlib.sha256(clean_q.encode('utf-8')).hexdigest()[:16]
+    return f"rag:tenant:{user_id}:cache:{q_hash}"
 
 # ==================== Bootstrap & Profile Parsers ====================
 
@@ -206,6 +234,21 @@ async def query_knowledge_base_async(arg1=None, arg2=None, genai_client=None, to
     if not query:
         return "يرجى تحديد سؤال للبحث في المستندات."
 
+    # 0. Check L1 In-Memory Redis Cache directly (sub-millisecond latency)
+    cache_key = get_rag_tenant_cache_key(user_id, query)
+    try:
+        r = await get_async_redis_client()
+        if r:
+            cached_val = await r.get(cache_key)
+            if cached_val:
+                cached_data = json.loads(cached_val)
+                text_out = cached_data.get("text", "")
+                if text_out:
+                    logger.info(f"[L1 Redis Agent Cache Hit] Served instantly (<1ms) for tenant {user_id}")
+                    return text_out
+    except Exception as redis_read_err:
+        logger.debug(f"Direct Redis L1 read skipped: {redis_read_err}")
+
     url = f"{DJANGO_API_URL}/api/knowledge/internal/rag/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -221,7 +264,19 @@ async def query_knowledge_base_async(arg1=None, arg2=None, genai_client=None, to
         async with session.post(url, json=payload, headers=headers, timeout=6.0) as resp:
             if resp.status == 200:
                 data = await resp.json()
-                return data.get("text", "لم يتم العثور على أي معلومات متعلقة بهذا السؤال في المستندات المرفوعة.")
+                ret_text = data.get("text", "لم يتم العثور على أي معلومات متعلقة بهذا السؤال في المستندات المرفوعة.")
+                # Save to Redis L1 cache directly for sub-millisecond future hits
+                try:
+                    r = await get_async_redis_client()
+                    if r and data.get("matches"):
+                        await r.set(
+                            cache_key,
+                            json.dumps({"text": ret_text, "matches": data.get("matches", [])}, ensure_ascii=False),
+                            ex=86400 * 7
+                        )
+                except Exception as redis_write_err:
+                    logger.debug(f"Direct Redis L1 write skipped: {redis_write_err}")
+                return ret_text
             text = await resp.text()
             logger.error(f"Knowledge RAG API error ({resp.status}): {text}")
             return "حدث خطأ أثناء البحث في المستندات عبر الواجهة البرمجية."
