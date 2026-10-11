@@ -86,11 +86,28 @@ async def entrypoint(ctx: JobContext):
     is_off_hours = payload.get("is_off_hours", False)
     off_hours_data = payload.get("off_hours_data") or {}
 
-    # If user_id wasn't in metadata, try extracting from room pattern (e.g. room_call_<user_id>_... or ext_<user_id>)
+    # If user_id wasn't in metadata, check Redis cache set by dispatch_agent_to_room for SIP/inbound calls
+    if not user_id:
+        try:
+            import redis.asyncio as aioredis
+            r = aioredis.from_url(REDIS_URL, decode_responses=True)
+            cached_meta = await r.get(f"room_job_meta:{room_name}")
+            if cached_meta:
+                cached_data = json.loads(cached_meta)
+                user_id = cached_data.get("user_id") or user_id
+                if not profile_data:
+                    profile_data = cached_data.get("profile")
+                if not caller_phone or caller_phone == "web_dashboard":
+                    caller_phone = cached_data.get("caller_phone") or caller_phone
+            await r.aclose()
+        except Exception as r_err:
+            logger.debug(f"Redis room_job_meta lookup skipped: {r_err}")
+
+    # Fallback: extract from room pattern (strictly excluding 999 service extension)
     if not user_id and "_" in room_name:
         parts = room_name.split("_")
         for part in parts:
-            if part.isdigit() and len(part) <= 6:
+            if part.isdigit() and len(part) <= 6 and part != "999":
                 try:
                     user_id = int(part)
                     break

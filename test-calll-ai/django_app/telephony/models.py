@@ -439,6 +439,9 @@ def resolve_tenant_from_context_and_ext(context_name: str, caller_ext: str = "")
     target_profile = None
     employee = None
 
+    clean_ext = caller_ext.lower().replace("emp", "").strip() if caller_ext else ""
+    ext_candidates = [e for e in set([caller_ext, clean_ext]) if e]
+
     # 1. Match by TenantTelephonyConfig wazo_context
     if context_name:
         cfg = TenantTelephonyConfig.objects.filter(wazo_context=context_name).select_related('user').first()
@@ -446,12 +449,12 @@ def resolve_tenant_from_context_and_ext(context_name: str, caller_ext: str = "")
             user = cfg.user
 
     # 2. If user found and caller_ext provided, look up specific employee
-    if user and caller_ext:
-        employee = EmployeeProfile.objects.filter(employer=user, extension=caller_ext, is_active=True).first()
+    if user and ext_candidates:
+        employee = EmployeeProfile.objects.filter(employer=user, extension__in=ext_candidates, is_active=True).first()
 
     # 3. Fallback: match by caller_ext if context_name is default or missing
-    if not user and caller_ext:
-        employee = EmployeeProfile.objects.filter(extension=caller_ext, is_active=True).select_related('employer', 'user').first()
+    if not user and ext_candidates:
+        employee = EmployeeProfile.objects.filter(extension__in=ext_candidates, is_active=True).select_related('employer', 'user').first()
         if employee:
             user = employee.employer or employee.user
 

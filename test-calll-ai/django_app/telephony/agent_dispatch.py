@@ -56,6 +56,8 @@ def dispatch_agent_to_room(room_name: str, payload: Dict[str, Any]) -> bool:
             clean = participant_identity.replace("sip_sip_", "sip_")
             r.set(f"agent_room:{participant_identity}", room_name, ex=7200)
             r.set(f"agent_room:{clean}", room_name, ex=7200)
+        # Always cache full job metadata for worker fallback lookups
+        r.set(f"room_job_meta:{room_name}", json.dumps(payload, ensure_ascii=False), ex=3600)
     except Exception as redis_ex:
         logger.error(f"[DISPATCH] Redis setup failed: {redis_ex}")
 
