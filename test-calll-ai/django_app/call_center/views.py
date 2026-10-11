@@ -218,18 +218,6 @@ def api_create_employee(request):
         if not display_name or not username or not extension:
             return JsonResponse({"status": "error", "message": "الاسم واسم المستخدم ورقم التحويلة حقول مطلوبة"}, status=400)
 
-        if EmployeeProfile.objects.filter(extension=extension).exists():
-            return JsonResponse({"status": "error", "message": f"رقم التحويلة '{extension}' مسجل بالفعل لموظف آخر"}, status=400)
-
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({"status": "error", "message": f"اسم المستخدم '{username}' مسجل بالفعل"}, status=400)
-
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            first_name=display_name
-        )
-
         employer = None
         if request.user.is_authenticated:
             employer = request.user
@@ -240,6 +228,21 @@ def api_create_employee(request):
         if not employer:
             employer = User.objects.filter(is_superuser=True).order_by('id').first()
 
+        if EmployeeProfile.objects.filter(employer=employer, extension=extension).exists():
+            return JsonResponse({"status": "error", "message": f"رقم التحويلة '{extension}' مسجل بالفعل لموظف آخر داخل مؤسستك"}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"status": "error", "message": f"اسم المستخدم '{username}' مسجل بالفعل"}, status=400)
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=display_name
+        )
+
+        # Unique tenant prefix for global PBX/PJSIP endpoint segregation
+        tenant_prefix = f"t{employer.id}_emp"
+
         # Ensure tenant has a native Wazo context
         tenant_context = None
         try:
@@ -249,12 +252,13 @@ def api_create_employee(request):
         except Exception as e:
             logger.warning(f"Could not resolve tenant context: {e}")
 
-        # Headless Wazo Provisioning in Tenant Context
+        # Headless Wazo Provisioning in Tenant Context with unique tenant prefix
         wazo_info = wazo_client.provision_employee(
             display_name=display_name,
             extension=extension,
             password=password,
-            context=tenant_context
+            context=tenant_context,
+            tenant_prefix=tenant_prefix
         )
 
         employee = EmployeeProfile.objects.create(
@@ -267,7 +271,7 @@ def api_create_employee(request):
             avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}",
             wazo_user_uuid=wazo_info.get("wazo_user_uuid", ""),
             wazo_line_id=wazo_info.get("wazo_line_id", ""),
-            sip_username=wazo_info.get("sip_username", f"emp{extension}"),
+            sip_username=wazo_info.get("sip_username", f"{tenant_prefix}{extension}"),
             sip_password=wazo_info.get("sip_password", password),
             sip_host=wazo_info.get("sip_host", ""),
             sip_port=wazo_info.get("sip_port", 5070)

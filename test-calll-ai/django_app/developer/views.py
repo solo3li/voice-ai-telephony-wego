@@ -1201,6 +1201,9 @@ def api_user_employees(request):
             first_name=name
         )
 
+        tenant_prefix = f"t{request.user.id}_emp"
+        sip_user = f"{tenant_prefix}{extension}"
+
         emp = EmployeeProfile.objects.create(
             employer=request.user,
             user=emp_user,
@@ -1208,6 +1211,7 @@ def api_user_employees(request):
             extension=extension,
             department=data.get('department', 'المبيعات').strip(),
             status=data.get('status', 'ready'),
+            sip_username=sip_user,
             avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}"
         )
         return JsonResponse({

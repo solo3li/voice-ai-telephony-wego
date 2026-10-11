@@ -329,7 +329,9 @@ class WazoClient:
         display_name: str,
         extension: str,
         password: Optional[str] = None,
-        context: Optional[str] = None
+        context: Optional[str] = None,
+        tenant_prefix: Optional[str] = None,
+        sip_username_override: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         All-in-one headless employee provisioning in Wazo.
@@ -337,7 +339,12 @@ class WazoClient:
         reloads Asterisk PJSIP, and returns SIP connection details for softphones/IP phones.
         """
         ctx = context if (context and context != "default") else self.get_default_context()
-        sip_user = f"emp{extension}"
+        if sip_username_override:
+            sip_user = sip_username_override
+        elif tenant_prefix:
+            sip_user = f"{tenant_prefix}{extension}"
+        else:
+            sip_user = f"emp{extension}"
         sip_pass = password or f"WzPass_{uuid.uuid4().hex[:10]}"
 
         user_data = self.create_user(firstname=display_name)
