@@ -131,6 +131,7 @@ def parse_active_profile_from_bootstrap(bootstrap: dict) -> dict:
             "gender": prof.get("gender") or "female",
             "language": prof.get("language") or "arabic",
             "dialect": prof.get("dialect") or "egyptian",
+            "custom_role": prof.get("custom_role"),
             "persona_role": prof.get("persona_role") or "customer_support",
             "speaking_style": prof.get("speaking_style") or "friendly",
             "verbosity": prof.get("verbosity") or "balanced",
