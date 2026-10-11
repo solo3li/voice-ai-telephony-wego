@@ -378,8 +378,8 @@ async def entrypoint(ctx: JobContext):
         turn_handling={
             "interruption": {
                 "enabled": True,
-                "min_duration": 0.8,
-                "min_words": 2,
+                "min_duration": 0.3,
+                "min_words": 0,
                 "resume_false_interruption": True,
             }
         },
