@@ -9,6 +9,9 @@ Validating all 4 requirements:
 5. Validation of Developer and Partner OpenAPI specifications
 """
 
+
+
+
 import sys
 import os
 import io
