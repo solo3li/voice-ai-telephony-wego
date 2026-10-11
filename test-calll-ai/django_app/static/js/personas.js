@@ -8,6 +8,10 @@ let activeProfile = null;
 let googleVoices = [];
 let availableLanguages = [];
 let languageDialectsMap = {};
+let industryRolesCatalog = [];
+let tenantCustomRoles = [];
+let selectedCustomRoleId = null;
+let newProfCustomRoleId = null;
 
 let profileSelect = null;
 let fieldGender = null;
@@ -55,6 +59,96 @@ function toggleWelcomeInput(target) {
   }
 }
 
+function renderCustomRolesCount() {
+  const count = tenantCustomRoles ? tenantCustomRoles.length : 0;
+  const countElem = document.getElementById('custom-roles-count');
+  if (countElem) countElem.innerText = count;
+  const modalCountElem = document.getElementById('modal-roles-count');
+  if (modalCountElem) modalCountElem.innerText = count;
+}
+
+function populateRolePresetDropdowns() {
+  const fieldSelect = document.getElementById('field-role-preset');
+  const newSelect = document.getElementById('new-prof-role-preset');
+  if (!fieldSelect && !newSelect) return;
+
+  let optionsHtml = '<option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك --</option>';
+
+  if (industryRolesCatalog && industryRolesCatalog.length > 0) {
+    industryRolesCatalog.forEach(cat => {
+      optionsHtml += `<optgroup label="🏢 ${cat.category_name}">`;
+      (cat.roles || []).forEach(r => {
+        optionsHtml += `<option value="preset:${r.id}">${r.label}</option>`;
+      });
+      optionsHtml += '</optgroup>';
+    });
+  }
+
+  if (tenantCustomRoles && tenantCustomRoles.length > 0) {
+    optionsHtml += `<optgroup label="⭐ مكتبة أدوارك المخصصة (${tenantCustomRoles.length})">`;
+    tenantCustomRoles.forEach(cr => {
+      optionsHtml += `<option value="custom:${cr.id}">⭐ ${cr.name} (${cr.industry || 'مخصص'})</option>`;
+    });
+    optionsHtml += '</optgroup>';
+  }
+
+  if (fieldSelect) {
+    const curVal = fieldSelect.value;
+    fieldSelect.innerHTML = optionsHtml;
+    if (curVal) fieldSelect.value = curVal;
+  }
+  if (newSelect) {
+    const curVal = newSelect.value;
+    newSelect.innerHTML = optionsHtml;
+    if (curVal) newSelect.value = curVal;
+  }
+}
+
+function handleRolePresetSelect(val, context) {
+  if (!val) return;
+  let targetTextarea = (context === 'field') ? fieldRole : document.getElementById('new-prof-role');
+  if (!targetTextarea) return;
+
+  if (val.startsWith('preset:')) {
+    const presetId = val.replace('preset:', '');
+    let foundPrompt = '';
+    let foundLabel = '';
+    if (industryRolesCatalog) {
+      for (const cat of industryRolesCatalog) {
+        const match = (cat.roles || []).find(r => r.id === presetId);
+        if (match) {
+          foundPrompt = match.default_prompt;
+          foundLabel = match.label;
+          break;
+        }
+      }
+    }
+    if (foundPrompt) {
+      targetTextarea.value = foundPrompt;
+      if (context === 'field') {
+        selectedCustomRoleId = null;
+        const statusElem = document.getElementById('role-selection-status');
+        if (statusElem) statusElem.innerText = `تم تطبيق دور: ${foundLabel} (كتالوج 20 دور)`;
+      } else {
+        newProfCustomRoleId = null;
+      }
+    }
+  } else if (val.startsWith('custom:')) {
+    const customId = parseInt(val.replace('custom:', ''));
+    const cr = (tenantCustomRoles || []).find(x => x.id === customId);
+    if (cr) {
+      targetTextarea.value = cr.role_prompt;
+      if (context === 'field') {
+        selectedCustomRoleId = cr.id;
+        const statusElem = document.getElementById('role-selection-status');
+        if (statusElem) statusElem.innerText = `تم تطبيق الدور المخصص: ${cr.name} (من مكتبتك)`;
+      } else {
+        newProfCustomRoleId = cr.id;
+      }
+    }
+  }
+}
+
 async function loadProfiles() {
   try {
     const res = await fetch('/api/agents/profiles/');
@@ -65,7 +159,11 @@ async function loadProfiles() {
       googleVoices = data.google_voices;
       availableLanguages = data.languages || [];
       languageDialectsMap = data.language_dialects_map || {};
+      industryRolesCatalog = data.industry_roles_catalog || [];
+      tenantCustomRoles = data.custom_roles || [];
 
+      renderCustomRolesCount();
+      populateRolePresetDropdowns();
       renderProfileDropdown();
       renderProfileCards();
       syncGenderVoiceOptions();
@@ -272,6 +370,33 @@ function populateProfileForm(p) {
   if (fieldOffTopic) fieldOffTopic.value = p.off_topic_response || '';
   updateVoiceTag();
 
+  // Reflect custom role or preset in preset dropdown
+  const presetSelect = document.getElementById('field-role-preset');
+  const statusElem = document.getElementById('role-selection-status');
+  if (p.custom_role_id) {
+    selectedCustomRoleId = p.custom_role_id;
+    if (presetSelect) presetSelect.value = `custom:${p.custom_role_id}`;
+    if (statusElem) statusElem.innerText = `الدور المطبق: دور مخصص من مكتبتك (#${p.custom_role_id})`;
+  } else {
+    selectedCustomRoleId = null;
+    let matchedPreset = false;
+    if (industryRolesCatalog) {
+      for (const cat of industryRolesCatalog) {
+        const match = (cat.roles || []).find(r => r.id === (p.persona_role || p.role) || r.default_prompt === (p.persona_role || p.role));
+        if (match) {
+          if (presetSelect) presetSelect.value = `preset:${match.id}`;
+          if (statusElem) statusElem.innerText = `الدور المطبق: ${match.label}`;
+          matchedPreset = true;
+          break;
+        }
+      }
+    }
+    if (!matchedPreset && presetSelect) {
+      presetSelect.value = '';
+      if (statusElem) statusElem.innerText = 'تخصيص حر / مخصص لهذا البروفايل';
+    }
+  }
+
   if (profileStatusMsg) {
     profileStatusMsg.innerText = `البروفايل المطبق: "${p.name}" (${p.voice_name || p.voice} / ${p.dialect_display || p.dialect})`;
     profileStatusMsg.className = 'text-xs text-[#680E23] font-semibold';
@@ -346,6 +471,7 @@ async function saveActiveProfileChanges() {
     language: fieldLanguage ? fieldLanguage.value : 'arabic',
     dialect: fieldDialect ? fieldDialect.value : 'egyptian',
     voice_name: fieldVoice ? fieldVoice.value : 'Aoede',
+    custom_role_id: selectedCustomRoleId,
     persona_role: fieldRole ? fieldRole.value : '',
     speaking_style: fieldStyle ? fieldStyle.value : '',
     verbosity: fieldVerbosity ? fieldVerbosity.value : 'balanced',
@@ -389,6 +515,7 @@ function openNewProfileModal() {
   if (newProfLanguage) newProfLanguage.value = 'arabic';
   populateDialectSelect(newProfDialect, 'arabic', 'egyptian');
   syncNewProfileVoices();
+  newProfCustomRoleId = null;
   if (newProfWelcomeEnabled) newProfWelcomeEnabled.checked = true;
   if (newProfWelcome) newProfWelcome.value = '';
   if (newProfOffTopic) newProfOffTopic.value = '';
@@ -433,6 +560,7 @@ async function createNewProfile(e) {
         language,
         dialect,
         voice_name,
+        custom_role_id: newProfCustomRoleId,
         persona_role,
         speaking_style,
         verbosity,
@@ -457,6 +585,162 @@ async function createNewProfile(e) {
       btn.disabled = false;
       btn.innerText = 'حفظ البروفايل';
     }
+  }
+}
+
+// ==================== Custom Roles Library Modal Logic ====================
+function openCustomRolesModal() {
+  renderModalCustomRolesList();
+  const modal = document.getElementById('custom-roles-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeCustomRolesModal() {
+  const modal = document.getElementById('custom-roles-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function promptSaveCurrentRoleAsCustom() {
+  const currentPrompt = fieldRole ? fieldRole.value.trim() : '';
+  if (!currentPrompt) {
+    showToast('يرجى كتابة نص الدور والشخصية أولاً قبل حفظه في المكتبة.', 'error');
+    return;
+  }
+  openCustomRolesModal();
+  const promptInput = document.getElementById('cr-modal-prompt');
+  if (promptInput) promptInput.value = currentPrompt;
+  const nameInput = document.getElementById('cr-modal-name');
+  if (nameInput) {
+    nameInput.value = (activeProfile ? activeProfile.name : '') + ' (مخصص)';
+    nameInput.focus();
+  }
+}
+
+function renderModalCustomRolesList() {
+  const container = document.getElementById('modal-custom-roles-list');
+  if (!container) return;
+  renderCustomRolesCount();
+
+  if (!tenantCustomRoles || tenantCustomRoles.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+        لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = tenantCustomRoles.map(cr => `
+    <div class="bg-white p-3.5 rounded-2xl border border-[#EAE3D9] shadow-sm space-y-2">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-[#1C1917] text-xs">${escapeHtml(cr.name)}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
+          </div>
+          ${cr.description ? `<p class="text-[11px] text-[#6E645D] mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-[11px] font-bold transition">
+            استخدام
+          </button>
+          <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#F5EFE6] hover:bg-rose-50 text-rose-700 text-[11px] font-bold transition">
+            حذف
+          </button>
+        </div>
+      </div>
+      <div class="bg-[#FAF7F2] p-2 rounded-xl text-[10px] text-[#443D39] line-clamp-2 italic border border-[#EAE3D9]">
+        "${escapeHtml(cr.role_prompt)}"
+      </div>
+    </div>
+  `).join('');
+}
+
+async function submitNewCustomRoleFromModal() {
+  const name = (document.getElementById('cr-modal-name')?.value || '').trim();
+  const industry = (document.getElementById('cr-modal-industry')?.value || '').trim();
+  const description = (document.getElementById('cr-modal-desc')?.value || '').trim();
+  const role_prompt = (document.getElementById('cr-modal-prompt')?.value || '').trim();
+
+  if (!name) {
+    showToast('اسم الدور المخصص مطلوب.', 'error');
+    return;
+  }
+  if (!role_prompt) {
+    showToast('نص التوجيه والبرومبت المخصص مطلوب.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-save-custom-role');
+  if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+  try {
+    const res = await fetch('/api/agents/roles/custom/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ name, industry, description, role_prompt })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      tenantCustomRoles.unshift(data.role);
+      populateRolePresetDropdowns();
+      renderModalCustomRolesList();
+      if (document.getElementById('cr-modal-name')) document.getElementById('cr-modal-name').value = '';
+      if (document.getElementById('cr-modal-industry')) document.getElementById('cr-modal-industry').value = '';
+      if (document.getElementById('cr-modal-desc')) document.getElementById('cr-modal-desc').value = '';
+      if (document.getElementById('cr-modal-prompt')) document.getElementById('cr-modal-prompt').value = '';
+      showToast('تم حفظ الدور المخصص في مكتبة المؤسسة بنجاح!', 'success');
+    } else {
+      showToast('فشل الحفظ: ' + (data.message || ''), 'error');
+    }
+  } catch (err) {
+    showToast('حدث خطأ أثناء حفظ الدور المخصص.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>💾</span> حفظ الدور في المكتبة';
+    }
+  }
+}
+
+function applyCustomRoleToActiveProfile(crId) {
+  const cr = tenantCustomRoles.find(x => x.id === crId);
+  if (!cr) return;
+  if (fieldRole) fieldRole.value = cr.role_prompt;
+  selectedCustomRoleId = cr.id;
+  const presetSelect = document.getElementById('field-role-preset');
+  if (presetSelect) presetSelect.value = `custom:${cr.id}`;
+  const statusElem = document.getElementById('role-selection-status');
+  if (statusElem) statusElem.innerText = `تم تطبيق الدور المخصص: ${cr.name}`;
+  closeCustomRolesModal();
+  showToast(`تم تطبيق "${cr.name}" على النموذج الحالي. اضغط "حفظ وتطبيق على المكالمات" للاعتماد.`, 'success');
+}
+
+async function deleteCustomRole(roleId) {
+  const cr = tenantCustomRoles.find(x => x.id === roleId);
+  const name = cr ? cr.name : '';
+  if (!confirm(`هل أنت متأكد من حذف الدور المخصص "${name}" من مكتبتك؟`)) return;
+
+  try {
+    const res = await fetch(`/api/agents/roles/custom/${roleId}/`, {
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      tenantCustomRoles = tenantCustomRoles.filter(x => x.id !== roleId);
+      if (selectedCustomRoleId === roleId) selectedCustomRoleId = null;
+      populateRolePresetDropdowns();
+      renderModalCustomRolesList();
+      showToast('تم حذف الدور المخصص بنجاح', 'success');
+    } else {
+      showToast('فشل الحذف: ' + (data.message || ''), 'error');
+    }
+  } catch (err) {
+    showToast('حدث خطأ أثناء حذف الدور المخصص.', 'error');
   }
 }
 

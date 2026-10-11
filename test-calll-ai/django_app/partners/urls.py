@@ -30,6 +30,11 @@ urlpatterns = [
     path('clients/<int:client_id>/profiles/<int:profile_id>/', views.api_partner_client_profile_detail, name='api_partner_client_profile_detail'),
     path('clients/<int:client_id>/profiles/<int:profile_id>/activate/', views.api_partner_client_profile_activate, name='api_partner_client_profile_activate'),
 
+    # Managed Client AI Roles & Custom Library
+    path('clients/<int:client_id>/roles/', views.api_partner_client_roles, name='api_partner_client_roles'),
+    path('clients/<int:client_id>/roles/custom/', views.api_partner_client_custom_roles, name='api_partner_client_custom_roles'),
+    path('clients/<int:client_id>/roles/custom/<int:role_id>/', views.api_partner_client_custom_role_detail, name='api_partner_client_custom_role_detail'),
+
     path('clients/<int:client_id>/memory/', views.api_partner_client_memory, name='api_partner_client_memory'),
     path('clients/<int:client_id>/memory/<int:memory_id>/', views.api_partner_client_memory_detail, name='api_partner_client_memory_detail'),
     path('clients/<int:client_id>/crm/customers/', views.api_partner_client_crm_customers, name='api_partner_client_crm_customers'),

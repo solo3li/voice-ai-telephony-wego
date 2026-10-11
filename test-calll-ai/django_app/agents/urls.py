@@ -11,6 +11,11 @@ urlpatterns = [
     path('profiles/<int:profile_id>/update/', views.update_profile, name='update_profile'),
     path('profiles/<int:profile_id>/delete/', views.delete_profile, name='delete_profile'),
 
+    # AI Industry Roles & Custom Roles Library
+    path('roles/catalog/', views.api_roles_catalog, name='roles_catalog'),
+    path('roles/custom/', views.api_custom_roles_list_create, name='custom_roles_list_create'),
+    path('roles/custom/<int:role_id>/', views.api_custom_role_detail, name='custom_role_detail'),
+
 
     # External FastMCP Server APIs
     path('mcp/', views.get_mcp_server, name='get_mcp_server'),

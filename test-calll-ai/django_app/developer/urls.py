@@ -22,6 +22,11 @@ urlpatterns = [
     path('profiles/<int:profile_id>/', views.api_user_profile_detail, name='developer_profile_detail'),
     path('profiles/<int:profile_id>/activate/', views.api_user_profile_activate, name='developer_profile_activate'),
 
+    # AI Industry Roles & Custom Library
+    path('roles/', views.api_user_roles_catalog, name='developer_roles_catalog'),
+    path('roles/custom/', views.api_user_custom_roles, name='developer_custom_roles'),
+    path('roles/custom/<int:role_id>/', views.api_user_custom_role_detail, name='developer_custom_role_detail'),
+
     path('memory/', views.api_user_memory, name='developer_memory'),
     path('memory/<int:memory_id>/', views.api_user_memory_detail, name='developer_memory_detail'),
 

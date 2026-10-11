@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import AgentProfile, UserMCPServer, SystemSetting, TenantLiveContext
+from .models import AgentProfile, UserMCPServer, SystemSetting, TenantLiveContext, TenantCustomRole
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +126,7 @@ def list_profiles(request):
         profiles = [default_prof]
 
     active_p = next((p for p in profiles if p.is_active), profiles[0])
+    custom_roles = list(TenantCustomRole.objects.filter(user=request.user))
 
     return JsonResponse({
         "status": "success",
@@ -136,6 +137,8 @@ def list_profiles(request):
         "language_dialects_map": LANGUAGE_DIALECTS_MAP,
         "dialects": [{"id": d[0], "label": d[1]} for d in AgentProfile.DIALECT_CHOICES],
         "roles": [{"id": r[0], "label": r[1]} for r in AgentProfile.ROLE_CHOICES],
+        "industry_roles_catalog": AgentProfile.INDUSTRY_ROLE_CATALOG,
+        "custom_roles": [cr.to_dict() for cr in custom_roles],
         "styles": [{"id": s[0], "label": s[1]} for s in AgentProfile.STYLE_CHOICES],
         "genders": [{"id": g[0], "label": g[1]} for g in AgentProfile.GENDER_CHOICES],
         "verbosities": [{"id": v[0], "label": v[1]} for v in AgentProfile.VERBOSITY_CHOICES],
@@ -163,6 +166,13 @@ def create_profile(request):
         off_topic_response = str(data.get('off_topic_response', '')).strip()
         is_active = bool(data.get('is_active', True))
 
+        custom_role_id = data.get('custom_role_id')
+        custom_role = None
+        if custom_role_id:
+            custom_role = TenantCustomRole.objects.filter(id=custom_role_id, user=request.user).first()
+            if custom_role and ('persona_role' not in data or not str(data.get('persona_role', '')).strip()):
+                persona_role = custom_role.role_prompt
+
         profile = AgentProfile.objects.create(
             user=request.user,
             name=name,
@@ -170,6 +180,7 @@ def create_profile(request):
             gender=gender,
             language=language,
             dialect=dialect,
+            custom_role=custom_role,
             persona_role=persona_role,
             speaking_style=speaking_style,
             verbosity=verbosity,
@@ -207,6 +218,14 @@ def update_profile(request, profile_id):
             profile.language = data['language'].strip()
         if 'dialect' in data:
             profile.dialect = data['dialect']
+        if 'custom_role_id' in data:
+            c_role_id = data.get('custom_role_id')
+            if c_role_id:
+                profile.custom_role = TenantCustomRole.objects.filter(id=c_role_id, user=request.user).first()
+                if profile.custom_role and ('persona_role' not in data or not str(data.get('persona_role', '')).strip()):
+                    profile.persona_role = profile.custom_role.role_prompt
+            else:
+                profile.custom_role = None
         if 'persona_role' in data:
             profile.persona_role = str(data['persona_role']).strip()
         if 'speaking_style' in data:
@@ -856,3 +875,116 @@ def api_user_live_context_preview_web(request):
         })
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+# ==================== Tenant AI Roles & Custom Library ====================
+
+@login_required(login_url='/login/')
+def api_roles_catalog(request):
+    """Return categorized standard industry roles (20 roles) + user's saved custom roles."""
+    custom_roles = TenantCustomRole.objects.filter(user=request.user)
+    return JsonResponse({
+        "status": "success",
+        "industry_roles_catalog": AgentProfile.INDUSTRY_ROLE_CATALOG,
+        "roles": [{"id": r[0], "label": r[1]} for r in AgentProfile.ROLE_CHOICES],
+        "custom_roles": [cr.to_dict() for cr in custom_roles]
+    })
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def api_custom_roles_list_create(request):
+    """
+    GET: List user's custom roles library.
+    POST: Create a new custom role in the user's library.
+    """
+    if request.method == 'GET':
+        roles = TenantCustomRole.objects.filter(user=request.user)
+        return JsonResponse({
+            "status": "success",
+            "total": roles.count(),
+            "roles": [r.to_dict() for r in roles]
+        })
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        except Exception:
+            return JsonResponse({"status": "error", "message": "صيغة البيانات غير صحيحة (JSON غير صالح)"}, status=400)
+
+        name = str(data.get('name', '')).strip()
+        role_prompt = str(data.get('role_prompt', '')).strip()
+        industry = str(data.get('industry', 'custom')).strip() or 'custom'
+        description = str(data.get('description', '')).strip()
+
+        if not name:
+            return JsonResponse({"status": "error", "message": "اسم الدور المخصص مطلوب (name is required)"}, status=400)
+        if not role_prompt:
+            return JsonResponse({"status": "error", "message": "نص التوجيه المخصص للدور مطلوب (role_prompt is required)"}, status=400)
+
+        if TenantCustomRole.objects.filter(user=request.user, name=name).exists():
+            return JsonResponse({"status": "error", "message": f"يوجد دور مخصص مسجل بنفس الاسم '{name}' مسبقاً"}, status=400)
+
+        role_obj = TenantCustomRole.objects.create(
+            user=request.user,
+            name=name,
+            industry=industry,
+            description=description,
+            role_prompt=role_prompt
+        )
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"تم إنشاء الدور المخصص '{role_obj.name}' بنجاح وحفظه في مكتبة المؤسسة.",
+            "role": role_obj.to_dict()
+        }, status=201)
+
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def api_custom_role_detail(request, role_id):
+    """
+    GET, PUT, PATCH, DELETE a specific custom role belonging to the logged-in user.
+    """
+    role_obj = get_object_or_404(TenantCustomRole, id=role_id, user=request.user)
+
+    if request.method == 'GET':
+        return JsonResponse({"status": "success", "role": role_obj.to_dict()})
+
+    elif request.method in ('PUT', 'PATCH', 'POST'):
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        except Exception:
+            return JsonResponse({"status": "error", "message": "صيغة البيانات غير صحيحة"}, status=400)
+
+        if 'name' in data and str(data['name']).strip():
+            new_name = str(data['name']).strip()
+            if TenantCustomRole.objects.filter(user=request.user, name=new_name).exclude(pk=role_obj.pk).exists():
+                return JsonResponse({"status": "error", "message": f"يوجد دور مخصص آخر بهذا الاسم '{new_name}'"}, status=400)
+            role_obj.name = new_name
+        if 'industry' in data:
+            role_obj.industry = str(data['industry']).strip() or 'custom'
+        if 'description' in data:
+            role_obj.description = str(data['description']).strip()
+        if 'role_prompt' in data and str(data['role_prompt']).strip():
+            role_obj.role_prompt = str(data['role_prompt']).strip()
+
+        role_obj.save()
+        return JsonResponse({
+            "status": "success",
+            "message": f"تم تحديث الدور المخصص '{role_obj.name}' بنجاح.",
+            "role": role_obj.to_dict()
+        })
+
+    elif request.method == 'DELETE':
+        role_name = role_obj.name
+        role_obj.delete()
+        return JsonResponse({
+            "status": "success",
+            "message": f"تم حذف الدور المخصص '{role_name}' بنجاح من مكتبة المؤسسة."
+        })
+
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+

@@ -547,10 +547,26 @@
             <!-- Persona Role -->
             <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
               <div class="flex justify-between items-center">
-                <label class="block font-semibold text-[#443D39]" data-i18n="field_persona_role">الدور والشخصية (كتابة حرة)</label>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">تخصيص حر</span>
+                <label class="block font-semibold text-[#443D39]" data-i18n="field_persona_role">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="openCustomRolesModal()" class="text-[10px] px-2 py-0.5 rounded-full bg-white hover:bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] transition font-bold flex items-center gap-1">
+                    <span>📚</span> مكتبة أدوار المؤسسة (<span id="custom-roles-count">0</span>)
+                  </button>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">20 تخصص جاهز</span>
+                </div>
               </div>
-              <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة (مثال: ممثل خدمة عملاء محترف لمتجر عطور، مستشار مبيعات عقارية خبير...)" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+              <div class="space-y-1.5">
+                <select id="field-role-preset" onchange="handleRolePresetSelect(this.value, 'field')" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs font-semibold focus:outline-none focus:border-[#680E23]">
+                  <option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك المخصصة --</option>
+                </select>
+                <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+                <div class="flex justify-between items-center pt-1">
+                  <span id="role-selection-status" class="text-[10px] text-[#8C827A]">يمكنك التعديل على النص بحرية تامة</span>
+                  <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-[10px] text-[#680E23] hover:underline font-bold flex items-center gap-1">
+                    <span>💾</span> حفظ النص الحالي كدور مخصص في مكتبتي
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Speaking Style & Pacing -->
@@ -1401,7 +1417,12 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block font-semibold text-[#443D39] mb-1">الدور والشخصية (كتابة حرة)</label>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block font-semibold text-[#443D39]">الدور والشخصية (20 دور + أدوارك)</label>
+              </div>
+              <select id="new-prof-role-preset" onchange="handleRolePresetSelect(this.value, 'new')" class="w-full mb-1.5 px-3 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">
+                <option value="">-- اختر من الكتالوج أو مكتبتك المخصصة --</option>
+              </select>
               <textarea id="new-prof-role" rows="2" placeholder="اكتب الدور بحرية (مثال: ممثل خدمة عملاء محترف...)" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">خدمة عملاء ومبيعات المتجر</textarea>
             </div>
             <div>
@@ -1433,6 +1454,66 @@
             <button type="submit" id="btn-create-prof" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition">حفظ البروفايل</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Custom Roles Library Modal -->
+    <div id="custom-roles-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+      <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📚</span>
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917]">مكتبة أدوار الذكاء الاصطناعي المخصصة للمؤسسة</h3>
+              <p class="text-[10px] text-[#8C827A]">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeCustomRolesModal()" class="text-[#6E645D] hover:text-[#2D2825] text-lg font-bold">&times;</button>
+        </div>
+
+        <div class="overflow-y-auto space-y-4 flex-1 pr-1">
+          <!-- Saved Roles List -->
+          <div>
+            <h4 class="font-bold text-[#1C1917] mb-2 flex items-center justify-between">
+              <span>الأدوار المخصصة المحفوظة (<span id="modal-roles-count">0</span>)</span>
+            </h4>
+            <div id="modal-custom-roles-list" class="space-y-2">
+              <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+                لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
+              </div>
+            </div>
+          </div>
+
+          <!-- Add / Edit Custom Role Form -->
+          <div class="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EAE3D9] space-y-3">
+            <h4 class="font-bold text-[#680E23] flex items-center gap-1.5">
+              <span>➕</span> إضافة دور مخصص جديد للمكتبة
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block font-semibold text-[#443D39] mb-1">اسم الدور *</label>
+                <input type="text" id="cr-modal-name" placeholder="مثال: منسق حجوزات شاليهات الساحل" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+              </div>
+              <div>
+                <label class="block font-semibold text-[#443D39] mb-1">القطاع أو التصنيف</label>
+                <input type="text" id="cr-modal-industry" placeholder="مثال: سياحة وضيافة، عيادات..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-[#443D39] mb-1">وصف مختصر (للإشارة)</label>
+              <input type="text" id="cr-modal-desc" placeholder="مثال: الرد على استفسارات الأسعار والمساحات وتأكيد الحجز المبدئي" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+            </div>
+            <div>
+              <label class="block font-semibold text-[#443D39] mb-1">نص التوجيه والبرومبت المخصص للدور *</label>
+              <textarea id="cr-modal-prompt" rows="3" placeholder="دورك هو... ترحب بالعملاء بأسلوب... تشرح لهم... وتسجل بياناتهم..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" onclick="submitNewCustomRoleFromModal()" id="btn-save-custom-role" class="px-4 py-2 bg-[#680E23] hover:bg-[#7E152F] text-white rounded-xl font-bold transition flex items-center gap-1.5">
+                <span>💾</span> حفظ الدور في المكتبة
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -4768,11 +4849,16 @@
     }
 
     // ==================== Agent Voice & Persona Profiles Handling ====================
+    // ==================== Agent Voice & Persona Profiles Handling ====================
     let userProfiles = [];
     let activeProfile = null;
     let googleVoices = [];
     let availableLanguages = [];
     let languageDialectsMap = {};
+    let industryRolesCatalog = [];
+    let tenantCustomRoles = [];
+    let selectedCustomRoleId = null;
+    let newProfCustomRoleId = null;
 
     const profileSelect = document.getElementById('profile-select');
     const fieldGender = document.getElementById('field-gender');
@@ -4793,6 +4879,98 @@
     const newProfDialect = document.getElementById('new-prof-dialect');
     const newProfVerbosity = document.getElementById('new-prof-verbosity');
 
+    function renderCustomRolesCount() {
+      const count = tenantCustomRoles ? tenantCustomRoles.length : 0;
+      const countElem = document.getElementById('custom-roles-count');
+      if (countElem) countElem.innerText = count;
+      const modalCountElem = document.getElementById('modal-roles-count');
+      if (modalCountElem) modalCountElem.innerText = count;
+    }
+
+    function populateRolePresetDropdowns() {
+      const fieldSelect = document.getElementById('field-role-preset');
+      const newSelect = document.getElementById('new-prof-role-preset');
+      if (!fieldSelect && !newSelect) return;
+
+      let optionsHtml = '<option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك --</option>';
+
+      // 1. Industry Categories (20 Specialized Presets)
+      if (industryRolesCatalog && industryRolesCatalog.length > 0) {
+        industryRolesCatalog.forEach(cat => {
+          optionsHtml += `<optgroup label="🏢 ${cat.category_name}">`;
+          (cat.roles || []).forEach(r => {
+            optionsHtml += `<option value="preset:${r.id}">${r.label}</option>`;
+          });
+          optionsHtml += '</optgroup>';
+        });
+      }
+
+      // 2. Tenant Custom Roles Library
+      if (tenantCustomRoles && tenantCustomRoles.length > 0) {
+        optionsHtml += `<optgroup label="⭐ مكتبة أدوارك المخصصة (${tenantCustomRoles.length})">`;
+        tenantCustomRoles.forEach(cr => {
+          optionsHtml += `<option value="custom:${cr.id}">⭐ ${cr.name} (${cr.industry || 'مخصص'})</option>`;
+        });
+        optionsHtml += '</optgroup>';
+      }
+
+      if (fieldSelect) {
+        const curVal = fieldSelect.value;
+        fieldSelect.innerHTML = optionsHtml;
+        if (curVal) fieldSelect.value = curVal;
+      }
+      if (newSelect) {
+        const curVal = newSelect.value;
+        newSelect.innerHTML = optionsHtml;
+        if (curVal) newSelect.value = curVal;
+      }
+    }
+
+    function handleRolePresetSelect(val, context) {
+      if (!val) return;
+      let targetTextarea = (context === 'field') ? fieldRole : document.getElementById('new-prof-role');
+      if (!targetTextarea) return;
+
+      if (val.startsWith('preset:')) {
+        const presetId = val.replace('preset:', '');
+        let foundPrompt = '';
+        let foundLabel = '';
+        if (industryRolesCatalog) {
+          for (const cat of industryRolesCatalog) {
+            const match = (cat.roles || []).find(r => r.id === presetId);
+            if (match) {
+              foundPrompt = match.default_prompt;
+              foundLabel = match.label;
+              break;
+            }
+          }
+        }
+        if (foundPrompt) {
+          targetTextarea.value = foundPrompt;
+          if (context === 'field') {
+            selectedCustomRoleId = null;
+            const statusElem = document.getElementById('role-selection-status');
+            if (statusElem) statusElem.innerText = `تم تطبيق دور: ${foundLabel} (كتالوج 20 دور)`;
+          } else {
+            newProfCustomRoleId = null;
+          }
+        }
+      } else if (val.startsWith('custom:')) {
+        const customId = parseInt(val.replace('custom:', ''));
+        const cr = (tenantCustomRoles || []).find(x => x.id === customId);
+        if (cr) {
+          targetTextarea.value = cr.role_prompt;
+          if (context === 'field') {
+            selectedCustomRoleId = cr.id;
+            const statusElem = document.getElementById('role-selection-status');
+            if (statusElem) statusElem.innerText = `تم تطبيق الدور المخصص: ${cr.name} (من مكتبتك)`;
+          } else {
+            newProfCustomRoleId = cr.id;
+          }
+        }
+      }
+    }
+
     async function loadProfiles() {
       try {
         const res = await fetch('/api/agents/profiles/');
@@ -4803,8 +4981,13 @@
           googleVoices = data.google_voices;
           availableLanguages = data.languages || [];
           languageDialectsMap = data.language_dialects_map || {};
+          industryRolesCatalog = data.industry_roles_catalog || [];
+          tenantCustomRoles = data.custom_roles || [];
 
-          renderProfileDropdown(); renderProfileCards();
+          renderCustomRolesCount();
+          populateRolePresetDropdowns();
+          renderProfileDropdown();
+          renderProfileCards();
           syncGenderVoiceOptions();
           if (activeProfile) {
             populateProfileForm(activeProfile);
@@ -4915,6 +5098,34 @@
       const fieldOffTopic = document.getElementById('field-off-topic');
       if (fieldOffTopic) fieldOffTopic.value = p.off_topic_response || '';
       updateVoiceTag();
+
+      // Reflect custom role or preset in preset dropdown
+      const presetSelect = document.getElementById('field-role-preset');
+      const statusElem = document.getElementById('role-selection-status');
+      if (p.custom_role_id) {
+        selectedCustomRoleId = p.custom_role_id;
+        if (presetSelect) presetSelect.value = `custom:${p.custom_role_id}`;
+        if (statusElem) statusElem.innerText = `الدور المطبق: دور مخصص من مكتبتك (#${p.custom_role_id})`;
+      } else {
+        selectedCustomRoleId = null;
+        let matchedPreset = false;
+        if (industryRolesCatalog) {
+          for (const cat of industryRolesCatalog) {
+            const match = (cat.roles || []).find(r => r.id === p.persona_role || r.default_prompt === p.persona_role);
+            if (match) {
+              if (presetSelect) presetSelect.value = `preset:${match.id}`;
+              if (statusElem) statusElem.innerText = `الدور المطبق: ${match.label}`;
+              matchedPreset = true;
+              break;
+            }
+          }
+        }
+        if (!matchedPreset && presetSelect) {
+          presetSelect.value = '';
+          if (statusElem) statusElem.innerText = 'تخصيص حر / مخصص لهذا البروفايل';
+        }
+      }
+
       profileStatusMsg.innerText = `البروفايل المطبق: "${p.name}" (${p.voice_name} / ${p.dialect_display || p.dialect})`;
       profileStatusMsg.className = 'text-xs text-[#680E23] font-semibold';
     }
@@ -4951,6 +5162,7 @@
         language: fieldLanguage ? fieldLanguage.value : 'arabic',
         dialect: fieldDialect.value,
         voice_name: fieldVoice.value,
+        custom_role_id: selectedCustomRoleId,
         persona_role: fieldRole.value,
         speaking_style: fieldStyle.value,
         verbosity: fieldVerbosity ? fieldVerbosity.value : 'balanced',
@@ -4991,6 +5203,7 @@
       if (newProfLanguage) newProfLanguage.value = 'arabic';
       populateDialectSelect(newProfDialect, 'arabic', 'egyptian');
       syncNewProfileVoices();
+      newProfCustomRoleId = null;
       profileModal.classList.remove('hidden');
     }
 
@@ -5027,6 +5240,7 @@
             language,
             dialect,
             voice_name,
+            custom_role_id: newProfCustomRoleId,
             persona_role,
             speaking_style,
             verbosity,
@@ -5046,6 +5260,162 @@
       } finally {
         btn.disabled = false;
         btn.innerText = 'حفظ البروفايل';
+      }
+    }
+
+    // ==================== Custom Roles Library Modal Logic ====================
+    function openCustomRolesModal() {
+      renderModalCustomRolesList();
+      const modal = document.getElementById('custom-roles-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCustomRolesModal() {
+      const modal = document.getElementById('custom-roles-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function promptSaveCurrentRoleAsCustom() {
+      const currentPrompt = fieldRole ? fieldRole.value.trim() : '';
+      if (!currentPrompt) {
+        alert('يرجى كتابة نص الدور والشخصية أولاً قبل حفظه في المكتبة.');
+        return;
+      }
+      openCustomRolesModal();
+      const promptInput = document.getElementById('cr-modal-prompt');
+      if (promptInput) promptInput.value = currentPrompt;
+      const nameInput = document.getElementById('cr-modal-name');
+      if (nameInput) {
+        nameInput.value = (activeProfile ? activeProfile.name : '') + ' (مخصص)';
+        nameInput.focus();
+      }
+    }
+
+    function renderModalCustomRolesList() {
+      const container = document.getElementById('modal-custom-roles-list');
+      if (!container) return;
+      renderCustomRolesCount();
+
+      if (!tenantCustomRoles || tenantCustomRoles.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+            لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tenantCustomRoles.map(cr => `
+        <div class="bg-white p-3.5 rounded-2xl border border-[#EAE3D9] shadow-sm space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-[#1C1917] text-xs">${cr.name}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] font-semibold">${cr.industry || 'مخصص'}</span>
+              </div>
+              ${cr.description ? `<p class="text-[11px] text-[#6E645D] mt-0.5">${cr.description}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-[11px] font-bold transition">
+                استخدام
+              </button>
+              <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#F5EFE6] hover:bg-rose-50 text-rose-700 text-[11px] font-bold transition">
+                حذف
+              </button>
+            </div>
+          </div>
+          <div class="bg-[#FAF7F2] p-2 rounded-xl text-[10px] text-[#443D39] line-clamp-2 italic border border-[#EAE3D9]">
+            "${cr.role_prompt}"
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function submitNewCustomRoleFromModal() {
+      const name = (document.getElementById('cr-modal-name')?.value || '').trim();
+      const industry = (document.getElementById('cr-modal-industry')?.value || '').trim();
+      const description = (document.getElementById('cr-modal-desc')?.value || '').trim();
+      const role_prompt = (document.getElementById('cr-modal-prompt')?.value || '').trim();
+
+      if (!name) {
+        alert('اسم الدور المخصص مطلوب.');
+        return;
+      }
+      if (!role_prompt) {
+        alert('نص التوجيه والبرومبت المخصص مطلوب.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-custom-role');
+      if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+      try {
+        const res = await fetch('/api/agents/roles/custom/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ name, industry, description, role_prompt })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          tenantCustomRoles.unshift(data.role);
+          populateRolePresetDropdowns();
+          renderModalCustomRolesList();
+          // Clear inputs
+          if (document.getElementById('cr-modal-name')) document.getElementById('cr-modal-name').value = '';
+          if (document.getElementById('cr-modal-industry')) document.getElementById('cr-modal-industry').value = '';
+          if (document.getElementById('cr-modal-desc')) document.getElementById('cr-modal-desc').value = '';
+          if (document.getElementById('cr-modal-prompt')) document.getElementById('cr-modal-prompt').value = '';
+          alert('تم حفظ الدور المخصص في مكتبة المؤسسة بنجاح!');
+        } else {
+          alert('فشل الحفظ: ' + (data.message || ''));
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء حفظ الدور المخصص.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>💾</span> حفظ الدور في المكتبة';
+        }
+      }
+    }
+
+    function applyCustomRoleToActiveProfile(crId) {
+      const cr = tenantCustomRoles.find(x => x.id === crId);
+      if (!cr) return;
+      if (fieldRole) fieldRole.value = cr.role_prompt;
+      selectedCustomRoleId = cr.id;
+      const presetSelect = document.getElementById('field-role-preset');
+      if (presetSelect) presetSelect.value = `custom:${cr.id}`;
+      const statusElem = document.getElementById('role-selection-status');
+      if (statusElem) statusElem.innerText = `تم تطبيق الدور المخصص: ${cr.name}`;
+      closeCustomRolesModal();
+      alert(`تم تطبيق "${cr.name}" على النموذج الحالي. اضغط "حفظ وتطبيق على المكالمات" للاعتماد.`);
+    }
+
+    async function deleteCustomRole(roleId) {
+      const cr = tenantCustomRoles.find(x => x.id === roleId);
+      const name = cr ? cr.name : '';
+      if (!confirm(`هل أنت متأكد من حذف الدور المخصص "${name}" من مكتبتك؟`)) return;
+
+      try {
+        const res = await fetch(`/api/agents/roles/custom/${roleId}/`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          tenantCustomRoles = tenantCustomRoles.filter(x => x.id !== roleId);
+          if (selectedCustomRoleId === roleId) selectedCustomRoleId = null;
+          populateRolePresetDropdowns();
+          renderModalCustomRolesList();
+        } else {
+          alert('فشل الحذف: ' + (data.message || ''));
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء حذف الدور المخصص.');
       }
     }
 

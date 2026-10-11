@@ -47,7 +47,7 @@ def partner_client_access_required(view_func):
     @wraps(view_func)
     @partner_required
     def _wrapped(request, *args, **kwargs):
-        client_id = kwargs.get('client_id') or request.GET.get('client_id')
+        client_id = kwargs.get('client_id') or (args[0] if args else None) or request.GET.get('client_id')
         if not client_id and request.body:
             try:
                 body_data = json.loads(request.body)
