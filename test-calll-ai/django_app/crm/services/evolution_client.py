@@ -54,6 +54,17 @@ def get_connection_status(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[st
         return {"status": "error", "ok": False, "state": "close", "connected": False, "error": str(e)}
 
 
+def delete_instance(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
+    """Delete an instance from Evolution API to clear dead/stale sessions."""
+    url = f"{EVOLUTION_API_URL}/instance/delete/{instance_name}"
+    try:
+        resp = requests.delete(url, headers=get_headers(), timeout=10.0)
+        return {"ok": resp.status_code == 200}
+    except Exception as e:
+        logger.warning(f"Error deleting instance {instance_name}: {e}")
+        return {"ok": False, "error": str(e)}
+
+
 def get_qr_code(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
     """Fetch base64 QR code to pair WhatsApp."""
     url = f"{EVOLUTION_API_URL}/instance/connect/{instance_name}"
@@ -64,15 +75,23 @@ def get_qr_code(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
             base64_qr = data.get("base64") or data.get("qrcode", {}).get("base64") or ""
             pairing_code = data.get("pairingCode") or ""
             count = data.get("count", 0)
-            return {"status": "success", "ok": True, "base64": base64_qr, "pairing_code": pairing_code, "count": count}
-        elif resp.status_code == 404:
-            create_or_get_instance(instance_name)
-            # Retry once
-            r2 = requests.get(url, headers=get_headers(), timeout=10.0)
-            if r2.status_code in (200, 201):
-                d2 = r2.json()
-                return {"status": "success", "ok": True, "base64": d2.get("base64", ""), "pairing_code": d2.get("pairingCode", "")}
-        return {"status": "error", "ok": False, "error": resp.text}
+            if base64_qr or pairing_code:
+                return {"status": "success", "ok": True, "base64": base64_qr, "pairing_code": pairing_code, "count": count}
+
+        # If instance not found or stale session without QR, recreate instance cleanly
+        delete_instance(instance_name)
+        create_or_get_instance(instance_name)
+        r2 = requests.get(url, headers=get_headers(), timeout=10.0)
+        if r2.status_code in (200, 201):
+            d2 = r2.json()
+            return {
+                "status": "success",
+                "ok": True,
+                "base64": d2.get("base64") or d2.get("qrcode", {}).get("base64") or "",
+                "pairing_code": d2.get("pairingCode", ""),
+                "count": d2.get("count", 0)
+            }
+        return {"status": "error", "ok": False, "error": r2.text}
     except Exception as e:
         logger.error(f"Error fetching QR code: {e}")
         return {"status": "error", "ok": False, "error": str(e)}

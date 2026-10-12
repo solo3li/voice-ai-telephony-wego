@@ -3875,6 +3875,15 @@
 
         // 2. Connect to Centrifugo (App WebSockets)
         try {
+          if (currentSubscription) {
+            try { currentSubscription.unsubscribe(); } catch (_) {}
+            currentSubscription = null;
+          }
+          if (centrifugeClient) {
+            try { centrifugeClient.disconnect(); } catch (_) {}
+            centrifugeClient = null;
+          }
+
           centrifugeClient = new Centrifuge(data.centrifugo_ws_url, {
             token: data.centrifugo_token
           });
@@ -3891,11 +3900,18 @@
             cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Centrifugo: منقطع';
           });
 
-          currentSubscription = centrifugeClient.newSubscription(data.channel);
-          currentSubscription.on('publication', (ctx) => {
-            handleAgentEvent(ctx.data);
-          });
-          currentSubscription.subscribe();
+          let sub = null;
+          if (typeof centrifugeClient.getSubscription === 'function') {
+            sub = centrifugeClient.getSubscription(data.channel);
+          }
+          if (!sub) {
+            sub = centrifugeClient.newSubscription(data.channel);
+            sub.on('publication', (ctx) => {
+              handleAgentEvent(ctx.data);
+            });
+            sub.subscribe();
+          }
+          currentSubscription = sub;
           centrifugeClient.connect();
         } catch (cfErr) {
           console.warn('Centrifugo connection skipped:', cfErr);
@@ -4089,6 +4105,10 @@
       if (livekitRoom) {
         try { livekitRoom.disconnect(); } catch (e) {}
         livekitRoom = null;
+      }
+      if (currentSubscription) {
+        try { currentSubscription.unsubscribe(); } catch (_) {}
+        currentSubscription = null;
       }
       if (centrifugeClient) {
         try { centrifugeClient.disconnect(); } catch (e) {}
