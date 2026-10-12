@@ -8,6 +8,7 @@ urlpatterns = [
     path('settings/', views.update_partner_settings, name='partner_settings'),
     path('settings/test-webhook/', views.test_partner_webhook, name='partner_test_webhook'),
     path('clients/cap/', views.update_client_cap, name='partner_client_cap'),
+    path('clients/<int:client_id>/cap/', views.update_client_cap, name='api_partner_client_cap'),
 
     path('docs/', views.api_partner_docs, name='partner_docs'),
     path('docs/openapi.json', views.api_partner_openapi_spec, name='partner_openapi_spec'),
@@ -20,6 +21,7 @@ urlpatterns = [
 
     path('clients/register/', views.api_partner_register_client, name='api_partner_register_client'),
     path('clients/', views.api_partner_list_clients, name='api_partner_list_clients'),
+    path('clients/<int:client_id>/', views.api_partner_client_detail, name='api_partner_client_detail'),
     path('clients/<int:client_id>/calls/', views.api_partner_client_calls, name='api_partner_client_calls'),
     path('clients/<int:client_id>/calls/dial/', views.api_partner_client_call_dial, name='api_partner_client_calls_dial'),
     path('clients/<int:client_id>/calls/hangup/', views.api_partner_client_call_hangup, name='api_partner_client_call_hangup'),

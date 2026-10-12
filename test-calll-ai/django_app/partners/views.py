@@ -255,23 +255,45 @@ def test_partner_webhook(request):
     return JsonResponse({"status": "success", "message": "تم إرسال إشعار فحص الـ Webhook التجريبي بنجاح."})
 
 
-@login_required(login_url='/login/')
-def update_client_cap(request):
+@csrf_exempt
+def update_client_cap(request, client_id=None):
     """Partner updates spending cap, minute cap, or toggle is_active for a client."""
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
-    partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
-    if not partner:
-        return JsonResponse({"status": "error", "message": "الحساب غير معتمد كشريك."}, status=403)
+    api_key = request.headers.get('X-Partner-Key')
+    if not api_key:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            api_key = auth_header.split(' ', 1)[1].strip()
+
+    partner = None
+    if api_key:
+        partner = PartnerProfile.objects.filter(api_key=api_key, status='approved').first()
+        if not partner:
+            return JsonResponse({"status": "error", "message": "مفتاح الشريك غير صالح أو غير معتمد."}, status=403)
+    elif request.user.is_authenticated:
+        partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
+        if not partner:
+            return JsonResponse({"status": "error", "message": "الحساب غير معتمد كشريك نشط."}, status=403)
+    else:
+        return JsonResponse({"status": "error", "message": "Authentication required (X-Partner-Key header or login session)"}, status=401)
 
     try:
         data = json.loads(request.body) if request.body else request.POST
     except Exception:
         data = {}
 
-    client_id = data.get('client_id')
-    client_rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).first()
+    target_client_id = client_id or data.get('client_id')
+    if not target_client_id:
+        return JsonResponse({"status": "error", "message": "client_id مطلوب."}, status=400)
+
+    from django.db.models import Q
+    q_filter = Q(client_id=target_client_id)
+    if str(target_client_id).isdigit():
+        q_filter |= Q(id=int(target_client_id))
+
+    client_rel = PartnerClientRelationship.objects.filter(q_filter, partner=partner).first()
     if not client_rel:
         return JsonResponse({"status": "error", "message": "العميل غير موجود أو لا يتبع حسابك."}, status=404)
 
@@ -407,6 +429,22 @@ def api_partner_list_clients(request):
         "partner_code": request.partner.partner_code,
         "count": clients.count(),
         "clients": [c.to_dict() for c in clients]
+    })
+
+
+@csrf_exempt
+@partner_client_access_required
+def api_partner_client_detail(request, client_id):
+    """
+    GET /api/partner/v1/clients/<int:client_id>/
+    Returns sub-client profile, call quotas, and usage statistics.
+    """
+    if request.method != 'GET':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    return JsonResponse({
+        "status": "success",
+        "client": request.client_rel.to_dict()
     })
 
 
