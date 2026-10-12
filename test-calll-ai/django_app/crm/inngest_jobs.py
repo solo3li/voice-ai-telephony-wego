@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import logging
 import inngest
@@ -398,17 +399,28 @@ async def fn_process_whatsapp_followup(ctx: inngest.Context):
     call_transcript = event_data.get("call_transcript", "")
     call_summary = event_data.get("call_summary", "")
 
+    # Prevent processing non-deliverable identifiers such as web_dashboard
+    raw_phone = str(phone_number or "").strip()
+    digits = re.sub(r"\D", "", raw_phone)
+    if not digits or raw_phone.lower() in ("web_dashboard", "none", "unknown", "anonymous") or len(digits) < 7:
+        logger.info(f"[Inngest Followup] Skipped non-deliverable destination: '{phone_number}'")
+        return {"status": "skipped", "reason": "invalid_or_web_phone"}
+
     async def step_run_langgraph():
         from crm.services.langgraph_worker import run_autonomous_followup
-        return await sync_to_async(run_autonomous_followup, thread_sensitive=True)(
-            user_id=user_id,
-            phone_number=phone_number,
-            trigger_type=trigger_type,
-            call_transcript=call_transcript,
-            call_summary=call_summary,
-            inbound_message=inbound_message,
-            customer_name=customer_name,
-        )
+        try:
+            return await sync_to_async(run_autonomous_followup, thread_sensitive=True)(
+                user_id=user_id,
+                phone_number=phone_number,
+                trigger_type=trigger_type,
+                call_transcript=call_transcript,
+                call_summary=call_summary,
+                inbound_message=inbound_message,
+                customer_name=customer_name,
+            )
+        except Exception as e:
+            logger.error(f"[Inngest LangGraph Error] Failed for {phone_number}: {e}", exc_info=True)
+            return {"status": "error", "error": str(e), "is_sent": False}
 
     return await ctx.step.run("execute-langgraph", step_run_langgraph)
 
@@ -423,6 +435,12 @@ def dispatch_whatsapp_followup_job(
     call_summary: str = ""
 ):
     """Dispatches a durable Inngest background job for LangGraph followup with robust fallback."""
+    raw_phone = str(phone_number or "").strip()
+    digits = re.sub(r"\D", "", raw_phone)
+    if not digits or raw_phone.lower() in ("web_dashboard", "none", "unknown", "anonymous") or len(digits) < 7:
+        logger.info(f"Skipping WhatsApp followup dispatch: '{phone_number}' is not a valid deliverable phone number.")
+        return {"status": "skipped", "reason": "invalid_or_web_phone"}
+
     from asgiref.sync import async_to_sync
     evt = inngest.Event(
         name="crm/whatsapp.followup_requested",

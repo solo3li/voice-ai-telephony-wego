@@ -690,6 +690,12 @@ def run_autonomous_followup(
     customer_name: str = ""
 ) -> Dict[str, Any]:
     """Execute LangGraph omnichannel engine for a customer event."""
+    raw_phone = str(phone_number or "").strip()
+    digits = re.sub(r"\D", "", raw_phone)
+    if not digits or raw_phone.lower() in ("web_dashboard", "none", "unknown", "anonymous") or len(digits) < 7:
+        logger.info(f"Skipping run_autonomous_followup: '{phone_number}' is not a valid phone destination.")
+        return {"status": "skipped", "reason": "invalid_phone", "is_sent": False}
+
     initial_state: FollowupState = {
         "user_id": user_id,
         "phone_number": phone_number,
