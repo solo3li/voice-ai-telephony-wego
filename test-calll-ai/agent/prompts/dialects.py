@@ -109,3 +109,81 @@ DIALECT_RULES_MAP = {
         "تحدث بنبرة هاتفية حية وعفوية ومرنة وسريعة كأنك موظف خدمة عملاء مصري حقيقي، دون أي تكلف أو نبرة قراءة نصوص إذاعية."
     ),
 }
+
+LANGUAGE_NAMES_MAP = {
+    "arabic": "العربية (Arabic)",
+    "english": "English",
+    "french": "Français (French)",
+    "spanish": "Español (Spanish)",
+    "german": "Deutsch (German)",
+    "italian": "Italiano (Italian)",
+    "turkish": "Türkçe (Turkish)",
+    "russian": "Русский (Russian)",
+    "urdu": "اردو (Urdu)",
+    "hindi": "हिन्दी (Hindi)",
+    "chinese": "中文 (Mandarin Chinese)",
+}
+
+DIALECT_NAMES_MAP = {
+    "egyptian": "لهجة مصرية عامية",
+    "saudi": "لهجة سعودية وخليجية دارجة",
+    "emirati": "لهجة إماراتية وخليجية",
+    "kuwaiti": "لهجة كويتية",
+    "levantine": "لهجة شامية (سوريا ولبنان)",
+    "jordanian_palestinian": "لهجة أردنية وفلسطينية",
+    "moroccan": "الدارجة المغربية",
+    "algerian": "لهجة جزائرية",
+    "tunisian": "لهجة تونسية",
+    "iraqi": "لهجة عراقية",
+    "sudanese": "لهجة سودانية",
+    "yemeni": "لهجة يمنية",
+    "fusha": "عربية فصحى معاصرة",
+    "english_us": "American English (US)",
+    "english_uk": "British English (UK)",
+    "english_aus": "Australian English",
+    "english_ind": "Indian English",
+    "english": "General English",
+    "french_fr": "Français Métropolitain (France)",
+    "french_ca": "Français Canadien (Canada)",
+    "spanish_es": "Español de España",
+    "spanish_latam": "Español Latinoamericano",
+    "german_de": "Standarddeutsch",
+    "italian_it": "Italiano Standard",
+    "turkish_tr": "Türkçe",
+    "russian_ru": "Русский язык",
+    "urdu_pk": "اردو (Urdu)",
+    "hindi_in": "हिन्दी (Hindi)",
+    "chinese_zh": "普通话 (Mandarin Chinese)",
+}
+
+
+def build_language_lock_instruction(language: str = "arabic", dialect: str = "egyptian") -> str:
+    """Build dynamic, context-aware language and dialect lock instructions."""
+    lang_key = (language or "arabic").lower().strip()
+    dia_key = (dialect or "egyptian").lower().strip()
+
+    lang_name = LANGUAGE_NAMES_MAP.get(lang_key, lang_key.capitalize())
+    dialect_name = DIALECT_NAMES_MAP.get(dia_key, dia_key)
+
+    is_non_arabic = (
+        lang_key in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"]
+        or any(dia_key.startswith(p) for p in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"])
+    )
+
+    if is_non_arabic:
+        return (
+            f"قفل اللغة واللهجة الصارم والذكي (Smart Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
+            f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} - {dialect_name}.\n"
+            f"- Speak strictly and exclusively in {dialect_name} ({lang_name}) throughout the entire conversation.\n"
+            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق أي جملة أو عبارة بأي لغة أو لهجة أخرى غير لغة المنشأة المحددة أعلاه ({dialect_name}) مهما كان السبب!\n"
+            f"- حتى لو صدر من المتصل كلام بلغة أخرى (كالعربية أو الإسبانية أو غيرها)، أو حدث تشويش صوتي أو خطأ في التقاط الميكروفون: لا تقلد لغة المتصل أبداً ولا تكررها! بل استمر دائماً في الحديث والرد بلغة المنشأة المعتمدة حصراً: {dialect_name}."
+        )
+    else:
+        return (
+            f"قفل اللغة واللهجة الصارم والذكي (Smart Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
+            f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} ({dialect_name}).\n"
+            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق جملة أو عبارة بأي لغة أجنبية أو لهجة أخرى غير لغة المنشأة المحددة أعلاه مهما كان السبب!\n"
+            f"- حتى لو صدر من المتصل كلام بلغة أجنبية، أو حدث تشويش صوتي أو خطأ في التقاط الكلمات من الميكروفون بدا كلغة أخرى: لا تقلد لغة المتصل أبداً ولا تكررها! بل استمر دائماً في الحديث والرد بـ {lang_name} ({dialect_name}) حصراً.\n"
+            f"- يُسمح فقط بنطق المصطلحات الفنية أو مسميات الخدمات والتقنية الشائعة بالإنجليزية داخل السياق الطبيعي عند الحاجة فقط (مثل: Single, Double, Suite, Wi-Fi, VIP, System)."
+        )
+
