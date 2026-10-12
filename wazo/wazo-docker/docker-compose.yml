@@ -159,7 +159,7 @@ services:
       - '0.0.0.0:5070:5060/tcp'  # SIP TCP (custom 5070)
       - '[::]:5070:5060/udp'
       - '[::]:5070:5060/tcp'
-      - '19000-20000:19000-20000/udp'  # RTP
+      - '19980-20000:19980-20000/udp'  # RTP
     networks:
       - default
       - voice_net
