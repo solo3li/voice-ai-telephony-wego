@@ -516,6 +516,30 @@ class WazoClient:
             logger.warning(f"[WazoClient] delete_user error: {e}")
             return False
 
+    def delete_line(self, line_id: Any) -> bool:
+        """Delete line and associated endpoint in Wazo."""
+        if not line_id or str(line_id).startswith("sim-"):
+            return True
+        url = f"{self.confd_url}/lines/{line_id}"
+        try:
+            resp = requests.delete(url, headers=self._headers(), timeout=self.timeout)
+            return resp.status_code in (200, 204, 404)
+        except Exception as e:
+            logger.warning(f"[WazoClient] delete_line error: {e}")
+            return False
+
+    def delete_extension(self, extension_id: Any) -> bool:
+        """Delete extension in Wazo."""
+        if not extension_id or str(extension_id).startswith("sim-"):
+            return True
+        url = f"{self.confd_url}/extensions/{extension_id}"
+        try:
+            resp = requests.delete(url, headers=self._headers(), timeout=self.timeout)
+            return resp.status_code in (200, 204, 404)
+        except Exception as e:
+            logger.warning(f"[WazoClient] delete_extension error: {e}")
+            return False
+
 
 # Singleton instance
 wazo_client = WazoClient()

@@ -1455,10 +1455,10 @@ def api_partner_client_employees(request, client_id):
             return JsonResponse({"status": "error", "message": "display_name and extension are required"}, status=400)
 
         # Check unique extension for this client
-        if EmployeeProfile.objects.filter(employer=request.client_user, extension=extension, is_active=True).exists():
+        if EmployeeProfile.objects.filter(employer=request.client_user, extension=extension).exists():
             return JsonResponse({
                 "status": "error",
-                "message": f"Extension '{extension}' is already registered for this client."
+                "message": f"رقم التحويلة '{extension}' مسجل بالفعل لهذا المطعم. يرجى اختيار رقم تحويلة آخر."
             }, status=409)
 
         # Create auth user for this employee
@@ -1489,22 +1489,34 @@ def api_partner_client_employees(request, client_id):
             context=tenant_context
         )
 
-        employee = EmployeeProfile.objects.create(
-            user=emp_user,
-            employer=request.client_user,
-            extension=extension,
-            display_name=display_name,
-            department=department,
-            status=status_val,
-            avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}",
-            wazo_user_uuid=wazo_info.get("wazo_user_uuid", ""),
-            wazo_line_id=wazo_info.get("wazo_line_id", ""),
-            sip_username=wazo_info.get("sip_username", f"emp{extension}"),
-            sip_password=wazo_info.get("sip_password", password),
-            sip_host=wazo_info.get("sip_host", ""),
-            sip_port=wazo_info.get("sip_port", 5070),
-            is_active=True
-        )
+        try:
+            employee = EmployeeProfile.objects.create(
+                user=emp_user,
+                employer=request.client_user,
+                extension=extension,
+                display_name=display_name,
+                department=department,
+                status=status_val,
+                avatar_url=f"https://api.dicebear.com/7.x/bottts/png?seed={extension}",
+                wazo_user_uuid=wazo_info.get("wazo_user_uuid", ""),
+                wazo_line_id=wazo_info.get("wazo_line_id", ""),
+                sip_username=wazo_info.get("sip_username", f"emp{extension}"),
+                sip_password=wazo_info.get("sip_password", password),
+                sip_host=wazo_info.get("sip_host", ""),
+                sip_port=wazo_info.get("sip_port", 5070),
+                is_active=True
+            )
+        except Exception as e:
+            logger.error(f"Failed to create EmployeeProfile for ext {extension}: {e}")
+            if emp_user:
+                try:
+                    emp_user.delete()
+                except Exception:
+                    pass
+            return JsonResponse({
+                "status": "error",
+                "message": f"تعذر إضافة الموظف: رقم التحويلة '{extension}' مسجل بالفعل لهذا المطعم أو حدث تعارض في البيانات."
+            }, status=409)
 
         try:
             from call_center.views import publish_to_centrifugo
@@ -1608,16 +1620,23 @@ def api_partner_client_employee_detail(request, client_id, employee_id):
         name = employee.display_name
         ext = employee.extension
         wazo_uuid = employee.wazo_user_uuid
+        wazo_line = employee.wazo_line_id
         user_to_del = employee.user
         employee.delete()
         if user_to_del:
-            user_to_del.delete()
-        if wazo_uuid:
             try:
-                from telephony.wazo_client import wazo_client
+                user_to_del.delete()
+            except Exception:
+                pass
+        try:
+            from telephony.wazo_client import wazo_client
+            if wazo_uuid:
                 wazo_client.delete_user(wazo_uuid)
-            except Exception as e:
-                logger.warning(f"Failed to delete Wazo user {wazo_uuid}: {e}")
+            if wazo_line:
+                wazo_client.delete_line(wazo_line)
+            wazo_client.reload_asterisk_pjsip()
+        except Exception as e:
+            logger.warning(f"Failed to clean up Wazo resources for employee ext {ext}: {e}")
 
         return JsonResponse({
             "status": "success",
