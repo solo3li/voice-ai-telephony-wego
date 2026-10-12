@@ -1584,8 +1584,16 @@ def api_partner_client_employee_detail(request, client_id, employee_id):
                 employee.extension = new_ext
 
         if 'password' in data and data['password']:
-            employee.user.set_password(str(data['password']).strip())
+            new_pwd = str(data['password']).strip()
+            employee.user.set_password(new_pwd)
             employee.user.save(update_fields=['password'])
+            employee.sip_password = new_pwd
+            if employee.wazo_line_id:
+                try:
+                    from telephony.wazo_client import wazo_client
+                    wazo_client.update_line_password(employee.wazo_line_id, new_pwd)
+                except Exception as e:
+                    logger.warning(f"Failed to sync SIP password to Wazo for employee {employee.id}: {e}")
 
         employee.save()
 

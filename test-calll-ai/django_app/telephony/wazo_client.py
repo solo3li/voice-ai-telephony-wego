@@ -284,6 +284,44 @@ class WazoClient:
 
         return {"id": int(uuid.uuid4().int % 100000), "context": ctx}
 
+    def update_line_password(self, line_id: Any, new_password: str) -> bool:
+        """Update SIP password for a line's endpoint in Wazo and reload PJSIP."""
+        try:
+            line_resp = requests.get(f"{self.confd_url}/lines/{line_id}", headers=self._headers(), timeout=self.timeout)
+            if line_resp.status_code != 200:
+                logger.warning(f"[WazoClient] update_line_password: line {line_id} not found ({line_resp.status_code})")
+                return False
+            ep_info = line_resp.json().get("endpoint_sip") or {}
+            ep_uuid = ep_info.get("uuid")
+            if not ep_uuid:
+                logger.warning(f"[WazoClient] update_line_password: no endpoint_sip uuid for line {line_id}")
+                return False
+
+            ep_resp = requests.get(f"{self.confd_url}/endpoints/sip/{ep_uuid}", headers=self._headers(), timeout=self.timeout)
+            if ep_resp.status_code != 200:
+                logger.warning(f"[WazoClient] update_line_password: endpoint {ep_uuid} fetch failed ({ep_resp.status_code})")
+                return False
+            ep_data = ep_resp.json()
+            auth_opts = ep_data.get("auth_section_options", [])
+            has_pwd = False
+            for opt in auth_opts:
+                if len(opt) >= 2 and opt[0] == "password":
+                    opt[1] = str(new_password)
+                    has_pwd = True
+                    break
+            if not has_pwd:
+                auth_opts.append(["password", str(new_password)])
+            ep_data["auth_section_options"] = auth_opts
+
+            put_resp = requests.put(f"{self.confd_url}/endpoints/sip/{ep_uuid}", headers=self._headers(), json=ep_data, timeout=self.timeout)
+            if put_resp.status_code in (200, 204):
+                self.reload_asterisk_pjsip()
+                return True
+            logger.warning(f"[WazoClient] update_line_password PUT failed ({put_resp.status_code}): {put_resp.text}")
+        except Exception as e:
+            logger.warning(f"[WazoClient] update_line_password exception: {e}")
+        return False
+
     def create_extension(self, exten: str, context: Optional[str] = None) -> Dict[str, Any]:
         """Create an extension in Wazo."""
         ctx = context if (context and context != "default") else self.get_default_context()
