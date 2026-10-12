@@ -43,7 +43,10 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
         {"name": "10. الويبهوك والتوقيع المشفر", "description": "استقبال إشعارات انتهاء المكالمات والتحقق البرمجي من توقيع HMAC-SHA256."},
         {"name": "11. إدارة خوادم FastMCP للعملاء", "description": "ربط خوادم FastMCP الخارجية لعميل محدد عبر بروتوكول SSE ومزامنة أدوات الذكاء الاصطناعي الحية."},
         {"name": "12. حملات اتصال العملاء (Client Campaigns)", "description": "إنشاء وإدارة حملات الاتصال الآلي، التحكم بجهات الاتصال الفردية، إعادة المحاولات، والتصدير عبر Inngest."},
-        {"name": "13. الذاكرة المنظمة الحية للعميل (Client Live Context)", "description": "حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع لعملاء الشريك في كاش Redis فائق السرعة (< 2ms)."}
+        {"name": "13. الذاكرة المنظمة الحية للعميل (Client Live Context)", "description": "حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع لعملاء الشريك في كاش Redis فائق السرعة (< 2ms)."},
+        {"name": "14. الأدوار الوظيفية والصناعية لعملاء الشريك (Client AI Industry Roles)", "description": "كتالوج الأدوار المحددة مسبقاً وتخصيص أدوار المساعد لعملاء الشريك."},
+        {"name": "15. قائمة منع الاتصال لعملاء الشريك (Client Do Not Call - DNC)", "description": "إدارة قائمة DNC وفحص الأرقام الممنوعة قبل إطلاق حملات العميل لضمان الامتثال."},
+        {"name": "16. قنوات الواتساب والمراسلة للعملاء (Client WhatsApp Omnichannel)", "description": "ربط جلسات الواتساب لعملاء الشريك، متابعة المحادثات، والردود الآلية والفواتير."}
     ]
 
     tags_en = [
@@ -59,7 +62,10 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
         {"name": "10. Webhooks & HMAC Signatures", "description": "Real-time call completion webhook notifications and HMAC-SHA256 signature verification."},
         {"name": "11. Client FastMCP Management", "description": "Manage external FastMCP SSE tool servers per sub-client and synchronize live tool schemas."},
         {"name": "12. Client Outbound Campaigns", "description": "Create and execute outbound calling campaigns, manage contacts, single dial triggers, and export leads."},
-        {"name": "13. Client Structured Live Context", "description": "Manage sub-client real-time in-memory cache (< 2ms) for dynamic business data (menus, branches, delivery zones, out of stock)."}
+        {"name": "13. Client Structured Live Context", "description": "Manage sub-client real-time in-memory cache (< 2ms) for dynamic business data (menus, branches, delivery zones, out of stock)."},
+        {"name": "14. Client AI Industry Roles", "description": "Pre-built industry roles catalog and custom role provisioning per sub-client."},
+        {"name": "15. Client Do Not Call (DNC) Registry", "description": "Sub-client DNC list management, pre-dial phone validation, and regulatory opt-outs."},
+        {"name": "16. Client WhatsApp & Omnichannel", "description": "Sub-client WhatsApp instance pairing, live chat inspection, human agent reply, and post-call receipts."}
     ]
 
     tags = tags_ar if is_ar else tags_en
@@ -77,6 +83,9 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
         "tag_mcp": tags[10]["name"],
         "tag_campaigns": tags[11]["name"],
         "tag_context": tags[12]["name"],
+        "tag_roles": tags[13]["name"],
+        "tag_dnc": tags[14]["name"],
+        "tag_whatsapp": tags[15]["name"],
     }
 
     # 3. Path Operations
@@ -1733,7 +1742,390 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                 },
                 "responses": {"200": {"description": "تم حفظ الإعدادات بنجاح" if is_ar else "Business hours updated successfully"}}
             }
-        }
+        },
+        "/clients/{client_id}/roles/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "استعراض كتالوج الأدوار المتاحة للعميل (List Client Roles)" if is_ar else "List Sub-client Industry Roles Catalog",
+                "description": "استرجاع كتالوج الأدوار الصناعية الجاهزة في المنظومة لتعيينها لعميل الشريك." if is_ar else "Retrieve pre-configured system roles catalog available for this sub-client.",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {"200": {"description": "كتالوج الأدوار المتاحة" if is_ar else "Roles catalog"}}
+            }
+        },
+        "/clients/{client_id}/roles/custom/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "استعراض الأدوار المخصصة لعميل الشريك (List Client Custom Roles)" if is_ar else "List Sub-client Custom Roles",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {"200": {"description": "قائمة الأدوار المخصصة للعميل" if is_ar else "Client custom roles"}}
+            },
+            "post": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "إنشاء دور وظيفي مخصص لعميل الشريك (Create Client Custom Role)" if is_ar else "Create Sub-client Custom Role",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "name": "مسؤول خدمة عملاء وتوصيل المطعم",
+                                "industry": "restaurants",
+                                "description": "الترحيب بطلب المنيو وتأكيد العنوان ومتابعة الكاشير",
+                                "base_system_prompt": "أنت موظف استقبال طلبات ذكي في المطعم، تساعد العميل على اختيار الأطباق وتسجيل العنوان.",
+                                "tone": "friendly",
+                                "suggested_first_message": "أهلاً بحضرتك! معاك خدمة العملاء، تؤمر بإيه النهارده؟"
+                            }
+                        }
+                    }
+                },
+                "responses": {"201": {"description": "تم إنشاء الدور المخصص للعميل بنجاح" if is_ar else "Client custom role created"}}
+            }
+        },
+        "/clients/{client_id}/roles/custom/{role_id}/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "تفاصيل الدور المخصص للعميل (Get Client Custom Role)" if is_ar else "Get Sub-client Custom Role Detail",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {"200": {"description": "بيانات الدور المخصص" if is_ar else "Custom role details"}}
+            },
+            "patch": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "تحديث الدور المخصص للعميل (Update Client Custom Role)" if is_ar else "Update Sub-client Custom Role",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {"example": {"name": "مسؤول كول سنتر مطور", "tone": "energetic"}}
+                    }
+                },
+                "responses": {"200": {"description": "تم تحديث الدور بنجاح" if is_ar else "Role updated"}}
+            },
+            "delete": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "حذف الدور المخصص للعميل (Delete Client Custom Role)" if is_ar else "Delete Sub-client Custom Role",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {"200": {"description": "تم حذف الدور بنجاح" if is_ar else "Role deleted"}}
+            }
+        },
+        "/clients/{client_id}/mcp/test/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "فحص اتصال خادم FastMCP لعميل الشريك (Test Client MCP Server)" if is_ar else "Test Sub-client FastMCP Server Connectivity",
+                "description": "فحص صحة رابط SSE واستكشاف الأدوات دون حفظ الخادم." if is_ar else "Ping an external FastMCP SSE endpoint for sub-client and discover declared tools without saving.",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"server_url": "https://restaurant-app.com/sse?access_key=ak_sub_123"}
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نتيجة الاتصال وقائمة الأدوات" if is_ar else "Ping response and discovered tools",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "reachable": True, "tools_count": 8, "tools": [{"name": "place_order"}]}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/mcp/test-tool/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "تجربة أداة MCP مباشرة لعميل الشريك (Execute Generic Client Tool Test)" if is_ar else "Execute Generic Client Tool Test",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "server_url": "https://restaurant-app.com/sse?access_key=ak_sub_123",
+                                "tool_name": "check_delivery_zone",
+                                "params": {"area": "الرياض - العليا"}
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "نتيجة تنفيذ الأداة" if is_ar else "Tool execution result"}}
+            }
+        },
+        "/clients/{client_id}/mcp/{mcp_id}/test-tool/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "تجربة أداة لخادم مسجل لعميل الشريك (Test Registered Tool for Client)" if is_ar else "Test Registered MCP Tool for Sub-client",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "mcp_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "tool_name": "search_menu",
+                                "params": {"query": "برجر"}
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "نتيجة تنفيذ الأداة" if is_ar else "Tool execution result"}}
+            }
+        },
+        "/clients/{client_id}/campaigns/upload-contacts/": {
+            "post": {
+                "tags": [tag_map["tag_campaigns"]],
+                "summary": "رفع جهات اتصال لحملة العميل عبر CSV (Upload Client Campaign Contacts CSV)" if is_ar else "Upload Sub-client Campaign Contacts CSV",
+                "description": "رفع ملف CSV لجهات اتصال حملة عميل الشريك مع الفحص التلقائي ضد قائمة DNC الخاصة به." if is_ar else "Upload contacts via CSV multipart form data for a sub-client campaign with automatic DNC filtering.",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["campaign_id", "file"],
+                                "properties": {
+                                    "campaign_id": {"type": "integer", "description": "معرف الحملة المستهدفة"},
+                                    "file": {"type": "string", "format": "binary", "description": "ملف CSV جهات الاتصال"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "إحصائيات جهات الاتصال المرفوعة للعميل" if is_ar else "Uploaded contacts summary",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "total_parsed": 500, "valid_count": 495, "dnc_skipped": 5}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/dnc/": {
+            "get": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "استعراض قائمة منع الاتصال لعميل الشريك (List Client DNC Numbers)" if is_ar else "List Sub-client DNC Numbers",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {"200": {"description": "قائمة أرقام DNC للعميل" if is_ar else "Client DNC list"}}
+            },
+            "post": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "إضافة رقم لقائمة منع الاتصال لعميل الشريك (Add Phone to Client DNC)" if is_ar else "Add Phone to Sub-client DNC",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"phone_number": "+966501234567", "reason": "طلب العميل عدم استلام عروض"}
+                        }
+                    }
+                },
+                "responses": {"201": {"description": "تمت إضافة الرقم لقائمة العميل بنجاح" if is_ar else "Phone added to client DNC"}}
+            }
+        },
+        "/clients/{client_id}/dnc/check/": {
+            "post": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "فحص رقم في قائمة منع الاتصال للعميل (Check Phone in Client DNC)" if is_ar else "Check Phone in Sub-client DNC",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {"example": {"phone_number": "+966501234567"}}
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نتيجة فحص رقم العميل" if is_ar else "DNC check result",
+                        "content": {
+                            "application/json": {
+                                "example": {"phone_number": "+966501234567", "is_dnc": True, "reason": "طلب العميل عدم استلام عروض"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/dnc/{entry_id}/": {
+            "delete": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "حذف رقم من قائمة منع الاتصال للعميل (Remove Phone from Client DNC)" if is_ar else "Remove Phone from Sub-client DNC",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "entry_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {"200": {"description": "تم حذف الرقم بنجاح" if is_ar else "Phone removed from DNC"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/status/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "حالة اتصال جلسة واتساب العميل (Get Client WhatsApp Status)" if is_ar else "Get Sub-client WhatsApp Status",
+                "description": "الاستعلام عن حالة جلسة الواتساب للعميل الفرعي (open, connecting, close, qrcode)." if is_ar else "Fetch real-time WhatsApp session state for sub-client.",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {
+                    "200": {
+                        "description": "حالة جلسة الواتساب" if is_ar else "WhatsApp status",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "state": "open", "connected": True, "phone": "+966501234567"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/whatsapp/connect/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "ربط واتساب العميل وتوليد كود QR (Connect Client WhatsApp / Get QR)" if is_ar else "Connect Sub-client WhatsApp & Generate QR",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {
+                    "200": {
+                        "description": "كود QR للاقتران لعميل الشريك" if is_ar else "Pairing QR and codes",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "state": "qrcode", "base64": "data:image/png;base64,iVBORw0KGgo...", "pairing_code": "5678-1234"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/whatsapp/disconnect/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "فصل جلسة واتساب العميل (Disconnect Client WhatsApp)" if is_ar else "Disconnect Sub-client WhatsApp Session",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {"200": {"description": "تم قطع اتصال الواتساب بنجاح" if is_ar else "Disconnected"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "استعراض محادثات واتساب العميل (List Client WhatsApp Conversations)" if is_ar else "List Sub-client WhatsApp Conversations",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {"200": {"description": "قائمة محادثات واتساب العميل" if is_ar else "Conversations list"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/messages/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "سجل رسائل محادثة لعميل الشريك (Get Client Conversation Messages)" if is_ar else "Get Sub-client Chat Messages",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}},
+                    {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 50}}
+                ],
+                "responses": {"200": {"description": "سجل رسائل المحادثة" if is_ar else "Messages history"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/reply/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رد يدوي من موظف العميل (Reply to Client WhatsApp Conversation)" if is_ar else "Reply to Sub-client WhatsApp Chat",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {"example": {"message": "تم تأكيد الحجز لموعد غد الساعة 5 مساءً."}}
+                    }
+                },
+                "responses": {"200": {"description": "تم إرسال الرد بنجاح" if is_ar else "Reply sent"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/toggle-ai/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تبديل الرد الآلي للذكاء الاصطناعي لمحادثة العميل (Toggle AI for Client Chat)" if is_ar else "Toggle AI for Sub-client Chat Thread",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {"example": {"is_ai_enabled": False}}
+                    }
+                },
+                "responses": {"200": {"description": "تم تبديل حالة الذكاء الاصطناعي" if is_ar else "AI status toggled"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/send/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رسالة واتساب مباشرة لعميل الشريك (Send Direct WhatsApp from Client)" if is_ar else "Send Direct WhatsApp Message from Sub-client",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "phone_number": "+966501234567",
+                                "message": "فاتورة طلبك رقم 881 بقيمة 120 ريال من المتجر: https://example.com/receipt"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم إرسال الرسالة بنجاح" if is_ar else "Message dispatched",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "sent": True, "message_id": "msg_partner_wa_102"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{client_id}/whatsapp/followup/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رسالة متابعة لما بعد المكالمة للعميل (Send Post-Call Followup from Client)" if is_ar else "Send Post-Call WhatsApp Followup from Sub-client",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "phone_number": "+966501234567",
+                                "call_id": "call_partner_5521",
+                                "message": "شكراً لاتصالك! تم تسجيل طلبك بنجاح وسيتواصل معك السائق فور الانطلاق."
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إرسال رسالة المتابعة بنجاح" if is_ar else "Followup sent"}}
+            }
+        },
     }
 
     # 4. Parameters & Schemas

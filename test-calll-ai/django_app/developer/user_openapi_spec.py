@@ -40,7 +40,10 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
         {"name": "9. حملات الاتصال والعملاء (Campaigns)", "description": "إنشاء وإدارة حملات الاتصال الآلي الصادرة وجدولة الاتصال المتوازي عبر Inngest."},
         {"name": "10. سجلات المكالمات والفوترة", "description": "استعراض سجلات المكالمات CDR، الدقائق المفوترة، تكلفة المكالمة، وملخصات المحادثة."},
         {"name": "11. إشعارات الويبهوك", "description": "استقبال إشعارات انتهاء المكالمات والتحقق البرمجي من الأحداث الموقعة."},
-        {"name": "12. الذاكرة المنظمة اللحظية للنشاط (Live Context)", "description": "حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة (< 2ms) لمنع الهلوسة في المكالمات."}
+        {"name": "12. الذاكرة المنظمة اللحظية للنشاط (Live Context)", "description": "حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة (< 2ms) لمنع الهلوسة في المكالمات."},
+        {"name": "13. الأدوار الوظيفية والصناعية (Industry AI Roles)", "description": "كتالوج الأدوار المحددة مسبقاً، وإنشاء وتخصيص أدوار جديدة للمساعد الصوتي."},
+        {"name": "14. قائمة منع الاتصال (Do Not Call - DNC)", "description": "إدارة الأرقام المحظورة وفحص الأرقام قبل إجراء المكالمات والحملات لضمان الامتثال."},
+        {"name": "15. قنوات الواتساب والمراسلة التفاعلية (WhatsApp Omnichannel)", "description": "إدارة جلسات الواتساب، إرسال الرسائل والفواتير، ومتابعات ما بعد المكالمة."}
     ]
 
     tags_en = [
@@ -55,7 +58,10 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
         {"name": "9. Outbound Campaigns", "description": "Create and manage automated outbound calling campaigns and dial execution via Inngest."},
         {"name": "10. Call Logs & CDR", "description": "Call detail records (CDR), billed minute deduction, call recordings, and AI conversation summaries."},
         {"name": "11. Webhooks & Events", "description": "Configure webhook endpoints for call.completed notifications and event payloads."},
-        {"name": "12. Structured Live Context", "description": "Real-time in-memory cache (< 2ms) for dynamic business data (menus, branches, delivery zones, out of stock)."}
+        {"name": "12. Structured Live Context", "description": "Real-time in-memory cache (< 2ms) for dynamic business data (menus, branches, delivery zones, out of stock)."},
+        {"name": "13. Industry AI Roles & Custom Library", "description": "Pre-built industry roles catalog, custom persona role creation, and tool assignments."},
+        {"name": "14. Do Not Call (DNC) Compliance", "description": "Do Not Call registry management, real-time phone number scrub check, and opt-out handling."},
+        {"name": "15. WhatsApp & Omnichannel Management", "description": "WhatsApp Baileys instance pairing, automated AI customer chats, manual operator takeover, and call followups."}
     ]
 
     tags = tags_ar if is_ar else tags_en
@@ -72,6 +78,9 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
         "tag_cdr": tags[9]["name"],
         "tag_webhooks": tags[10]["name"],
         "tag_context": tags[11]["name"],
+        "tag_roles": tags[12]["name"],
+        "tag_dnc": tags[13]["name"],
+        "tag_whatsapp": tags[14]["name"],
     }
 
     paths = {
@@ -1248,7 +1257,418 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                 ],
                 "responses": {"200": {"description": "تم بدء الاتصال بنجاح" if is_ar else "Call initiated successfully"}}
             }
-        }
+        },
+        "/roles/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "استعراض كتالوج الأدوار الوظيفية والصناعية (List Industry Roles)" if is_ar else "List Industry AI Roles Catalog",
+                "description": "استرجاع كتالوج الأدوار الوظيفية المجهزة مسبقاً (خدمة العملاء، المطاعم، العقارات، العيادات، إلخ) مع نماذج البرومبت واللهجات المقترحة." if is_ar else "Retrieve catalog of system pre-configured industry AI roles with recommended system prompts, dialects, and tools.",
+                "responses": {
+                    "200": {
+                        "description": "قائمة الأدوار الوظيفية المتاحة" if is_ar else "Catalog of pre-built industry roles",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "success",
+                                    "total_roles": 12,
+                                    "roles": [
+                                        {"id": 1, "name": "خدمة عملاء ومبيعات المطاعم", "industry": "restaurants", "description": "استقبال طلبات المطاعم والاستعلام عن المنيو والأسعار والتوصيل", "tone": "friendly"},
+                                        {"id": 2, "name": "مستشار عقاري وحجز معاينات", "industry": "real_estate", "description": "تأهيل المشترين وحجز مواعيد المعاينات للمشاريع العقارية", "tone": "professional"}
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/custom/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "استعراض الأدوار المخصصة للمطور (List Custom Roles)" if is_ar else "List Custom AI Roles",
+                "description": "يعيد كافة الأدوار الوظيفية المخصصة التي قام المطور بإنشائها." if is_ar else "Returns all custom roles created by the developer.",
+                "responses": {"200": {"description": "قائمة الأدوار المخصصة" if is_ar else "List of custom roles"}}
+            },
+            "post": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "إنشاء دور وظيفي مخصص جديد (Create Custom Role)" if is_ar else "Create Custom AI Role",
+                "description": "إنشاء دور وظيفي متخصص مع برومبت مخصص ونبرة محددة لتعيينه للمساعدين الصوتيين." if is_ar else "Create a specialized persona role with custom system prompt and tone.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "name": "مسؤول حجوزات فندقية VIP",
+                                "industry": "hospitality",
+                                "description": "استقبال طلبات حجز الغرف والأجنحة الفندقية وتنسيق الخدمات الخاصة",
+                                "base_system_prompt": "أنت موظف استقبال في فندق راقٍ، تتحدث بلباقة شديدة وتلبي متطلبات النزلاء.",
+                                "tone": "luxury",
+                                "suggested_first_message": "أهلاً بك في فندقنا الفاخر، كيف يمكنني خدمة إقامتك اليوم؟",
+                                "allowed_tools": ["check_room_availability", "create_hotel_booking"]
+                            }
+                        }
+                    }
+                },
+                "responses": {"201": {"description": "تم إنشاء الدور المخصص بنجاح" if is_ar else "Custom role created successfully"}}
+            }
+        },
+        "/roles/custom/{role_id}/": {
+            "get": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "تفاصيل الدور المخصص (Get Custom Role Detail)" if is_ar else "Get Custom Role Detail",
+                "parameters": [{"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "responses": {"200": {"description": "بيانات الدور المخصص" if is_ar else "Custom role details"}}
+            },
+            "patch": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "تعديل الدور المخصص (Update Custom Role)" if is_ar else "Update Custom Role",
+                "parameters": [{"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"name": "مسؤول حجوزات فندقية VIP معدل", "tone": "prestigious"}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم تحديث الدور بنجاح" if is_ar else "Role updated successfully"}}
+            },
+            "delete": {
+                "tags": [tag_map["tag_roles"]],
+                "summary": "حذف الدور المخصص (Delete Custom Role)" if is_ar else "Delete Custom Role",
+                "parameters": [{"name": "role_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "responses": {"200": {"description": "تم حذف الدور بنجاح" if is_ar else "Role deleted successfully"}}
+            }
+        },
+        "/mcp/test/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "فحص اتصال خادم FastMCP (Test MCP Server Connectivity)" if is_ar else "Test FastMCP Server Connectivity",
+                "description": "التحقق من صحة رابط الـ SSE واستكشاف الأدوات المعلنة فورياً دون حفظ الخادم." if is_ar else "Ping an external FastMCP SSE endpoint and discover declared tool definitions without saving.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"server_url": "https://uggu.space/sse?access_key=ak_live_xyz123"}
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نتيجة الاتصال وقائمة الأدوات المكتشفة" if is_ar else "Connection result and discovered tools list",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "reachable": True, "tools_count": 6, "tools": [{"name": "search_menu", "description": "البحث في المنيو"}]}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mcp/test-tool/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "تجربة استدعاء أداة MCP مباشرة (Execute Generic MCP Tool Test)" if is_ar else "Execute Generic MCP Tool Test",
+                "description": "تجربة استدعاء دالة أداة معينة وتمرير معطيات لها عبر رابط خادم SSE مباشر." if is_ar else "Test-execute a declared tool on an arbitrary MCP server with sample JSON arguments.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "server_url": "https://uggu.space/sse?access_key=ak_live_xyz123",
+                                "tool_name": "search_menu",
+                                "params": {"query": "بيتزا"}
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "نتيجة تنفيذ الأداة" if is_ar else "Tool execution result"}}
+            }
+        },
+        "/mcp/{mcp_id}/test-tool/": {
+            "post": {
+                "tags": [tag_map["tag_mcp"]],
+                "summary": "تجربة أداة تابعة لخادم MCP مسجل (Test Tool for Registered Server)" if is_ar else "Test Tool for Registered MCP Server",
+                "parameters": [{"name": "mcp_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "tool_name": "lookup_customer",
+                                "params": {"phone": "+966501234567"}
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "نتيجة تنفيذ الأداة" if is_ar else "Tool execution result"}}
+            }
+        },
+        "/queues/{queue_id}/": {
+            "get": {
+                "tags": [tag_map["tag_queues"]],
+                "summary": "تفاصيل طابور الانتظار (Get Queue Detail)" if is_ar else "Get Call Queue Detail",
+                "parameters": [{"name": "queue_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "responses": {"200": {"description": "تفاصيل الطابور والأعضاء" if is_ar else "Queue details and members"}}
+            },
+            "patch": {
+                "tags": [tag_map["tag_queues"]],
+                "summary": "تحديث إعدادات طابور الانتظار (Update Queue)" if is_ar else "Update Call Queue",
+                "parameters": [{"name": "queue_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"strategy": "round_robin", "ring_timeout_seconds": 25, "fallback_action": "ai_assistant"}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم تحديث الطابور بنجاح" if is_ar else "Queue updated successfully"}}
+            },
+            "delete": {
+                "tags": [tag_map["tag_queues"]],
+                "summary": "حذف طابور الانتظار (Delete Queue)" if is_ar else "Delete Call Queue",
+                "parameters": [{"name": "queue_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "responses": {"200": {"description": "تم حذف الطابور بنجاح" if is_ar else "Queue deleted successfully"}}
+            }
+        },
+        "/campaigns/upload-contacts/": {
+            "post": {
+                "tags": [tag_map["tag_campaigns"]],
+                "summary": "رفع جهات اتصال الحملة عبر ملف CSV (Upload Contacts CSV)" if is_ar else "Upload Campaign Contacts CSV",
+                "description": "رفع ملف CSV يحتوي على أرقام وأسماء جهات الاتصال وربطها بحملة مع الفلترة التلقائية لأرقام DNC الممنوعة." if is_ar else "Upload contacts via CSV multipart form data with automatic scrubbing against Do Not Call (DNC) list.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["campaign_id", "file"],
+                                "properties": {
+                                    "campaign_id": {"type": "integer", "description": "معرف الحملة المستهدفة"},
+                                    "file": {"type": "string", "format": "binary", "description": "ملف CSV يحتوي على phone, name"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "إحصائيات جهات الاتصال المرفوعة" if is_ar else "Uploaded contacts summary",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "total_parsed": 250, "valid_count": 248, "dnc_skipped": 2, "duplicates_skipped": 0}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dnc/": {
+            "get": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "استعراض قائمة منع الاتصال (List DNC Numbers)" if is_ar else "List Do Not Call Numbers",
+                "description": "استعراض الأرقام المسجلة في قائمة عدم الإزعاج DNC لمنع إطلاق مكالمات آلية أو حملات تسويقية لها." if is_ar else "Retrieve Do Not Call blacklist entries with pagination and search.",
+                "parameters": [
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {"200": {"description": "قائمة أرقام الحظر" if is_ar else "List of DNC entries"}}
+            },
+            "post": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "إضافة رقم لقائمة منع الاتصال (Add Phone to DNC)" if is_ar else "Add Phone to DNC List",
+                "description": "إدراج رقم هاتف في قائمة الحظر مع ذكر السبب (طلب العميل، عدم اهتمام، قانوني)." if is_ar else "Blacklist a phone number from all future outbound dialer calls.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"phone_number": "+966501234567", "reason": "طلب العميل صراحة عدم الاتصال به مجدداً"}
+                        }
+                    }
+                },
+                "responses": {"201": {"description": "تمت إضافة الرقم بنجاح" if is_ar else "Phone added to DNC successfully"}}
+            }
+        },
+        "/dnc/check/": {
+            "post": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "فحص رقم في قائمة منع الاتصال (Check Phone in DNC)" if is_ar else "Check Phone in DNC",
+                "description": "فحص فوري استباقي لرقم هاتف للتأكد هل هو محظور من المكالمات أم مسموح به." if is_ar else "Pre-dial verification check to verify if a given phone number is blocked on the DNC list.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"phone_number": "+966501234567"}
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نتيجة فحص الحظر" if is_ar else "DNC check result",
+                        "content": {
+                            "application/json": {
+                                "example": {"phone_number": "+966501234567", "is_dnc": True, "reason": "طلب العميل عدم الإزعاج", "added_at": "2026-10-10"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dnc/{entry_id}/": {
+            "delete": {
+                "tags": [tag_map["tag_dnc"]],
+                "summary": "حذف رقم من قائمة منع الاتصال (Remove Phone from DNC)" if is_ar else "Remove Phone from DNC",
+                "parameters": [{"name": "entry_id", "in": "path", "required": True, "schema": {"type": "integer"}}],
+                "responses": {"200": {"description": "تم حذف الرقم من الحظر بنجاح" if is_ar else "Phone removed from DNC"}}
+            }
+        },
+        "/whatsapp/status/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "حالة اتصال جلسة الواتساب (Get WhatsApp Status)" if is_ar else "Get WhatsApp Connection Status",
+                "description": "الاستعلام عن حالة جلسة Baileys النشطة (open, connecting, close, qrcode) ورقم الهاتف المقترن." if is_ar else "Fetch real-time WhatsApp session state and paired phone identity.",
+                "responses": {
+                    "200": {
+                        "description": "حالة جلسة الواتساب" if is_ar else "WhatsApp session status",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "state": "open", "connected": True, "phone": "+966501234567"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/whatsapp/connect/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "ربط جلسة الواتساب وتوليد كود QR (Connect WhatsApp / Get QR)" if is_ar else "Connect WhatsApp & Generate QR",
+                "description": "بدء جلسة اقتران جديدة وتوليد كود QR بصيغة Base64 مع كود Pairing للربط المباشر." if is_ar else "Initialize WhatsApp pairing session and return fresh Base64 QR code and Pairing code.",
+                "responses": {
+                    "200": {
+                        "description": "كود QR للاقتران" if is_ar else "Pairing QR and codes",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "state": "qrcode", "base64": "data:image/png;base64,iVBORw0KGgo...", "pairing_code": "1234-5678"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/whatsapp/disconnect/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "فصل جلسة الواتساب (Disconnect WhatsApp)" if is_ar else "Disconnect WhatsApp Session",
+                "description": "تسجيل الخروج وقطع جلسة الواتساب الحالية فورياً." if is_ar else "Log out and sever active WhatsApp instance pairing.",
+                "responses": {"200": {"description": "تم قطع الاتصال بنجاح" if is_ar else "WhatsApp disconnected successfully"}}
+            }
+        },
+        "/whatsapp/conversations/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "استعراض محادثات الواتساب (List WhatsApp Conversations)" if is_ar else "List WhatsApp Conversations",
+                "description": "استعراض قائمة المحادثات النشطة مع العملاء، رسائل المجموعات، وآخر رسالة واردة وحالة تفعيل الذكاء الاصطناعي." if is_ar else "List customer chat threads with unread counters, last message snippet, and active AI status.",
+                "parameters": [
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {"200": {"description": "قائمة محادثات الواتساب" if is_ar else "Customer conversations list"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/messages/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "سجل رسائل محادثة العميل (Get Conversation Messages)" if is_ar else "Get Customer Conversation Messages",
+                "parameters": [
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}},
+                    {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 50}}
+                ],
+                "responses": {"200": {"description": "سجل الرسائل المتزامنة" if is_ar else "Chat message history"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/reply/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رد على محادثة الواتساب (Reply to Conversation)" if is_ar else "Reply to WhatsApp Conversation",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"message": "أهلاً بك يا فندم، طلبك قيد التجهيز وسيصل خلال 30 دقيقة."}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إرسال الرد بنجاح" if is_ar else "Reply sent successfully"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/toggle-ai/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تبديل الرد الآلي للذكاء الاصطناعي للمحادثة (Toggle AI for Conversation)" if is_ar else "Toggle AI for Conversation",
+                "description": "تمكين أو تعطيل ردود الذكاء الاصطناعي التلقائية لمحادثة هذا العميل (للتدخل البشري)." if is_ar else "Enable or pause automatic AI conversational replies for this specific customer thread.",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {"is_ai_enabled": False}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم تبديل حالة الذكاء الاصطناعي بنجاح" if is_ar else "AI status toggled successfully"}}
+            }
+        },
+        "/whatsapp/send/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رسالة واتساب مباشرة لرقم هاتف (Send Direct WhatsApp Message)" if is_ar else "Send Direct WhatsApp Message",
+                "description": "إرسال رسالة نصية أو رابط فاتورة مباشرة إلى رقم هاتف العميل." if is_ar else "Dispatch an outbound WhatsApp message or invoice link to a recipient phone number.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "phone_number": "+966501234567",
+                                "message": "مرحباً بك! تم تأكيد طلبك رقم 4092 بنجاح، شكراً لاختيارك لنا."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم إرسال الرسالة بنجاح" if is_ar else "Message dispatched successfully",
+                        "content": {
+                            "application/json": {
+                                "example": {"status": "success", "sent": True, "message_id": "msg_baileys_9921", "timestamp": "2026-10-12T04:30:00Z"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/whatsapp/followup/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إرسال رسالة متابعة لما بعد المكالمة (Send Call Followup Message)" if is_ar else "Send Call Followup Message",
+                "description": "إرسال ملخص مكالمة أو استبيان رضا العميل أو تفاصيل المعاينة عبر واتساب بعد انتهاء المكالمة الصوتية." if is_ar else "Send a post-call summary, survey link, or order confirmation receipt over WhatsApp.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "phone_number": "+966501234567",
+                                "call_id": "call_rec_88319",
+                                "message": "سعدنا باتصالك معنا اليوم! ملخص طلبك هو: 2 بيتزا مارجريتا + 1 بيبسي. لمتابعة الطلب: https://example.com/track"
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إرسال رسالة المتابعة بنجاح" if is_ar else "Followup message sent successfully"}}
+            }
+        },
     }
 
     components = {
