@@ -4168,11 +4168,36 @@ def api_partner_client_whatsapp_conversations(request, client_id):
         wm = mem.whatsapp_memory or {} if mem else {}
         ai_active = wm.get("ai_auto_reply_enabled", True)
 
+        chat_type = "direct"
+        can_send = True
+        read_only_reason = ""
+
+        if p.endswith('@newsletter'):
+            chat_type = "channel"
+            can_send = False
+            read_only_reason = "هذه قناة إخبارية (Newsletter) للعرض فقط ولا تدعم إرسال الرسائل."
+        elif p == 'status@broadcast' or p.endswith('@broadcast'):
+            chat_type = "broadcast"
+            can_send = False
+            read_only_reason = "هذه قناة إشعارات رسمية للعرض فقط."
+        elif p == '0':
+            chat_type = "official"
+            can_send = False
+            read_only_reason = "حساب واتساب الرسمي للعرض فقط."
+        elif p.endswith('@g.us'):
+            chat_type = "group"
+            instance_name = f"user_{client_user.id}"
+            from crm.services.evolution_client import check_group_can_send
+            can_send, read_only_reason = check_group_can_send(p, instance_name)
+
         results.append({
             "phone_number": p,
             "customer_name": c_name,
             "display_phone": display_phone,
             "real_phone": real_phone,
+            "chat_type": chat_type,
+            "can_send": can_send,
+            "read_only_reason": read_only_reason,
             "last_message": {
                 "text": last_msg.message_text if last_msg else "",
                 "direction": last_msg.direction if last_msg else "inbound",
@@ -4184,7 +4209,7 @@ def api_partner_client_whatsapp_conversations(request, client_id):
                 "created_at_iso": last_msg.created_at.isoformat() if last_msg else "",
             },
             "messages_count": t['messages_count'],
-            "ai_active": ai_active,
+            "ai_active": (ai_active if can_send else False),
             "has_call_history": bool(mem and mem.total_calls_count > 0)
         })
 
@@ -4223,6 +4248,27 @@ def api_partner_client_whatsapp_conversation_messages(request, client_id, phone)
     c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
     wm = mem.whatsapp_memory or {} if mem else {}
 
+    chat_type = "direct"
+    can_send = True
+    read_only_reason = ""
+    if clean_phone.endswith('@newsletter'):
+        chat_type = "channel"
+        can_send = False
+        read_only_reason = "هذه قناة إخبارية (Newsletter) للعرض فقط ولا تدعم إرسال الرسائل."
+    elif clean_phone == 'status@broadcast' or clean_phone.endswith('@broadcast'):
+        chat_type = "broadcast"
+        can_send = False
+        read_only_reason = "هذه قناة إشعارات رسمية للعرض فقط."
+    elif clean_phone == '0':
+        chat_type = "official"
+        can_send = False
+        read_only_reason = "حساب واتساب الرسمي للعرض فقط."
+    elif clean_phone.endswith('@g.us'):
+        chat_type = "group"
+        instance_name = f"user_{client_user.id}"
+        from crm.services.evolution_client import check_group_can_send
+        can_send, read_only_reason = check_group_can_send(clean_phone, instance_name)
+
     return JsonResponse({
         "status": "success",
         "client_id": client_id,
@@ -4230,7 +4276,10 @@ def api_partner_client_whatsapp_conversation_messages(request, client_id, phone)
         "customer_name": c_name,
         "display_phone": display_phone,
         "real_phone": real_phone,
-        "ai_active": wm.get("ai_auto_reply_enabled", True),
+        "chat_type": chat_type,
+        "can_send": can_send,
+        "read_only_reason": read_only_reason,
+        "ai_active": (wm.get("ai_auto_reply_enabled", True) if can_send else False),
         "total_messages": len(msgs),
         "messages": [m.to_dict() for m in msgs]
     })
@@ -4262,6 +4311,15 @@ def api_partner_client_whatsapp_conversation_reply(request, client_id, phone):
 
     clean_phone = phone.strip()
     instance_name = f"user_{client_user.id}"
+
+    if clean_phone.endswith('@newsletter') or clean_phone == 'status@broadcast' or clean_phone.endswith('@broadcast') or clean_phone == '0':
+        return JsonResponse({"status": "error", "message": "لا يمكن إرسال رد في هذه القناة (محادثة للعرض فقط)."}, status=400)
+    elif clean_phone.endswith('@g.us'):
+        from crm.services.evolution_client import check_group_can_send
+        can_send, reason = check_group_can_send(clean_phone, instance_name)
+        if not can_send:
+            return JsonResponse({"status": "error", "message": reason or "لا يمكن إرسال رسائل في هذه المجموعة (المشرفون فقط هم من يستطيعون الإرسال)."}, status=400)
+
     send_res = send_whatsapp_message(clean_phone, text, instance_name)
 
     mem = CustomerMemory.objects.filter(user=client_user, phone_number=clean_phone).first()
@@ -4307,6 +4365,16 @@ def api_partner_client_whatsapp_conversation_toggle_ai(request, client_id, phone
             pass
 
     clean_phone = phone.strip()
+    instance_name = f"user_{client_user.id}"
+
+    if clean_phone.endswith('@newsletter') or clean_phone == 'status@broadcast' or clean_phone.endswith('@broadcast') or clean_phone == '0':
+        return JsonResponse({"status": "error", "message": "لا يمكن تفعيل الرد الآلي في محادثة للقراءة فقط."}, status=400)
+    elif clean_phone.endswith('@g.us'):
+        from crm.services.evolution_client import check_group_can_send
+        can_send, reason = check_group_can_send(clean_phone, instance_name)
+        if not can_send:
+            return JsonResponse({"status": "error", "message": "لا يمكن تفعيل الرد الآلي في مجموعة مقيدة للمشرفين فقط."}, status=400)
+
     mem, _ = CustomerMemory.objects.get_or_create(user=client_user, phone_number=clean_phone)
     wm = mem.whatsapp_memory or {}
 
@@ -4358,6 +4426,15 @@ def api_partner_client_whatsapp_send(request, client_id):
         return JsonResponse({"status": "error", "message": "نص الرسالة مطلوب"}, status=400)
 
     instance_name = f"user_{client_user.id}"
+
+    if phone.endswith('@newsletter') or phone == 'status@broadcast' or phone.endswith('@broadcast') or phone == '0':
+        return JsonResponse({"status": "error", "message": "لا يمكن إرسال رسائل في هذه القناة (محادثة للعرض فقط)."}, status=400)
+    elif phone.endswith('@g.us'):
+        from crm.services.evolution_client import check_group_can_send
+        can_send, reason = check_group_can_send(phone, instance_name)
+        if not can_send:
+            return JsonResponse({"status": "error", "message": reason or "لا يمكن إرسال رسائل في هذه المجموعة (المشرفون فقط هم من يستطيعون الإرسال)."}, status=400)
+
     send_res = send_whatsapp_message(phone, text, instance_name)
 
     mem = CustomerMemory.objects.filter(user=client_user, phone_number=phone).first()

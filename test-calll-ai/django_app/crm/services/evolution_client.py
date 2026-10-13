@@ -193,3 +193,67 @@ def configure_instance_webhook(webhook_url: str, instance_name: str = DEFAULT_IN
     except Exception as e:
         logger.error(f"Error setting webhook: {e}")
         return {"ok": False, "error": str(e)}
+
+
+def check_group_can_send(group_jid: str, instance_name: str = DEFAULT_INSTANCE_NAME) -> tuple:
+    """
+    Check if this WhatsApp instance has permission to send messages into a group.
+    Returns (can_send: bool, reason: str).
+    """
+    if not group_jid or not group_jid.endswith('@g.us'):
+        return True, ""
+
+    from django.core.cache import cache
+    cache_key = f"wa_group_can_send_{instance_name}_{group_jid}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        # 1. Fetch instance owner JID
+        inst_url = f"{EVOLUTION_API_URL}/instance/fetchInstances?instanceName={instance_name}"
+        inst_resp = requests.get(inst_url, headers=get_headers(), timeout=4.0)
+        owner_jid = ""
+        if inst_resp.status_code == 200:
+            data = inst_resp.json()
+            if data and isinstance(data, list):
+                owner_jid = data[0].get("ownerJid", "")
+
+        # 2. Fetch group metadata
+        grp_url = f"{EVOLUTION_API_URL}/group/findGroupInfos/{instance_name}?groupJid={group_jid}"
+        grp_resp = requests.get(grp_url, headers=get_headers(), timeout=4.0)
+        if grp_resp.status_code != 200:
+            res = (False, "تعذر التحقق من إعدادات المجموعة أو تم الخروج منها")
+            cache.set(cache_key, res, timeout=300)
+            return res
+
+        gd = grp_resp.json()
+        is_announce = gd.get("announce", False)
+        if not is_announce:
+            res = (True, "")
+            cache.set(cache_key, res, timeout=300)
+            return res
+
+        # Announcement group: Only admins can send
+        participants = gd.get("participants", [])
+        owner_clean = owner_jid.split("@")[0] if owner_jid else ""
+        is_admin = False
+        if owner_clean:
+            for p in participants:
+                pid = p.get("id", "")
+                if owner_clean and owner_clean in pid:
+                    if p.get("admin") in ("admin", "superadmin"):
+                        is_admin = True
+                        break
+
+        if is_admin:
+            res = (True, "")
+        else:
+            res = (False, "المشرفون فقط هم من يستطيعون إرسال الرسائل في هذه المجموعة")
+
+        cache.set(cache_key, res, timeout=300)
+        return res
+    except Exception as e:
+        logger.warning(f"Error checking group send status for {group_jid}: {e}")
+        return True, ""
+
