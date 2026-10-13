@@ -31,8 +31,10 @@ def extract_media_info_from_message(raw_msg: dict, msg_type: str = "") -> dict:
 
     if "audioMessage" in raw_msg:
         aud = raw_msg["audioMessage"]
+        is_expired = bool(aud.get("viewOnce") and not aud.get("mediaKey") and not aud.get("url"))
         media_info = {
             "has_media": True,
+            "media_expired": is_expired,
             "media_type": "audio",
             "mimetype": aud.get("mimetype", "audio/ogg; codecs=opus"),
             "duration": aud.get("seconds", 0),
@@ -42,8 +44,10 @@ def extract_media_info_from_message(raw_msg: dict, msg_type: str = "") -> dict:
         }
     elif "imageMessage" in raw_msg:
         img = raw_msg["imageMessage"]
+        is_expired = bool(img.get("viewOnce") and not img.get("mediaKey") and not img.get("url"))
         media_info = {
             "has_media": True,
+            "media_expired": is_expired,
             "media_type": "image",
             "mimetype": img.get("mimetype", "image/jpeg"),
             "caption": img.get("caption", ""),
@@ -53,8 +57,10 @@ def extract_media_info_from_message(raw_msg: dict, msg_type: str = "") -> dict:
         }
     elif "videoMessage" in raw_msg:
         vid = raw_msg["videoMessage"]
+        is_expired = bool(vid.get("viewOnce") and not vid.get("mediaKey") and not vid.get("url"))
         media_info = {
             "has_media": True,
+            "media_expired": is_expired,
             "media_type": "video",
             "mimetype": vid.get("mimetype", "video/mp4"),
             "duration": vid.get("seconds", 0),
@@ -65,6 +71,7 @@ def extract_media_info_from_message(raw_msg: dict, msg_type: str = "") -> dict:
         doc = raw_msg["documentMessage"]
         media_info = {
             "has_media": True,
+            "media_expired": False,
             "media_type": "document",
             "mimetype": doc.get("mimetype", "application/pdf"),
             "file_name": doc.get("fileName", "document.pdf"),
@@ -74,6 +81,7 @@ def extract_media_info_from_message(raw_msg: dict, msg_type: str = "") -> dict:
         stk = raw_msg["stickerMessage"]
         media_info = {
             "has_media": True,
+            "media_expired": False,
             "media_type": "sticker",
             "mimetype": stk.get("mimetype", "image/webp"),
             "file_name": "sticker.webp",
@@ -88,7 +96,7 @@ def get_or_download_whatsapp_media(message_obj, instance_name: str = "default_wo
     Returns (absolute_file_path, mimetype).
     """
     meta = message_obj.metadata or {}
-    if not meta.get("has_media"):
+    if not meta.get("has_media") or meta.get("media_expired"):
         return None, ""
 
     # Resolve instance name to user_ID if available
@@ -103,6 +111,15 @@ def get_or_download_whatsapp_media(message_obj, instance_name: str = "default_wo
     raw_key = meta.get("raw_key") or meta.get("raw_data", {}).get("key") or {}
     raw_msg = meta.get("raw_msg") or meta.get("raw_data", {}).get("message") or {}
     if not raw_key and not raw_msg:
+        return None, ""
+
+    mtype = meta.get("media_type", "")
+    sub = raw_msg.get(f"{mtype}Message", {}) if isinstance(raw_msg, dict) else {}
+    if sub.get("viewOnce") and not sub.get("mediaKey") and not sub.get("url"):
+        logger.info(f"Skipping expired viewOnce media for msg {message_obj.id}")
+        meta["media_expired"] = True
+        message_obj.metadata = meta
+        message_obj.save(update_fields=["metadata"])
         return None, ""
 
     # Call Evolution API getBase64FromMediaMessage

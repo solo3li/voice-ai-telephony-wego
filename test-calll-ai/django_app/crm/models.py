@@ -126,8 +126,17 @@ class OmnichannelMessage(models.Model):
         meta = self.metadata or {}
         has_media = bool(meta.get("has_media"))
         media_type = meta.get("media_type", "")
+        
+        # Check if viewOnce media has expired (no mediaKey and no url in raw_msg)
+        is_expired = bool(meta.get("media_expired"))
+        if has_media and not is_expired:
+            raw_msg = meta.get("raw_msg") or {}
+            sub = raw_msg.get(f"{media_type}Message") or {}
+            if sub.get("viewOnce") and not sub.get("mediaKey") and not sub.get("url"):
+                is_expired = True
+
         media_url = ""
-        if has_media:
+        if has_media and not is_expired:
             if client_id:
                 media_url = f"/api/partner/v1/clients/{client_id}/whatsapp/messages/{self.id}/media/"
             else:
@@ -144,6 +153,7 @@ class OmnichannelMessage(models.Model):
             "is_human": self.direction == 'outbound_human',
             "message_text": self.message_text,
             "has_media": has_media,
+            "media_expired": is_expired,
             "media_type": media_type,
             "media_url": media_url,
             "media_mimetype": meta.get("mimetype", ""),
