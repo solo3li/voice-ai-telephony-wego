@@ -468,7 +468,8 @@ async def entrypoint(ctx: JobContext):
                     "parameters": param_dict
                 }
                 @llm.function_tool(raw_schema=raw_schema)
-                async def mcp_tool(raw_args: dict) -> str:
+                async def mcp_tool(raw_arguments: dict) -> str:
+                    raw_args = dict(raw_arguments) if isinstance(raw_arguments, dict) else {}
                     if caller_phone and caller_phone != "web_dashboard" and isinstance(raw_args, dict):
                         props = (param_dict.get("properties") or {}) if isinstance(param_dict, dict) else {}
                         for p_key in ("phone", "customer_phone", "phone_number"):
