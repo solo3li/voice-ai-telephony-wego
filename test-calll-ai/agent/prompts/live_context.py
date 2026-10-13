@@ -49,8 +49,10 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                     hours = b.get("hours") or b.get("working_hours") or b.get("المواعيد") or ""
                     phone = b.get("phone") or b.get("الهاتف") or ""
                     address = b.get("address") or b.get("العنوان") or ""
+                    currency = b.get("currency_name") or b.get("currency") or b.get("العملة") or ""
                     details = []
                     if status: details.append(f"الحالة: {status}")
+                    if currency: details.append(f"العملة المعتمدة: {currency}")
                     if hours: details.append(f"مواعيد العمل: {hours}")
                     if address: details.append(f"العنوان: {address}")
                     if phone: details.append(f"الهاتف: {phone}")
@@ -61,7 +63,7 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
             for k, v in branches.items():
                 branch_lines.append(f"- فرع {k}: {v}")
         if branch_lines:
-            blocks.append("🏢 الفروع ومواعيد العمل المباشرة:\n" + "\n".join(branch_lines))
+            blocks.append("🏢 الفروع والعملات ومواعيد العمل المباشرة:\n" + "\n".join(branch_lines))
 
     # 3. Delivery Zones & Fees
     delivery = context_data.get("delivery_zones") or context_data.get("delivery") or context_data.get("مناطق_التوصيل")
@@ -72,10 +74,14 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                 if isinstance(d, dict):
                     zone = d.get("zone") or d.get("area") or d.get("name") or d.get("المنطقة") or ""
                     fee = d.get("fee") or d.get("cost") or d.get("رسوم_التوصيل") or ""
+                    cur = d.get("currency") or ""
+                    fee_str = f"{fee} {cur}".strip() if fee else ""
                     min_order = d.get("min_order") or d.get("minimum") or d.get("الحد_الأدنى") or ""
                     time_est = d.get("estimated_time") or d.get("time") or d.get("الوقت_المتوقع") or ""
+                    branch_n = d.get("branch_name") or ""
                     details = []
-                    if fee: details.append(f"رسوم: {fee}")
+                    if branch_n: details.append(f"تابع لـ: {branch_n}")
+                    if fee_str: details.append(f"رسوم التوصيل: {fee_str}")
                     if min_order: details.append(f"حد أدنى: {min_order}")
                     if time_est: details.append(f"الوقت المتوقع: {time_est}")
                     delivery_lines.append(f"- منطقة {zone}: ({'، '.join(details)})" if details else f"- منطقة {zone}")
@@ -118,12 +124,15 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                 if isinstance(item, dict):
                     i_name = item.get("name") or item.get("الصنف") or ""
                     i_price = item.get("price") or item.get("السعر") or ""
+                    i_cur = item.get("currency") or item.get("currency_name") or item.get("العملة") or ""
                     i_cat = item.get("category") or item.get("القسم") or ""
                     i_sizes = item.get("sizes") or item.get("الأحجام") or ""
                     i_desc = item.get("description") or item.get("الوصف") or ""
                     line_parts = [i_name]
                     if i_cat: line_parts.append(f"[{i_cat}]")
-                    if i_price: line_parts.append(f"السعر: {i_price}")
+                    if i_price:
+                        price_str = f"السعر: {i_price} {i_cur}".strip()
+                        line_parts.append(price_str)
                     if i_sizes:
                         if isinstance(i_sizes, dict):
                             sizes_str = "، ".join([f"{k}: {v}" for k, v in i_sizes.items()])
@@ -142,9 +151,23 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                         if isinstance(it, dict):
                             it_name = it.get("name") or it.get("الصنف") or ""
                             it_price = it.get("price") or it.get("السعر") or ""
+                            it_cur = it.get("currency") or it.get("currency_name") or it.get("العملة") or ""
                             it_sizes = it.get("sizes") or ""
+                            it_branch_prices = it.get("branch_prices") or {}
+
+                            price_display = f"{it_price} {it_cur}".strip()
+                            if it_branch_prices and isinstance(it_branch_prices, dict):
+                                bp_parts = []
+                                for b_name, b_info in it_branch_prices.items():
+                                    if isinstance(b_info, dict):
+                                        bp_parts.append(f"{b_name}: {b_info.get('price')} {b_info.get('currency', '')}".strip())
+                                    else:
+                                        bp_parts.append(f"{b_name}: {b_info}")
+                                if bp_parts:
+                                    price_display += f" [أسعار الفروع: {', '.join(bp_parts)}]"
+
                             s_str = f" ({it_sizes})" if it_sizes else ""
-                            menu_lines.append(f"    - {it_name}: {it_price}{s_str}")
+                            menu_lines.append(f"    - {it_name}: {price_display}{s_str}")
                         else:
                             menu_lines.append(f"    - {str(it)}")
                 else:
