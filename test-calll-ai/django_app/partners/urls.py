@@ -88,6 +88,7 @@ urlpatterns = [
     path('clients/<int:client_id>/whatsapp/disconnect/', views.api_partner_client_whatsapp_disconnect, name='api_partner_client_whatsapp_disconnect'),
     path('clients/<int:client_id>/whatsapp/conversations/', views.api_partner_client_whatsapp_conversations, name='api_partner_client_whatsapp_conversations'),
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/messages/', views.api_partner_client_whatsapp_conversation_messages, name='api_partner_client_whatsapp_conversation_messages'),
+    path('clients/<int:client_id>/whatsapp/messages/<int:message_id>/media/', views.api_partner_client_whatsapp_message_media, name='api_partner_client_whatsapp_message_media'),
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/reply/', views.api_partner_client_whatsapp_conversation_reply, name='api_partner_client_whatsapp_conversation_reply'),
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/toggle-ai/', views.api_partner_client_whatsapp_conversation_toggle_ai, name='api_partner_client_whatsapp_conversation_toggle_ai'),
     path('clients/<int:client_id>/whatsapp/send/', views.api_partner_client_whatsapp_send, name='api_partner_client_whatsapp_send'),

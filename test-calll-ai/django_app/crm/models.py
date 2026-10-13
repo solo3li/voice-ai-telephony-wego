@@ -122,7 +122,17 @@ class OmnichannelMessage(models.Model):
     def __str__(self):
         return f"[{self.channel}:{self.direction}] {self.phone_number}: {self.message_text[:30]}"
 
-    def to_dict(self):
+    def to_dict(self, client_id=None):
+        meta = self.metadata or {}
+        has_media = bool(meta.get("has_media"))
+        media_type = meta.get("media_type", "")
+        media_url = ""
+        if has_media:
+            if client_id:
+                media_url = f"/api/partner/v1/clients/{client_id}/whatsapp/messages/{self.id}/media/"
+            else:
+                media_url = f"/api/crm/whatsapp/messages/{self.id}/media/"
+
         return {
             "id": self.id,
             "phone_number": self.phone_number,
@@ -133,9 +143,17 @@ class OmnichannelMessage(models.Model):
             "is_ai": self.direction == 'outbound_ai',
             "is_human": self.direction == 'outbound_human',
             "message_text": self.message_text,
+            "has_media": has_media,
+            "media_type": media_type,
+            "media_url": media_url,
+            "media_mimetype": meta.get("mimetype", ""),
+            "media_duration": meta.get("duration", 0),
+            "media_file_name": meta.get("file_name", ""),
+            "transcription": meta.get("transcription", ""),
+            "vision_analysis": meta.get("vision_analysis", ""),
             "is_followup": self.is_followup,
             "followup_reason": self.followup_reason,
-            "metadata": self.metadata or {},
+            "metadata": meta,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
             "created_at_time": self.created_at.strftime("%I:%M %p"),
             "created_at_iso": self.created_at.isoformat(),

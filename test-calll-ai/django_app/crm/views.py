@@ -2,9 +2,11 @@ import json
 import logging
 import datetime
 import re
+import os
 from decimal import Decimal
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -1035,22 +1037,93 @@ def api_whatsapp_webhook(request):
                 or ""
             ).strip()
 
-            if not msg_text or not clean_phone:
-                return JsonResponse({"status": "ignored", "reason": "empty_content_or_phone"})
+            from .services.whatsapp_media import (
+                extract_media_info_from_message,
+                get_or_download_whatsapp_media,
+                analyze_media_with_gemini
+            )
 
-            logger.info(f"Received inbound WhatsApp message from {clean_phone} ({push_name}): {msg_text[:60]}")
+            media_info = extract_media_info_from_message(message_content, data.get("messageType", ""))
+            has_media = media_info.get("has_media", False)
+
+            if not msg_text and not has_media:
+                return JsonResponse({"status": "ignored", "reason": "empty_content_and_no_media"})
+
+            if not clean_phone:
+                return JsonResponse({"status": "ignored", "reason": "empty_phone"})
+
+            msg_meta = {
+                "raw_data": data,
+                "raw_key": key,
+                "raw_msg": message_content,
+                "whatsapp_msg_id": key.get("id", ""),
+            }
+            if has_media:
+                msg_meta.update(media_info)
+
+            display_initial_text = msg_text
+            if not display_initial_text and has_media:
+                m_type = media_info.get("media_type")
+                if m_type == "audio":
+                    display_initial_text = "🎤 رسالة صوتية"
+                elif m_type == "image":
+                    display_initial_text = "📷 صورة"
+                elif m_type == "video":
+                    display_initial_text = "🎥 فيديو"
+                else:
+                    display_initial_text = f"[{m_type}]"
 
             # 1. Log inbound message
             from .models import OmnichannelMessage, CustomerMemory
-            OmnichannelMessage.objects.create(
+            msg_obj = OmnichannelMessage.objects.create(
                 user=user,
                 phone_number=clean_phone,
                 customer_name=push_name,
                 channel="whatsapp",
                 direction="inbound",
-                message_text=msg_text,
-                metadata={"raw_data": data}
+                message_text=display_initial_text,
+                metadata=msg_meta
             )
+
+            # If message contains media, decrypt and run Gemini Multimodal analysis
+            if has_media:
+                try:
+                    media_path, mimetype = get_or_download_whatsapp_media(msg_obj, instance_name=f"user_{user.id}")
+                    if media_path and os.path.exists(media_path):
+                        with open(media_path, "rb") as mf:
+                            media_bytes = mf.read()
+                        analysis = analyze_media_with_gemini(
+                            media_bytes=media_bytes,
+                            mimetype=mimetype,
+                            media_type=media_info.get("media_type", ""),
+                            caption=media_info.get("caption", "")
+                        )
+                        if media_info.get("media_type") == "audio":
+                            transcription = analysis.get("transcription", "")
+                            msg_meta["transcription"] = transcription
+                            msg_meta["audio_summary"] = analysis.get("summary", "")
+                            msg_meta["audio_intent"] = analysis.get("intent", "")
+                            if transcription:
+                                msg_text = f"🎤 [رسالة صوتية مسجلة]: {transcription}"
+                                msg_obj.message_text = msg_text
+                        elif media_info.get("media_type") in ("image", "video"):
+                            vision_desc = analysis.get("description", "")
+                            pmt = analysis.get("payment_details")
+                            msg_meta["vision_analysis"] = analysis
+                            prefix = "📷 [صورة مرفقة]" if media_info.get("media_type") == "image" else "🎥 [فيديو مرفق]"
+                            if pmt:
+                                details_str = f"إيصال دفع: {pmt.get('المبلغ المحول') or pmt.get('amount') or ''} - عملية: {pmt.get('رقم العملية') or pmt.get('ref') or ''}"
+                                msg_text = f"{prefix}: {details_str} ({vision_desc})"
+                            elif vision_desc:
+                                msg_text = f"{prefix}: {vision_desc}"
+                            msg_obj.message_text = msg_text
+
+                        msg_obj.metadata = msg_meta
+                        msg_obj.save(update_fields=["message_text", "metadata"])
+                except Exception as media_err:
+                    logger.error(f"Error analyzing incoming WhatsApp media: {media_err}", exc_info=True)
+
+            logger.info(f"Received inbound WhatsApp message from {clean_phone} ({push_name}): {msg_obj.message_text[:60]}")
 
             # 2. Update CustomerMemory whatsapp_memory
             mem, _ = CustomerMemory.objects.get_or_create(
@@ -1059,10 +1132,10 @@ def api_whatsapp_webhook(request):
                 defaults={"customer_name": push_name}
             )
             wm = mem.whatsapp_memory or {}
-            wm["last_received_message"] = msg_text
+            wm["last_received_message"] = msg_obj.message_text
             wm["last_interaction_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             msgs_list = wm.get("last_messages", [])
-            msgs_list.append({"sender": "customer", "text": msg_text, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")})
+            msgs_list.append({"sender": "customer", "text": msg_obj.message_text, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")})
             wm["last_messages"] = msgs_list[-6:]
             mem.whatsapp_memory = wm
             if push_name and not mem.customer_name:
@@ -1080,7 +1153,7 @@ def api_whatsapp_webhook(request):
                 user_id=user.id,
                 phone_number=clean_phone,
                 trigger_type="inbound_whatsapp",
-                inbound_message=msg_text,
+                inbound_message=msg_obj.message_text,
                 customer_name=push_name,
             )
 
@@ -1091,5 +1164,58 @@ def api_whatsapp_webhook(request):
     except Exception as e:
         logger.error(f"Error handling Evolution API webhook: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_message_media(request, message_id):
+    """
+    GET /api/crm/whatsapp/messages/<message_id>/media/
+    Streams decrypted media (audio, image, video, document) with HTTP Range support.
+    """
+    from .models import OmnichannelMessage
+    msg = get_object_or_404(OmnichannelMessage, id=message_id, user=request.user)
+    meta = msg.metadata or {}
+    if not meta.get("has_media"):
+        return JsonResponse({"status": "error", "message": "Message does not contain media"}, status=400)
+
+    from .services.whatsapp_media import get_or_download_whatsapp_media, analyze_media_with_gemini
+    instance_name = f"user_{request.user.id}"
+    media_path, mimetype = get_or_download_whatsapp_media(msg, instance_name=instance_name)
+
+    if not media_path or not os.path.exists(media_path):
+        return JsonResponse({"status": "error", "message": "Media could not be retrieved or decrypted"}, status=404)
+
+    # Lazy transcription on first stream if missing
+    if meta.get("media_type") == "audio" and not meta.get("transcription"):
+        try:
+            with open(media_path, "rb") as af:
+                a_bytes = af.read()
+            analysis = analyze_media_with_gemini(a_bytes, mimetype, "audio")
+            if analysis.get("transcription"):
+                meta["transcription"] = analysis["transcription"]
+                meta["audio_summary"] = analysis.get("summary", "")
+                meta["audio_intent"] = analysis.get("intent", "")
+                msg.metadata = meta
+                msg.save(update_fields=["metadata"])
+        except Exception as e:
+            logger.warning(f"Could not lazy-transcribe audio for msg {message_id}: {e}")
+
+    elif meta.get("media_type") == "image" and not meta.get("vision_analysis"):
+        try:
+            with open(media_path, "rb") as imf:
+                i_bytes = imf.read()
+            analysis = analyze_media_with_gemini(i_bytes, mimetype, "image", caption=meta.get("caption", ""))
+            if analysis:
+                meta["vision_analysis"] = analysis
+                msg.metadata = meta
+                msg.save(update_fields=["metadata"])
+        except Exception as e:
+            logger.warning(f"Could not lazy-analyze image for msg {message_id}: {e}")
+
+    response = FileResponse(open(media_path, 'rb'), content_type=mimetype or 'application/octet-stream')
+    response['Accept-Ranges'] = 'bytes'
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
 
 

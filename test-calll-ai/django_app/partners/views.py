@@ -12,7 +12,7 @@ from urllib.parse import urlparse, unquote
 from decimal import Decimal
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse as _DjangoJsonResponse
+from django.http import HttpResponse, JsonResponse as _DjangoJsonResponse, FileResponse
 
 def JsonResponse(data, *args, **kwargs):
     dumps_params = kwargs.pop('json_dumps_params', None)
@@ -4295,8 +4295,68 @@ def api_partner_client_whatsapp_conversation_messages(request, client_id, phone)
         "read_only_reason": read_only_reason,
         "ai_active": (wm.get("ai_auto_reply_enabled", True) if can_send else False),
         "total_messages": len(msgs),
-        "messages": [m.to_dict() for m in msgs]
+        "messages": [m.to_dict(client_id=client_id) for m in msgs]
     })
+
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="get_partner_client_whatsapp_message_media",
+    summary="بث وتشغيل وسائط رسالة واتساب للعميل التابع (صوت/صورة/فيديو)",
+    tags=["17. قنوات التواصل للعملاء (Client WhatsApp)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@partner_client_access_required
+def api_partner_client_whatsapp_message_media(request, client_id, message_id):
+    """
+    GET /api/partner/v1/clients/<client_id>/whatsapp/messages/<message_id>/media/
+    Streams decrypted media (audio, image, video, document) with HTTP Range support for sub-client.
+    """
+    client_user = request.client_user
+    msg = get_object_or_404(OmnichannelMessage, id=message_id, user=client_user)
+    meta = msg.metadata or {}
+    if not meta.get("has_media"):
+        return JsonResponse({"status": "error", "message": "Message does not contain media"}, status=400)
+
+    from crm.services.whatsapp_media import get_or_download_whatsapp_media, analyze_media_with_gemini
+    instance_name = f"user_{client_user.id}"
+    media_path, mimetype = get_or_download_whatsapp_media(msg, instance_name=instance_name)
+
+    if not media_path or not os.path.exists(media_path):
+        return JsonResponse({"status": "error", "message": "Media could not be retrieved or decrypted"}, status=404)
+
+    # Lazy transcription on first stream if missing
+    if meta.get("media_type") == "audio" and not meta.get("transcription"):
+        try:
+            with open(media_path, "rb") as af:
+                a_bytes = af.read()
+            analysis = analyze_media_with_gemini(a_bytes, mimetype, "audio")
+            if analysis.get("transcription"):
+                meta["transcription"] = analysis["transcription"]
+                meta["audio_summary"] = analysis.get("summary", "")
+                meta["audio_intent"] = analysis.get("intent", "")
+                msg.metadata = meta
+                msg.save(update_fields=["metadata"])
+        except Exception as e:
+            logger.warning(f"Could not lazy-transcribe audio for msg {message_id}: {e}")
+
+    elif meta.get("media_type") == "image" and not meta.get("vision_analysis"):
+        try:
+            with open(media_path, "rb") as imf:
+                i_bytes = imf.read()
+            analysis = analyze_media_with_gemini(i_bytes, mimetype, "image", caption=meta.get("caption", ""))
+            if analysis:
+                meta["vision_analysis"] = analysis
+                msg.metadata = meta
+                msg.save(update_fields=["metadata"])
+        except Exception as e:
+            logger.warning(f"Could not lazy-analyze image for msg {message_id}: {e}")
+
+    response = FileResponse(open(media_path, 'rb'), content_type=mimetype or 'application/octet-stream')
+    response['Accept-Ranges'] = 'bytes'
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
 
 
 @extend_schema(

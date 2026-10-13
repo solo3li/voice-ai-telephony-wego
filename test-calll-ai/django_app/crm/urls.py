@@ -39,6 +39,7 @@ urlpatterns = [
     path('whatsapp/conversations/<path:phone_number>/reply/', views.api_whatsapp_conversation_reply, name='api_whatsapp_conversation_reply'),
     path('whatsapp/conversations/<path:phone_number>/toggle-ai/', views.api_whatsapp_conversation_toggle_ai, name='api_whatsapp_conversation_toggle_ai'),
     path('whatsapp/conversations/<path:phone_number>/update-contact/', views.api_whatsapp_conversation_update_contact, name='api_whatsapp_conversation_update_contact'),
+    path('whatsapp/messages/<int:message_id>/media/', views.api_whatsapp_message_media, name='api_whatsapp_message_media'),
     path('whatsapp/sync/', views.api_whatsapp_sync, name='api_whatsapp_sync'),
     path('whatsapp/send-test/', views.api_whatsapp_send_test, name='api_whatsapp_send_test'),
     path('whatsapp/trigger-followup/', views.api_whatsapp_trigger_followup, name='api_whatsapp_trigger_followup'),

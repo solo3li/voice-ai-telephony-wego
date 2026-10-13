@@ -222,6 +222,7 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     m.key->>'id' as wa_msg_id,
                     m.key->>'remoteJid' as remote_jid,
                     (m.key->>'fromMe')::boolean as from_me,
+                    m.key as raw_key,
                     m.message,
                     m."pushName",
                     m."messageType",
@@ -239,7 +240,11 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     ROW_NUMBER() OVER (
                         PARTITION BY dm.remote_jid 
                         ORDER BY dm."messageTimestamp" DESC
-                    ) as rn
+                    ) as rn,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY dm.remote_jid, dm."messageType"
+                        ORDER BY dm."messageTimestamp" DESC
+                    ) as rn_media
                 FROM distinct_messages dm
             )
             SELECT 
@@ -247,12 +252,13 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                 wa_msg_id,
                 remote_jid,
                 from_me,
+                raw_key,
                 message,
                 "pushName",
                 "messageType",
                 "messageTimestamp"
             FROM ranked_messages
-            WHERE rn <= %s
+            WHERE rn <= %s OR (rn_media <= 10 AND "messageType" IN ('audioMessage', 'imageMessage', 'videoMessage'))
             ORDER BY remote_jid, "messageTimestamp" ASC;
         ''', (instance_id, max_messages_per_chat))
 
@@ -274,9 +280,11 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
             if m.customer_name
         }
 
+        from crm.services.whatsapp_media import extract_media_info_from_message
+
         # 4. Process and Group Messages by Chat
         chats_data = {}  # identifier -> list of message dicts
-        for m_id, wa_msg_id, r_jid, from_me, msg_content, push_name, msg_type, msg_ts in raw_messages:
+        for m_id, wa_msg_id, r_jid, from_me, raw_key, msg_content, push_name, msg_type, msg_ts in raw_messages:
             if not r_jid:
                 continue
 
@@ -328,7 +336,8 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                 pic_url = contact_map.get(f"{real_phone}@s.whatsapp.net", {}).get("pic_url") or ""
 
             text = extract_message_text(msg_content, msg_type)
-            if not text:
+            media_info = extract_media_info_from_message(msg_content, msg_type)
+            if not text and not media_info.get("has_media"):
                 continue
 
             direction = "outbound_human" if from_me else "inbound"
@@ -355,7 +364,10 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                 "direction": direction,
                 "text": text,
                 "created_at": dt,
-                "push_name": push_name or name or identifier
+                "push_name": push_name or name or identifier,
+                "raw_key": raw_key,
+                "raw_msg": msg_content,
+                "media_info": media_info,
             })
 
         # 5. Save to Django Database within transaction
@@ -393,6 +405,18 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     if wa_id and wa_id in existing_wa_ids:
                         continue  # Skip already imported message
 
+                    msg_meta = {
+                        "raw_jid": c_info["raw_jid"],
+                        "whatsapp_msg_id": wa_id or "",
+                    }
+                    if msg.get("raw_key"):
+                        msg_meta["raw_key"] = msg["raw_key"]
+                    if msg.get("raw_msg"):
+                        msg_meta["raw_msg"] = msg["raw_msg"]
+                    m_info = msg.get("media_info") or {}
+                    if m_info.get("has_media"):
+                        msg_meta.update(m_info)
+
                     om_msg = OmnichannelMessage(
                         user=user,
                         phone_number=identifier,
@@ -402,10 +426,7 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                         message_text=msg["text"],
                         is_followup=False,
                         followup_reason="whatsapp_sync",
-                        metadata={
-                            "raw_jid": c_info["raw_jid"],
-                            "whatsapp_msg_id": wa_id or ""
-                        },
+                        metadata=msg_meta,
                         created_at=msg["created_at"]
                     )
                     messages_to_create.append(om_msg)
