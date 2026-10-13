@@ -434,22 +434,23 @@ def livekit_webhook(request):
                             or ""
                         )
 
-                    # Fallback: extract caller_ext from room_name (e.g. sip_999__110_xyz) or participant_identity (sip_110)
+                    # Fallback: extract caller_ext from room_name (e.g. sip_999__110_xyz or sip_999__emp90_xyz) or participant_identity (sip_110 or sip_emp90)
                     if not caller_ext:
+                        cand = ""
                         if "__" in room_name:
                             try:
-                                candidate = room_name.split("__", 1)[1].split("_")[0]
-                                if candidate.isdigit() and len(candidate) <= 6:
-                                    caller_ext = candidate
+                                cand = room_name.split("__", 1)[1].split("_")[0]
                             except Exception:
                                 pass
-                        if not caller_ext and str(participant_identity).startswith("sip_"):
+                        if not cand and str(participant_identity).startswith("sip_"):
                             cand = str(participant_identity).replace("sip_sip_", "").replace("sip_", "").split("@")[0]
-                            if cand.isdigit() and len(cand) <= 6:
+                        if cand:
+                            clean_c = cand.lower().replace("emp", "").strip()
+                            if (clean_c.isdigit() and len(clean_c) <= 6) or (cand.isdigit() and len(cand) <= 6) or cand.lower().startswith("emp"):
                                 caller_ext = cand
 
                     # 1. Check if this is an internal employee call (e.g. dialed 999 or has Wazo Context)
-                    if call_to in ("999", "sip:999") or "999" in room_name or wazo_ctx or (caller_ext and len(caller_ext) <= 4):
+                    if call_to in ("999", "sip:999") or "999" in room_name or wazo_ctx or (caller_ext and len(caller_ext) <= 8):
                         tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)
                         if tenant_u:
                             user_id = tenant_u.id

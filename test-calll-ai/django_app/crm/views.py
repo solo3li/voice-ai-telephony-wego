@@ -748,6 +748,11 @@ def api_whatsapp_conversations(request):
             },
             "messages_count": t['messages_count'],
             "ai_active": ai_active,
+            "needs_human_attention": wm.get("needs_human_attention", False),
+            "escalation_reason": wm.get("escalation_reason", ""),
+            "escalation_urgency": wm.get("escalation_urgency", ""),
+            "escalation_summary": wm.get("escalation_summary", ""),
+            "escalated_at": wm.get("escalated_at", ""),
             "has_call_history": bool(mem and mem.total_calls_count > 0)
         })
 
@@ -780,6 +785,11 @@ def api_whatsapp_conversation_messages(request, phone_number):
         "real_phone": real_phone,
         "profile_pic_url": profile_pic_url,
         "ai_active": wm.get("ai_auto_reply_enabled", True),
+        "needs_human_attention": wm.get("needs_human_attention", False),
+        "escalation_reason": wm.get("escalation_reason", ""),
+        "escalation_urgency": wm.get("escalation_urgency", ""),
+        "escalation_summary": wm.get("escalation_summary", ""),
+        "escalated_at": wm.get("escalated_at", ""),
         "call_summary": cm.get("last_call_summary") or (mem.last_interaction_summary if mem else ""),
         "total_calls_count": mem.total_calls_count if mem else 0,
         "messages": [m.to_dict() for m in msgs]
@@ -906,6 +916,8 @@ def api_whatsapp_conversation_toggle_ai(request, phone_number):
             new_state = not current
 
         wm["ai_auto_reply_enabled"] = new_state
+        if new_state:
+            wm["needs_human_attention"] = False
         mem.whatsapp_memory = wm
         mem.save()
 

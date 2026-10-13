@@ -146,16 +146,16 @@ def parse_active_profile_from_bootstrap(bootstrap: dict) -> dict:
 
 # ==================== Bootstrap API ====================
 
-async def fetch_agent_bootstrap_async(user_id: int, caller_phone: str = "web_dashboard") -> dict:
+async def fetch_agent_bootstrap_async(user_id: Optional[int] = None, caller_phone: str = "web_dashboard", room_name: str = "", caller_extension: str = "") -> dict:
     """Fetch complete agent bootstrap bundle non-blockingly via aiohttp."""
-    if not user_id:
+    if not user_id and not room_name and not caller_extension:
         return {}
     url = f"{DJANGO_API_URL}/api/agents/internal/bootstrap/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
         "Content-Type": "application/json"
     }
-    payload = {"user_id": user_id, "caller_phone": caller_phone}
+    payload = {"user_id": user_id, "caller_phone": caller_phone, "room_name": room_name, "caller_extension": caller_extension}
     try:
         session = await get_http_session()
         async with session.post(url, json=payload, headers=headers, timeout=5.0) as resp:
@@ -168,9 +168,9 @@ async def fetch_agent_bootstrap_async(user_id: int, caller_phone: str = "web_das
         logger.error(f"Failed to fetch bootstrap asynchronously from Django API: {e}")
         return {}
 
-def fetch_agent_bootstrap_sync(user_id: int, caller_phone: str = "web_dashboard") -> dict:
+def fetch_agent_bootstrap_sync(user_id: Optional[int] = None, caller_phone: str = "web_dashboard", room_name: str = "", caller_extension: str = "") -> dict:
     """Fetch complete agent bootstrap bundle via synchronous HTTP (backward compatibility)."""
-    if not user_id:
+    if not user_id and not room_name and not caller_extension:
         return {}
     try:
         url = f"{DJANGO_API_URL}/api/agents/internal/bootstrap/"
@@ -178,7 +178,8 @@ def fetch_agent_bootstrap_sync(user_id: int, caller_phone: str = "web_dashboard"
             "X-Internal-API-Key": INTERNAL_API_KEY,
             "Content-Type": "application/json"
         }
-        res = requests.post(url, json={"user_id": user_id, "caller_phone": caller_phone}, headers=headers, timeout=5)
+        payload = {"user_id": user_id, "caller_phone": caller_phone, "room_name": room_name, "caller_extension": caller_extension}
+        res = requests.post(url, json=payload, headers=headers, timeout=5)
         if res.status_code == 200:
             return res.json()
         logger.error(f"Bootstrap API error ({res.status_code}): {res.text}")
@@ -544,4 +545,52 @@ def lookup_customer_memory_sync(arg1=None, arg2=None, **kwargs) -> dict:
     except Exception as e:
         logger.error(f"Failed to lookup customer memory synchronously: {e}")
         return {"status": "error", "found": False, "message": str(e)}
+
+
+async def send_whatsapp_message_async(user_id: int, phone: str, message: str) -> dict:
+    """Send WhatsApp message to caller during live AI call session non-blockingly."""
+    if not user_id or not phone or not message:
+        return {"status": "error", "message": "user_id, phone, and message are required"}
+    url = f"{DJANGO_API_URL}/api/agents/internal/whatsapp/send/"
+    headers = {
+        "X-Internal-API-Key": INTERNAL_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "user_id": user_id,
+        "phone_number": phone,
+        "message": message
+    }
+    try:
+        session = await get_http_session()
+        async with session.post(url, json=payload, headers=headers, timeout=5.0) as resp:
+            if resp.status == 200:
+                return await resp.json()
+            err_text = await resp.text()
+            logger.error(f"WhatsApp send API error ({resp.status}): {err_text}")
+            return {"status": "error", "message": f"API error {resp.status}"}
+    except Exception as e:
+        logger.error(f"Failed to send WhatsApp message via Django API: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+def send_whatsapp_message_sync(user_id: int, phone: str, message: str) -> dict:
+    """Send WhatsApp message synchronously."""
+    if not user_id or not phone or not message:
+        return {"status": "error", "message": "user_id, phone, and message are required"}
+    try:
+        url = f"{DJANGO_API_URL}/api/agents/internal/whatsapp/send/"
+        headers = {
+            "X-Internal-API-Key": INTERNAL_API_KEY,
+            "Content-Type": "application/json"
+        }
+        res = requests.post(url, json={"user_id": user_id, "phone_number": phone, "message": message}, headers=headers, timeout=5)
+        if res.status_code == 200:
+            return res.json()
+        logger.error(f"WhatsApp send sync error ({res.status_code}): {res.text}")
+        return {"status": "error", "message": res.text}
+    except Exception as e:
+        logger.error(f"Failed to send WhatsApp message synchronously: {e}")
+        return {"status": "error", "message": str(e)}
+
 

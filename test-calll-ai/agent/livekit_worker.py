@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import time
+import re
 from typing import Dict, Any, Optional, List
 
 from livekit import api, rtc
@@ -49,6 +50,7 @@ from agent.clients.django_client import (
     query_knowledge_base_async,
     lookup_customer_memory_async,
     save_call_session_and_update_memory_async,
+    send_whatsapp_message_async,
 )
 from agent.clients.mcp_client import execute_mcp_tool_call
 from agent.prompts import build_dynamic_system_instruction, generate_welcome_greeting
@@ -103,6 +105,15 @@ async def entrypoint(ctx: JobContext):
         except Exception as r_err:
             logger.debug(f"Redis room_job_meta lookup skipped: {r_err}")
 
+    caller_ext = None
+    if "__" in room_name:
+        try:
+            cand = room_name.split("__", 1)[1].split("_")[0]
+            if cand:
+                caller_ext = cand
+        except Exception:
+            pass
+
     # Fallback: extract from room pattern (strictly excluding 999 service extension)
     if not user_id and "_" in room_name:
         parts = room_name.split("_")
@@ -134,11 +145,18 @@ async def entrypoint(ctx: JobContext):
 
     # 3. Fetch unified Bootstrap bundle from Django
     bootstrap: Dict[str, Any] = {}
-    if user_id:
-        try:
-            bootstrap = await fetch_agent_bootstrap_async(user_id, caller_phone)
-        except Exception as err:
-            logger.error(f"Failed to fetch agent bootstrap for user {user_id}: {err}")
+    try:
+        bootstrap = await fetch_agent_bootstrap_async(
+            user_id=user_id,
+            caller_phone=caller_phone,
+            room_name=room_name,
+            caller_extension=caller_ext or ""
+        )
+        if not user_id and bootstrap.get("user_id"):
+            user_id = bootstrap.get("user_id")
+            logger.info(f"[LiveKit Agent] Auto-resolved user_id={user_id} from Django bootstrap for room '{room_name}'")
+    except Exception as err:
+        logger.error(f"Failed to fetch agent bootstrap for room '{room_name}': {err}")
 
     # Resolve active Gemini API key: prioritize Django SystemSetting from bootstrap, fallback to .env
     active_api_key = (bootstrap.get("gemini_api_key") or "").strip() or GEMINI_API_KEY
@@ -179,6 +197,36 @@ async def entrypoint(ctx: JobContext):
             "destination_phone": destination_phone or caller_phone,
         }
 
+    # Discover available tools metadata for the dynamic system instruction manifest
+    available_tools_meta: List[Dict[str, Any]] = [
+        {
+            "name": "search_knowledge_base",
+            "description": "البحث الدلالي الموثوق في مستندات وقاعدة معرفة المنشأة الرسمية عند ورود أي سؤال عن خدمات أو أسعار أو سياسات غير مذكورة في الذاكرة اللحظية."
+        },
+        {
+            "name": "lookup_customer_memory",
+            "description": "استرجاع ملف وبيانات وسجل العميل وتفضيلاته بالاسم أو برقم هاتفه لمساعدته بشكل مخصص."
+        },
+        {
+            "name": "send_whatsapp_message",
+            "description": "إرسال رسالة نصية أو رابط المنيو أو تفاصيل الطلب أو أي معلومات يطلبها العميل على الواتساب أثناء المكالمة لرقم هاتفه تلقائياً."
+        }
+    ]
+    if call_queues:
+        available_tools_meta.append({
+            "name": "transfer_to_queue",
+            "description": "تحويل المكالمة لطابور خدمة العملاء البشري عند طلب العميل التحدث مع موظف بشري أو قسم معين."
+        })
+
+    mcp_servers_list = parse_mcp_servers_from_bootstrap(bootstrap) if user_id else []
+    for s in mcp_servers_list:
+        for t in s.get("tools", []):
+            if t.get("name"):
+                available_tools_meta.append({
+                    "name": t["name"],
+                    "description": t.get("description", f"تنفيذ إجراء {t['name']}")
+                })
+
     # Build system instruction prompt
     system_instruction_text = build_dynamic_system_instruction(
         active_profile,
@@ -188,6 +236,7 @@ async def entrypoint(ctx: JobContext):
         call_queues=call_queues,
         live_context=live_context,
         knowledge_manifest=knowledge_manifest,
+        available_tools=available_tools_meta,
     )
 
     # 4. Connect to Room
@@ -210,9 +259,15 @@ async def entrypoint(ctx: JobContext):
             voice=chosen_voice,
         )
         off_hours_session = AgentSession(llm=off_hours_model)
-        off_hours_agent = Agent(instructions="Speak the provided off-hours greeting politely.")
+        off_hours_agent = Agent(instructions="You are an automated phone receptionist answering outside business hours. Apologize politely to the caller in Arabic and speak the provided message clearly.")
         await off_hours_session.start(off_hours_agent, room=ctx.room)
-        await off_hours_session.say(ai_msg)
+        try:
+            handle = off_hours_session.generate_reply(
+                instructions=f"انطق رسالة الاعتذار التالية للمتصل خارج أوقات العمل بدقة ولطف واختم: '{ai_msg}'"
+            )
+            await handle
+        except Exception as e:
+            logger.error(f"Error speaking off-hours greeting: {e}")
         await asyncio.sleep(4.0)
         await ctx.room.disconnect()
         return
@@ -328,7 +383,72 @@ async def entrypoint(ctx: JobContext):
 
         tools.append(transfer_to_queue)
 
-    # Tool 4: Dynamic Tenant MCP Tools
+    # Tool 4: Send WhatsApp Message to Caller
+    @llm.function_tool(
+        description=(
+            "إرسال رسالة نصية أو رابط المنيو أو تفاصيل الطلب أو أي معلومات يطلبها العميل على الواتساب أثناء المكالمة. "
+            "إذا لم يحدد العميل رقماً آخر صراحة، يتم الإرسال تلقائياً إلى رقم هاتفه المتصل منه. "
+            "أخبر العميل فوراً بعد استدعاء الأداة بأن الرسالة أو الرابط وصله الآن على الواتساب."
+        )
+    )
+    async def send_whatsapp_message(message: str, phone: Optional[str] = None) -> str:
+        """Send a WhatsApp message or link to caller.
+
+        Args:
+            message: نص الرسالة أو الرابط المراد إرساله للعميل على الواتساب.
+            phone: رقم هاتف العميل (اختياري، إن لم يُحدد يتم الإرسال تلقائياً لرقم المتصل).
+        """
+        if not user_id:
+            return "تعذر إرسال الرسالة، حساب المنشأة غير محدد."
+        target_phone = str(phone or "").strip() or str(caller_phone or "").strip()
+        digits = re.sub(r"\D", "", target_phone)
+        if len(digits) < 7:
+            return (
+                "لم يتوفر رقم هاتف محمول صالح للعميل لإرسال الواتساب إليه. "
+                "اطلب من العميل بلباقة أن يمليك رقم الواتساب أو رقم الجوال الخاص به لترسل له رابط المنيو فوراً."
+            )
+
+        if digits.startswith("01") and len(digits) == 11:
+            target_phone = "20" + digits[1:]
+        elif digits.startswith("05") and len(digits) == 10:
+            target_phone = "966" + digits[1:]
+        elif digits.startswith("00"):
+            target_phone = digits[2:]
+        else:
+            target_phone = digits
+
+        clean_msg = str(message or "").strip()
+        if not clean_msg:
+            return "نص الرسالة فارغ، يرجى تحديد ما تريد إرساله."
+
+        # Ensure digital menu link is included if user requested menu
+        d_menu_url = (live_context.get("digital_menu_url") or "").strip() if live_context else ""
+        if d_menu_url and ("منيو" in clean_msg or "قائمة" in clean_msg or "menu" in clean_msg.lower()) and "http" not in clean_msg:
+            clean_msg += f"\nرابط قائمة الطعام الإلكترونية:\n{d_menu_url}"
+
+        asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري إرسال رسالة واتساب إلى ({target_phone})..."))
+        try:
+            res = await asyncio.wait_for(
+                send_whatsapp_message_async(user_id=user_id, phone=target_phone, message=clean_msg),
+                timeout=6.0
+            )
+            if not res or res.get("status") == "error" or not res.get("ok"):
+                err_msg = res.get("error") or res.get("message") or "تعذر الإرسال"
+                logger.error(f"Failed to send WhatsApp message to {target_phone}: {err_msg}")
+                return f"حدث خطأ أثناء محاولة إرسال رسالة الواتساب إلى ({target_phone}): {err_msg}. اعتذر للعميل واطلب منه التأكد من صحة رقم الواتساب."
+
+            asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", "تم إرسال رسالة الواتساب بنجاح"))
+            return f"تم إرسال الرسالة بنجاح إلى رقم الواتساب ({target_phone}). أخبر العميل بأن الرسالة وصلته الآن على الواتساب."
+        except asyncio.TimeoutError:
+            logger.warning(f"Timeout sending WhatsApp message to {target_phone}")
+            return f"جاري إرسال الرسالة للرقم ({target_phone}) وستصل للعميل خلال لحظات."
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp message: {e}")
+            return f"حدث خطأ أثناء محاولة إرسال رسالة الواتساب: {e}"
+
+    tools.append(send_whatsapp_message)
+
+    # Tool 5: Dynamic Tenant MCP Tools
     mcp_servers_list = parse_mcp_servers_from_bootstrap(bootstrap) if user_id else []
     for s in mcp_servers_list:
         s_url = s.get("server_url")
@@ -348,6 +468,12 @@ async def entrypoint(ctx: JobContext):
                 }
                 @llm.function_tool(raw_schema=raw_schema)
                 async def mcp_tool(raw_args: dict) -> str:
+                    if caller_phone and caller_phone != "web_dashboard" and isinstance(raw_args, dict):
+                        props = (input_schema.get("properties") or {}) if isinstance(input_schema, dict) else {}
+                        for p_key in ("phone", "customer_phone", "phone_number"):
+                            if p_key in props and not raw_args.get(p_key):
+                                raw_args[p_key] = caller_phone
+                                break
                     asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})..."))
                     try:
                         res = await asyncio.wait_for(
@@ -503,9 +629,12 @@ async def entrypoint(ctx: JobContext):
                     recovery_nudge = "معك يا غالي، عم بسمعك تفضل."
 
                 try:
-                    await session.say(recovery_nudge)
+                    handle = session.generate_reply(
+                        instructions=f"قل للمتصل بنبرة هادئة ومؤدبة: '{recovery_nudge}'"
+                    )
+                    await handle
                 except Exception as ex:
-                    logger.debug(f"[Watchdog] Failed to say recovery nudge: {ex}")
+                    logger.debug(f"[Watchdog] Failed to generate recovery nudge: {ex}")
 
     watchdog_task = asyncio.create_task(silent_drop_watchdog())
 
@@ -573,13 +702,19 @@ async def entrypoint(ctx: JobContext):
         participant = await ctx.wait_for_participant()
         if participant:
             logger.info(f"[LiveKit Agent] Human participant '{participant.identity}' joined. Speaking greeting: {greeting_text}")
-            await session.say(greeting_text)
+            handle = session.generate_reply(
+                instructions=f"ابدأ المكالمة فوراً بالترحيب بالعميل بنبرة ودودة وواضحة والتزم بالتحية التالية: {greeting_text}"
+            )
+            await handle
     except Exception as e:
-        logger.debug(f"Proactive greeting wait ended or participant already connected: {e}")
+        logger.warning(f"Proactive greeting wait ended or participant already connected: {e}")
         try:
-            await session.say(greeting_text)
-        except Exception:
-            pass
+            handle = session.generate_reply(
+                instructions=f"ابدأ المكالمة فوراً بالترحيب بالعميل بنبرة ودودة وواضحة والتزم بالتحية التالية: {greeting_text}"
+            )
+            await handle
+        except Exception as e2:
+            logger.debug(f"Proactive fallback greeting failed: {e2}")
 
 
 def prewarm(proc: JobProcess):

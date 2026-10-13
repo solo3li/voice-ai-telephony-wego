@@ -285,14 +285,24 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
         if menu_lines:
             blocks.append("📋 قائمة الطعام والأسعار المعتمدة (Menu):\n" + "\n".join(menu_lines))
 
-    # 6. Any other remaining freeform keys
+    # 6. Digital Menu URL
+    digital_menu = context_data.get("digital_menu_url") or context_data.get("menu_url") or context_data.get("رابط_المنيو")
+    if digital_menu:
+        blocks.append(
+            f"📱 رابط قائمة الطعام الإلكترونية المباشرة (Digital QR Menu):\n"
+            f"• الرابط: {digital_menu}\n"
+            f"• قاعدة تشغيلية: إذا طلب المتصل إرسال المنيو على الواتساب، استدعِ أداة send_whatsapp_message فوراً وأرسل له هذا الرابط، وأخبره بلباقة أن الرابط وصله على الواتساب."
+        )
+
+    # 7. Any other remaining freeform keys
     standard_keys = {
         "restaurant_name", "business_name", "اسم_النشاط",
         "out_of_stock", "unavailable_today", "النواقص", "غير_متوفر",
         "branches", "locations", "الفروع",
         "delivery_zones", "delivery", "مناطق_التوصيل",
         "offers", "deals", "عروض", "العروض",
-        "menu", "menu_items", "منيو", "قائمة_الطعام"
+        "menu", "menu_items", "منيو", "قائمة_الطعام",
+        "digital_menu_url", "menu_url", "رابط_المنيو", "digital_menu_whatsapp_template"
     }
     other_lines = []
     for k, v in context_data.items():

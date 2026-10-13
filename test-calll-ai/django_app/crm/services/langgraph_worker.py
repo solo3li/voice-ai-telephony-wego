@@ -24,6 +24,10 @@ from crm.models import CustomerMemory, OmnichannelMessage
 from crm.services.evolution_client import send_whatsapp_message
 from agents.models import SystemSetting, AgentProfile, UserMCPServer, AgentToolCallLog
 from agents.mcp_service import test_mcp_tool_sync
+from agents.live_context_service import get_user_live_context_cached, format_live_context_for_prompt
+from telephony.models import BusinessHoursSchedule
+from common.centrifugo import publish_to_centrifugo
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
@@ -324,7 +328,7 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
         except Exception as p_err:
             logger.debug(f"Could not send typing presence: {p_err}")
 
-        # 1. Build Tools (RAG + Memory + MCP Tools)
+        # 1. Build Tools (RAG + Memory + Escalation + MCP Tools)
         mcp_decls, mcp_tool_map = load_user_mcp_tools(user_id)
 
         rag_decl = types.FunctionDeclaration(
@@ -351,24 +355,104 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
             }
         )
 
-        all_decls = [rag_decl, memory_decl] + mcp_decls
+        escalate_decl = types.FunctionDeclaration(
+            name="escalate_to_human_support",
+            description=(
+                "تحويل محادثة الواتساب فوراً إلى موظف خدمة العملاء البشري أو الكاشير، وإيقاف الرد الآلي للذكاء الاصطناعي لهذه المحادثة. "
+                "يجب استدعاء هذه الأداة فوراً ودون تردد عند: "
+                "1. ورود أي شكوى من العميل بخصوص أوردر أو جودة الطعام أو تأخر التوصيل أو خطأ في الفاتورة أو الحساب. "
+                "2. طلب العميل التحدث مع موظف بشري أو خدمة العملاء أو المشرف (مثل: 'حولني لخدمة العملاء'، 'عايز بني آدم'). "
+                "3. عندما يكون العميل غاضباً أو غير راضٍ عن الردود التلقائية."
+            ),
+            parameters={
+                "type": "OBJECT",
+                "properties": {
+                    "reason": {
+                        "type": "STRING",
+                        "description": "سبب التحويل الرئيسي (مثال: شكوى تأخر الطلب، مشكلة في جودة الطعام، طلب العميل لموظف بشري، خطأ في الحساب)"
+                    },
+                    "urgency": {
+                        "type": "STRING",
+                        "description": "درجة الأهمية",
+                        "enum": ["urgent", "normal"]
+                    },
+                    "summary": {
+                        "type": "STRING",
+                        "description": "ملخص واضح وموجز لشكوى أو طلب العميل ليقرأه موظف الدعم البشري فوراً"
+                    }
+                },
+                "required": ["reason", "summary"]
+            }
+        )
+
+        all_decls = [rag_decl, memory_decl, escalate_decl] + mcp_decls
         tools_config = [types.Tool(function_declarations=all_decls)] if all_decls else None
 
-        # 2. Build Memory Context for Prompt
+        # 2. Build Memory, Schedule, and Live Context for Prompt
         call_sum = call_mem.get("last_call_summary", "")
         agreed = call_mem.get("agreed_next_steps", "")
         memory_context = ""
         if call_sum or agreed:
             memory_context = f"\n[ذاكرة المكالمات الهاتفية السابقة للعميل]: {call_sum}. ما تم الاتفاق عليه هاتفياً: {agreed}.\n"
 
+        # Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
+        live_ctx_raw = get_user_live_context_cached(user_id) if user_id else {}
+        live_context_str = format_live_context_for_prompt(live_ctx_raw) if live_ctx_raw else ""
+
+        # Business Hours Schedule & Real-time Operating Status
+        b_sched = BusinessHoursSchedule.objects.filter(user_id=user_id).first() if user_id else None
+        schedule_context_str = ""
+        if b_sched and b_sched.is_enabled:
+            tz_name = b_sched.timezone or "Africa/Cairo"
+            try:
+                local_tz = ZoneInfo(tz_name)
+            except Exception:
+                local_tz = ZoneInfo("UTC")
+            now_dt = datetime.now(local_tz)
+            is_open_now = b_sched.is_within_business_hours(now_dt)
+
+            day_keys_ar = {
+                "saturday": "السبت", "sunday": "الأحد", "monday": "الاثنين",
+                "tuesday": "الثلاثاء", "wednesday": "الأربعاء", "thursday": "الخميس", "friday": "الجمعة"
+            }
+            curr_day_key = now_dt.strftime('%A').lower()
+            curr_day_ar = day_keys_ar.get(curr_day_key, curr_day_key)
+            curr_time_str = now_dt.strftime('%I:%M %p')
+
+            days_cfg = b_sched.days_config or {}
+            today_cfg = days_cfg.get(curr_day_key, {})
+            start_t = today_cfg.get("start_time", "09:00")
+            end_t = today_cfg.get("end_time", "17:00")
+
+            if is_open_now:
+                status_text = f"المطعم والنشاط [مفتوح الآن ويستقبل الطلبات كالمعتاد] (ساعات العمل اليوم {curr_day_ar}: من {start_t} إلى {end_t})."
+            else:
+                status_text = (
+                    f"المطعم والنشاط [مغلق حالياً خارج أوقات العمل الرسمية]!\n"
+                    f"- التوقيت المحلي الحالي: {curr_time_str} يوم {curr_day_ar}.\n"
+                    f"- مواعيد العمل لليوم ({curr_day_ar}): من {start_t} إلى {end_t}.\n"
+                    f"- قاعدة صارمة في حالة الإغلاق: إذا استفسر العميل عن أوقات العمل أو حاول طلب أوردر للتوصيل الفوري، اعتذر له بلطف وأخبره أن المطبخ/الفرع مغلق حالياً وسيبدأ العمل في تمام {start_t}، واعرض عليه تسجيل طلبه مقدماً (Pre-order) ليتم تجهيزه فور فتح المطبخ."
+                )
+
+            schedule_context_str = (
+                f"\n\n==================== [مواعيد وساعات العمل الرسمية وحالة التشغيل اللحظية] ====================\n"
+                f"- التوقيت المحلي للمنشأة الآن: {curr_time_str} ({tz_name}).\n"
+                f"- الحالة التشغيلية الحالية: {status_text}\n"
+                f"============================================================================================\n"
+            )
+
         system_instruction = (
             f"{persona_prompt}\n"
             f"{memory_context}\n"
+            f"{schedule_context_str}\n"
+            f"{live_context_str}\n"
             f"أنت تتحدث الآن مع العميل عبر الواتساب (رقمه: {phone}، اسمه: {c_name}).\n"
-            f"⛔ التزام تام بالبزنس فقط: إذا طرح العميل أي سؤال خارج نطاق منتجات وخدمات ومستندات المنشأة (أسئلة عامة، شخصية، سياسة، رياضة، برمجة عامة، نكات... إلخ): اعتذر له بلباقة ومرونة دون أن يبدو قالباً محفوظاً، ووجهه لخدماتنا ومستنداتنا.\n"
-            f"⛔ تنبيه حاسم وصارم: ممنوع منعاً باتاً ونهائياً إرسال أي رسائل تمهيدية أو وعود للعميل (مثل: 'هبحثلك في المستندات' أو 'لحظة واحدة وهجيبلك التفاصيل' أو 'ثواني أشوفلك'). هذا تطبيق شات، والعميل ينتظر الإجابة المباشرة ولا تذكر له خطوات بحثك الداخلية أو أنك تبحث في مستندات إطلاقاً.\n"
-            f"إذا كان سؤال العميل يتطلب معرفة أسعار أو باقات أو خدمات أو أي تفاصيل من قاعدة المعرفة: يجب عليك استدعاء أداة (search_knowledge_base) فوراً وبصمت تام في نفس اللحظة بدون إرسال أي نص تمهيدي.\n"
-            f"قدّم الإجابة المباشرة الشافية الكاملة للعميل بعد استخراج البيانات من الأداة مباشرة في رسالة واحدة."
+            f"قواعد تشغيلية إلزامية خاصة بالمحادثة في الواتساب:\n"
+            f"1. الذاكرة اللحظية المباشرة (المنيو، الأسعار، الفروع، النواقص، مناطق التوصيل) متوفرة في الأعلى: أجب منها فوراً دون استدعاء أي أداة لأعلى سرعة استجابة.\n"
+            f"2. ⚠️ قاعدة الشكاوى والتحويل للدعم البشري (حاسمة وفورية): إذا وردت أي شكوى من العميل بخصوص أوردر (أكل بارد، نقص صنف، تأخر توصيل، خطأ في الحساب) أو إذا طلب العميل صراحة التحويل لموظف بشري أو خدمة العملاء: يُمنع منعاً باتاً الجدال أو الاستمرار في تقديم اعتذارات روبوتية متكررة، ويجب عليك فوراً استدعاء أداة (escalate_to_human_support) لتسليم المحادثة للدعم البشري!\n"
+            f"3. ⛔ التزام تام بالبزنس فقط: إذا طرح العميل أي سؤال خارج نطاق منتجات وخدمات ومستندات المنشأة (أسئلة عامة، شخصية، سياسة، رياضة، برمجة عامة، نكات... إلخ): اعتذر له بلباقة ومرونة دون أن يبدو قالباً محفوظاً، ووجهه لخدماتنا ومستنداتنا.\n"
+            f"4. ⛔ حظر قاطع للرسائل التمهيدية: ممنوع تماماً ونهائياً إرسال أي رسائل تمهيدية أو وعود للعميل (مثل: 'هبحثلك في المستندات' أو 'لحظة واحدة وهجيبلك التفاصيل' أو 'ثواني أشوفلك'). هذا تطبيق شات، والعميل ينتظر الإجابة المباشرة ولا تذكر له خطوات بحثك الداخلية أو أنك تبحث في مستندات إطلاقاً.\n"
+            f"5. قدّم الإجابة المباشرة الشافية الكاملة للعميل بعد استخراج البيانات من الأداة مباشرة في رسالة واحدة."
         )
 
         # 3. Build Rich Conversation History (Last 25 messages for deep conversational context)
@@ -437,6 +521,43 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
                         elif t_name == "lookup_customer_memory":
                             ident = str(t_args.get("identifier", phone))
                             t_output = execute_customer_memory_lookup(user_id, ident)
+                        elif t_name == "escalate_to_human_support":
+                            reason = str(t_args.get("reason", "طلب دعم بشري / شكوى"))
+                            urgency = str(t_args.get("urgency", "normal"))
+                            summary = str(t_args.get("summary", inbound_msg))
+
+                            mem_rec, _ = CustomerMemory.objects.get_or_create(user_id=user_id, phone_number=phone)
+                            wm_rec = mem_rec.whatsapp_memory or {}
+                            wm_rec["ai_auto_reply_enabled"] = False
+                            wm_rec["needs_human_attention"] = True
+                            wm_rec["escalation_reason"] = reason
+                            wm_rec["escalation_urgency"] = urgency
+                            wm_rec["escalation_summary"] = summary
+                            wm_rec["escalated_at"] = datetime.now(timezone.utc).isoformat()
+                            mem_rec.whatsapp_memory = wm_rec
+                            mem_rec.save()
+
+                            # Publish real-time Centrifugo event to dashboard
+                            alert_payload = {
+                                "event": "whatsapp_escalation",
+                                "phone_number": phone,
+                                "customer_name": c_name or mem_rec.customer_name or phone,
+                                "reason": reason,
+                                "urgency": urgency,
+                                "summary": summary,
+                                "escalated_at": wm_rec["escalated_at"]
+                            }
+                            try:
+                                publish_to_centrifugo(f"tenant_{user_id}", alert_payload)
+                                publish_to_centrifugo(f"user_{user_id}", alert_payload)
+                                publish_to_centrifugo(f"whatsapp_{user_id}", alert_payload)
+                            except Exception as cent_err:
+                                logger.warning(f"Failed to publish Centrifugo escalation alert: {cent_err}")
+
+                            t_output = (
+                                "تم تحويل المحادثة بنجاح إلى موظف الدعم البشري وتم إيقاف الرد الآلي للذكاء الاصطناعي لهذه المحادثة. "
+                                "أبلغ العميل الآن بلباقة واعتذار لطيف بأن طلبه تم تحويله لموظف خدمة العملاء وسيتواصل معه مباشرة هنا."
+                            )
                         elif t_name in mcp_tool_map:
                             srv_info = mcp_tool_map[t_name]
                             mcp_res = test_mcp_tool_sync(

@@ -4223,6 +4223,11 @@ def api_partner_client_whatsapp_conversations(request, client_id):
             },
             "messages_count": t['messages_count'],
             "ai_active": (ai_active if can_send else False),
+            "needs_human_attention": wm.get("needs_human_attention", False),
+            "escalation_reason": wm.get("escalation_reason", ""),
+            "escalation_urgency": wm.get("escalation_urgency", ""),
+            "escalation_summary": wm.get("escalation_summary", ""),
+            "escalated_at": wm.get("escalated_at", ""),
             "has_call_history": bool(mem and mem.total_calls_count > 0)
         })
 
@@ -4459,6 +4464,8 @@ def api_partner_client_whatsapp_conversation_toggle_ai(request, client_id, phone
         new_state = not current
 
     wm["ai_auto_reply_enabled"] = new_state
+    if new_state:
+        wm["needs_human_attention"] = False
     mem.whatsapp_memory = wm
     mem.save(update_fields=['whatsapp_memory'])
 

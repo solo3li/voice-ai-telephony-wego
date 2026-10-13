@@ -98,16 +98,44 @@ def get_qr_code(instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
         return {"status": "error", "ok": False, "error": str(e)}
 
 
+def format_whatsapp_number(raw_phone: str) -> str:
+    """Format and normalize phone number for WhatsApp / Evolution API with country code."""
+    phone = str(raw_phone or "").strip()
+    if not phone:
+        return ""
+    if "@" in phone:
+        return phone.replace("+", "")
+
+    import re
+    digits = re.sub(r"\D", "", phone)
+    if not digits:
+        return ""
+
+    # Strip leading 00
+    if digits.startswith("00"):
+        digits = digits[2:]
+
+    # Egyptian local mobile numbers: 010, 011, 012, 015 (11 digits)
+    if digits.startswith("01") and len(digits) == 11:
+        digits = "20" + digits[1:]
+    # Egyptian numbers typed as 2001... (13 digits with extra 0)
+    elif digits.startswith("2001") and len(digits) == 13:
+        digits = "20" + digits[3:]
+    # Saudi local mobile numbers: 05... (10 digits)
+    elif digits.startswith("05") and len(digits) == 10:
+        digits = "966" + digits[1:]
+    # Saudi numbers typed as 96605... (13 digits with extra 0)
+    elif digits.startswith("96605") and len(digits) == 13:
+        digits = "966" + digits[4:]
+
+    return digits
+
+
 def send_whatsapp_message(phone_number: str, text: str, instance_name: str = DEFAULT_INSTANCE_NAME) -> Dict[str, Any]:
     """Send text message to WhatsApp recipient (supports both standard numbers and @lid/@g.us JIDs)."""
-    target_number = phone_number.strip()
-    if "@" not in target_number:
-        clean_phone = "".join(ch for ch in target_number if ch.isdigit())
-        if not clean_phone:
-            return {"status": "error", "ok": False, "error": "Invalid phone number"}
-        target_number = clean_phone
-    else:
-        target_number = target_number.replace("+", "")
+    target_number = format_whatsapp_number(phone_number)
+    if not target_number:
+        return {"status": "error", "ok": False, "error": "Invalid phone number"}
 
     # Check connection state first
     stat = get_connection_status(instance_name)
@@ -137,14 +165,9 @@ def send_whatsapp_presence(phone_number: str, presence: str = "composing", delay
     """
     Send chat presence status (e.g. 'composing' for typing indicator) to Evolution API.
     """
-    target_number = phone_number.strip()
-    if "@" not in target_number:
-        clean_phone = "".join(ch for ch in target_number if ch.isdigit())
-        if not clean_phone:
-            return {"status": "error", "ok": False, "error": "Invalid phone number"}
-        target_number = clean_phone
-    else:
-        target_number = target_number.replace("+", "")
+    target_number = format_whatsapp_number(phone_number)
+    if not target_number:
+        return {"status": "error", "ok": False, "error": "Invalid phone number"}
 
     url = f"{EVOLUTION_API_URL}/chat/sendPresence/{instance_name}"
     payload = {

@@ -485,7 +485,7 @@
     if (currentFilter === 'ai_active') {
       filtered = convs.filter(c => c.ai_active);
     } else if (currentFilter === 'manual') {
-      filtered = convs.filter(c => !c.ai_active);
+      filtered = convs.filter(c => !c.ai_active || c.needs_human_attention);
     }
 
     // Apply Search
@@ -524,6 +524,11 @@
       if (lastMsg.is_ai) dirPrefix = '🤖 ';
       else if (lastMsg.is_human) dirPrefix = '👤 ';
 
+      let escalationBadge = '';
+      if (c.needs_human_attention) {
+        escalationBadge = `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse" title="${escapeHtml(c.escalation_reason || 'شكوى عميل')}">⚠️ شكوى عميل</span>`;
+      }
+
       const aiBadge = isAi
         ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 AI</span>'
         : '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">⏸️ يدوي</span>';
@@ -561,6 +566,7 @@
             </p>
             <!-- السطر الرابع: الشارات وحالة الرد وعدد الرسائل -->
             <div class="flex items-center gap-1.5 pt-0.5">
+              ${escalationBadge}
               ${aiBadge}
               ${callBadge}
               <span class="text-[9px] text-[#8C827A] font-mono">(${c.messages_count} رسائل)</span>

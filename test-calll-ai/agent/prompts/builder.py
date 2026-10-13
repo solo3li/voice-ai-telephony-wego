@@ -12,7 +12,8 @@ def build_dynamic_system_instruction(
     outbound_context: Optional[Dict[str, Any]] = None,
     call_queues: Optional[List[Dict[str, Any]]] = None,
     live_context: Optional[Dict[str, Any]] = None,
-    knowledge_manifest: Optional[List[Dict[str, Any]]] = None
+    knowledge_manifest: Optional[List[Dict[str, Any]]] = None,
+    available_tools: Optional[List[Dict[str, Any]]] = None
 ) -> str:
     """Construct dynamic prompt incorporating dialect, gender, role, style, memory, queue fallback context, outbound context, and strict guardrails."""
     gender = profile.get("gender", "female")
@@ -182,6 +183,27 @@ def build_dynamic_system_instruction(
                 f"- استدعِ أداة 'search_knowledge_base' للبحث الدلالي الفوري في هذه المستندات عند ورود أي سؤال عن خدمات المنشأة أو ميزاتها.\n"
             )
 
+    # 9. Available Tools Manifest (FastMCP & Operations awareness)
+    tools_manifest_text = ""
+    if available_tools:
+        tool_items = []
+        for t in available_tools:
+            t_name = t.get("name", "")
+            t_desc = t.get("description", "")
+            if t_name:
+                tool_items.append(f"• أداة [{t_name}]: {t_desc}")
+        if tool_items:
+            tools_manifest_text = (
+                f"\n\n==================== [قائمة الأدوات البرمجية المتاحة حصراً في هذه المكالمة (Live Tools Manifest)] ====================\n"
+                f"أنت مزود بالأدوات التنفيذية التالية ومرخص ومكلف باستدعائها في اللحظة المناسبة:\n"
+                + "\n".join(tool_items) + "\n\n"
+                f"قواعد تشغيلية حاسمة لاستدعاء الأدوات مقابل الذاكرة اللحظية:\n"
+                f"1. الذاكرة اللحظية المباشرة (المنيو، الأسعار، الفروع، النواقص، مناطق التوصيل) موجودة لديك نصاً في الأعلى: أجب منها فوراً دون أي استدعاء خارجي لأعلى سرعة استجابة.\n"
+                f"2. لتنفيذ العمليات والإجراءات الحية (مثل تسجيل أو معاينة طلب جديد، تتبع طلب جاري، إلغاء طلب، استرجاع تفاصيل العميل، أو التحويل لطابور بشري): استدعِ الأداة المناسبة فوراً في الخلفية ولا تدّعِ تنفيذ الإجراء شفهياً دون استدعاء أداته الفعلية!\n"
+                f"3. إرسال الواتساب أثناء المكالمة (أداة send_whatsapp_message): إذا طلب العميل إرسال المنيو، أو لوكيشن، أو تفاصيل الطلب، أو أي معلومة على الواتساب، استدعِ أداة [send_whatsapp_message] فوراً مع نص الرسالة المطلوب لتصل لرقم هاتفه أثناء المكالمة. إذا طلبت منك الأداة رقم هاتف العميل، اسأل العميل بلطف: «ممكن رقم الواتساب اللي تحب أبعتلك عليه يا فندم؟» ثم استدعِ الأداة فور نطقه للرقم، وأخبره بلباقة بأن الرسالة وصلته الآن على الواتساب!\n"
+                f"=================================================================================================\n"
+            )
+
     # Mandatory Alignment between Role and Documents
     if titles_str:
         alignment_instruction = (
@@ -257,7 +279,7 @@ def build_dynamic_system_instruction(
      أ. اعترف للمتصل فوراً وبشكل صريح وواضح بالمشكلة واعتذر له بلباقة شديدة بلهجتك.
      ب. يُمنع منعاً باتاً وحاسماً أن تدّعي نجاح العملية إذا فشلت الأداة أو أرجعت خطأ!
      ج. اعرض على المتصل فوراً الحلول البديلة المتاحة: إعادة المحاولة لاحقاً أو التحويل لموظف بشري.{welcome_text}{custom_text}
-{verbosity_instruction}{memory_text}{live_context_text}{manifest_text}"""
+{verbosity_instruction}{memory_text}{live_context_text}{manifest_text}{tools_manifest_text}"""
 
     if call_queues:
         q_lines = []

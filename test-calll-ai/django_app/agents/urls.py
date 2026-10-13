@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Internal AI Agent Session Bootstrap API
     path('internal/bootstrap/', views.api_internal_agent_bootstrap, name='api_internal_agent_bootstrap'),
+    path('internal/whatsapp/send/', views.api_internal_agent_whatsapp_send, name='api_internal_agent_whatsapp_send'),
 
     # Structured Live Context (Fast In-Memory Cache)
     path('context/', views.api_user_live_context_web, name='user_live_context_web'),

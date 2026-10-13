@@ -677,6 +677,14 @@ def api_internal_agent_bootstrap(request):
             except Exception:
                 pass
 
+        if not caller_ext and room_name and "__" in room_name:
+            try:
+                cand = room_name.split("__", 1)[1].split("_")[0]
+                if cand:
+                    caller_ext = cand
+            except Exception:
+                pass
+
         if not user_id and (wazo_ctx or caller_ext):
             from telephony.models import resolve_tenant_from_context_and_ext
             tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)
@@ -797,6 +805,71 @@ def api_internal_agent_bootstrap(request):
 
     except Exception as e:
         logger.error(f"Error in api_internal_agent_bootstrap: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_internal_agent_whatsapp_send(request):
+    """
+    Internal API endpoint for LiveKit AI Voice Agent to send WhatsApp message to the caller during a call.
+    Accepts: { user_id: int, phone_number: str, message: str }
+    """
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    if not verify_internal_api_key(request):
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        user_id = data.get('user_id')
+        phone = str(data.get('phone_number') or data.get('phone') or '').strip()
+        text = str(data.get('message') or '').strip()
+
+        if not user_id or not phone or not text:
+            return JsonResponse({"status": "error", "message": "user_id, phone_number, and message are required"}, status=400)
+
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({"status": "error", "message": f"User {user_id} not found"}, status=404)
+
+        from crm.services.evolution_client import format_whatsapp_number, send_whatsapp_message
+        norm_phone = format_whatsapp_number(phone)
+        if not norm_phone:
+            return JsonResponse({"status": "error", "message": "Invalid phone number"}, status=400)
+
+        instance_name = f"user_{user.id}"
+        send_res = send_whatsapp_message(norm_phone, text, instance_name)
+        is_ok = bool(send_res.get("ok"))
+
+        from crm.models import CustomerMemory, OmnichannelMessage
+        mem = CustomerMemory.objects.filter(user=user, phone_number__in=[norm_phone, phone]).first()
+        c_name = mem.customer_name if mem else ""
+
+        msg = OmnichannelMessage.objects.create(
+            user=user,
+            phone_number=norm_phone,
+            customer_name=c_name,
+            channel='whatsapp',
+            direction='outbound_agent',
+            message_text=text,
+            metadata={"source": "voice_ai_call", "evolution_response": send_res}
+        )
+
+        if not is_ok:
+            logger.warning(f"Evolution API send status for {norm_phone}: {send_res}")
+
+        return JsonResponse({
+            "status": "success" if is_ok else "warning",
+            "ok": True,
+            "sent": is_ok,
+            "phone_number": norm_phone,
+            "message_id": msg.id,
+            "error": send_res.get("error") if not is_ok else None,
+            "evolution_response": send_res
+        })
+    except Exception as e:
+        logger.error(f"Error in api_internal_agent_whatsapp_send: {e}", exc_info=True)
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
