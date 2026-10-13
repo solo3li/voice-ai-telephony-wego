@@ -456,20 +456,21 @@ async def entrypoint(ctx: JobContext):
         for t in s.get("tools", []):
             t_name = t.get("name")
             t_desc = t.get("description", "")
-            t_schema = t.get("inputSchema")
+            t_schema = t.get("parameters") or t.get("inputSchema") or {}
             if not t_name:
                 continue
 
             def make_mcp_wrapper(name: str, url: str, token: str, desc: str, input_schema: Any):
+                param_dict = input_schema if isinstance(input_schema, dict) and input_schema.get("type") == "object" else {"type": "object", "properties": {}}
                 raw_schema = {
                     "name": name,
                     "description": desc or f"Execute tool {name}",
-                    "parameters": input_schema if isinstance(input_schema, dict) and input_schema.get("type") == "object" else {"type": "object", "properties": {}}
+                    "parameters": param_dict
                 }
                 @llm.function_tool(raw_schema=raw_schema)
                 async def mcp_tool(raw_args: dict) -> str:
                     if caller_phone and caller_phone != "web_dashboard" and isinstance(raw_args, dict):
-                        props = (input_schema.get("properties") or {}) if isinstance(input_schema, dict) else {}
+                        props = (param_dict.get("properties") or {}) if isinstance(param_dict, dict) else {}
                         for p_key in ("phone", "customer_phone", "phone_number"):
                             if p_key in props and not raw_args.get(p_key):
                                 raw_args[p_key] = caller_phone
@@ -478,13 +479,20 @@ async def entrypoint(ctx: JobContext):
                     try:
                         res = await asyncio.wait_for(
                             execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=raw_args),
-                            timeout=4.0
+                            timeout=10.0
                         )
                         asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})"))
-                        return json.dumps(res, ensure_ascii=False) if isinstance(res, (dict, list)) else str(res)
+                        if isinstance(res, dict):
+                            if "result" in res and res.get("result"):
+                                if res.get("is_error"):
+                                    err_msg = res.get("error_message") or res.get("result")
+                                    return f"تعذر تنفيذ الإجراء ({name}): {err_msg}"
+                                return str(res.get("result"))
+                            return json.dumps(res, ensure_ascii=False)
+                        return str(res)
                     except asyncio.TimeoutError:
                         logger.warning(f"Timeout executing MCP tool {name}")
-                        return f"استغرق تنفيذ الإجراء ({name}) وقتاً أطول من المتوقع، جاري متابعته."
+                        return f"استغرق تنفيذ الإجراء ({name}) وقتاً أطول من المتوقع، جاري متابعته مع الفرع."
                     except Exception as ex:
                         logger.error(f"Error calling MCP tool {name}: {ex}")
                         return f"خطأ أثناء استدعاء الأداة {name}: {ex}"

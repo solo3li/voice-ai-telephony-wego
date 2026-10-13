@@ -73,6 +73,7 @@ async def test_mcp_connection_async(server_url: str, auth_token: str = "", timeo
                             "name": t.name,
                             "description": t.description or "",
                             "parameters": schema,
+                            "inputSchema": schema,
                             "required_params": required,
                             "params_count": len(properties) if isinstance(properties, dict) else 0
                         })

@@ -86,7 +86,7 @@ async def execute_mcp_tool_call(server_url: str, auth_token: str = "", tool_name
                     is_err = getattr(result, "is_error", False)
                     return raw_text, is_err
 
-        raw_text, is_err = await asyncio.wait_for(_call(), timeout=4.0)
+        raw_text, is_err = await asyncio.wait_for(_call(), timeout=8.0)
 
         # Inspect raw_text for application-level error payloads
         error_msg = ""
@@ -129,7 +129,7 @@ async def execute_mcp_tool_call(server_url: str, auth_token: str = "", tool_name
             error_type=error_type
         )
     except asyncio.TimeoutError:
-        logger.warning(f"MCP tool '{tool_name}' timed out after 4.0s")
+        logger.warning(f"MCP tool '{tool_name}' timed out after 8.0s")
         timeout_msg = "استغرق خادم أداة المتجر وقتاً أطول من المتوقع للرد (انتهت المهلة الزمنية)."
         return MCPToolResult(
             success=False,
