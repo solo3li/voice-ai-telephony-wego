@@ -4423,4 +4423,31 @@ def api_partner_client_whatsapp_followup(request, client_id):
     })
 
 
+@extend_schema(
+    methods=['POST'],
+    operation_id="sync_partner_client_whatsapp_chats",
+    summary="مزامنة رسائل ومحادثات الواتساب الحقيقية للعميل التابع من الهاتف",
+    tags=["17. قنوات التواصل للعملاء (Client WhatsApp)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@partner_client_access_required
+def api_partner_client_whatsapp_sync(request, client_id):
+    """POST /api/partner/v1/clients/<client_id>/whatsapp/sync/"""
+    client_user = request.client_user
+    from crm.services.whatsapp_sync import sync_whatsapp_data
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+    clean_old = bool(data.get("clean_old", False))
+    max_messages = int(data.get("max_messages", 40))
+    res = sync_whatsapp_data(client_user, clean_old=clean_old, max_messages_per_chat=max_messages)
+    return JsonResponse(res)
+
+
+
 

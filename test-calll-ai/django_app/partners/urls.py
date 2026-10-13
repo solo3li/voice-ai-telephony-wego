@@ -92,6 +92,7 @@ urlpatterns = [
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/toggle-ai/', views.api_partner_client_whatsapp_conversation_toggle_ai, name='api_partner_client_whatsapp_conversation_toggle_ai'),
     path('clients/<int:client_id>/whatsapp/send/', views.api_partner_client_whatsapp_send, name='api_partner_client_whatsapp_send'),
     path('clients/<int:client_id>/whatsapp/followup/', views.api_partner_client_whatsapp_followup, name='api_partner_client_whatsapp_followup'),
+    path('clients/<int:client_id>/whatsapp/sync/', views.api_partner_client_whatsapp_sync, name='api_partner_client_whatsapp_sync'),
 
     # Managed Client Business Hours & Off-Hours Schedule
     path('clients/<int:client_id>/business-hours/', views.api_partner_client_business_hours, name='api_partner_client_business_hours'),

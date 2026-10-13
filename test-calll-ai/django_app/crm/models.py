@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class CustomerMemory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_memories')
@@ -113,7 +114,7 @@ class OmnichannelMessage(models.Model):
     is_followup = models.BooleanField(default=False)
     followup_reason = models.CharField(max_length=120, blank=True, default='')
     metadata = models.JSONField(default=dict, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     class Meta:
         ordering = ['-created_at']

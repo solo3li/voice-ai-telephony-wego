@@ -184,28 +184,37 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
             "0": {"name": "واتساب الرسمي", "phone": "0"},
         }
 
-        # 3. Fetch latest messages per chat using SQL Window Function (last N messages)
+        # 3. Fetch latest messages per chat using SQL Window Function with Deduplication
         cur.execute('''
-            WITH ranked_messages AS (
-                SELECT 
+            WITH distinct_messages AS (
+                SELECT DISTINCT ON (m.key->>'id')
                     m.id,
+                    m.key->>'id' as wa_msg_id,
                     m.key->>'remoteJid' as remote_jid,
                     (m.key->>'fromMe')::boolean as from_me,
                     m.message,
                     m."pushName",
                     m."messageType",
-                    m."messageTimestamp",
-                    ROW_NUMBER() OVER (
-                        PARTITION BY m.key->>'remoteJid' 
-                        ORDER BY m."messageTimestamp" DESC
-                    ) as rn
+                    m."messageTimestamp"
                 FROM "Message" m
                 WHERE m."instanceId" = %s
                   AND m.key->>'remoteJid' IS NOT NULL
                   AND m.key->>'remoteJid' != 'status@broadcast'
+                  AND m.key->>'id' IS NOT NULL
+                ORDER BY m.key->>'id', m."messageTimestamp" DESC
+            ),
+            ranked_messages AS (
+                SELECT 
+                    dm.*,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY dm.remote_jid 
+                        ORDER BY dm."messageTimestamp" DESC
+                    ) as rn
+                FROM distinct_messages dm
             )
             SELECT 
                 id,
+                wa_msg_id,
                 remote_jid,
                 from_me,
                 message,
@@ -237,7 +246,7 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
 
         # 4. Process and Group Messages by Chat
         chats_data = {}  # identifier -> list of message dicts
-        for m_id, r_jid, from_me, msg_content, push_name, msg_type, msg_ts in raw_messages:
+        for m_id, wa_msg_id, r_jid, from_me, msg_content, push_name, msg_type, msg_ts in raw_messages:
             if not r_jid:
                 continue
 
@@ -292,6 +301,7 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                     chats_data[identifier]["real_phone"] = real_phone
 
             chats_data[identifier]["messages"].append({
+                "wa_msg_id": wa_msg_id,
                 "direction": direction,
                 "text": text,
                 "created_at": dt,
@@ -301,14 +311,26 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
         # 5. Save to Django Database within transaction
         with transaction.atomic():
             if clean_old:
-                deleted_count, _ = OmnichannelMessage.objects.filter(user=user).delete()
-                logger.info(f"Purged {deleted_count} previous mock messages for user {user.username}.")
+                deleted_count, _ = OmnichannelMessage.objects.filter(user=user, channel="whatsapp").delete()
+                logger.info(f"Purged {deleted_count} previous messages for user {user.username}.")
+                existing_wa_ids = set()
+            else:
+                # Deduplication: Load existing message IDs and (phone, text) combinations
+                existing_wa_ids = set()
+                metas = OmnichannelMessage.objects.filter(user=user, channel="whatsapp").values_list('metadata', flat=True)
+                for meta in metas:
+                    if isinstance(meta, dict) and meta.get("whatsapp_msg_id"):
+                        existing_wa_ids.add(meta["whatsapp_msg_id"])
 
             messages_to_create = []
             for identifier, c_info in chats_data.items():
                 c_name = c_info["customer_name"]
                 c_real_phone = c_info.get("real_phone", "")
                 for msg in c_info["messages"]:
+                    wa_id = msg.get("wa_msg_id")
+                    if wa_id and wa_id in existing_wa_ids:
+                        continue  # Skip already imported message
+
                     om_msg = OmnichannelMessage(
                         user=user,
                         phone_number=identifier,
@@ -318,10 +340,15 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                         message_text=msg["text"],
                         is_followup=False,
                         followup_reason="whatsapp_sync",
-                        metadata={"raw_jid": c_info["raw_jid"]}
+                        metadata={
+                            "raw_jid": c_info["raw_jid"],
+                            "whatsapp_msg_id": wa_id or ""
+                        },
+                        created_at=msg["created_at"]
                     )
-                    om_msg.created_at = msg["created_at"]
                     messages_to_create.append(om_msg)
+                    if wa_id:
+                        existing_wa_ids.add(wa_id)
 
                 # Initialize CustomerMemory with AI Autopilot enabled
                 mem, _ = CustomerMemory.objects.get_or_create(
@@ -363,7 +390,8 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
                 mem.save()
 
             # Bulk create messages
-            OmnichannelMessage.objects.bulk_create(messages_to_create, batch_size=200)
+            if messages_to_create:
+                OmnichannelMessage.objects.bulk_create(messages_to_create, batch_size=200)
 
         total_imported_msgs = len(messages_to_create)
         total_chats = len(chats_data)
