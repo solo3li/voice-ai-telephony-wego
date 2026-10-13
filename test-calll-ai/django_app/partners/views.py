@@ -3786,7 +3786,7 @@ def api_partner_client_live_context(request, client_id):
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
-def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tuple:
+def _resolve_contact_display(phone_number: str, mem=None, last_msg=None, client_user=None) -> tuple:
     prof = (mem.permanent_profile or {}) if mem else {}
     c_name = (mem.customer_name if mem else '') or prof.get('customer_name') or (last_msg.customer_name if last_msg else '')
     clean_p = phone_number.strip()
@@ -3801,7 +3801,19 @@ def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tupl
             c_name = "عميل واتساب جديد"
     real_phone = prof.get('real_phone') or (clean_p if ('@' not in clean_p and clean_p.isdigit()) else '')
     display_phone = prof.get('display_phone') or format_phone_display(real_phone, clean_p)
-    return c_name, display_phone, real_phone
+    profile_pic_url = prof.get('profile_pic_url') or ''
+    if not profile_pic_url and client_user:
+        try:
+            from crm.services.evolution_client import fetch_profile_picture_url
+            instance_name = f"user_{client_user.id}"
+            profile_pic_url = fetch_profile_picture_url(real_phone or clean_p, instance_name) or ''
+            if profile_pic_url and mem:
+                prof['profile_pic_url'] = profile_pic_url
+                mem.permanent_profile = prof
+                mem.save(update_fields=['permanent_profile'])
+        except Exception:
+            pass
+    return c_name, display_phone, real_phone, profile_pic_url
 
 
 # =========================================================================
@@ -4164,7 +4176,7 @@ def api_partner_client_whatsapp_conversations(request, client_id):
         p = t['phone_number']
         last_msg = OmnichannelMessage.objects.filter(user=client_user, phone_number=p).order_by('-created_at').first()
         mem = memories.get(p)
-        c_name, display_phone, real_phone = _resolve_contact_display(p, mem, last_msg)
+        c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(p, mem, last_msg, client_user=client_user)
         wm = mem.whatsapp_memory or {} if mem else {}
         ai_active = wm.get("ai_auto_reply_enabled", True)
 
@@ -4195,6 +4207,7 @@ def api_partner_client_whatsapp_conversations(request, client_id):
             "customer_name": c_name,
             "display_phone": display_phone,
             "real_phone": real_phone,
+            "profile_pic_url": profile_pic_url,
             "chat_type": chat_type,
             "can_send": can_send,
             "read_only_reason": read_only_reason,
@@ -4245,7 +4258,7 @@ def api_partner_client_whatsapp_conversation_messages(request, client_id, phone)
     msgs = list(reversed(msgs_qs))
     mem = CustomerMemory.objects.filter(user=client_user, phone_number=clean_phone).first()
     last_msg = msgs[-1] if msgs else None
-    c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
+    c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(clean_phone, mem, last_msg, client_user=client_user)
     wm = mem.whatsapp_memory or {} if mem else {}
 
     chat_type = "direct"
@@ -4276,6 +4289,7 @@ def api_partner_client_whatsapp_conversation_messages(request, client_id, phone)
         "customer_name": c_name,
         "display_phone": display_phone,
         "real_phone": real_phone,
+        "profile_pic_url": profile_pic_url,
         "chat_type": chat_type,
         "can_send": can_send,
         "read_only_reason": read_only_reason,

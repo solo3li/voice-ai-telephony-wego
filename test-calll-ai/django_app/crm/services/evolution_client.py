@@ -2,6 +2,7 @@ import logging
 import os
 import requests
 from typing import Dict, Any, Optional
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -256,4 +257,28 @@ def check_group_can_send(group_jid: str, instance_name: str = DEFAULT_INSTANCE_N
     except Exception as e:
         logger.warning(f"Error checking group send status for {group_jid}: {e}")
         return True, ""
+
+
+def fetch_profile_picture_url(number: str, instance_name: str = DEFAULT_INSTANCE_NAME) -> Optional[str]:
+    """Fetch live profile picture URL from WhatsApp for a contact or group."""
+    if not number:
+        return None
+    cache_key = f"wa_profile_pic_{instance_name}_{number}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached or None
+
+    url = f"{EVOLUTION_API_URL}/chat/fetchProfilePictureUrl/{instance_name}"
+    payload = {"number": number}
+    try:
+        resp = requests.post(url, json=payload, headers=get_headers(), timeout=5.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            pic_url = data.get("profilePictureUrl") or ""
+            cache.set(cache_key, pic_url, timeout=3600)
+            return pic_url or None
+    except Exception as e:
+        logger.warning(f"Error fetching profile picture for {number}: {e}")
+    cache.set(cache_key, "", timeout=300)
+    return None
 

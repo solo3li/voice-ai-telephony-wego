@@ -3037,7 +3037,7 @@ def api_user_live_context(request):
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
-def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tuple:
+def _resolve_contact_display(phone_number: str, mem=None, last_msg=None, user=None) -> tuple:
     prof = (mem.permanent_profile or {}) if mem else {}
     c_name = (mem.customer_name if mem else '') or prof.get('customer_name') or (last_msg.customer_name if last_msg else '')
     clean_p = phone_number.strip()
@@ -3052,7 +3052,19 @@ def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tupl
             c_name = "عميل واتساب جديد"
     real_phone = prof.get('real_phone') or (clean_p if ('@' not in clean_p and clean_p.isdigit()) else '')
     display_phone = prof.get('display_phone') or format_phone_display(real_phone, clean_p)
-    return c_name, display_phone, real_phone
+    profile_pic_url = prof.get('profile_pic_url') or ''
+    if not profile_pic_url and user:
+        try:
+            from crm.services.evolution_client import fetch_profile_picture_url
+            instance_name = f"user_{user.id}"
+            profile_pic_url = fetch_profile_picture_url(real_phone or clean_p, instance_name) or ''
+            if profile_pic_url and mem:
+                prof['profile_pic_url'] = profile_pic_url
+                mem.permanent_profile = prof
+                mem.save(update_fields=['permanent_profile'])
+        except Exception:
+            pass
+    return c_name, display_phone, real_phone, profile_pic_url
 
 
 # =========================================================================
@@ -3412,7 +3424,7 @@ def api_user_whatsapp_conversations(request):
         p = t['phone_number']
         last_msg = OmnichannelMessage.objects.filter(user=request.user, phone_number=p).order_by('-created_at').first()
         mem = memories.get(p)
-        c_name, display_phone, real_phone = _resolve_contact_display(p, mem, last_msg)
+        c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(p, mem, last_msg, user=request.user)
         wm = mem.whatsapp_memory or {} if mem else {}
         ai_active = wm.get("ai_auto_reply_enabled", True)
 
@@ -3421,6 +3433,7 @@ def api_user_whatsapp_conversations(request):
             "customer_name": c_name,
             "display_phone": display_phone,
             "real_phone": real_phone,
+            "profile_pic_url": profile_pic_url,
             "last_message": {
                 "text": last_msg.message_text if last_msg else "",
                 "direction": last_msg.direction if last_msg else "inbound",
@@ -3466,7 +3479,7 @@ def api_user_whatsapp_conversation_messages(request, phone):
     msgs = list(reversed(msgs_qs))
     mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
     last_msg = msgs[-1] if msgs else None
-    c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
+    c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(clean_phone, mem, last_msg, user=request.user)
     wm = mem.whatsapp_memory or {} if mem else {}
 
     return JsonResponse({
@@ -3475,6 +3488,7 @@ def api_user_whatsapp_conversation_messages(request, phone):
         "customer_name": c_name,
         "display_phone": display_phone,
         "real_phone": real_phone,
+        "profile_pic_url": profile_pic_url,
         "ai_active": wm.get("ai_auto_reply_enabled", True),
         "total_messages": len(msgs),
         "messages": [m.to_dict() for m in msgs]

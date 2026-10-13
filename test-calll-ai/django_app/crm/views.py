@@ -665,8 +665,8 @@ def api_whatsapp_messages(request):
     })
 
 
-def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tuple:
-    """Helper to return (customer_name, display_phone, real_phone)"""
+def _resolve_contact_display(phone_number: str, mem=None, last_msg=None, user=None) -> tuple:
+    """Helper to return (customer_name, display_phone, real_phone, profile_pic_url)"""
     from .services.whatsapp_sync import format_phone_display
     prof = (mem.permanent_profile or {}) if mem else {}
     c_name = (mem.customer_name if mem else '') or prof.get('customer_name') or (last_msg.customer_name if last_msg else '')
@@ -685,7 +685,19 @@ def _resolve_contact_display(phone_number: str, mem=None, last_msg=None) -> tupl
 
     real_phone = prof.get('real_phone') or (clean_p if ('@' not in clean_p and clean_p.isdigit()) else '')
     display_phone = prof.get('display_phone') or format_phone_display(real_phone, clean_p)
-    return c_name, display_phone, real_phone
+    profile_pic_url = prof.get('profile_pic_url') or ''
+    if not profile_pic_url and user:
+        try:
+            from crm.services.evolution_client import fetch_profile_picture_url
+            instance_name = f"user_{user.id}"
+            profile_pic_url = fetch_profile_picture_url(real_phone or clean_p, instance_name) or ''
+            if profile_pic_url and mem:
+                prof['profile_pic_url'] = profile_pic_url
+                mem.permanent_profile = prof
+                mem.save(update_fields=['permanent_profile'])
+        except Exception:
+            pass
+    return c_name, display_phone, real_phone, profile_pic_url
 
 
 @login_required(login_url='/login/')
@@ -712,7 +724,7 @@ def api_whatsapp_conversations(request):
         p = t['phone_number']
         last_msg = OmnichannelMessage.objects.filter(user=request.user, phone_number=p).order_by('-created_at').first()
         mem = memories.get(p)
-        c_name, display_phone, real_phone = _resolve_contact_display(p, mem, last_msg)
+        c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(p, mem, last_msg, user=request.user)
         wm = mem.whatsapp_memory or {} if mem else {}
         ai_active = wm.get("ai_auto_reply_enabled", True)
 
@@ -721,6 +733,7 @@ def api_whatsapp_conversations(request):
             "customer_name": c_name,
             "display_phone": display_phone,
             "real_phone": real_phone,
+            "profile_pic_url": profile_pic_url,
             "last_message": {
                 "text": last_msg.message_text if last_msg else "",
                 "direction": last_msg.direction if last_msg else "inbound",
@@ -753,7 +766,7 @@ def api_whatsapp_conversation_messages(request, phone_number):
     msgs = list(msgs_qs[:150])
     mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
     last_msg = msgs[-1] if msgs else None
-    c_name, display_phone, real_phone = _resolve_contact_display(clean_phone, mem, last_msg)
+    c_name, display_phone, real_phone, profile_pic_url = _resolve_contact_display(clean_phone, mem, last_msg, user=request.user)
     wm = mem.whatsapp_memory or {} if mem else {}
     cm = mem.call_memory or {} if mem else {}
 
@@ -763,6 +776,7 @@ def api_whatsapp_conversation_messages(request, phone_number):
         "customer_name": c_name,
         "display_phone": display_phone,
         "real_phone": real_phone,
+        "profile_pic_url": profile_pic_url,
         "ai_active": wm.get("ai_auto_reply_enabled", True),
         "call_summary": cm.get("last_call_summary") or (mem.last_interaction_summary if mem else ""),
         "total_calls_count": mem.total_calls_count if mem else 0,
