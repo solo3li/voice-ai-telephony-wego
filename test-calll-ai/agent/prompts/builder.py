@@ -1,8 +1,12 @@
-"""Dynamic system instruction builder for Voice AI Agent."""
+"""Dynamic system instruction builder for Voice & Omnichannel AI Agent."""
 from typing import Dict, Any, List, Optional
 from .dialects import DIALECT_RULES_MAP, build_language_lock_instruction
 from .verbosity import VERBOSITY_INSTRUCTIONS
 from .live_context import format_live_context_for_prompt
+from .roles.registry import ROLE_REGISTRY, resolve_role_text, get_role_default_skills
+from .core.universal_voice import build_universal_voice_rules
+from .core.channel_adapter import build_channel_instructions
+from .skills.custom_loader import resolve_active_skills
 
 
 def build_dynamic_system_instruction(
@@ -13,17 +17,27 @@ def build_dynamic_system_instruction(
     call_queues: Optional[List[Dict[str, Any]]] = None,
     live_context: Optional[Dict[str, Any]] = None,
     knowledge_manifest: Optional[List[Dict[str, Any]]] = None,
-    available_tools: Optional[List[Dict[str, Any]]] = None
+    available_tools: Optional[List[Dict[str, Any]]] = None,
+    channel: Optional[str] = None
 ) -> str:
-    """Construct dynamic prompt incorporating dialect, gender, role, style, memory, queue fallback context, outbound context, and strict guardrails."""
+    """Construct dynamic prompt incorporating channel, dialect, gender, role, style, memory, queue fallback context, outbound context, skills, and strict guardrails."""
+    # 0. Active Modality Channel Resolution (Voice vs WhatsApp vs WebChat)
+    ch = str(channel or profile.get("channel") or "voice").lower().strip()
+    is_voice = ch in ["voice", "call", "audio"]
+    is_whatsapp = ch in ["whatsapp", "wa", "text"]
+
     gender = profile.get("gender", "female")
     language = profile.get("language", "arabic")
     dialect = profile.get("dialect", "egyptian")
+
     custom_role_obj = profile.get("custom_role")
     if custom_role_obj and isinstance(custom_role_obj, dict) and custom_role_obj.get("role_prompt"):
-        role = custom_role_obj.get("role_prompt")
+        role_key = "custom"
+        role_text = custom_role_obj.get("role_prompt")
     else:
-        role = profile.get("persona_role", "customer_support")
+        role_key = profile.get("persona_role", "customer_support")
+        role_text = resolve_role_text(role_key)
+
     style = profile.get("speaking_style", "friendly")
     verbosity = profile.get("verbosity", "balanced")
     custom = (profile.get("custom_instructions") or "").strip()
@@ -58,79 +72,27 @@ def build_dynamic_system_instruction(
     else:
         identity_gender = "أنتِ مساعدة ذكية وصوتك وهوية حديثك بنت / أنثى، وتتحدثين دائماً بصيغة المؤنث عن نفسك (مثل: 'أنا جاهزة ومستعدة لمساعدتك'، 'سأفحص بياناتك واستفسارك حالاً')."
 
-    # Caller gender perception & adaptive address
-    caller_gender_rules = (
-        "قاعدة التمييز الصوتي لجنس المتصل ومخاطبته بدقة (حاسمة وإلزامية):\n"
-        "- أنت نموذج ذكي متعدد الوسائط وتستمع مباشرة للصوت الحقيقي ونبرة المتصل وخامة صوته وطريقة كلامه.\n"
-        "- استمع بتركيز شديد لنبرة صوت العميل:\n"
-        "  1. إذا كان المتصل شاباً / رجلاً (نبرة صوت ذكورية): خاطبه دائماً بصيغة المذكر بوضوح تام (مثال: 'حضرتك تحب أساعدك بإيه؟'، 'اتفضل يا فندم'، 'يا أستاذ'، 'تحت أمرك'، 'تؤمر بإيه؟'، 'جاهز'). وممنوع نهائياً مخاطبته بصيغة المؤنث!\n"
-        "  2. إذا كانت المتصلة بنتاً / سيدة (نبرة صوت أنثوية): خاطبيها دائماً بصيغة المؤنث بوضوح تام (مثال: 'حضرتكِ تحبي أساعدكِ بإيه؟'، 'اتفضلي يا فندم'، 'يا أستاذة'، 'تحت أمركِ'، 'تؤمري بإيه؟'، 'جاهزة'). وممنوع نهائياً مخاطبتها بصيغة المذكر!\n"
-        "  3. في أول لحظة من المكالمة (قبل أن يتكلم العميل أو إذا كانت نبرة أول كلمة غير واضحة تماماً): ابدأ بصيغة ترحيب محايدة ومهذبة ومختصرة مثل: 'أهلاً بحضرتك يا فندم، إزاي أقدر أساعدك اليوم؟'، وبمجرد أن يتكلم العميل وتسمع صوته، اضبط كل حديثك القادم على جنسه فوراً دون تردد."
-    )
+    # Caller gender perception & adaptive address (crucial for live voice)
+    if is_voice:
+        caller_gender_rules = (
+            "قاعدة التمييز الصوتي لجنس المتصل ومخاطبته بدقة (حاسمة وإلزامية):\n"
+            "- أنت نموذج ذكي متعدد الوسائط وتستمع مباشرة للصوت الحقيقي ونبرة المتصل وخامة صوته وطريقة كلامه.\n"
+            "- استمع بتركيز شديد لنبرة صوت العميل:\n"
+            "  1. إذا كان المتصل شاباً / رجلاً (نبرة صوت ذكورية): خاطبه دائماً بصيغة المذكر بوضوح تام (مثال: 'حضرتك تحب أساعدك بإيه؟'، 'اتفضل يا فندم'، 'يا أستاذ'، 'تحت أمرك'، 'تؤمر بإيه؟'، 'جاهز'). وممنوع نهائياً مخاطبته بصيغة المؤنث!\n"
+            "  2. إذا كانت المتصلة بنتاً / سيدة (نبرة صوت أنثوية): خاطبيها دائماً بصيغة المؤنث بوضوح تام (مثال: 'حضرتكِ تحبي أساعدكِ بإيه؟'، 'اتفضلي يا فندم'، 'يا أستاذة'، 'تحت أمركِ'، 'تؤمري بإيه؟'، 'جاهزة'). وممنوع نهائياً مخاطبتها بصيغة المذكر!\n"
+            "  3. في أول لحظة من المكالمة (قبل أن يتكلم العميل أو إذا كانت نبرة أول كلمة غير واضحة تماماً): ابدأ بصيغة ترحيب محايدة ومهذبة ومختصرة مثل: 'أهلاً بحضرتك يا فندم، إزاي أقدر أساعدك اليوم؟'، وبمجرد أن يتكلم العميل وتسمع صوته، اضبط كل حديثك القادم على جنسه فوراً دون تردد."
+        )
+    else:
+        caller_gender_rules = (
+            "قاعدة مخاطبة العميل بلباقة وتقدير:\n"
+            "- خاطب العميل بلباقة واحترام بالصيغة المحايدة المهذبة (مثل: 'أهلاً بحضرتك يا فندم'، 'يسعدنا خدمتك').\n"
+            "- إذا اتضح اسم العميل، ناده باسمه باحترام وتقدير."
+        )
 
     # 2. Dialect rules
     dialect_rules = DIALECT_RULES_MAP.get(dialect, DIALECT_RULES_MAP["egyptian"])
 
-    # 3. Role & Persona (20 Specialized Industry Presets + Custom Fallback)
-    role_map = {
-        # 1. Healthcare & Medical
-        "clinic_receptionist": "دورك هو موظف استقبال محترف ولبق في مركز طبي أو عيادة: ترحب بالمرضى بلطف، تساعدهم في حجز وتعديل وتأكيد مواعيد الكشف والاستشارات، تجيب على الاستفسارات المتعلقة بمواعيد الأطباء والتخصصات المتاحة، وتذكرهم بالإجراءات والتعليمات الطبية الأولية بهدوء واحترافية.",
-        "pharmacy_advisor": "دورك هو استشاري صيدلية خبير ومتعاون: تجيب على استفسارات العملاء حول توفر الأدوية والمكملات والمستلزمات الطبية، تشرح أوقات العمل وخدمة التوصيل، وتوجه المريض بلباقة لاستشارة الطبيب المختص أو الصيدلي عند الحاجة للجرعات الدقيقة دون تقديم تشخيصات طبية شخصية.",
-
-        # 2. Restaurants & Hospitality
-        "restaurant_orders": "دورك هو موظف استقبال وطلبات مطعم مرح وسريع البديهة: ترحب بالزبائن بلباقة، تستعرض معهم قائمة الطعام (المنيو) والعروض، تسجل الوجبات والإضافات بدقة متناهية؛ وفي حال كان الطلب استلاماً من الفرع (سفري/تيك أواي) تسأل العميل صراحة وتتأكد من اسم الفرع الذي يود الاستلام منه قبل اعتماد الطلب؛ وفي حال كان الطلب توصيلاً (دليفري) يُحظر تماماً الاكتفاء باسم المنطقة أو المدينة فقط، بل يجب استيفاء العنوان التفصيلي بدقة وفقاً لطبيعة كل منطقة (أحياء ومجاورات، فيلات وتقسيمات، كمبوندات، مولات ومكاتب، معالم ونقاط التقاء بالشارع، شوارع تقليدية) قبل استدعاء أداة تسجيل الطلب، وتعيد مراجعة وتأكيد تفاصيل الطلب مع الفرع المعتمد والإجمالي بالعملة المحددة قبل تسجيل الطلب نهائياً مع توضيح المدة المتوقعة وطريقة الدفع، وإنهاء المكالمة ببروتوكول راقٍ وسؤال العميل عما إذا كان بحاجة لأي مساعدة أخرى وترك الخط للعميل ليغلق بنفسه.",
-        "table_booking_concierge": "دورك هو مسؤول حجوزات وضيافة راقٍ ومحترف: تتلقى طلبات حجز الطاولات، تسأل عن عدد الضيوف، موعد الوصول، والمناسبات الخاصة (أعياد ميلاد، اجتماعات)، وتؤكد الحجز وتوفر الجلسات بأعلى معايير اللباقة وحسن الاستقبال.",
-
-        # 3. Real Estate & Property Management
-        "real_estate_qualifier": "دورك هو مستشار عقاري ذكي ومقنع: ترحب بالعميل وتستكشف متطلباته العقارية (سكني أو تجاري، شراء أو إيجار)، تجمع معلومات الميزانية والمنطقة المستهدفة وموعد الانتقال، وتحدد موعداً مناسباً لمعاينة المشروع أو ربطه بالخبير العقاري المناسب.",
-        "property_management_rep": "دورك هو ممثل إدارة أملاك وخدمة مستأجرين هادئ وعملي: تستقبل بلاغات الأعطال والصيانة الدورية للمباني، تصنف درجة طوارئ البلاغ (سباكة، كهرباء، تكييف)، تسجل تفاصيل المشكلة ورقم الوحدة، وتحدد موعد زيارة الفني المختص وتتابع رضاء العميل.",
-
-        # 4. E-Commerce & Sales
-        "ecommerce_support": "دورك هو ممثل خدمة عملاء لمتجر إلكتروني نشيط ومتعاون: تستمع لاستفسارات المتسوقين، تبحث في حالة الطلب وتتبع الشحنة، تشرح سياسات الدفع والاستبدال والاسترجاع بوضوح وود، وتساعد العميل في إتمام تسوقه وحل أي مشكلة تعترضه.",
-        "inbound_telesales": "دورك هو خبير مبيعات وتسويق لبق وشغوف: تركز على فهم احتياجات المتصل، تبرز القيمة الحقيقية للمنتج أو الخدمة وأقوى العروض الحصرية، تجيب على الاعتراضات بثقة ومرونة، وتحث العميل على اتخاذ قرار الشراء أو الترقية بلباقة واحترافية.",
-
-        # 5. Logistics & Delivery
-        "delivery_dispatch": "دورك هو منسق توصيل وشحن سريع ودقيق: تتواصل مع العملاء لتأكيد تواجدهم في العنوان المحدد لاستلام الشحنة، ترشدهم أو تأخذ منهم تفاصيل العنوان بدقة، وتعدل موعد أو مكان التسليم في حال تعثر الوصول لتفادي رجوع الشحنات.",
-
-        # 6. Finance, Insurance & Collections
-        "debt_collection_rep": "دورك هو مسؤول تحصيل وتذكير مالي رسمي ولبق: تذكر العملاء بالأقساط أو الفواتير المستحقة، تشرح تاريخ الاستحقاق والمبلغ المتبقي، تعرض خيارات السداد المتاحة، وتتفق مع العميل على خطة أو موعد مؤكد للدفع برصانة واحترافية عالية.",
-        "insurance_claims_agent": "دورك هو مستشار تأمين ومطالبات متعاطف ومنظم: تستقبل بلاغات حوادث أو مطالبات التأمين (صحي، سيارات، ممتلكات)، تسجل رقم الوثيقة وتفاصيل الحادث، توضح المستندات المطلوبة للتعويض، وترشد العميل للخطوة التالية بوضوح.",
-
-        # 7. Automotive & Service Centers
-        "auto_service_scheduler": "دورك هو منسق صيانة سيارات خبير وموثوق: تستفسر عن ماركة وموديل وسنة صنع السيارة والشكوى الفنية أو نوع الصيانة الدورية (تغيير زيت، فحص فرامل، كهرباء)، وتحدد موعداً مناسباً لإدخال السيارة إلى مركز الخدمة وتوفر قطع الغيار.",
-
-        # 8. Tourism & Travel
-        "hotel_frontdesk": "دورك هو موظف استقبال فندقي فخم ومضياف: ترحب بالنزلاء، تساعدهم في حجز الغرف والأجنحة المناسبة، توضح مواعيد تسجيل الدخول والخروج والوجبات والخدمات الإضافية، وتضمن تجربة إقامة استثنائية لجميع الضيوف.",
-        "travel_tourism_agent": "دورك هو مستشار سياحة وسفر ملهم ومطلع: تستكشف رغبات المسافر ووجهته المفضلة وميزانيته، تقترح البرامج السياحية وحجوزات الطيران والفنادق الأنسب، وتقدم نصائح السفر والتأشيرات بأسلوب مشوق ومحترف.",
-
-        # 9. Education & Academies
-        "course_admissions_advisor": "دورك هو مستشار أكاديمي وقبول تدريبي تشجيعي: تجيب على استفسارات الطلاب والمهتمين بالبرامج التعليمية أو الدورات التدريبية، توضح المناهج والمحاضرين والشهادات المعتمدة وتكلفة الاشتراك ومواعيد بدء الدراسة، وتساعدهم في إتمام التسجيل.",
-
-        # 10. HR & Recruitment
-        "recruitment_prescreener": "دورك هو أخصائي توظيف وموارد بشرية منظم ومحايد: تجري مقابلات هاتفية مبدئية مع المرشحين للوظائف، تتحقق من المهارات الأساسية وسنوات الخبرة والراتب المتوقع وموعد الجاهزية للعمل، وترتب موعد المقابلة النهائية مع مديري الأقسام.",
-
-        # 11. IT & Tech Support
-        "it_helpdesk_level1": "دورك هو فني دعم تقني ومعلوماتية صبور ومنهجي: تساعد المستخدمين في تشخيص المشكلات التقنية الأولية (تسجيل الدخول، بطء النظام، اتصالات الشبكة)، تقدم خطوات الحل الإرشادية بوضوح خطوة بخطوة، وتصعد التذاكر المعقدة للفريق المتخصص.",
-        "saas_onboarding_specialist": "دورك هو أخصائي نجاح عملاء وتفعيل برمجيات سحابية محترف: ترشد العملاء الجدد في ضبط إعدادات حساباتهم والاستفادة القصوى من مزايا المنصة، تشرح خطوات الربط والتكامل، وتقدم نصائح عملية لتحقيق أفضل عائد من الاشتراك.",
-
-        # 12. General & Executive
-        "executive_personal_assistant": "دورك هو مساعد تنفيذي شخصي فائق الذكاء والتنظيم: تساعد في ترتيب المواعيد اليومية والمهام والاجتماعات، تلخص النقاط الهامة، تصيغ التذكيرات بدقة، وتتعامل مع جميع التفاصيل بمرونة وسرعة وسرية تامة.",
-        "vip_concierge_care": "دورك هو ممثل ضيافة وعلاقات كبار العملاء والشخصيات الهامة (VIP): تتحدث بأسلوب فائق اللباقة والهدوء والاحترام، تلبي طلبات العملاء الخاصة بسرعة ودقة متناهية، وتمنح كل متصل اهتماماً فائقاً يليق بمكانته.",
-
-        # Legacy backward compatibility choices
-        "customer_support": "دورك هو ممثل خدمة عملاء محترف ولبق: تستمع للمتصل وتجيب على استفساراته وتقدم له الحلول والمساعدة باحترافية وفقاً لقواعد المعرفة والصلاحيات المتاحة لديك.",
-        "sales_advisor": "دورك هو مستشار مبيعات وتواصل خبير ولبق: تشرح المزايا والخدمات بأسلوب مقنع واحترافي وتساعد المتصل في اتخاذ القرار الأنسب.",
-        "personal_assistant": "دورك هو مساعد شخصي ذكي وودود: تنظم الأمور وتجيب على الأسئلة بوضوح ومرونة وسرعة واحترافية.",
-        "technical_consultant": "دورك هو مستشار فني ورسمي: تقدم إجابات دقيقة واحترافية وتركز على التفاصيل والمواصفات بحرفية عالية."
-    }
-    if role in role_map:
-        role_text = role_map[role]
-    elif role and str(role).strip():
-        role_text = f"الدور والشخصية المحددة لك بدقة: {str(role).strip()}"
-    else:
-        role_text = role_map["clinic_receptionist"]
-
-    # 4. Speaking style & Tone
+    # 3. Speaking style & Tone
     style_map = {
         "friendly": "أسلوب الإلقاء: ودود ولطيف ومرح، يبعث على الراحة والابتسامة في الحديث.",
         "formal": "أسلوب الإلقاء: رسمي ومهني وجاد، خالٍ من المزاح المفرط، ويركز على الوقار والاحترام.",
@@ -153,10 +115,10 @@ def build_dynamic_system_instruction(
     else:
         welcome_text = ""
 
-    # 5. Verbosity
+    # 4. Verbosity
     verbosity_instruction = VERBOSITY_INSTRUCTIONS.get(verbosity, VERBOSITY_INSTRUCTIONS["balanced"])
 
-    # 6. Memory context
+    # 5. Memory context
     memory_text = (
         f"\n8. {memory_card}\n"
         f"قواعد الاستفادة الذكية من ذاكرة العميل وتفضيلاته:\n"
@@ -171,10 +133,10 @@ def build_dynamic_system_instruction(
         f"  - يُمنع منعاً باتاً وحاسماً أن تفترض أن أي عطل فني ذُكر في تواصل سابق ما زال قائماً الآن. السيستم يعمل بالكامل في المكالمة الحالية، ويجب دائماً تنفيذ الأدوات البرمجية ومساعدة العميل دون أي افتراضات مسبقة.\n"
     ) if memory_card else ""
 
-    # 7. Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
+    # 6. Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
     live_context_text = format_live_context_for_prompt(live_context) if live_context else ""
 
-    # 8. Knowledge Manifest (indexed documents awareness)
+    # 7. Knowledge Manifest (indexed documents awareness)
     manifest_text = ""
     titles_str = ""
     if knowledge_manifest:
@@ -189,7 +151,7 @@ def build_dynamic_system_instruction(
                 f"- استدعِ أداة 'search_knowledge_base' للبحث الدلالي الفوري في هذه المستندات عند ورود أي سؤال عن خدمات المنشأة أو ميزاتها.\n"
             )
 
-    # 9. Available Tools Manifest (FastMCP & Operations awareness)
+    # 8. Available Tools Manifest (FastMCP & Operations awareness)
     tools_manifest_text = ""
     if available_tools:
         tool_items = []
@@ -241,6 +203,30 @@ def build_dynamic_system_instruction(
     clean_name = name.split(" - ")[0].strip() if " - " in name else name.strip()
     language_lock_text = build_language_lock_instruction(language, dialect)
 
+    # 10. Dynamic Skills Assembly (Delivery Address, Custom, External Claude/MCP Skills)
+    active_skills = resolve_active_skills(profile, role_key=role_key, available_tools=available_tools)
+    skills_text_parts = []
+    delivery_skill_text = ""
+
+    for sk in active_skills:
+        if sk.id == "delivery_address":
+            delivery_skill_text = f"\n{sk.render()}\n"
+        elif sk.id != "whatsapp_summary":
+            skills_text_parts.append(f"\n- مهارة [{sk.name}]:\n{sk.render()}\n")
+
+    custom_skills_block = ""
+    if skills_text_parts:
+        custom_skills_block = "\n==================== [مهارات وقدرات إضافية مفعلة (Active Skills)] ====================\n" + "\n".join(skills_text_parts)
+
+    # Universal Voice Rules (De-escalation, micro-fillers, self-correction, side-talk, wrap-up)
+    if is_voice:
+        universal_voice_block = f"\n{build_universal_voice_rules()}"
+    else:
+        universal_voice_block = ""
+
+    # Channel Modality Instruction
+    channel_modality_block = f"\n{build_channel_instructions(ch)}\n"
+
     prompt = f"""[الهوية القيادية والدور المهني المعتمد (الأولوية العليا والملزمة)]:
 - اسمك في المكالمة: {clean_name}.
 {identity_gender}
@@ -253,6 +239,7 @@ def build_dynamic_system_instruction(
 
 {caller_gender_rules}
 
+{channel_modality_block}
 قواعد أساسية تشغيلية ملزمة:
 1. {dialect_rules}
 2. التحيات والتعريف بالنفس: تبادل التحيات بلباقة واختصار حسب اللغة واللهجة المحددة، والتعريف بنفسك وبالمنشأة الموثقة في ملفاتك بلطف (مثال: 'مع حضرتك {clean_name} من خدمة العملاء' أو اسم المنشأة الوارد في المستندات)، ويُمنع منعاً باتاً ادعاء أي نشاط وهمي في التحية ما لم يكن وارداً في المستندات المرفوعة.
@@ -288,49 +275,7 @@ def build_dynamic_system_instruction(
    - لكل فرع عملته الرسمية المعتمدة المذكورة صراحة في بيانات الفروع وقائمة الطعام والذاكرة اللحظية (مثل: الجنيه المصري، الدينار التونسي، الريال السعودي).
    - انطق الأسعار دائماً بالعملة المعتمدة الخاصة بالفرع المعني فقط.
    - يُحظر تماماً وبشكل قاطع نطق 'ريال' أو 'ريال سعودي' إذا كانت عملة الفرع ليست SAR! لا تفترض العملة أبداً بناءً على لهجتك الصوتية، بل التزم بما ورد في بيانات الفرع حصراً.
-9. قاعدة جمع وتفصيل العنوان الذكي المتكيف لطلبات التوصيل (Smart Adaptive Delivery Address Protocol):
-   - عند رغبة العميل في خدمة التوصيل (Delivery)، يُحظر تماماً وبشكل قاطع استدعاء أداة تسجيل الطلب (create_callcenter_order) بعنوان عام أو اسم منطقة مجرد فقط (مثل: "الشيخ زايد" أو "مدينتي" أو "التجمع" أو "مول العرب" أو "المعادي") دون تفاصيل كاملة!
-   - يجب عليك التكيف بذكاء وسؤال المتصل بلباقة عما يناسب النمط العمراني لمنطقته بالتحديد قبل استدعاء أداة تسجيل الطلب نهائياً:
-     أ. المدن الجديدة بنظام الأحياء والمجاورات (مثل الشيخ زايد، 6 أكتوبر، الشروق، العبور، 15 مايو، بدر، العاشر من رمضان): اسأل العميل عن: الحي، رقم المجاورة، رقم العمارة، رقم الدور والشقة.
-     ب. الكمبوندات السكنية المغلقة (مثل مدينتي، الرحاب، هايد بارك، ميفيدا، بادية، سوديك، بالم هيلز): اسأل العميل عن: رقم أو اسم المجموعة/المرحلة، رقم العمارة أو الفيلا، رقم الشقة أو الوحدة، ورقم البوابة إن وجد.
-     ج. المولات والمقرات الإدارية والتجارية (مثل مول مصر، مول العرب، كايرو فيستيفال، سيتي ستارز، أركان، القرية الذكية): اسأل العميل عن: اسم المحل أو الشركة أو المكتب في المول، والدور أو أقرب بوابة ومصعد.
-     د. المناطق المقسمة بالنمر والفيلات (مثل التجمع الخامس - النرجس، الياسمين، البنفسج، اللوتس، بيت الوطن): اسأل العميل عن: المنطقة أو النمرة بالتحديد (نرجس كام أو الحي الكام)، ورقم الفيلا أو العمارة، والدور والشقة.
-     هـ. الشوارع التقليدية والمناطق السكنية العامة (مثل المعادي، مصر الجديدة، مدينة نصر، المهندسين، الدقي، فيصل، الهرم، شبرا): اسأل العميل عن: اسم الشارع الرئيسي أو المتفرع، رقم العمارة، الدور، رقم الشقة، وأقرب علامة مميزة.
-     و. المعالم البارزة والأماكن المعروفة ونقاط الالتقاء وسؤال الحسم السريع (Prominent Landmarks & Outdoor Meeting Points):
-        عندما يذكر العميل مكاناً مميزاً أو معلماً معروفاً (مثل: كارفور، هايبر وان، مول، نادي، مستشفى، بنزينة، محطة مترو):
-        1. سؤال الحسم السريع الإلزامي (The Single Disambiguation Question):
-           إذا لم يوضح العميل هل هو بالشارع أم بالداخل، اسأله فوراً بحسم ولباقة قبل طلب أي بيانات سكنية:
-           «يا فندم حضرتك هتستلم من الكابتن برة في الشارع قدام [اسم المعلم/المكان]، ولا التوصيل لمحل أو مكتب جوه؟»
-        2. مسار الاستلام الخارجي بالشارع (Outdoor Pickup):
-           إذا أكد العميل (أو كان قد قال مسبقاً في كلامه مثل: "هستلمه من قدام كارفور الشروق"): إنه سيستلم في الشارع / قدام المكان / برة / على البوابة / في العربية:
-           -> اعتمد العنوان فوراً وسجل: «استلام خارجي بالشارع قدام [اسم المعلم]»! ويُمنع منعاً باتاً وحاسماً أن تطلب منه رقم عمارة أو شقة أو دور أو مجاورة؛ لأن الاستلام في الشارع كنقطة التقاء صريحة!
-        3. مسار الاستلام الداخلي (Indoor Commercial Pickup):
-           إذا قال العميل إنه بالداخل (محل أو مكتب أو شركة أو عيادة):
-           -> اسأله فقط عن: اسم المحل/المكتب ورقم الدور أو البوابة (دون طلب عمارة أو شقة سكنية).
-   - إذا أعادت الأداة حالة 'address_details_required' أو 'disambiguation_required' أو طلباً لتفاصيل إضافية، فهذا متطلب تشغيلي عادي وليس عطلاً بالسيستم؛ انطق فوراً ما ورد في 'ai_speech_response' بلطف واسأل العميل عما ينقصه قبل استدعاء الأداة مجدداً.
-10. قاعدة الذكاء العاطفي وتعديل النبرة وامتصاص الغضب (Real-Time Sentiment Adaptation & De-escalation):
-    - أنت تستمع مباشرة لنبرة الصوت والمشاعر الحقيقية للمتصل وخامة صوته وانفعاله:
-      أ. وضع امتصاص الغضب (De-escalation Mode): إذا رصدت في نبرة المتصل أو كلماته ضيقاً، أو غضباً، أو صوتاً عالياً، أو استعجالاً ونفاد صبر (مثل شكوى، تأخر طلب، مشكلة سابقة):
-         - تحول فوراً وبشكل حاسم إلى نبرة هادئة ورصينة وجادة ومتعاطفة، وأوقف تماماً أي مزاح أو ابتسامة أو عبارات فكاهية.
-         - بادر فوراً بالاعتراف الصادق بحقه والاعتذار الودود الصريح: «حقك عليا جداً يا فندم، أنا مستوعب ومقدر ضيق حضرتك تماماً، وأنا معاك حالياً وهحل المشكلة دي فوراً».
-         - ركز على الحل العملي المباشر السريع دون إطالة أو مجادلة، وإذا طلب العميل التحدث مع مسؤول أو موظف بشري بادر بتحويله للطابور المناسب إن توفر.
-      ب. وضع التفاعل الإيجابي والمرح: إذا كان العميل مسترخياً أو يمازحك بلطف، بادله الود والابتسامة في صوتك بخفة دم ولباقة طبيعية.
-11. قاعدة التأكيدات الصوتية وملء ثواني الصمت (Backchanneling & Natural Micro-Fillers):
-    - أثناء استدعاء الأدوات البرمجية أو انتظار العمليات في الخلفية أو مراجعة الحسابات، يُحظر ترك صمت تام وميت (Dead Air) يجعل المتصل يظن أن الخط انقطع أو يسأل 'ألو؟'.
-    - استخدم فوراً تأكيدات صوتية بشرية سريعة وخفيفة تدل على استماعك ومتابعتك الحية: («حاضر من عيني يا فندم ثواني معايا...»، «تمام يا فندم...»، «مظبوط... ثواني براجعها لحضرتك...»).
-12. قاعدة إدراك الاستدراك والتراجع اللحظي في الكلام (Mid-Sentence Self-Correction):
-    - انتبه بدقة لأدوات الاستدراك والرجوع في الكلام الشائعة هاتفياً (مثل: «لأ استنى»، «معلش بدلها»، «خليهم كذا بدال كذا»، «أقصد كذا»).
-    - عندما يغير العميل رأيه أو يعدل طلبه في منتصف الحديث، عدل السلة أو العنوان فوراً واستبعد البيان السابق دون أي تكرار، وأكد له التعديل بنعومة ودقة: «تمام يا فندم، عدلتها لحضرتك: [اذكر التعديل الجديد فقط]».
-13. قاعدة عزل الحوارات الجانبية والضوضاء المحيطة (Side-Talk Filtering):
-    - إذا كان المتصل يتشاور مع شخص بجانبه في الغرفة (مثل أن ينادي: «يا محمد تاكل برجر ولا فراخ؟» أو يتحدث مع أطفاله أو السائق):
-      - لا تقاطع العميل، ولا تعتبر حديثه الموجه للشخص الآخر طلباً أو أمراً موجهاً لك في المكالمة!
-      - التزم الصمت التام والانتظار المهذب حتى يوجه المتصل صوته وكلامه إليك في الهاتف مباشرة، ثم تجاوب معه بمرونة وتركيز.
-14. بروتوكول إنهاء المكالمة الفندقي الراقي (Graceful Call Wrap-Up Protocol):
-    - عند انتهاء تقديم الخدمة أو تسجيل الطلب بنجاح، يُحظر إغلاق المكالمة بشكل مفاجئ أو مبتور، بل اتبع هذا التسلسل بدقة:
-      أ. مراجعة سريعة موجزة ومطمئنة لما تم تنفيذه (رقم الطلب، الإجمالي، وتأكيد إرسال الفاتورة ورابط التتبع على الواتساب).
-      ب. السؤال الخدمي المفتوح: «تؤمرني بأي حاجة تانية أقدر أساعدك بيها النهاردة يا فندم؟».
-      ج. التوديع اللطيف باسم العميل: «ألف هنا وشفا مقدماً يا أستاذ [اسم العميل]، نورتنا ويومك سعيد!».
-      د. يُمنع منعاً باتاً أن تنهي المكالمة أو تغلق الخط من جانبك أولاً؛ بل اترك الخط مفتوحاً وانتظر دائماً حتى يودعك العميل أو يغلق هو الخط بنفسه.{welcome_text}{custom_text}
+{delivery_skill_text}{universal_voice_block}{custom_skills_block}{welcome_text}{custom_text}
 {verbosity_instruction}{memory_text}{live_context_text}{manifest_text}{tools_manifest_text}"""
 
     if call_queues:
@@ -379,35 +324,39 @@ def generate_welcome_greeting(
         return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
 
     # 2. Personalized greeting for returning recognized customer
-    clean_cust_name = str(customer_name or "").strip()
-    if clean_cust_name.lower() in ["none", "null", "unknown", "عميل", "مستخدم", "..."]:
-        clean_cust_name = ""
-
-    if clean_cust_name and not is_outbound:
-        if "saudi" in dialect or "gulf" in dialect or "khaliji" in dialect:
-            return f"يا هلا ومسهلا بأستاذ {clean_cust_name}! معك {name}، كيف أقدر أخدمك اليوم؟"
-        elif "levantine" in dialect or "shami" in dialect or "syrian" in dialect or "lebanese" in dialect:
-            return f"أهلاً وسهلاً بحضرتك أستاذ {clean_cust_name}! معك {name}، كيف بقدر ساعدك اليوم؟"
-        elif "moroccan" in dialect or "maghrebi" in dialect:
-            return f"أهلاً وسهلاً سي {clean_cust_name}! معاك {name}، كيفاش نقدر نعاونك اليوم؟"
-        elif "egyptian" in dialect:
-            return f"أهلاً بحضرتك يا أستاذ {clean_cust_name}! نورتنا، معاك {name}، أقدر أساعدك إزاي النهاردة؟"
+    if customer_name:
+        c_clean = customer_name.strip()
+        if dialect == "saudi":
+            return f"يا هلا والله أستاذ {c_clean}، مساك الله بالخير! معك {name}، كيف أقدر أخدمك اليوم؟"
+        elif dialect in ["emirati", "kuwaiti", "gulf"]:
+            return f"يا مرحباً بك أستاذ {c_clean}! معك {name}، شخبارك اليوم وكيف أقدر أساعدك؟"
+        elif dialect == "levantine":
+            return f"يا مية أهلاً وسهلاً أستاذ {c_clean}! معك {name}، كيف بقدر ساعدك اليوم؟"
+        elif dialect in ["moroccan", "tunisian", "algerian"]:
+            return f"أهلاً وسهلاً بك أستاذ {c_clean}، معك {name}. كيفاش نقدر نعاونك اليوم؟"
+        elif dialect == "fusha":
+            return f"أهلاً وسهلاً بك أستاذ {c_clean}، معك {name}. كيف يمكنني مساعدتك اليوم؟"
         else:
-            return f"أهلاً بك يا أستاذ {clean_cust_name}! معك {name}، كيف يمكنني مساعدتك اليوم؟"
+            return f"أهلاً بحضرتك يا أستاذ {c_clean}، منورنا دايماً! مع حضرتك {name}، إزاي أقدر أساعدك النهاردة؟"
 
-    # 3. Standard greeting for new / anonymous callers
-    custom_welcome = (profile.get("welcome_message") or "").strip()
-    if custom_welcome:
-        return custom_welcome
+    # 3. Custom welcome message if configured
+    is_welcome_enabled = profile.get("is_welcome_message_enabled", True) if profile.get("is_welcome_message_enabled") is not None else True
+    if not is_welcome_enabled:
+        return ""
 
-    if "saudi" in dialect or "gulf" in dialect or "khaliji" in dialect:
-        return f"أهلاً وسهلاً بك، معك {name}، كيف أقدر أخدمك اليوم؟"
-    elif "levantine" in dialect or "shami" in dialect or "syrian" in dialect or "lebanese" in dialect:
-        return f"أهلاً وسهلاً، معك {name}، كيف بقدر ساعدك اليوم؟"
-    elif "moroccan" in dialect or "maghrebi" in dialect:
-        return f"أهلاً بك، معاك {name}، كيفاش نقدر نعاونك اليوم؟"
-    elif "egyptian" in dialect:
-        return f"أهلاً بحضرتك، معاك {name}، أقدر أساعدك إزاي النهاردة؟"
+    if profile.get("welcome_message"):
+        return profile["welcome_message"].strip()
+
+    # 4. Dialect-aware default greetings
+    if dialect == "saudi":
+        return f"يا هلا والله! معك {name} من خدمة العملاء، أمرني كيف أقدر أساعدك اليوم؟"
+    elif dialect in ["emirati", "kuwaiti", "gulf"]:
+        return f"مرحبا وسهلا! معك {name} من خدمة العملاء، كيف أقدر أساعدك اليوم؟"
+    elif dialect == "levantine":
+        return f"أهلاً وسهلاً بحضرتك! معك {name} من خدمة العملاء، كيف بقدر ساعدك اليوم؟"
+    elif dialect in ["moroccan", "tunisian", "algerian"]:
+        return f"أهلاً وسهلاً، معك {name} من مصلحة الزبناء، كيفاش نقدر نعاونك اليوم؟"
+    elif dialect == "fusha":
+        return f"مرحباً بك! معك {name} من خدمة العملاء، كيف يمكنني مساعدتك اليوم؟"
     else:
-        role_label = role if (role and len(role) <= 30 and "دورك" not in role) else "خدمة العملاء"
-        return f"مرحباً بك، معك {name} من {role_label}، كيف يمكنني مساعدتك اليوم؟"
+        return f"أهلاً بحضرتك يا فندم! مع حضرتك {name} من خدمة العملاء، إزاي أقدر أساعدك النهاردة؟"
