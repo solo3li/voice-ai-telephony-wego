@@ -194,10 +194,86 @@ def run_tests():
     print("  [+] Saudi, Egyptian, and Recognized Customer greetings verified.")
     print("✅ TEST 7 PASSED: Welcome greetings verified.")
 
+    # -------------------------------------------------------------------------
+    # TEST 8: Smart Multi-Tenant Human Handoff Skill (Omnichannel & Adaptive Queues)
+    # -------------------------------------------------------------------------
+    print("\n[TEST 8] Verifying Smart Multi-Tenant Human Handoff Skill...")
+    
+    # 8.1 Multi-Queue Tenant in Voice Mode
+    multi_queues = [
+        {"name": "مبيعات العقارات", "code": "sales_101", "description": "حجز وشراء الوحدات والفلل"},
+        {"name": "الدعم الفني والصيانة", "code": "support_202", "description": "أعطال المصاعد والتكييف المركزي"}
+    ]
+    prompt_multi_voice = build_dynamic_system_instruction(
+        {"name": "مساعد إعمار", "persona_role": "real_estate_qualifier"},
+        call_queues=multi_queues
+    )
+    assert "مهارة التوجيه والتحويل البشري الذكي" in prompt_multi_voice
+    assert "قسم مبيعات العقارات [كود التحويل: sales_101]" in prompt_multi_voice
+    assert "قسم الدعم الفني والصيانة [كود التحويل: support_202]" in prompt_multi_voice
+    assert "استكشاف المشكلة والمطابقة الدلالية للقسم" in prompt_multi_voice
+    assert "التحويل السريع لامتصاص الغضب الشديد (Fast-Track De-escalation)" in prompt_multi_voice
+    assert "التسليم الدافئ الشامل (Warm Handoff Summary)" in prompt_multi_voice
+    assert "transfer_to_queue" in prompt_multi_voice
+    print("  [+] Multi-Queue Voice mode: Semantic matching, De-escalation, Warm Handoff verified.")
+
+    # 8.2 Single-Queue Tenant in Voice Mode (Zero friction)
+    single_queue = [
+        {"name": "خدمة العملاء العامة", "code": "care_general", "description": "استفسارات عامة وشكاوى"}
+    ]
+    prompt_single_voice = build_dynamic_system_instruction(
+        {"name": "مساعد الشركة", "persona_role": "customer_support"},
+        call_queues=single_queue
+    )
+    assert "بروتوكول التحويل المباشر للطابور الموحد" in prompt_single_voice
+    assert "دون سؤاله عن تحديد القسم" in prompt_single_voice
+    assert "care_general" in prompt_single_voice
+    print("  [+] Single-Queue Voice mode: Direct frictionless handoff verified.")
+
+    # 8.3 Zero-Queue / Off-Hours Tenant in Voice Mode
+    prompt_zero_voice = build_dynamic_system_instruction(
+        {"name": "مساعد المنشأة", "persona_role": "clinic_receptionist"},
+        call_queues=[]
+    )
+    assert "بروتوكول الاحتواء خارج أوقات العمل (Off-Hours & Zero-Queue Fallback)" in prompt_zero_voice
+    assert "الاعتذار اللبق وطمأنة العميل" in prompt_zero_voice
+    assert "الاحتواء وتسجيل بيانات المتابعة (Callback Capture)" in prompt_zero_voice
+    assert "حظر الأعطال الوهمية" in prompt_zero_voice
+    print("  [+] Zero-Queue / Off-Hours Voice mode: Containment and Callback capture verified.")
+
+    # 8.4 Omnichannel Adaptation: WhatsApp Channel Multi-Queue & Zero-Queue
+    prompt_multi_wa = build_dynamic_system_instruction(
+        {"name": "مساعد الواتساب", "persona_role": "ecommerce_support", "channel": "whatsapp"},
+        call_queues=multi_queues
+    )
+    assert "handover_to_human_agent" in prompt_multi_wa
+    assert "في محادثة الواتساب:" in prompt_multi_wa
+    assert "transfer_to_queue" not in prompt_multi_wa
+
+    prompt_zero_wa = build_dynamic_system_instruction(
+        {"name": "مساعد الواتساب", "persona_role": "ecommerce_support", "channel": "whatsapp"},
+        call_queues=[]
+    )
+    assert "في الشات نظراً لانتهاء ساعات العمل الرسمية" in prompt_zero_wa
+    print("  [+] Omnichannel WhatsApp mode: Handover tool & text phrasing verified.")
+
+    # 8.5 Universal Availability: Ensure human_transfer skill is active across ALL roles
+    resolved_clinic = resolve_active_skills({"persona_role": "clinic_receptionist"})
+    resolved_sales = resolve_active_skills({"persona_role": "real_estate_qualifier"})
+    resolved_custom = resolve_active_skills({"persona_role": "inbound_telesales", "enabled_skills": ["custom_test"]})
+    
+    assert any(s.id == "human_transfer" for s in resolved_clinic), "human_transfer missing in clinic"
+    assert any(s.id == "human_transfer" for s in resolved_sales), "human_transfer missing in sales"
+    assert any(s.id == "human_transfer" for s in resolved_custom), "human_transfer missing in custom enabled"
+    print("  [+] Universality: human_transfer skill is active across all profiles by default.")
+
+    print("✅ TEST 8 PASSED: Smart Multi-Tenant Human Handoff Skill confirmed.")
+
     print("\n======================================================================")
-    print("🎉 ALL 7 MODULAR ARCHITECTURE E2E TESTS PASSED 100% PERFECTLY!")
+    print("🎉 ALL 8 MODULAR ARCHITECTURE E2E TESTS PASSED 100% PERFECTLY!")
     print("======================================================================")
 
 
 if __name__ == "__main__":
     run_tests()
+

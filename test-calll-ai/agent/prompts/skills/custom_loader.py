@@ -3,12 +3,14 @@ import logging
 from typing import List, Dict, Any, Optional
 from .base import Skill
 from .delivery_address import DELIVERY_ADDRESS_SKILL
+from .human_transfer import HUMAN_TRANSFER_SKILL
 
 logger = logging.getLogger(__name__)
 
 # Built-in Skills Registry
 SKILLS_REGISTRY: Dict[str, Skill] = {
     "delivery_address": DELIVERY_ADDRESS_SKILL,
+    "human_transfer": HUMAN_TRANSFER_SKILL,
     "whatsapp_summary": Skill(
         id="whatsapp_summary",
         name="تأكيد ومتابعة الواتساب بعد المكالمة",
@@ -98,10 +100,20 @@ def resolve_active_skills(
             k_clean = str(key).strip()
             if k_clean in SKILLS_REGISTRY:
                 active_skills[k_clean] = SKILLS_REGISTRY[k_clean]
+        # Always include human_transfer by default across all agents
+        if "human_transfer" not in active_skills:
+            active_skills["human_transfer"] = HUMAN_TRANSFER_SKILL
     else:
         # Default behavior: Inspect role and available tools for backward compatibility
         clean_role = str(role_key or profile.get("persona_role") or "").strip()
-        from agent.prompts.roles.registry import get_role_default_skills
+        try:
+            from ..roles.registry import get_role_default_skills
+        except (ImportError, ValueError):
+            try:
+                from agent.prompts.roles.registry import get_role_default_skills
+            except ImportError:
+                from prompts.roles.registry import get_role_default_skills
+
         default_keys = get_role_default_skills(clean_role)
         for dk in default_keys:
             if dk in SKILLS_REGISTRY:
@@ -112,6 +124,10 @@ def resolve_active_skills(
         order_tool_indicators = {"create_callcenter_order", "preview_callcenter_order", "search_knowledge_base"}
         if tool_names.intersection(order_tool_indicators) and clean_role in ["restaurant_orders", "delivery_dispatch", ""]:
             active_skills["delivery_address"] = DELIVERY_ADDRESS_SKILL
+
+        # Human transfer skill is active for all agents by default
+        active_skills["human_transfer"] = HUMAN_TRANSFER_SKILL
+
 
     # 2. Append custom / external skills
     for cs in load_custom_skills_from_profile(profile):

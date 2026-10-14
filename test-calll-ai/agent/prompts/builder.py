@@ -211,7 +211,7 @@ def build_dynamic_system_instruction(
     for sk in active_skills:
         if sk.id == "delivery_address":
             delivery_skill_text = f"\n{sk.render()}\n"
-        elif sk.id != "whatsapp_summary":
+        elif sk.id not in ["whatsapp_summary", "human_transfer"]:
             skills_text_parts.append(f"\n- مهارة [{sk.name}]:\n{sk.render()}\n")
 
     custom_skills_block = ""
@@ -278,28 +278,8 @@ def build_dynamic_system_instruction(
 {delivery_skill_text}{universal_voice_block}{custom_skills_block}{welcome_text}{custom_text}
 {verbosity_instruction}{memory_text}{live_context_text}{manifest_text}{tools_manifest_text}"""
 
-    if call_queues:
-        q_lines = []
-        for q in call_queues:
-            desc = f" - اختصاصاته وشروط التحويل إليه: {q['description']}" if q.get("description") else ""
-            q_lines.append(f"- قسم {q['name']} [كود التحويل: {q['code']}]{desc}")
-        q_list_str = "\n".join(q_lines)
-        queues_instruction = (
-            f"\n\nطوابير وأقسام خدمة العملاء المتاحة حصراً في شركتك للتحويل إليها:\n{q_list_str}\n"
-            f"قواعد التحويل الذكي (فهم المشكلة أولاً وعدم التعجل في التحويل):\n"
-            f"1. عندما يطلب العميل التحويل أو التحدث مع موظف بشري أو خدمة العملاء أو قسم معين لأول مرة:\n"
-            f"   - يُمنع منعاً باتاً استدعاء أداة 'transfer_to_queue' فوراً دون معرفة السبب، بل يجب أولاً أن تسأل العميل بلطف ولباقة واختصار شديد عن مشكلته أو سبب رغبته لمحاولة مساعدته أو توجيهه للقسم الأنسب (مثال: 'تحت أمرك يا فندم، تحب أساعدك في إيه الأول؟ أو إيه المشكلة عشان أقدر أساعدك أو أوجهك للقسم المختص؟').\n"
-            f"   - بمجرد أن يكرر العميل رغبته بالتحويل أو يصر عليه أو يوضح مشكلته أو يذكر اسماً لقسم معين من الأقسام المتاحة: استدعِ أداة 'transfer_to_queue' فوراً دون أي تردد أو مماطلة أو تكرار السؤال، مع اختيار كود القسم وتمرير ملخص وافٍ في 'reason'.\n"
-            f"2. عند إتمام التحويل، انطق جملة واحدة فقط طبيعية وموجزة تؤكد التحويل للعميل (مثال: 'حاضر يا فندم، هحول حضرتك حالاً لقسم [اسم القسم]، ثواني معايا...')، وممنوع نهائياً قراءة أي معطيات تقنية أو تكرار الكلام.\n"
-            f"3. ممنوع نهائياً اختراع أو ذكر أي أقسام أو أرقام طوابير غير الموجودة في القائمة أعلاه، والتزم بتنفيذ التحويل بسلاسة عندما يطلب العميل ذلك."
-        )
-    else:
-        queues_instruction = (
-            "\n\nقواعد التعامل مع طلب التحويل لموظف بشري:\n"
-            "- لا تتوفر أي طوابير انتظار أو موظفون بشريون متاحون للتحويل حالياً في هذه المنشأة.\n"
-            "- إذا طلب العميل أو المتصل التحدث مع موظف بشري أو ممثل خدمة عملاء أو الدعم الفني أو طلب تحويل مكالمته: اعتذر له فوراً بلطف ولباقة والتزم بالرد التالي نصاً: 'بعتذر لحضرتك جداً يا فندم، التحويل لموظف بشري غير متاح حالياً، لكن أنا معاك وتحت أمرك أقدر أساعدك في كل استفساراتك، تحب أساعدك في إيه؟'.\n"
-            "- يُمنع منعاً باتاً البحث في المستندات (RAG) أو استدعاء أي أداة لطلب التحويل أو الادعاء بأنك تحاول تحويله."
-        )
+    from .skills.human_transfer import build_human_transfer_instruction
+    queues_instruction = "\n\n" + build_human_transfer_instruction(call_queues, channel=ch)
 
     return (outbound_header + fallback_header + prompt + queues_instruction).strip()
 
