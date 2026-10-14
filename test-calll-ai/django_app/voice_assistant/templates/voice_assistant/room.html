@@ -1046,7 +1046,7 @@
             onchange="onCustomerSelectChange(this.value)"
             class="bg-white border border-[#EAE3D9] shadow-sm border border-[#DDD5C7] rounded-xl px-3 py-1.5 text-[#1C1917] text-xs focus:ring-1 focus:ring-[#680E23] font-mono"
           >
-            <option value="web_dashboard">💻 web_dashboard (جلسة المتصفح)</option>
+            <option value="+201000000000">💻 +201000000000 (جلسة المتصفح الافتراضية)</option>
           </select>
           <div class="relative flex-1 min-w-[160px]">
             <input 
@@ -1061,7 +1061,7 @@
 
         <div class="flex items-center gap-2">
           <span class="text-[11px] text-[#6E645D]">العميل المعروض:</span>
-          <span id="crm-active-customer-badge" class="font-mono text-xs font-bold text-[#680E23] bg-[#FAF0F2] px-2.5 py-1 rounded-lg border border-[#EAE3D9]">web_dashboard</span>
+          <span id="crm-active-customer-badge" class="font-mono text-xs font-bold text-[#680E23] bg-[#FAF0F2] px-2.5 py-1 rounded-lg border border-[#EAE3D9]">+201000000000</span>
         </div>
       </div>
 
@@ -3857,8 +3857,9 @@
       callStatus.innerText = 'جاري طلب صلاحيات الاتصال والمفاتيح...';
       
       try {
-        // 1. Fetch Tokens from Django
-        const res = await fetch('/api/token/?dispatch=1&t=' + Date.now());
+        // 1. Fetch Tokens from Django with selected customer phone
+        const activePhoneParam = (typeof currentSelectedPhone !== 'undefined' && currentSelectedPhone && currentSelectedPhone !== 'web_dashboard') ? currentSelectedPhone : '+201000000000';
+        const res = await fetch(`/api/token/?dispatch=1&caller_phone=${encodeURIComponent(activePhoneParam)}&t=${Date.now()}`);
         const data = await res.json();
         if (data.status !== 'success') {
           if (data.code === 'insufficient_balance' || res.status === 402) {
@@ -5466,7 +5467,7 @@
     // ==========================================
     // Customer Memory Management Functions (Multi-Customer)
     // ==========================================
-    let currentSelectedPhone = 'web_dashboard';
+    let currentSelectedPhone = '+201000000000';
     let customerSearchTimer = null;
 
     function debounceCustomerSearch(query) {
@@ -5487,19 +5488,19 @@
         if (!selectEl) return;
 
         const customers = data.customers || [];
-        let html = '<option value="web_dashboard">💻 web_dashboard (جلسة المتصفح)</option>';
+        let html = '<option value="+201000000000">💻 +201000000000 (جلسة المتصفح الافتراضية)</option>';
 
-        let hasSelectedInList = (currentSelectedPhone === 'web_dashboard');
+        let hasSelectedInList = (currentSelectedPhone === '+201000000000');
 
         customers.forEach(c => {
-          if (c.phone_number === 'web_dashboard') return;
+          if (c.phone_number === 'web_dashboard' || c.phone_number === '+201000000000') return;
           const isSel = (c.phone_number === currentSelectedPhone);
           if (isSel) hasSelectedInList = true;
           const displayName = c.customer_name ? `${c.phone_number} (${c.customer_name})` : c.phone_number;
           html += `<option value="${escapeHtml(c.phone_number)}" ${isSel ? 'selected' : ''}>📞 ${escapeHtml(displayName)}</option>`;
         });
 
-        if (!hasSelectedInList && currentSelectedPhone && currentSelectedPhone !== 'web_dashboard') {
+        if (!hasSelectedInList && currentSelectedPhone && currentSelectedPhone !== '+201000000000' && currentSelectedPhone !== 'web_dashboard') {
           html += `<option value="${escapeHtml(currentSelectedPhone)}" selected>📞 ${escapeHtml(currentSelectedPhone)}</option>`;
         }
 
@@ -5511,7 +5512,7 @@
     }
 
     function onCustomerSelectChange(phone) {
-      currentSelectedPhone = phone || 'web_dashboard';
+      currentSelectedPhone = phone || '+201000000000';
       const badge = document.getElementById('crm-active-customer-badge');
       if (badge) badge.innerText = currentSelectedPhone;
       loadCustomerMemory(currentSelectedPhone);

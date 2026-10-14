@@ -3,7 +3,7 @@
  * Handles multi-customer switching, permanent profile view, immediate call summaries, and call archives.
  */
 
-let currentSelectedPhone = 'web_dashboard';
+let currentSelectedPhone = '+201000000000';
 let customerSearchTimer = null;
 
 function debounceCustomerSearch(query) {
@@ -24,19 +24,19 @@ async function loadCustomersList(query = '') {
     if (!selectEl) return;
 
     const customers = data.customers || [];
-    let html = '<option value="web_dashboard">💻 web_dashboard (جلسة المتصفح)</option>';
+    let html = '<option value="+201000000000">💻 +201000000000 (جلسة المتصفح الافتراضية)</option>';
 
-    let hasSelectedInList = (currentSelectedPhone === 'web_dashboard');
+    let hasSelectedInList = (currentSelectedPhone === '+201000000000');
 
     customers.forEach(c => {
-      if (c.phone_number === 'web_dashboard') return;
+      if (c.phone_number === 'web_dashboard' || c.phone_number === '+201000000000') return;
       const isSel = (c.phone_number === currentSelectedPhone);
       if (isSel) hasSelectedInList = true;
       const displayName = c.customer_name ? `${c.phone_number} (${c.customer_name})` : c.phone_number;
       html += `<option value="${escapeHtml(c.phone_number)}" ${isSel ? 'selected' : ''}>📞 ${escapeHtml(displayName)}</option>`;
     });
 
-    if (!hasSelectedInList && currentSelectedPhone && currentSelectedPhone !== 'web_dashboard') {
+    if (!hasSelectedInList && currentSelectedPhone && currentSelectedPhone !== '+201000000000' && currentSelectedPhone !== 'web_dashboard') {
       html += `<option value="${escapeHtml(currentSelectedPhone)}" selected>📞 ${escapeHtml(currentSelectedPhone)}</option>`;
     }
 
@@ -48,7 +48,7 @@ async function loadCustomersList(query = '') {
 }
 
 function onCustomerSelectChange(phone) {
-  currentSelectedPhone = phone || 'web_dashboard';
+  currentSelectedPhone = phone || '+201000000000';
   const badge = document.getElementById('crm-active-customer-badge');
   if (badge) badge.innerText = currentSelectedPhone;
   loadCustomerMemory(currentSelectedPhone);

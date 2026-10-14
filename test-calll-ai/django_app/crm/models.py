@@ -39,33 +39,91 @@ class CustomerMemory(models.Model):
             "total_calls_count": self.total_calls_count,
             "call_memory": self.call_memory or {},
             "whatsapp_memory": self.whatsapp_memory or {},
+            "card_text": self.format_for_system_instruction(),
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M"),
         }
 
     def format_for_system_instruction(self) -> str:
-        """Format the unified two-tier memory (call + whatsapp) into a compact block for Gemini."""
+        """Format the unified memory (call + whatsapp + crm dossier) into a compact block for Gemini."""
         parts = []
         prof = self.permanent_profile or {}
         items = []
-        name_val = self.customer_name or prof.get("customer_name")
+
+        name_val = str(self.customer_name or prof.get("customer_name") or "").strip()
+        vip_tier = str(prof.get("vip_tier") or "").strip().lower()
+        vip_label = " [عميل VIP دائم]" if vip_tier == "vip" else (" [عميل متكرر]" if vip_tier == "regular" else "")
+
         if name_val:
-            items.append(f"اسم العميل: {name_val}")
+            items.append(f"اسم العميل: {name_val}{vip_label}")
         phone_val = self.phone_number if self.phone_number != 'web_dashboard' else prof.get("phone")
         if phone_val:
             items.append(f"الهاتف: {phone_val}")
-        if prof.get("city") or prof.get("address"):
-            items.append(f"العنوان/المدينة: {prof.get('city') or prof.get('address')}")
-        if prof.get("preferences"):
-            prefs = prof['preferences']
-            if isinstance(prefs, list):
-                prefs = "، ".join(str(p) for p in prefs)
-            items.append(f"الاهتمامات والتفضيلات: {prefs}")
+
+        # 1. Personality & Pace
+        pers = prof.get("personality") or {}
+        pers_notes = []
+        if isinstance(pers, dict):
+            if pers.get("pace") == "fast" or pers.get("communication_style") == "direct":
+                pers_notes.append("يفضل السرعة والإيجاز المباشر (التزم بأقصر إجابات عملية دون إطالة)")
+            elif pers.get("pace") == "detailed":
+                pers_notes.append("يهتم بالتفاصيل الدقيقة والوضوح")
+            if pers.get("price_sensitivity") == "bargain_seeker":
+                pers_notes.append("يهتم بالأسعار والعروض والتوفير")
+        if pers_notes:
+            items.append(f"طبيعة وأسلوب المتصل: {' | '.join(pers_notes)}")
+
+        # 2. Saved Addresses List
+        addr_list = prof.get("addresses") or []
+        if addr_list and isinstance(addr_list, list):
+            addr_lines = []
+            for idx, a in enumerate(addr_list, start=1):
+                if isinstance(a, dict) and a.get("address"):
+                    lbl = a.get("label") or f"عنوان {idx}"
+                    addr_text = a.get("address")
+                    details = []
+                    if a.get("landmarks"):
+                        details.append(f"علامة: {a['landmarks']}")
+                    if a.get("apartment_details"):
+                        details.append(f"تفاصيل: {a['apartment_details']}")
+                    if a.get("instructions"):
+                        details.append(f"تعليمات: {a['instructions']}")
+                    det_str = f" ({', '.join(details)})" if details else ""
+                    addr_lines.append(f"• [{lbl}]: {addr_text}{det_str}")
+            if addr_lines:
+                items.append("العناوين المسجلة للعميل (اقترح التوصيل إليها دون استجوابه من الصفر):\n  " + "\n  ".join(addr_lines))
+        elif prof.get("city") or prof.get("address"):
+            items.append(f"العنوان المسجل: {prof.get('city') or prof.get('address')}")
+
+        # 3. Preferences & Dietary Notes (with explicit confirmation instruction)
+        prefs = prof.get("preferences")
+        if isinstance(prefs, dict):
+            if prefs.get("favorite_items"):
+                favs = "، ".join(str(i) for i in prefs["favorite_items"])
+                items.append(f"الأصناف والوجبات المفضلة: {favs}")
+            if prefs.get("dietary_restrictions"):
+                diet = "، ".join(str(d) for d in prefs["dietary_restrictions"])
+                items.append(f"اشتراطات غذائية خاصة (تأكيد مع العميل أولاً): {diet} (راعِ هذا التفضيل وتأكد منه مع العميل بلباقة)")
+            if prefs.get("payment_method"):
+                items.append(f"طريقة الدفع المعتادة: {prefs['payment_method']}")
+        elif isinstance(prefs, list) and prefs:
+            items.append(f"الاهتمامات والتفضيلات السابقة: {'، '.join(str(p) for p in prefs)}")
+
+        # 4. Past Issues / Complaints (No promises)
+        past_issues = prof.get("past_issues")
+        if past_issues:
+            if isinstance(past_issues, list):
+                issues_str = " | ".join(str(iss) for iss in past_issues)
+            else:
+                issues_str = str(past_issues)
+            items.append(f"سجل ملاحظات سابقة (احرص على الاعتذار بلباقة وإرضاء العميل التام): {issues_str}")
+
         if prof.get("notes"):
             items.append(f"ملاحظات: {prof['notes']}")
+
         if items:
             parts.append("البيانات الدائمة للعميل:\n- " + "\n- ".join(items))
 
-        # 1. Call Memory
+        # Call Memory
         cm = self.call_memory or {}
         call_sum = cm.get("last_call_summary") or self.last_interaction_summary
         if call_sum:
@@ -73,7 +131,7 @@ class CustomerMemory(models.Model):
         if cm.get("agreed_next_steps"):
             parts.append(f"[ما تم الاتفاق عليه هاتفياً]: {cm.get('agreed_next_steps')}")
 
-        # 2. WhatsApp Memory
+        # WhatsApp Memory
         wm = self.whatsapp_memory or {}
         wa_sum = wm.get("conversation_summary")
         if wa_sum:
@@ -85,17 +143,17 @@ class CustomerMemory(models.Model):
         if wm.get("last_sent_message"):
             parts.append(f"[آخر رد أرسله المساعد للعميل على الواتساب]: {wm.get('last_sent_message')}")
 
-        # Directive for proactive voice greeting
+        # Directive for proactive voice greeting if whatsapp was used
         if wa_sum or wm.get("last_received_message"):
             topic = wa_sum or wm.get("last_received_message")
             parts.append(
                 f"[توجيه استباقي ومبادر للتحية عبر الهاتف]: العميل تواصل معنا على الواتساب بخصوص ({topic}). "
-                f"بادر في بداية المكالمة بلباقة واحترافية بالربط مع شات الواتساب الأخير (مثال: 'أهلاً بك يا فندم! بخصوص اللي كنا بنتكلم فيه على الواتساب...') لإظهار متابعتك واهتمامك الفوري به!"
+                f"بادر في بداية المكالمة بلباقة واحترافية بالربط مع شات الواتساب الأخير لإظهار متابعتك واهتمامك الفوري به!"
             )
 
         if not parts:
             return ""
-        return "سياق وذاكرة العميل التراكمية (هاتف + واتساب) (استخدمها بذكاء وعفوية للتذكر دون سردها للمستخدم كقائمة):\n" + "\n\n".join(parts)
+        return "سياق وذاكرة العميل التراكمية (هاتف + واتساب) (استخدمها بذكاء وعفوية للتذكر والترحيب والخدمة):\n" + "\n\n".join(parts)
 
 
 class OmnichannelMessage(models.Model):

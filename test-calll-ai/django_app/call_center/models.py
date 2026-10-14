@@ -23,9 +23,29 @@ class EmployeeProfile(models.Model):
     sip_password = models.CharField(max_length=128, blank=True, default='', help_text="كلمة مرور الـ SIP")
     sip_host = models.CharField(max_length=128, blank=True, default='', help_text="عنوان سيرفر الـ SIP")
     sip_port = models.PositiveIntegerField(default=5070, help_text="منفذ سنترال Wazo")
+    phone_number = models.CharField(max_length=32, blank=True, default='', db_index=True, help_text="رقم هاتف الموظف الثابت (مولد تلقائياً)")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def generate_unique_employee_phone(cls) -> str:
+        """Generate a realistic random Egyptian mobile number (+2010xxxxxxxx or +2011xxxxxxxx) that is unique."""
+        import random
+        prefixes = ["+2010", "+2011", "+2012", "+2015"]
+        for _ in range(50):
+            pref = random.choice(prefixes)
+            rest = "".join(random.choices("0123456789", k=8))
+            cand = f"{pref}{rest}"
+            if not cls.objects.filter(phone_number=cand).exists():
+                return cand
+        import uuid
+        return f"+2010{uuid.uuid4().int % 100000000:08d}"
+
+    def save(self, *args, **kwargs):
+        if not self.phone_number:
+            self.phone_number = self.generate_unique_employee_phone()
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'voice_assistant_employeeprofile'
@@ -64,6 +84,7 @@ class EmployeeProfile(models.Model):
             "employer_id": self.employer_id,
             "username": self.user.username,
             "extension": self.extension,
+            "phone_number": self.phone_number,
             "display_name": self.display_name,
             "department": self.department,
             "status": self.status,

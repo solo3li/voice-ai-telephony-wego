@@ -59,7 +59,7 @@ def parse_mcp_servers_from_bootstrap(bootstrap: dict) -> list:
 def parse_customer_memory_from_bootstrap(bootstrap: dict, caller_phone: str = "web_dashboard") -> dict:
     """Extract and format customer memory from bootstrap dictionary."""
     if not bootstrap:
-        return {"phone_number": caller_phone, "permanent_profile": {}, "last_interaction_summary": "", "card_text": "", "total_calls_count": 0}
+        return {"phone_number": caller_phone, "customer_name": "", "permanent_profile": {}, "card_data": {}, "last_interaction_summary": "", "card_text": "", "total_calls_count": 0}
 
     mem = bootstrap.get("customer_memory", {})
     prof = mem.get("permanent_profile") or {}
@@ -70,25 +70,84 @@ def parse_customer_memory_from_bootstrap(bootstrap: dict, caller_phone: str = "w
             prof = {}
     summary = mem.get("last_interaction_summary", "")
 
+    # Top-level name resolution (Django model field or profile key)
+    c_name = str(mem.get("customer_name") or prof.get("customer_name") or "").strip()
+    vip_tier = str(prof.get("vip_tier") or "").strip().lower()
+    vip_label = " [عميل VIP دائم]" if vip_tier == "vip" else (" [عميل متكرر]" if vip_tier == "regular" else "")
+
     parts = []
-    if prof:
-        items = []
-        if prof.get("customer_name"):
-            items.append(f"اسم العميل المفضل: {prof['customer_name']}")
-        phone_val = caller_phone if caller_phone != 'web_dashboard' else prof.get("phone")
-        if phone_val:
-            items.append(f"الهاتف: {phone_val}")
-        if prof.get("city") or prof.get("address"):
-            items.append(f"العنوان/المدينة: {prof.get('city') or prof.get('address')}")
-        if prof.get("preferences"):
-            prefs = prof['preferences']
-            if isinstance(prefs, list):
-                prefs = "، ".join(str(p) for p in prefs)
-            items.append(f"تفضيلات واهتمامات العميل: {prefs}")
-        if prof.get("notes"):
-            items.append(f"ملاحظات هامة: {prof['notes']}")
-        if items:
-            parts.append("البيانات الدائمة للعميل:\n- " + "\n- ".join(items))
+    items = []
+
+    if c_name:
+        items.append(f"اسم العميل: {c_name}{vip_label}")
+    phone_val = caller_phone if caller_phone != 'web_dashboard' else prof.get("phone")
+    if phone_val:
+        items.append(f"الهاتف: {phone_val}")
+
+    # 1. Personality & Pace
+    pers = prof.get("personality") or {}
+    pers_notes = []
+    if isinstance(pers, dict):
+        if pers.get("pace") == "fast" or pers.get("communication_style") == "direct":
+            pers_notes.append("يفضل السرعة والإيجاز المباشر (التزم بأقصر إجابات عملية دون إطالة)")
+        elif pers.get("pace") == "detailed":
+            pers_notes.append("يهتم بالتفاصيل الدقيقة والوضوح")
+        if pers.get("price_sensitivity") == "bargain_seeker":
+            pers_notes.append("يهتم بالأسعار والعروض والتوفير")
+    if pers_notes:
+        items.append(f"طبيعة وأسلوب المتصل: {' | '.join(pers_notes)}")
+
+    # 2. Saved Addresses List
+    addr_list = prof.get("addresses") or []
+    if addr_list and isinstance(addr_list, list):
+        addr_lines = []
+        for idx, a in enumerate(addr_list, start=1):
+            if isinstance(a, dict) and a.get("address"):
+                lbl = a.get("label") or f"عنوان {idx}"
+                addr_text = a.get("address")
+                details = []
+                if a.get("landmarks"):
+                    details.append(f"علامة: {a['landmarks']}")
+                if a.get("apartment_details"):
+                    details.append(f"تفاصيل: {a['apartment_details']}")
+                if a.get("instructions"):
+                    details.append(f"تعليمات: {a['instructions']}")
+                det_str = f" ({', '.join(details)})" if details else ""
+                addr_lines.append(f"• [{lbl}]: {addr_text}{det_str}")
+        if addr_lines:
+            items.append("العناوين المسجلة للعميل (اقترح التوصيل إليها دون استجوابه من الصفر):\n  " + "\n  ".join(addr_lines))
+    elif prof.get("city") or prof.get("address"):
+        items.append(f"العنوان المسجل: {prof.get('city') or prof.get('address')}")
+
+    # 3. Preferences & Dietary Notes (with explicit confirmation instruction)
+    prefs = prof.get("preferences")
+    if isinstance(prefs, dict):
+        if prefs.get("favorite_items"):
+            favs = "، ".join(str(i) for i in prefs["favorite_items"])
+            items.append(f"الأصناف والوجبات المفضلة: {favs}")
+        if prefs.get("dietary_restrictions"):
+            diet = "، ".join(str(d) for d in prefs["dietary_restrictions"])
+            items.append(f"اشتراطات غذائية خاصة (تأكيد مع العميل أولاً): {diet} (راعِ هذا التفضيل وتأكد منه مع العميل بلباقة)")
+        if prefs.get("payment_method"):
+            items.append(f"طريقة الدفع المعتادة: {prefs['payment_method']}")
+    elif isinstance(prefs, list) and prefs:
+        items.append(f"تفضيلات واهتمامات سابقة: {'، '.join(str(p) for p in prefs)}")
+
+    # 4. Past Issues / Complaints (No promises)
+    past_issues = prof.get("past_issues")
+    if past_issues:
+        if isinstance(past_issues, list):
+            issues_str = " | ".join(str(iss) for iss in past_issues)
+        else:
+            issues_str = str(past_issues)
+        items.append(f"سجل ملاحظات سابقة (احرص على الاعتذار بلباقة وإرضاء العميل التام): {issues_str}")
+
+    # 5. General Notes
+    if prof.get("notes"):
+        items.append(f"ملاحظات هامة: {prof['notes']}")
+
+    if items:
+        parts.append("البيانات الدائمة للعميل:\n- " + "\n- ".join(items))
 
     if summary:
         parts.append(f"الذاكرة اللحظية من آخر تواصل:\n{summary}")
@@ -96,11 +155,13 @@ def parse_customer_memory_from_bootstrap(bootstrap: dict, caller_phone: str = "w
     card_text = ""
     if parts:
         phone_label = f" ({caller_phone})" if caller_phone and caller_phone != 'web_dashboard' else ""
-        card_text = f"ذاكرة وسياق العميل{phone_label} من المكالمات السابقة (استخدمها بذكاء وعفوية للتذكر والترحيب بالمتابعة):\n" + "\n\n".join(parts)
+        card_text = f"ذاكرة وسياق العميل{phone_label} من المكالمات السابقة (استخدمها بذكاء وعفوية للتذكر والترحيب والخدمة):\n" + "\n\n".join(parts)
 
     return {
         "phone_number": caller_phone,
+        "customer_name": c_name,
         "permanent_profile": prof,
+        "card_data": prof,
         "last_interaction_summary": summary,
         "card_text": card_text,
         "total_calls_count": mem.get("total_calls_count", 0)

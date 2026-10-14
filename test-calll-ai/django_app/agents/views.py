@@ -746,15 +746,38 @@ def api_internal_agent_bootstrap(request):
 
         # 3. Customer Memory (Lazy import to avoid circular dependency)
         from crm.models import CustomerMemory
+        from django.db.models import Q
         caller_phone = str(data.get('caller_phone') or 'web_dashboard').strip()
+        caller_ext = str(data.get('caller_extension') or '').strip()
+
+        # Resolve employee phone number if calling from internal extension/SIP
+        if caller_ext or caller_phone.startswith('emp'):
+            try:
+                from call_center.models import EmployeeProfile
+                ext_q = caller_ext or caller_phone.replace('emp', '')
+                emp_obj = EmployeeProfile.objects.filter(Q(extension=ext_q) | Q(sip_username__icontains=caller_phone)).first()
+                if emp_obj and emp_obj.phone_number:
+                    caller_phone = emp_obj.phone_number
+            except Exception:
+                pass
+
+        # Use fixed default test phone for web dashboard sessions
+        if caller_phone == 'web_dashboard':
+            caller_phone = '+201000000000'
+
         memory = CustomerMemory.objects.filter(user=user, phone_number=caller_phone).first()
-        if not memory and caller_phone != 'web_dashboard' and len(caller_phone) >= 7:
-            memory = CustomerMemory.objects.filter(user=user, phone_number__endswith=caller_phone[-8:]).first()
+        if not memory and len(caller_phone) >= 7:
+            clean_digits = re.sub(r'\D', '', caller_phone)
+            suffix = clean_digits[-8:] if len(clean_digits) >= 8 else caller_phone[-8:]
+            memory = CustomerMemory.objects.filter(user=user, phone_number__endswith=suffix).first()
+
         memory_data = memory.to_dict() if memory else {
             "phone_number": caller_phone,
             "customer_name": "",
             "permanent_profile": {},
+            "card_data": {},
             "last_interaction_summary": "",
+            "card_text": "",
             "total_calls_count": 0
         }
 

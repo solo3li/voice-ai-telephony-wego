@@ -159,6 +159,12 @@ def build_dynamic_system_instruction(
     # 6. Memory context
     memory_text = (
         f"\n8. {memory_card}\n"
+        f"قواعد الاستفادة الذكية من ذاكرة العميل وتفضيلاته:\n"
+        f"  - مناداة العميل باسمه: إذا كان اسم العميل مسجلاً في الذاكرة، خاطبه باسمه باحترام وود لتعزيز الولاء والتقدير.\n"
+        f"  - التكيف مع أسلوب وسرعة المتصل: إذا كان العميل مستعجلاً ويفضل الإيجاز (pace: fast / direct)، التزم بأقصر إجابات عملية وسريعة دون إطالة أو مقدمات.\n"
+        f"  - التفضيلات والاشتراطات الغذائية: راعِ تلقائياً أي ملاحظات غذائية مسجلة (مثل بدون شطة أو بدون مايونيز)، ولكن أكد عليها مع العميل أولاً بلباقة قبل اعتمادها (مثال: 'زي المعتاد يا فندم بدون شطة؟' أو 'نجهز الساندوتش بدون مايونيز زي ما بتفضل؟').\n"
+        f"  - قائمة العناوين المحفوظة: إذا كان للعميل عناوين محفوظة وطلب التوصيل، اعرض عليه التوصيل لأحد عناوينه المسجلة بدلاً من استجوابه عن تفاصيل العنوان من البداية (مثال: 'تحب نوصل لحضرتك على عنوان [المنزل] في [المنطقة] ولا عنوان تاني؟').\n"
+        f"  - سجل الشكاوى والملاحظات السابقة: إذا كان مسجلاً لديه شكوى سابقة، احرص على إظهار أقصى درجات الاهتمام والاعتذار بلباقة والحرص التام على خروج طلبه هذه المرة بأعلى جودة ورضا تام دون تكرار المشكلة.\n"
         f"قواعد الربط الذكي العابر للقنوات (Cross-Channel Omnichannel Continuity):\n"
         f"  - إذا تضمنت ذاكرة العميل تفاعلاً على الواتساب أو توجيهاً بالربط، فبادر في بداية المكالمة بلباقة واحترافية بالربط مع آخر موضوع تم التحدث فيه على الواتساب لإظهار اهتمامك ومتابعتك المباشرة له.\n"
         f"  - إذا قال المتصل 'أنا كنت باعتلكم على الواتساب'، راجع ذاكرة الواتساب وأجب منه مباشرة دون أي تردد.\n"
@@ -314,24 +320,43 @@ def build_dynamic_system_instruction(
 def generate_welcome_greeting(
     profile: Dict[str, Any],
     is_outbound: bool = False,
-    outbound_context: Optional[Dict[str, Any]] = None
+    outbound_context: Optional[Dict[str, Any]] = None,
+    customer_name: Optional[str] = None
 ) -> str:
-    """Generate the exact proactive greeting message based on profile or outbound context."""
-    custom_welcome = (profile.get("welcome_message") or "").strip()
-    if custom_welcome:
-        return custom_welcome
-
-    if is_outbound and outbound_context:
-        goal = (outbound_context.get("call_goal") or "").strip()
-        name = profile.get("name", "المساعد")
-        if goal and len(goal) < 80 and not any(kw in goal for kw in ["أنت", "سيناريو", "تعليمات", "\n"]):
-            return f"مرحباً بك، معك {name}. أتصل بحضرتك بخصوص {goal}."
-        return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
-
+    """Generate the exact proactive greeting message based on profile, customer identity, or outbound context."""
     raw_name = profile.get("name") or "المساعد"
     name = raw_name.split(" - ")[0].strip() if " - " in raw_name else raw_name.strip()
     dialect = (profile.get("dialect") or "egyptian").lower()
     role = profile.get("persona_role") or "خدمة العملاء"
+
+    # 1. Outbound campaign call greeting
+    if is_outbound and outbound_context:
+        goal = (outbound_context.get("call_goal") or "").strip()
+        if goal and len(goal) < 80 and not any(kw in goal for kw in ["أنت", "سيناريو", "تعليمات", "\n"]):
+            return f"مرحباً بك، معك {name}. أتصل بحضرتك بخصوص {goal}."
+        return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
+
+    # 2. Personalized greeting for returning recognized customer
+    clean_cust_name = str(customer_name or "").strip()
+    if clean_cust_name.lower() in ["none", "null", "unknown", "عميل", "مستخدم", "..."]:
+        clean_cust_name = ""
+
+    if clean_cust_name and not is_outbound:
+        if "saudi" in dialect or "gulf" in dialect or "khaliji" in dialect:
+            return f"يا هلا ومسهلا بأستاذ {clean_cust_name}! معك {name}، كيف أقدر أخدمك اليوم؟"
+        elif "levantine" in dialect or "shami" in dialect or "syrian" in dialect or "lebanese" in dialect:
+            return f"أهلاً وسهلاً بحضرتك أستاذ {clean_cust_name}! معك {name}، كيف بقدر ساعدك اليوم؟"
+        elif "moroccan" in dialect or "maghrebi" in dialect:
+            return f"أهلاً وسهلاً سي {clean_cust_name}! معاك {name}، كيفاش نقدر نعاونك اليوم؟"
+        elif "egyptian" in dialect:
+            return f"أهلاً بحضرتك يا أستاذ {clean_cust_name}! نورتنا، معاك {name}، أقدر أساعدك إزاي النهاردة؟"
+        else:
+            return f"أهلاً بك يا أستاذ {clean_cust_name}! معك {name}، كيف يمكنني مساعدتك اليوم؟"
+
+    # 3. Standard greeting for new / anonymous callers
+    custom_welcome = (profile.get("welcome_message") or "").strip()
+    if custom_welcome:
+        return custom_welcome
 
     if "saudi" in dialect or "gulf" in dialect or "khaliji" in dialect:
         return f"أهلاً وسهلاً بك، معك {name}، كيف أقدر أخدمك اليوم؟"

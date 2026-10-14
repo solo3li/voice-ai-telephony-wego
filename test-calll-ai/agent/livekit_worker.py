@@ -668,7 +668,7 @@ async def entrypoint(ctx: JobContext):
                         room_name=room_name,
                         started_at=call_start_time,
                         messages=dialogue_messages,
-                        current_profile=memory_data.get("card_data") or active_profile or {},
+                        current_profile=dict(memory_data.get("permanent_profile") or memory_data.get("card_data") or {}),
                         caller_phone=caller_phone,
                         genai_client=None,
                         outbound_context=outbound_context,
@@ -685,7 +685,7 @@ async def entrypoint(ctx: JobContext):
                     started_at=call_start_time,
                     transcript_text="\n".join(lines),
                     summary=f"مكالمة صوتية مكتملة ({len(dialogue_messages)} ردود، المدة: {int(duration)} ثانية).",
-                    updated_profile=dict(memory_data.get("card_data") or active_profile or {}),
+                    updated_profile=dict(memory_data.get("permanent_profile") or memory_data.get("card_data") or {}),
                     caller_phone=caller_phone,
                     outbound_context=outbound_context,
                     duration_seconds=int(duration),
@@ -704,8 +704,17 @@ async def entrypoint(ctx: JobContext):
         "المساعدة الصوتية وقاعدة المستندات جاهزة للاستماع إليك الآن!",
     )
 
-    # 11. Proactive Welcome Greeting
-    greeting_text = generate_welcome_greeting(active_profile, memory_card_text)
+    # 11. Proactive Welcome Greeting (Personalized for recognized returning customer)
+    recognized_name = memory_data.get("customer_name") or ""
+    if not recognized_name and isinstance(memory_data.get("permanent_profile"), dict):
+        recognized_name = memory_data.get("permanent_profile", {}).get("customer_name", "")
+
+    greeting_text = generate_welcome_greeting(
+        profile=active_profile,
+        is_outbound=bool(outbound_context),
+        outbound_context=outbound_context,
+        customer_name=recognized_name
+    )
     try:
         # Wait for human caller to connect (up to 15 seconds)
         participant = await ctx.wait_for_participant()

@@ -216,7 +216,21 @@ def api_internal_save_call_session_and_memory(request):
         summary = str(data.get('summary') or '')
         permanent_profile = data.get('permanent_profile') or data.get('distilled_profile')
 
-        now_dt = datetime.datetime.now(datetime.timezone.utc)
+        now_dt = datetime.timezone.utc and datetime.datetime.now(datetime.timezone.utc)
+
+        # Resolve employee phone number if caller is employee extension
+        if caller_extension or caller_phone.startswith('emp'):
+            try:
+                from call_center.models import EmployeeProfile
+                from django.db.models import Q
+                ext_q = caller_extension or caller_phone.replace('emp', '')
+                emp_obj = EmployeeProfile.objects.filter(Q(extension=ext_q) | Q(sip_username__icontains=caller_phone)).first()
+                if emp_obj and emp_obj.phone_number:
+                    caller_phone = emp_obj.phone_number
+                    if not customer_name:
+                        customer_name = emp_obj.display_name
+            except Exception:
+                pass
 
         # Check if permanent_profile contains extracted phone or name
         if isinstance(permanent_profile, dict):
@@ -224,8 +238,11 @@ def api_internal_save_call_session_and_memory(request):
             extracted_name = str(permanent_profile.get('customer_name') or '').strip()
             if extracted_name and not customer_name:
                 customer_name = extracted_name
-            if extracted_phone and caller_phone in ['web_dashboard', 'anonymous', 'unknown', '']:
+            if extracted_phone and caller_phone in ['web_dashboard', 'anonymous', 'unknown', '', '+201000000000']:
                 caller_phone = extracted_phone
+
+        if caller_phone == 'web_dashboard':
+            caller_phone = '+201000000000'
 
         # Check if recording_url is available from request or Redis cache
         req_recording_url = str(data.get('recording_url') or '').strip()
