@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تجربة المكالمة الصوتية المباشرة (Direct WebRTC Voice Call Demo)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- LiveKit Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-ring {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-xl w-full bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
+    
+    <!-- Header -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 mb-1 border border-emerald-500/20">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-white">تجربة المكالمات الصوتية WebRTC المباشرة</h1>
+      <p class="text-sm text-slate-400">اتصال صوتي فوري مع الذكاء الاصطناعي عبر المتصفح باستخدام LiveKit</p>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="flex rounded-xl bg-slate-900/80 p-1 border border-slate-700 text-sm font-medium">
+      <button id="btn-mode-dev" class="flex-1 py-2 rounded-lg bg-emerald-600 text-white transition shadow-sm" onclick="setApiMode('dev')">
+        Developer API (مطورين)
+      </button>
+      <button id="btn-mode-prt" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition" onclick="setApiMode('partner')">
+        Partner API (شركاء)
+      </button>
+    </div>
+
+    <!-- Config Form -->
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">مفتاح الـ API (API Key)</label>
+        <input type="password" id="input-api-key" placeholder="sk_live_usr_... أو sk_live_prt_..." 
+               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition font-mono" />
+      </div>
+
+      <div id="partner-client-group" class="hidden">
+        <label class="block text-xs font-semibold text-slate-300 mb-1">معرف العميل التابع (Sub-Client ID)</label>
+        <input type="number" id="input-client-id" placeholder="مثال: 64" 
+               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition font-mono" />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">اسم المتصل (Caller Name)</label>
+          <input type="text" id="input-caller-name" value="أحمد (عميل المتجر)" 
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">الحد الأقصى للثواني (Max Duration)</label>
+          <input type="number" id="input-duration" value="180" 
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition font-mono" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">رسالة الترحيب المخصصة (اختياري)</label>
+        <input type="text" id="input-welcome" placeholder="أهلاً بك يا فندم في خدمة العملاء، كيف أساعدك اليوم؟" 
+               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">سياق الجلسة الديناميكي (اختياري)</label>
+        <textarea id="input-context" rows="2" placeholder="العميل يستفسر عن حالة الطلب رقم #9821 المتأخر في الشحن..." 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 transition"></textarea>
+      </div>
+    </div>
+
+    <!-- Active Call Widget / Status -->
+    <div id="call-status-box" class="bg-slate-900/90 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="status-indicator" class="w-3.5 h-3.5 rounded-full bg-slate-500"></div>
+        <div>
+          <div id="status-text" class="text-sm font-semibold text-slate-200">غير متصل (Ready)</div>
+          <div id="status-subtext" class="text-xs text-slate-500">اضغط "بدء المكالمة" لتجربة الصوت المباشر</div>
+        </div>
+      </div>
+      <div id="call-timer" class="font-mono text-sm text-emerald-400 font-bold hidden">00:00</div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3">
+      <button id="btn-start" onclick="startWebRTCCall()" 
+              class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+        بدء المكالمة الصوتية
+      </button>
+
+      <button id="btn-end" onclick="endCall()" disabled 
+              class="hidden py-3 px-6 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-rose-900/30">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
+        </svg>
+        إنهاء المكالمة
+      </button>
+    </div>
+
+    <!-- Error container -->
+    <div id="error-box" class="hidden p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+
+  </div>
+
+  <script>
+    let currentMode = 'dev'; // 'dev' | 'partner'
+    let activeRoom = null;
+    let timerInterval = null;
+    let callSeconds = 0;
+
+    function setApiMode(mode) {
+      currentMode = mode;
+      const btnDev = document.getElementById('btn-mode-dev');
+      const btnPrt = document.getElementById('btn-mode-prt');
+      const prtGroup = document.getElementById('partner-client-group');
+
+      if (mode === 'dev') {
+        btnDev.className = 'flex-1 py-2 rounded-lg bg-emerald-600 text-white transition shadow-sm';
+        btnPrt.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+        prtGroup.classList.add('hidden');
+      } else {
+        btnPrt.className = 'flex-1 py-2 rounded-lg bg-emerald-600 text-white transition shadow-sm';
+        btnDev.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+        prtGroup.classList.remove('hidden');
+      }
+    }
+
+    function setStatus(text, subtext, colorClass = 'bg-slate-500', pulse = false) {
+      const ind = document.getElementById('status-indicator');
+      ind.className = `w-3.5 h-3.5 rounded-full ${colorClass} ${pulse ? 'pulse-ring' : ''}`;
+      document.getElementById('status-text').innerText = text;
+      document.getElementById('status-subtext').innerText = subtext;
+    }
+
+    function showError(msg) {
+      const b = document.getElementById('error-box');
+      b.innerText = msg;
+      b.classList.remove('hidden');
+    }
+
+    function clearError() {
+      const b = document.getElementById('error-box');
+      b.innerText = '';
+      b.classList.add('hidden');
+    }
+
+    function startTimer() {
+      callSeconds = 0;
+      const el = document.getElementById('call-timer');
+      el.classList.remove('hidden');
+      el.innerText = '00:00';
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const secs = String(callSeconds % 60).padStart(2, '0');
+        el.innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById('call-timer').classList.add('hidden');
+    }
+
+    async function startWebRTCCall() {
+      clearError();
+      const apiKey = document.getElementById('input-api-key').value.trim();
+      if (!apiKey) {
+        showError('يرجى إدخال مفتاح الـ API أولاً');
+        return;
+      }
+
+      const callerName = document.getElementById('input-caller-name').value.trim() || 'عميل تجريبي';
+      const maxDuration = parseInt(document.getElementById('input-duration').value.trim(), 10) || 180;
+      const welcome = document.getElementById('input-welcome').value.trim();
+      const context = document.getElementById('input-context').value.trim();
+
+      let endpointUrl = 'https://app.169.58.32.179.nip.io/api/v1/calls/webrtc/';
+      if (currentMode === 'partner') {
+        const clientId = document.getElementById('input-client-id').value.trim();
+        if (!clientId) {
+          showError('يرجى تحديد معرف العميل التابع (Sub-Client ID)');
+          return;
+        }
+        endpointUrl = `https://app.169.58.32.179.nip.io/api/partner/v1/clients/${clientId}/calls/webrtc/`;
+      }
+
+      setStatus('جارٍ إنشاء الجلسة...', 'يتم التواصل مع الخادم وتوليد توكن الغرفة...', 'bg-amber-500', true);
+      document.getElementById('btn-start').disabled = true;
+
+      try {
+        const payload = {
+          caller_name: callerName,
+          max_duration_seconds: maxDuration,
+          welcome_message: welcome,
+          context: context
+        };
+
+        const res = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+          throw new Error(data.message || `خطأ ${res.status}: فشل بدء الجلسة`);
+        }
+
+        console.log('Session initialized:', data);
+        setStatus('جارٍ الاتصال بـ LiveKit...', 'يتم الانضمام للغرفة وتفعيل المايكروفون...', 'bg-blue-500', true);
+
+        // Connect to LiveKit Room
+        activeRoom = new LivekitClient.Room({
+          adaptiveStream: true,
+          dynacast: true
+        });
+
+        // Handle Agent Audio
+        activeRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          if (track.kind === LivekitClient.Track.Kind.Audio || track.kind === 'audio') {
+            const audioEl = track.attach();
+            audioEl.autoplay = true;
+            document.body.appendChild(audioEl);
+            audioEl.play().catch(e => console.warn('Autoplay blocked:', e));
+            setStatus('المكالمة نشطة 🎙️', 'المساعد الذكي يستمع ويتحدث الآن بصوته الطبيعي', 'bg-emerald-500', true);
+          }
+        });
+
+        // Handle Disconnect
+        activeRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
+          setStatus('انتهت المكالمة', 'تم قطع الاتصال بالغرفة الصوتية', 'bg-slate-500');
+          cleanupCallUI();
+        });
+
+        // 1. Connect
+        await activeRoom.connect(data.livekit_url, data.livekit_token);
+        
+        // 2. Enable Mic
+        await activeRoom.localParticipant.setMicrophoneEnabled(true);
+
+        // Update UI
+        document.getElementById('btn-start').classList.add('hidden');
+        document.getElementById('btn-end').classList.remove('hidden');
+        document.getElementById('btn-end').disabled = false;
+        setStatus('متصل بالغرفة', 'بانتظار صوت المساعد الذكي...', 'bg-emerald-500', true);
+        startTimer();
+
+      } catch (err) {
+        console.error('Call initialization failed:', err);
+        showError(err.message || 'فشل الاتصال بالمكالمة الصوتية');
+        setStatus('فشل الاتصال', 'حدث خطأ أثناء بدء الجلسة', 'bg-rose-500');
+        cleanupCallUI();
+      }
+    }
+
+    function endCall() {
+      if (activeRoom) {
+        activeRoom.disconnect();
+        activeRoom = null;
+      }
+      cleanupCallUI();
+    }
+
+    function cleanupCallUI() {
+      stopTimer();
+      document.getElementById('btn-start').classList.remove('hidden');
+      document.getElementById('btn-start').disabled = false;
+      document.getElementById('btn-end').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

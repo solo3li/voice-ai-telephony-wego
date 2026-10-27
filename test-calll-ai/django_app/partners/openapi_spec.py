@@ -1256,6 +1256,66 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                 }
             }
         },
+        "/clients/{client_id}/calls/webrtc/": {
+            "post": {
+                "tags": [tag_map["tag_cdr"]],
+                "summary": "بدء جلسة مكالمة صوتية مباشرة للعميل التابع عبر المتصفح (Sub-client WebRTC Voice Session)" if is_ar else "Initiate Sub-client WebRTC Voice Session",
+                "description": (
+                    "توليد جلسة صوتية ذكية مشفرة وتوكن LiveKit للاتصال المباشر بالذكاء الاصطناعي لحساب العميل التابع للشريك، مع إمكانية تحديد سقف مدة المكالمة وتخصيص رسالة الترحيب والسياق."
+                    if is_ar else
+                    "Generates an authenticated LiveKit WebRTC room session and scoped AccessToken to talk directly with the AI voice assistant for a specific sub-client."
+                ),
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"}
+                ],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "caller_name": {"type": "string", "example": "أحمد (عميل موقع)", "description": "اسم المتصل المعروض في لوحة التحكم"},
+                                    "caller_phone": {"type": "string", "example": "+966551122334", "description": "رقم هاتف العميل أو معرفه لربط الذاكرة وسجل CRM"},
+                                    "profile_id": {"type": "integer", "example": 1, "description": "معرف شخصية الذكاء الاصطناعي (AgentProfile ID)"},
+                                    "welcome_message": {"type": "string", "example": "أهلاً بك في متجرنا! كيف يمكنني مساعدتك اليوم؟", "description": "رسالة ترحيب مخصصة تُنطق فور فتح الخط"},
+                                    "context": {"type": "string", "example": "العميل في صفحة سلة المشتريات", "description": "سياق إضافي يُحقن في تعليمات الإيجنت لهذه الجلسة فقط"},
+                                    "max_duration_seconds": {"type": "integer", "default": 300, "example": 300, "description": "سقف مدة المكالمة بالثواني (افتراضي: 300 ثانية / 5 دقائق)"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء جلسة الـ WebRTC بنجاح" if is_ar else "WebRTC session initiated successfully",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "success",
+                                    "client_id": 19,
+                                    "call_id": 491,
+                                    "room_name": "room_webrtc_prt_1_19_ab12cd34",
+                                    "livekit_url": "wss://livekit.169.58.32.179.nip.io",
+                                    "livekit_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                                    "max_duration_seconds": 300,
+                                    "expires_in": 300,
+                                    "agent_profile": {
+                                        "id": 1,
+                                        "name": "نورهان - خدمة عملاء",
+                                        "voice": "Aoede",
+                                        "dialect": "egyptian"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "402": {"description": "رصيد محفظة الشريك غير كافٍ" if is_ar else "Partner balance insufficient"},
+                    "403": {"description": "تم تجاوز سقف الاستهلاك المحدد للعميل الفرعي" if is_ar else "Client spending or minute cap exceeded"},
+                    "404": {"description": "شخصية الذكاء الاصطناعي المحددة غير موجودة" if is_ar else "Agent profile not found"}
+                }
+            }
+        },
         "/clients/{client_id}/calls/hangup/": {
             "post": {
                 "tags": [tag_map["tag_cdr"]],
@@ -2124,6 +2184,114 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                     }
                 },
                 "responses": {"200": {"description": "تم إرسال رسالة المتابعة بنجاح" if is_ar else "Followup sent"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/escalate/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تحويل محادثة العميل التابع للدعم البشري (Escalate Client WhatsApp)" if is_ar else "Escalate Sub-client WhatsApp Chat",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "reason": "طلب دعم فني عاجل",
+                                "urgency": "urgent",
+                                "summary": "استفسار بخصوص شحنة متأخرة"
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم تحويل المحادثة بنجاح" if is_ar else "Escalated successfully"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/claim/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "حجز محادثة العميل التابع لموظف (Claim Sub-client Chat)" if is_ar else "Claim Sub-client WhatsApp Chat",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {"agent_user_id": 12}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم حجز المحادثة بنجاح" if is_ar else "Claimed successfully"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/release/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إعادة إفلات محادثة العميل التابع للطابور (Release Sub-client Chat)" if is_ar else "Release Sub-client WhatsApp Chat",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {"reason": "إعادة للطابور العام"}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إفلات المحادثة بنجاح" if is_ar else "Released successfully"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/conversations/{phone}/resolve/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إنهاء دعم محادثة العميل التابع واستئناف الذكاء الاصطناعي (Resolve Sub-client Chat)" if is_ar else "Resolve Sub-client Chat & Resume AI",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "resolution_notes": "تم حل مشكلة العميل بالكامل",
+                                "resolution_status": "RESOLVED"
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إنهاء الدعم بنجاح" if is_ar else "Resolved successfully"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/tickets/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "استعراض تذاكر دعم العميل التابع (List Sub-client WhatsApp Tickets)" if is_ar else "List Sub-client WhatsApp Tickets",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "status", "in": "query", "schema": {"type": "string"}},
+                    {"name": "urgency", "in": "query", "schema": {"type": "string"}},
+                    {"name": "phone", "in": "query", "schema": {"type": "string"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}}
+                ],
+                "responses": {"200": {"description": "قائمة التذاكر" if is_ar else "Tickets list"}}
+            }
+        },
+        "/clients/{client_id}/whatsapp/tickets/{ticket_number}/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تفاصيل تذكرة دعم للعميل التابع (Get Sub-client Ticket Detail)" if is_ar else "Get Sub-client WhatsApp Ticket Detail",
+                "parameters": [
+                    {"$ref": "#/components/parameters/ClientId"},
+                    {"name": "ticket_number", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "responses": {"200": {"description": "تفاصيل التذكرة" if is_ar else "Ticket detail"}}
             }
         },
     }

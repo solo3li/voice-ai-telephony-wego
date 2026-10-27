@@ -1,0 +1,699 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}مكتب دعم عملاء الواتساب (الدعم البشري Tier 2){% endblock %}
+
+{% block extra_head %}
+<style>
+  .chat-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #D5C7B5 transparent;
+  }
+  .chat-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background-color: #D5C7B5;
+    border-radius: 9999px;
+  }
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: 0.9; }
+  }
+  .ring-alert {
+    animation: ringPulse 1.2s infinite ease-in-out;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+  <!-- ==================== Header & Desk Status ==================== -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#EAE3D9] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)]">
+    <div class="flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#841832] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+        🎧
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-lg font-bold text-[#1C1917]">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
+            رنين جماعي & استلام فوري
+          </span>
+        </div>
+        <p class="text-xs text-[#6E645D] mt-0.5">
+          شاشة العمل الموحدة لموظفي الدعم لاستقبال وتوزيع محادثات الشكاوى والتحويل من الذكاء الاصطناعي
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent Desk Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Presence Toggle -->
+      <button 
+        type="button" 
+        id="btn-agent-presence"
+        onclick="toggleAgentPresence()"
+        class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs"
+      >
+        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+        <span id="presence-text">حالتي: متصل ومستعد للاستلام</span>
+      </button>
+
+      <!-- Sound Mute Toggle -->
+      <button 
+        type="button" 
+        id="btn-sound-toggle"
+        onclick="toggleSoundMute()"
+        class="p-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#443D39] border border-[#DDD5C7] text-xs transition shadow-xs flex items-center gap-1.5"
+        title="كتم/تفعيل صوت الرنين"
+      >
+        <span id="sound-icon">🔔</span>
+        <span class="hidden sm:inline text-[11px] font-semibold" id="sound-text">الصوت مفعل</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 3-Panel Integrated Cockpit ==================== -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
+
+    <!-- Panel 1: Incoming Broadcast Ringing Queue (Right Panel, 3 cols) -->
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs">
+      <div class="p-3.5 px-4 border-b border-[#EAE3D9] bg-[#FAF7F2]/90 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🛎️</span>
+          <div>
+            <h3 class="font-bold text-xs text-[#1C1917]">طابور الرنين العام</h3>
+            <p class="text-[10px] text-[#8C827A]">ترن لدى الجميع (الأسبقية للاستلام)</p>
+          </div>
+        </div>
+        <span id="broadcast-queue-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 font-mono">
+          0
+        </span>
+      </div>
+
+      <!-- Queue Cards Container -->
+      <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-[#FAF7F2]/20">
+        <div class="p-8 text-center text-[#8C827A] text-xs space-y-2">
+          <div class="text-2xl">☕</div>
+          <p class="font-medium">لا توجد محادثات معلقة في الطابور حالياً.</p>
+          <p class="text-[10px] text-[#A8A199]">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2: My Active Claimed Chats (Middle Panel, 3 cols) -->
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs">
+      <div class="p-3.5 px-4 border-b border-[#EAE3D9] bg-[#FAF7F2]/90 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-base">👤</span>
+          <div>
+            <h3 class="font-bold text-xs text-[#1C1917]">محادثاتي المستلمة</h3>
+            <p class="text-[10px] text-[#8C827A]">محادثات قيد الدعم المباشر</p>
+          </div>
+        </div>
+        <span id="my-chats-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#680E23]/10 text-[#680E23] border border-[#680E23]/20 font-mono">
+          0
+        </span>
+      </div>
+
+      <!-- Active Claimed Chats List -->
+      <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-[#EAE3D9] chat-scroll">
+        <div class="p-8 text-center text-[#8C827A] text-xs">
+          لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Live Chat Thread & Cockpit (Left Main Panel, 6 cols) -->
+    <div class="lg:col-span-6 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs relative">
+
+      <!-- Empty State (No chat active) -->
+      <div id="desk-empty-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
+        <div class="w-16 h-16 rounded-3xl bg-rose-50 text-[#680E23] border border-rose-100 flex items-center justify-center text-3xl shadow-sm">
+          💬
+        </div>
+        <h3 class="text-base font-bold text-[#1C1917]">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
+        <p class="text-xs text-[#6E645D] max-w-sm leading-relaxed">
+          أو اضغط «استلام المحادثة» من طابور الرنين العام على اليمين لسحب طلب العميل والرد عليه مباشرة.
+        </p>
+      </div>
+
+      <!-- Active Chat View -->
+      <div id="desk-active-view" class="hidden flex-1 flex-col min-h-0">
+        
+        <!-- Header -->
+        <div class="p-3.5 px-5 border-b border-[#EAE3D9] bg-[#FAF7F2]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-3">
+            <div id="desk-chat-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#841832] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+              U
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="desk-chat-name" class="font-bold text-sm text-[#1C1917]">-</h3>
+                <span id="desk-chat-phone" class="font-mono text-xs text-[#6E645D] bg-white px-2 py-0.5 rounded-lg border border-[#DDD5C7] dir-ltr">-</span>
+              </div>
+              <span class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                قيد الدعم البشري المباشر
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions: Release back & Resolve -->
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              onclick="releaseActiveChat()" 
+              class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              title="إعادة المحادثة للطابور العام لترن عند الزملاء"
+            >
+              <span>🔄 إعادة للطابور</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="resolveActiveChat()" 
+              class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+              title="إنهاء التذكرة واستئناف الرد الآلي للذكاء الاصطناعي"
+            >
+              <span>✅ حل المشكلة واستئناف الـ AI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Handoff Brief Banner & 5-Minute Countdown -->
+        <div id="desk-brief-banner" class="px-5 py-3 bg-gradient-to-r from-amber-50 to-rose-50/50 border-b border-amber-200 text-xs text-[#443D39] shrink-0">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white">⚠️ شكوى / تصعيد</span>
+              <span class="font-bold text-[#841832]" id="desk-brief-reason">سبب التصعيد: -</span>
+            </div>
+            <!-- 5-Minute Countdown Badge -->
+            <div class="flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-white shadow-xs" id="sla-timer-container">
+              <span>⏱️ مهلة الرد:</span>
+              <span id="sla-countdown-text">05:00</span>
+            </div>
+          </div>
+          <p id="desk-brief-summary" class="text-[11px] text-[#443D39] mt-1.5 bg-white/80 p-2.5 rounded-xl border border-amber-200 leading-relaxed font-sans shadow-2xs">
+            -
+          </p>
+        </div>
+
+        <!-- Messages Stream -->
+        <div id="desk-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 chat-scroll bg-[#FAF7F2]/20 min-h-0">
+          <div class="p-8 text-center text-[#8C827A] text-xs">جارٍ جلب المحادثة...</div>
+        </div>
+
+        <!-- Quick Reply Composer -->
+        <div class="p-3.5 px-5 border-t border-[#EAE3D9] bg-white shrink-0">
+          <form id="desk-reply-form" onsubmit="sendDeskReply(event)" class="space-y-2">
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="desk-reply-input" 
+                placeholder="اكتب رداً مباشراً على العميل على الواتساب..." 
+                required
+                autocomplete="off"
+                class="flex-1 py-2.5 px-4 rounded-2xl bg-[#FAF7F2] border border-[#DDD5C7] text-xs text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:bg-white transition"
+              >
+              <button 
+                type="submit" 
+                id="btn-desk-send"
+                class="py-2.5 px-5 rounded-2xl bg-[#680E23] hover:bg-[#841832] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20 shrink-0"
+              >
+                <span>إرسال</span>
+                <span>📤</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // State
+  const CURRENT_USER_ID = {{ request.user.id|default:0 }};
+  let isSoundMuted = false;
+  let isAgentOnline = true;
+  let allConversations = [];
+  let currentActivePhone = null;
+  let currentActiveConv = null;
+  let slaIntervalId = null;
+  let chimeAudioIntervalId = null;
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDeskData();
+    setupCentrifugoDeskSubscription();
+    setInterval(() => {
+      loadDeskData(false);
+      if (currentActivePhone) {
+        loadActiveMessages(false);
+      }
+    }, 5000);
+  });
+
+  // Centrifugo Real-Time Subscription for Escalations & Broadcasts
+  function setupCentrifugoDeskSubscription() {
+    if (!window.globalCentrifugeClient) {
+      setTimeout(setupCentrifugoDeskSubscription, 800);
+      return;
+    }
+    const client = window.globalCentrifugeClient;
+    const channels = [`user_${CURRENT_USER_ID}`, `tenant_${CURRENT_USER_ID}`];
+    channels.forEach(ch => {
+      try {
+        const sub = client.newSubscription(ch);
+        sub.on('publication', function(ctx) {
+          console.log('[Centrifugo Desk Event]', ch, ctx.data);
+          loadDeskData(false);
+          if (currentActivePhone) {
+            loadActiveMessages(false);
+          }
+          if (ctx.data && (ctx.data.event === 'whatsapp_escalation_assigned' || ctx.data.event === 'whatsapp_conversation_claimed')) {
+            playRingingChime();
+          }
+        });
+        sub.subscribe();
+      } catch (e) {
+        console.debug('[Centrifugo Desk Sub Debug]', ch, e);
+      }
+    });
+  }
+
+  // ==================== Audio Chime Generator (Web Audio API) ====================
+  function playRingingChime() {
+    if (isSoundMuted || !isAgentOnline) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.45);
+    } catch (e) {
+      console.warn("Chime error:", e);
+    }
+  }
+
+  function syncChimeLoop(incomingCount) {
+    if (incomingCount > 0 && !chimeAudioIntervalId && isAgentOnline && !isSoundMuted) {
+      playRingingChime();
+      chimeAudioIntervalId = setInterval(playRingingChime, 3000);
+    } else if (incomingCount === 0 && chimeAudioIntervalId) {
+      clearInterval(chimeAudioIntervalId);
+      chimeAudioIntervalId = null;
+    }
+  }
+
+  function toggleSoundMute() {
+    isSoundMuted = !isSoundMuted;
+    document.getElementById('sound-icon').textContent = isSoundMuted ? '🔇' : '🔔';
+    document.getElementById('sound-text').textContent = isSoundMuted ? 'الصوت مكتوم' : 'الصوت مفعل';
+    if (isSoundMuted && chimeAudioIntervalId) {
+      clearInterval(chimeAudioIntervalId);
+      chimeAudioIntervalId = null;
+    }
+  }
+
+  function toggleAgentPresence() {
+    isAgentOnline = !isAgentOnline;
+    const btn = document.getElementById('btn-agent-presence');
+    const text = document.getElementById('presence-text');
+    if (isAgentOnline) {
+      btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs';
+      text.textContent = 'حالتي: متصل ومستعد للاستلام';
+    } else {
+      btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-amber-50 text-amber-800 border border-amber-300 shadow-xs';
+      text.textContent = 'حالتي: في استراحة (الصوت متوقف)';
+      if (chimeAudioIntervalId) {
+        clearInterval(chimeAudioIntervalId);
+        chimeAudioIntervalId = null;
+      }
+    }
+  }
+
+  // ==================== Data Loading & Rendering ====================
+  async function loadDeskData(showSpinner = true) {
+    try {
+      const res = await fetch('/api/crm/whatsapp/conversations/');
+      const data = await res.json();
+      if (data.status === 'success') {
+        allConversations = data.conversations || [];
+        renderPanels();
+      }
+    } catch (err) {
+      console.error('Error fetching desk data:', err);
+    }
+  }
+
+  function renderPanels() {
+    // 1. Incoming Broadcast Queue:
+    // Any chat in PENDING_AGENT_REPLY OR (needs_human_attention without assigned_agent_id)
+    const incomingQueue = allConversations.filter(c => 
+      c.conversation_state === 'PENDING_AGENT_REPLY' || 
+      (!c.assigned_agent_id && c.needs_human_attention)
+    );
+
+    // 2. My Active Claimed Chats:
+    // Any chat assigned to current agent in ACTIVE_SUPPORT
+    const myClaimedChats = allConversations.filter(c => 
+      c.assigned_agent_id === CURRENT_USER_ID && 
+      (c.conversation_state === 'ACTIVE_SUPPORT' || !c.ai_active)
+    );
+
+    document.getElementById('broadcast-queue-badge').textContent = incomingQueue.length;
+    document.getElementById('my-chats-badge').textContent = myClaimedChats.length;
+
+    renderBroadcastQueue(incomingQueue);
+    renderMyClaimedChats(myClaimedChats);
+    syncChimeLoop(incomingQueue.length);
+  }
+
+  function renderBroadcastQueue(queue) {
+    const container = document.getElementById('broadcast-queue-list');
+    if (!queue || queue.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 text-center text-[#8C827A] text-xs space-y-2">
+          <div class="text-2xl">☕</div>
+          <p class="font-medium">لا توجد محادثات معلقة في الطابور حالياً.</p>
+          <p class="text-[10px] text-[#A8A199]">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = queue.map(c => {
+      const name = c.customer_name || 'عميل واتساب جديد';
+      const phone = c.display_phone || c.real_phone || c.phone_number;
+      const reason = c.escalation_reason || 'طلب دعم بشري';
+      const summary = c.escalation_summary || (c.last_message ? c.last_message.text : 'بانتظار الرد');
+      const isUrgent = (c.escalation_urgency === 'urgent');
+
+      return `
+        <div class="p-3.5 bg-white rounded-2xl border ${isUrgent ? 'border-rose-400 ring-alert shadow-md' : 'border-amber-300 shadow-xs'} space-y-2.5 transition">
+          <div class="flex items-start justify-between gap-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">${isUrgent ? '🚨' : '🔔'}</span>
+              <div class="min-w-0">
+                <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(name)}</h4>
+                <p class="text-[10px] text-[#6E645D] font-mono dir-ltr text-right truncate">${escapeHtml(phone)}</p>
+              </div>
+            </div>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isUrgent ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'} shrink-0">
+              ${isUrgent ? 'عاجل جداً' : 'طلب دعم'}
+            </span>
+          </div>
+
+          <div class="text-[11px] text-[#443D39] bg-[#FAF7F2] p-2 rounded-xl border border-[#EAE3D9] leading-tight space-y-1">
+            <p class="font-bold text-[#841832] truncate">📌 ${escapeHtml(reason)}</p>
+            <p class="text-[#6E645D] text-[10px] line-clamp-2">${escapeHtml(summary)}</p>
+          </div>
+
+          <button 
+            type="button" 
+            onclick="claimChat('${escapeHtml(c.phone_number)}')"
+            class="w-full py-2 px-3 rounded-xl bg-[#680E23] hover:bg-[#841832] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+          >
+            <span>⚡ استلام المحادثة</span>
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderMyClaimedChats(chats) {
+    const container = document.getElementById('my-claimed-chats-list');
+    if (!chats || chats.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 text-center text-[#8C827A] text-xs">
+          لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = chats.map(c => {
+      const isSelected = (c.phone_number === currentActivePhone);
+      const name = c.customer_name || 'عميل واتساب';
+      const phone = c.display_phone || c.real_phone || c.phone_number;
+      const lastMsg = c.last_message || {};
+      const initial = name.trim().charAt(0).toUpperCase();
+
+      return `
+        <div 
+          onclick="selectClaimedChat('${escapeHtml(c.phone_number)}')" 
+          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-rose-50/70 border-r-4 border-r-[#680E23]' : 'hover:bg-[#FAF7F2]'}"
+        >
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${isSelected ? 'from-[#680E23] to-[#841832] text-white' : 'from-[#EAE3D9] to-[#D5C7B5] text-[#443D39]'} font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+            ${escapeHtml(initial)}
+          </div>
+          <div class="flex-1 min-w-0 space-y-0.5">
+            <div class="flex items-center justify-between gap-1">
+              <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(name)}</h4>
+              <span class="text-[9px] text-[#8C827A] font-mono">${escapeHtml(lastMsg.created_at_time || '')}</span>
+            </div>
+            <p class="text-[10px] text-[#6E645D] font-mono dir-ltr text-right">${escapeHtml(phone)}</p>
+            <p class="text-[11px] text-[#443D39] truncate">${escapeHtml(lastMsg.text || 'محادثة نشطة')}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ==================== Actions: Claim, Release, Resolve ====================
+  async function claimChat(phoneNumber) {
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(phoneNumber)}/claim/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        await loadDeskData(false);
+        selectClaimedChat(phoneNumber);
+      } else {
+        alert('تعذر استلام المحادثة: ' + (data.message || 'ربما تم استلامها من زميل آخر'));
+        await loadDeskData(false);
+      }
+    } catch (err) {
+      alert('خطأ أثناء الاستلام: ' + err.message);
+    }
+  }
+
+  async function releaseActiveChat() {
+    if (!currentActivePhone) return;
+    if (!confirm('هل تريد إعادة هذه المحادثة إلى الطابور العام لترن عند الزملاء؟')) return;
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/release/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        currentActivePhone = null;
+        document.getElementById('desk-empty-state').classList.remove('hidden');
+        document.getElementById('desk-active-view').classList.add('hidden');
+        document.getElementById('desk-active-view').classList.remove('flex');
+        await loadDeskData(false);
+      }
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  }
+
+  async function resolveActiveChat() {
+    if (!currentActivePhone) return;
+    const notes = prompt('أدخل ملاحظات حل المشكلة (اختياري):', 'تم حل شكوى العميل بنجاح');
+    if (notes === null) return;
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/resolve/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolution_notes: notes, resolution_status: 'RESOLVED' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('تم حل المحادثة بنجاح وإعادة تفعيل الذكاء الاصطناعي!');
+        currentActivePhone = null;
+        document.getElementById('desk-empty-state').classList.remove('hidden');
+        document.getElementById('desk-active-view').classList.add('hidden');
+        document.getElementById('desk-active-view').classList.remove('flex');
+        await loadDeskData(false);
+      }
+    } catch (err) {
+      alert('خطأ: ' + err.message);
+    }
+  }
+
+  // ==================== Active Chat & Messages View ====================
+  async function selectClaimedChat(phoneNumber) {
+    currentActivePhone = phoneNumber;
+    renderPanels();
+
+    document.getElementById('desk-empty-state').classList.add('hidden');
+    const activeView = document.getElementById('desk-active-view');
+    activeView.classList.remove('hidden');
+    activeView.classList.add('flex');
+
+    await loadActiveMessages(true);
+  }
+
+  async function loadActiveMessages(scrollToBottom = false) {
+    if (!currentActivePhone) return;
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/messages/`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        currentActiveConv = data;
+        updateActiveHeader(data);
+        renderMessagesStream(data.messages || [], scrollToBottom);
+        startSlaTimer(data);
+      }
+    } catch (err) {
+      console.error('Error loading active messages:', err);
+    }
+  }
+
+  function updateActiveHeader(data) {
+    document.getElementById('desk-chat-name').textContent = data.customer_name || 'عميل واتساب';
+    document.getElementById('desk-chat-phone').textContent = data.display_phone || data.real_phone || data.phone_number;
+    document.getElementById('desk-chat-avatar').textContent = (data.customer_name || 'U').trim().charAt(0).toUpperCase();
+
+    document.getElementById('desk-brief-reason').textContent = 'سبب التصعيد: ' + (data.escalation_reason || 'طلب دعم بشري / شكوى');
+    document.getElementById('desk-brief-summary').textContent = '📌 ملخص الذكاء الاصطناعي: ' + (data.escalation_summary || 'العميل بانتظار استجابتك ومساعدتك.');
+  }
+
+  function renderMessagesStream(messages, scrollToBottom = false) {
+    const stream = document.getElementById('desk-messages-stream');
+    if (!messages || messages.length === 0) {
+      stream.innerHTML = `<div class="p-8 text-center text-[#8C827A] text-xs">لا توجد رسائل سابقة بعد.</div>`;
+      return;
+    }
+
+    stream.innerHTML = messages.map(m => {
+      const isCustomer = (m.direction === 'inbound');
+      const isHuman = (m.direction === 'outbound_human');
+      const isAi = (m.direction === 'outbound_ai');
+
+      if (isCustomer) {
+        return `
+          <div class="flex justify-start">
+            <div class="max-w-[78%] bg-white border border-[#DDD5C7] rounded-2xl rounded-tr-xs p-3 shadow-2xs space-y-1">
+              <span class="text-[9px] font-bold text-[#8C827A]">👤 العميل</span>
+              <p class="text-xs text-[#1C1917] leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
+              <div class="text-[9px] text-[#A8A199] text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="flex justify-end">
+            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#680E23] to-[#841832] text-white' : 'bg-emerald-50 border border-emerald-200 text-[#1C1917]'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
+              <span class="text-[9px] font-bold ${isHuman ? 'text-rose-200' : 'text-emerald-700'}">${isHuman ? '👨‍💻 أنت (الموظف البشري)' : '🤖 الذكاء الاصطناعي'}</span>
+              <p class="text-xs leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
+              <div class="text-[9px] ${isHuman ? 'text-rose-200' : 'text-[#8C827A]'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+
+    if (scrollToBottom) {
+      stream.scrollTop = stream.scrollHeight;
+    }
+  }
+
+  // ==================== 5-Minute SLA Countdown Watchdog ====================
+  function startSlaTimer(data) {
+    if (slaIntervalId) clearInterval(slaIntervalId);
+
+    const slaTotalSec = data.sla_seconds || 300; // 5 minutes default
+    const startTimeStr = data.claimed_at || data.escalated_at;
+    const startMs = startTimeStr ? new Date(startTimeStr).getTime() : Date.now();
+
+    function tick() {
+      const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
+      const remainingSec = Math.max(0, slaTotalSec - elapsedSec);
+
+      const m = Math.floor(remainingSec / 60);
+      const s = remainingSec % 60;
+      const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+      const textEl = document.getElementById('sla-countdown-text');
+      const boxEl = document.getElementById('sla-timer-container');
+      if (textEl) textEl.textContent = formatted;
+
+      if (boxEl) {
+        if (remainingSec <= 60) {
+          boxEl.className = 'flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-rose-100 text-rose-800 border-rose-300 animate-pulse';
+        } else {
+          boxEl.className = 'flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-white text-amber-900 border-amber-300 shadow-xs';
+        }
+      }
+    }
+
+    tick();
+    slaIntervalId = setInterval(tick, 1000);
+  }
+
+  // ==================== Send Manual Reply ====================
+  async function sendDeskReply(e) {
+    e.preventDefault();
+    if (!currentActivePhone) return;
+
+    const input = document.getElementById('desk-reply-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const btn = document.getElementById('btn-desk-send');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/reply/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        input.value = '';
+        await loadActiveMessages(true);
+      } else {
+        alert('خطأ أثناء إرسال الرسالة: ' + (data.message || ''));
+      }
+    } catch (err) {
+      alert('خطأ في الاتصال: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+</script>
+{% endblock %}

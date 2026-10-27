@@ -8,6 +8,8 @@ import requests
 import jwt
 import asyncio
 import csv
+import datetime
+from django.utils import timezone
 from urllib.parse import urlparse, unquote
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -1870,6 +1872,62 @@ def api_user_call_dial(request):
         return JsonResponse({"status": "error", "message": f"Outbound call initiation failed: {str(e)}"}, status=500)
 
 
+@extend_schema(
+    methods=['POST'],
+    operation_id="initiate_user_webrtc_call",
+    summary="بدء جلسة مكالمة صوتية مباشرة عبر المتصفح (Direct WebRTC Voice Session)",
+    description="توليد جلسة صوتية ذكية مشفرة وتوكن LiveKit للاتصال المباشر بالذكاء الاصطناعي عبر الويب RTC بدون الحاجة لشبكة الهواتف، مع إمكانية تحديد سقف مدة المكالمة وتخصيص رسالة الترحيب وسياق الجلسة.",
+    tags=["09. سجل ومراقبة المكالمات (Calls & CDR)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_call_webrtc(request):
+    """
+    POST /api/v1/calls/webrtc/
+    Initiate a direct WebRTC voice call to the AI agent over LiveKit.
+    Accepts:
+    {
+        "caller_name": "أحمد (عميل موقع)",
+        "caller_phone": "+201099887766",       // optional
+        "profile_id": 1,                      // optional agent profile ID
+        "welcome_message": "أهلاً بك يا فندم",  // optional custom greeting
+        "context": "سياق الديمو أو سلة الشراء", // optional dynamic context
+        "max_duration_seconds": 300           // default: 300s (5 mins)
+    }
+    """
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed. Use POST."}, status=405)
+
+    try:
+        data = request.data if hasattr(request, 'data') and request.data else {}
+        if not data and request.body:
+            data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = {}
+
+    caller_name = data.get('caller_name', '')
+    caller_phone = data.get('caller_phone', '')
+    profile_id = data.get('profile_id')
+    welcome_message = data.get('welcome_message', '')
+    context = data.get('context', '')
+    max_duration_seconds = data.get('max_duration_seconds', 300)
+
+    from telephony.webrtc_service import initiate_webrtc_session
+    res = initiate_webrtc_session(
+        user=request.user,
+        caller_name=caller_name,
+        caller_phone=caller_phone,
+        profile_id=profile_id,
+        welcome_message=welcome_message,
+        context=context,
+        max_duration_seconds=max_duration_seconds
+    )
+    http_status = res.pop('http_status', 201)
+    return JsonResponse(res, status=http_status)
+
+
 # =========================================================================
 # User RESTful Campaigns API (Inngest Powered)
 # =========================================================================
@@ -3446,6 +3504,16 @@ def api_user_whatsapp_conversations(request):
             },
             "messages_count": t['messages_count'],
             "ai_active": ai_active,
+            "needs_human_attention": wm.get("needs_human_attention", False),
+            "conversation_state": wm.get("conversation_state", "AI_ACTIVE" if ai_active else "PENDING_AGENT_REPLY"),
+            "assigned_agent_id": wm.get("assigned_agent_id"),
+            "sla_seconds": wm.get("sla_seconds", 300),
+            "escalation_reason": wm.get("escalation_reason", ""),
+            "escalation_urgency": wm.get("escalation_urgency", ""),
+            "escalation_summary": wm.get("escalation_summary", ""),
+            "escalated_at": wm.get("escalated_at", ""),
+            "claimed_at": wm.get("claimed_at", ""),
+            "resolved_at": wm.get("resolved_at", ""),
             "has_call_history": bool(mem and mem.total_calls_count > 0)
         })
 
@@ -3524,6 +3592,14 @@ def api_user_whatsapp_conversation_reply(request, phone):
 
     mem = CustomerMemory.objects.filter(user=request.user, phone_number=clean_phone).first()
     c_name = mem.customer_name if mem else ""
+    if mem:
+        wm = mem.whatsapp_memory or {}
+        if wm.get("conversation_state") in ("PENDING_AGENT_REPLY", "RINGING_ALL"):
+            wm["conversation_state"] = "ACTIVE_SUPPORT"
+        wm["last_agent_reply_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        wm["sla_breached"] = False
+        mem.whatsapp_memory = wm
+        mem.save()
 
     msg = OmnichannelMessage.objects.create(
         user=request.user,
@@ -3672,6 +3748,238 @@ def api_user_whatsapp_followup(request):
         "status": "success",
         "message": "تم إرسال مهمة المتابعة الذكية عبر الواتساب بنجاح!"
     })
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="escalate_user_whatsapp_conversation",
+    summary="تحويل محادثة واتساب إلى الدعم البشري (Escalate to Human Support)",
+    description="تحويل المحادثة إلى طابور الدعم البشري وإسنادها لأقل موظف انشغالاً أو إنشاء تذكرة دعم في حال عدم توفر موظفين.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_escalate(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/escalate/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    clean_phone = phone.strip()
+    reason = str(data.get("reason") or "طلب دعم بشري / شكوى عبر Developer API").strip()
+    urgency = str(data.get("urgency") or "normal").strip()
+    summary = str(data.get("summary") or "").strip()
+    customer_name = str(data.get("customer_name") or "").strip()
+
+    from crm.services.whatsapp_dispatcher import dispatch_whatsapp_escalation
+    res = dispatch_whatsapp_escalation(
+        user_id=request.user,
+        phone_number=clean_phone,
+        customer_name=customer_name,
+        reason=reason,
+        urgency=urgency,
+        summary=summary
+    )
+
+    ticket_obj = res.get("ticket")
+    ticket_dict = ticket_obj.to_dict() if ticket_obj and hasattr(ticket_obj, 'to_dict') else None
+    resp_data = {
+        "status": res.get("status", "success"),
+        "action": res.get("action", "escalated"),
+        "phone_number": clean_phone,
+        "conversation_state": res.get("conversation_state", "PENDING_AGENT_REPLY"),
+        "assigned_agent_id": res.get("assigned_agent_id"),
+        "ai_auto_reply_enabled": res.get("ai_auto_reply_enabled", False),
+        "ticket_number": res.get("ticket_number"),
+        "ticket": ticket_dict,
+        "is_operating_hours": res.get("is_operating_hours", True),
+        "operating_hours_text": res.get("operating_hours_text", ""),
+        "sla_seconds": res.get("sla_seconds", 300),
+        "escalated_at": res.get("escalated_at")
+    }
+    return JsonResponse(resp_data)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="claim_user_whatsapp_conversation",
+    summary="حجز محادثة واتساب لموظف (Claim Conversation)",
+    description="حجز محادثة محولة للدعم من قبل موظف محدد وتحويل حالتها إلى ACTIVE_SUPPORT وإيقاف الرنين.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_claim(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/claim/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    clean_phone = phone.strip()
+    agent_id = data.get("agent_user_id") or request.user.id
+    try:
+        agent_id = int(agent_id)
+    except (TypeError, ValueError):
+        agent_id = request.user.id
+
+    from crm.services.whatsapp_dispatcher import claim_conversation
+    res = claim_conversation(
+        user_id=request.user,
+        phone_number=clean_phone,
+        agent_user_id=agent_id
+    )
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="release_user_whatsapp_conversation",
+    summary="إفلات محادثة واتساب للطابور (Release Conversation)",
+    description="إعادة إفلات المحادثة المحجوزة إلى طابور الرنين العام ليتسنى لموظف آخر استلامها.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_release(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/release/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    clean_phone = phone.strip()
+    reason = str(data.get("reason") or "Released via Developer API").strip()
+
+    from crm.services.whatsapp_dispatcher import release_conversation_to_pool
+    res = release_conversation_to_pool(
+        user_id=request.user,
+        phone_number=clean_phone,
+        reason=reason
+    )
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['POST'],
+    operation_id="resolve_user_whatsapp_conversation",
+    summary="إنهاء دعم محادثة واستئناف الذكاء الاصطناعي (Resolve & Resume AI)",
+    description="إغلاق تذكرة الدعم البشري للمحادثة، وتحديث الحالة إلى RESOLVED، وإعادة تفعيل الرد الآلي للذكاء الاصطناعي فوراً.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_whatsapp_conversation_resolve(request, phone):
+    """POST /api/v1/whatsapp/conversations/<phone>/resolve/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    clean_phone = phone.strip()
+    notes = str(data.get("resolution_notes") or "").strip()
+    res_status = str(data.get("resolution_status") or "RESOLVED").strip()
+
+    from crm.services.whatsapp_dispatcher import resolve_conversation
+    res = resolve_conversation(
+        user_id=request.user,
+        phone_number=clean_phone,
+        resolution_notes=notes,
+        resolution_status=res_status
+    )
+    return JsonResponse(res)
+
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="list_user_whatsapp_tickets",
+    summary="استعراض تذاكر دعم الواتساب (List WhatsApp Support Tickets)",
+    description="استعراض قائمة تذاكر الدعم الفني المنشأة آلياً أو يدوياً عبر الواتساب مع دعم الفلترة والصفحات.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_tickets(request):
+    """GET /api/v1/whatsapp/tickets/"""
+    from crm.models import CRMSupportTicket
+    qs = CRMSupportTicket.objects.filter(user=request.user)
+
+    status_filter = request.GET.get('status', '').strip()
+    if status_filter:
+        qs = qs.filter(status=status_filter.upper())
+
+    urgency_filter = request.GET.get('urgency', '').strip()
+    if urgency_filter:
+        qs = qs.filter(urgency=urgency_filter.lower())
+
+    phone_filter = request.GET.get('phone', '').strip()
+    if phone_filter:
+        qs = qs.filter(customer_phone__icontains=phone_filter)
+
+    q = request.GET.get('q', '').strip()
+    if q:
+        from django.db.models import Q
+        qs = qs.filter(
+            Q(ticket_number__icontains=q) |
+            Q(customer_name__icontains=q) |
+            Q(customer_phone__icontains=q) |
+            Q(reason__icontains=q)
+        )
+
+    page = int(request.GET.get('page', 1))
+    page_size = min(100, max(1, int(request.GET.get('page_size', 30))))
+    paginator = Paginator(qs, page_size)
+    page_obj = paginator.get_page(page)
+
+    return JsonResponse({
+        "status": "success",
+        "total": paginator.count,
+        "num_pages": paginator.num_pages,
+        "current_page": page,
+        "tickets": [t.to_dict() for t in page_obj]
+    })
+
+
+@extend_schema(
+    methods=['GET'],
+    operation_id="get_user_whatsapp_ticket_detail",
+    summary="تفاصيل تذكرة دعم واتساب (Get WhatsApp Ticket Detail)",
+    description="الاستعلام عن تفاصيل تذكرة دعم فني محددة برقمها المرجعي.",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['GET'])
+@authentication_classes([])
+@user_api_key_required
+def api_user_whatsapp_ticket_detail(request, ticket_number):
+    """GET /api/v1/whatsapp/tickets/<ticket_number>/"""
+    from crm.models import CRMSupportTicket
+    ticket = CRMSupportTicket.objects.filter(user=request.user, ticket_number=ticket_number.strip()).first()
+    if not ticket:
+        return JsonResponse({"status": "error", "message": "تذكرة الدعم غير موجودة"}, status=404)
+
+    return JsonResponse({
+        "status": "success",
+        "ticket": ticket.to_dict()
+    })
+
 
 
 

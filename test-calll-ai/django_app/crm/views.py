@@ -766,6 +766,9 @@ def api_whatsapp_conversations(request):
             "messages_count": t['messages_count'],
             "ai_active": ai_active,
             "needs_human_attention": wm.get("needs_human_attention", False),
+            "conversation_state": wm.get("conversation_state", "AI_ACTIVE" if ai_active else "PENDING_AGENT_REPLY"),
+            "assigned_agent_id": wm.get("assigned_agent_id"),
+            "sla_seconds": wm.get("sla_seconds", 300),
             "escalation_reason": wm.get("escalation_reason", ""),
             "escalation_urgency": wm.get("escalation_urgency", ""),
             "escalation_summary": wm.get("escalation_summary", ""),
@@ -803,6 +806,9 @@ def api_whatsapp_conversation_messages(request, phone_number):
         "profile_pic_url": profile_pic_url,
         "ai_active": wm.get("ai_auto_reply_enabled", True),
         "needs_human_attention": wm.get("needs_human_attention", False),
+        "conversation_state": wm.get("conversation_state", "AI_ACTIVE" if wm.get("ai_auto_reply_enabled", True) else "PENDING_AGENT_REPLY"),
+        "assigned_agent_id": wm.get("assigned_agent_id"),
+        "sla_seconds": wm.get("sla_seconds", 300),
         "escalation_reason": wm.get("escalation_reason", ""),
         "escalation_urgency": wm.get("escalation_urgency", ""),
         "escalation_summary": wm.get("escalation_summary", ""),
@@ -1246,5 +1252,80 @@ def api_whatsapp_message_media(request, message_id):
     response['Accept-Ranges'] = 'bytes'
     response['Cache-Control'] = 'public, max-age=86400'
     return response
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_resolve(request, phone_number):
+    """
+    POST /api/crm/whatsapp/conversations/<path:phone_number>/resolve/
+    Resolves an active support conversation:
+    - Sets conversation_state = 'RESOLVED'
+    - Reactivates AI auto-reply: ai_auto_reply_enabled = True
+    - Saves resolution notes and timestamp in CustomerMemory
+    - Synchronizes any OPEN CRMSupportTicket for this phone to RESOLVED
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    clean_phone = str(phone_number).strip()
+    try:
+        data = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except Exception:
+        data = {}
+
+    notes = data.get("resolution_notes", "")
+    res_status = data.get("resolution_status", "RESOLVED")
+
+    from crm.services.whatsapp_dispatcher import resolve_conversation
+    res = resolve_conversation(
+        user_id=request.user,
+        phone_number=clean_phone,
+        resolution_notes=notes,
+        resolution_status=res_status
+    )
+    return JsonResponse(res)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_claim(request, phone_number):
+    """
+    POST /api/crm/whatsapp/conversations/<path:phone_number>/claim/
+    Claim an escalated WhatsApp conversation from the shared ringing pool.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    clean_phone = str(phone_number).strip()
+    from crm.services.whatsapp_dispatcher import claim_conversation
+    res = claim_conversation(
+        user_id=request.user,
+        phone_number=clean_phone,
+        agent_user_id=request.user.id
+    )
+    return JsonResponse(res)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def api_whatsapp_conversation_release(request, phone_number):
+    """
+    POST /api/crm/whatsapp/conversations/<path:phone_number>/release/
+    Release a claimed conversation back into the shared ringing pool.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    clean_phone = str(phone_number).strip()
+    from crm.services.whatsapp_dispatcher import release_conversation_to_pool
+    res = release_conversation_to_pool(
+        user_id=request.user,
+        phone_number=clean_phone,
+        reason="Agent released back to queue"
+    )
+    return JsonResponse(res)
+
+
 
 

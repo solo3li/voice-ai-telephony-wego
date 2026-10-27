@@ -223,6 +223,30 @@
           </div>
         </div>
 
+        <!-- AI Handoff Brief Banner (if escalated to human support) -->
+        <div id="chat-escalation-banner" class="hidden px-5 py-3 bg-amber-50/95 border-b border-amber-300 text-xs text-[#443D39] shrink-0">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white animate-pulse">⚠️ محول للدعم البشري</span>
+              <span class="font-bold text-[#841832]" id="escalation-reason-text">سبب التصعيد: -</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-lg border border-amber-300" id="escalation-sla-timer">⏱️ مهلة الرد: 120 ثانية</span>
+              <button 
+                type="button" 
+                onclick="resolveCurrentConversation()"
+                class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                title="حل المشكلة وإعادة تفعيل الرد الآلي للذكاء الاصطناعي"
+              >
+                <span>✅ حل المشكلة واستئناف الـ AI</span>
+              </button>
+            </div>
+          </div>
+          <p id="escalation-summary-text" class="text-[11px] text-[#443D39] mt-1.5 bg-white/70 p-2 rounded-lg border border-amber-200 leading-relaxed font-sans">
+            -
+          </p>
+        </div>
+
         <!-- Chat Messages Stream -->
         <div id="chat-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 chat-scroll bg-[#FAF7F2]/30 min-h-0">
           <div class="p-8 text-center text-[#6E645D] text-xs">جارٍ جلب المحادثة...</div>
@@ -470,6 +494,16 @@
       if (data.status === 'success') {
         conversationsData = data.conversations || [];
         document.getElementById('conversations-count').textContent = conversationsData.length;
+
+        // Sound chime alert for incoming unattended escalations
+        const unhandledEscalations = conversationsData.filter(c => c.needs_human_attention || c.conversation_state === 'PENDING_AGENT_REPLY');
+        if (unhandledEscalations.length > 0 && !window._lastEscalationAlerted) {
+          playChimeAlert();
+          window._lastEscalationAlerted = true;
+        } else if (unhandledEscalations.length === 0) {
+          window._lastEscalationAlerted = false;
+        }
+
         renderConversationsList(conversationsData);
       }
     } catch (err) {
@@ -638,6 +672,20 @@
       callBanner.classList.add('hidden');
     }
 
+    // Escalation Banner & AI Handoff Brief
+    const escBanner = document.getElementById('chat-escalation-banner');
+    const escReason = document.getElementById('escalation-reason-text');
+    const escSummary = document.getElementById('escalation-summary-text');
+    if (data.needs_human_attention || data.conversation_state === 'PENDING_AGENT_REPLY' || data.escalation_reason) {
+      if (escBanner) {
+        escBanner.classList.remove('hidden');
+        if (escReason) escReason.textContent = 'سبب التصعيد: ' + (data.escalation_reason || 'طلب دعم بشري / شكوى');
+        if (escSummary) escSummary.textContent = '📌 ملخص الذكاء الاصطناعي: ' + (data.escalation_summary || 'العميل بانتظار استلام الموظف البشري للمحادثة.');
+      }
+    } else {
+      if (escBanner) escBanner.classList.add('hidden');
+    }
+
     // AI Toggle Switch Button
     const btnToggle = document.getElementById('btn-toggle-ai');
     const toggleIcon = document.getElementById('ai-toggle-icon');
@@ -651,6 +699,48 @@
       btnToggle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100';
       toggleIcon.textContent = '⏸️';
       toggleText.textContent = 'وضع الموظف البشري (AI متوقف)';
+    }
+  }
+
+  async function resolveCurrentConversation() {
+    if (!currentActivePhone) return;
+    const notes = prompt('أدخل ملاحظات حل المشكلة (اختياري):', 'تم التعامل مع العميل وحل المشكلة');
+    if (notes === null) return;
+    try {
+      const res = await fetch(`/api/crm/whatsapp/conversations/${encodeURIComponent(currentActivePhone)}/resolve/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolution_notes: notes, resolution_status: 'RESOLVED' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('تم حل المحادثة وإعادة تفعيل الذكاء الاصطناعي بنجاح!');
+        await loadActiveMessages(true);
+        await loadConversationsList(false);
+      } else {
+        alert('تعذر حل المحادثة: ' + (data.message || 'خطأ غير معروف'));
+      }
+    } catch (err) {
+      alert('خطأ في الاتصال: ' + err.message);
+    }
+  }
+
+  function playChimeAlert() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.warn("Audio chime alert error:", e);
     }
   }
 

@@ -87,6 +87,13 @@
       <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">LangGraph</span>
     </a>
 
+    <!-- 6.7. WhatsApp Support Desk (Tier 2 Dedicated Page) -->
+    <a href="{% url 'voice_assistant:whatsapp_desk_page' %}" id="nav-btn-whatsapp-desk" class="nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition text-start {% if active_nav == 'whatsapp_desk' %}bg-white/15 text-white shadow-sm border border-[#D4AF37]/30{% else %}text-[#EADBC8] hover:text-white hover:bg-white/10{% endif %}">
+      <span class="text-base shrink-0">🧑‍💼</span>
+      <span class="nav-text">مكتب دعم واتساب (Tier 2)</span>
+      <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">Live Desk</span>
+    </a>
+
     <!-- 7. Store MCP (Dedicated Page) -->
     <a href="{% url 'voice_assistant:store_page' %}" id="nav-btn-store" class="nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition text-start {% if active_nav == 'store' %}bg-white/15 text-white shadow-sm border border-[#D4AF37]/30{% else %}text-[#EADBC8] hover:text-white hover:bg-white/10{% endif %}">
       <span class="text-base shrink-0">🛍️</span>

@@ -526,38 +526,28 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
                             urgency = str(t_args.get("urgency", "normal"))
                             summary = str(t_args.get("summary", inbound_msg))
 
-                            mem_rec, _ = CustomerMemory.objects.get_or_create(user_id=user_id, phone_number=phone)
-                            wm_rec = mem_rec.whatsapp_memory or {}
-                            wm_rec["ai_auto_reply_enabled"] = False
-                            wm_rec["needs_human_attention"] = True
-                            wm_rec["escalation_reason"] = reason
-                            wm_rec["escalation_urgency"] = urgency
-                            wm_rec["escalation_summary"] = summary
-                            wm_rec["escalated_at"] = datetime.now(timezone.utc).isoformat()
-                            mem_rec.whatsapp_memory = wm_rec
-                            mem_rec.save()
-
-                            # Publish real-time Centrifugo event to dashboard
-                            alert_payload = {
-                                "event": "whatsapp_escalation",
-                                "phone_number": phone,
-                                "customer_name": c_name or mem_rec.customer_name or phone,
-                                "reason": reason,
-                                "urgency": urgency,
-                                "summary": summary,
-                                "escalated_at": wm_rec["escalated_at"]
-                            }
-                            try:
-                                publish_to_centrifugo(f"tenant_{user_id}", alert_payload)
-                                publish_to_centrifugo(f"user_{user_id}", alert_payload)
-                                publish_to_centrifugo(f"whatsapp_{user_id}", alert_payload)
-                            except Exception as cent_err:
-                                logger.warning(f"Failed to publish Centrifugo escalation alert: {cent_err}")
-
-                            t_output = (
-                                "تم تحويل المحادثة بنجاح إلى موظف الدعم البشري وتم إيقاف الرد الآلي للذكاء الاصطناعي لهذه المحادثة. "
-                                "أبلغ العميل الآن بلباقة واعتذار لطيف بأن طلبه تم تحويله لموظف خدمة العملاء وسيتواصل معه مباشرة هنا."
+                            from crm.services.whatsapp_dispatcher import dispatch_whatsapp_escalation
+                            dispatch_res = dispatch_whatsapp_escalation(
+                                user_id=user_id,
+                                phone_number=phone,
+                                customer_name=c_name or phone,
+                                reason=reason,
+                                urgency=urgency,
+                                summary=summary
                             )
+
+                            if dispatch_res.get("status") == "ticket_created":
+                                tck_num = dispatch_res.get("ticket_number")
+                                hours_info = dispatch_res.get("operating_hours_text", "")
+                                t_output = (
+                                    f"تم تسجيل تذكرة دعم للعميل برقم #{tck_num} لأن فريق الدعم البشري غير متاح حالياً ({hours_info}). "
+                                    f"أبلغ العميل بلطف برقم التذكرة وساعات العمل وأخبره أنك مستمر معه لمساعدته في أي استفسار آخر."
+                                )
+                            else:
+                                t_output = (
+                                    "تم تحويل المحادثة بنجاح إلى موظف الدعم البشري المتاح وتم إيقاف الرد الآلي للذكاء الاصطناعي لهذه المحادثة. "
+                                    "أبلغ العميل الآن بلباقة واعتذار لطيف بأن طلبه تم تحويله لموظف خدمة العملاء وسيتواصل معه مباشرة هنا."
+                                )
                         elif t_name in mcp_tool_map:
                             srv_info = mcp_tool_map[t_name]
                             mcp_res = test_mcp_tool_sync(

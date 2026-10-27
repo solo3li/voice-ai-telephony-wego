@@ -24,6 +24,7 @@ urlpatterns = [
     path('clients/<int:client_id>/', views.api_partner_client_detail, name='api_partner_client_detail'),
     path('clients/<int:client_id>/calls/', views.api_partner_client_calls, name='api_partner_client_calls'),
     path('clients/<int:client_id>/calls/dial/', views.api_partner_client_call_dial, name='api_partner_client_calls_dial'),
+    path('clients/<int:client_id>/calls/webrtc/', views.api_partner_client_call_webrtc, name='api_partner_client_calls_webrtc'),
     path('clients/<int:client_id>/calls/hangup/', views.api_partner_client_call_hangup, name='api_partner_client_call_hangup'),
     path('clients/<int:client_id>/calls/<str:call_id>/', views.api_partner_client_call_detail, name='api_partner_client_call_detail'),
 
@@ -90,10 +91,16 @@ urlpatterns = [
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/messages/', views.api_partner_client_whatsapp_conversation_messages, name='api_partner_client_whatsapp_conversation_messages'),
     path('clients/<int:client_id>/whatsapp/messages/<int:message_id>/media/', views.api_partner_client_whatsapp_message_media, name='api_partner_client_whatsapp_message_media'),
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/reply/', views.api_partner_client_whatsapp_conversation_reply, name='api_partner_client_whatsapp_conversation_reply'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/escalate/', views.api_partner_client_whatsapp_conversation_escalate, name='api_partner_client_whatsapp_conversation_escalate'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/claim/', views.api_partner_client_whatsapp_conversation_claim, name='api_partner_client_whatsapp_conversation_claim'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/release/', views.api_partner_client_whatsapp_conversation_release, name='api_partner_client_whatsapp_conversation_release'),
+    path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/resolve/', views.api_partner_client_whatsapp_conversation_resolve, name='api_partner_client_whatsapp_conversation_resolve'),
     path('clients/<int:client_id>/whatsapp/conversations/<str:phone>/toggle-ai/', views.api_partner_client_whatsapp_conversation_toggle_ai, name='api_partner_client_whatsapp_conversation_toggle_ai'),
     path('clients/<int:client_id>/whatsapp/send/', views.api_partner_client_whatsapp_send, name='api_partner_client_whatsapp_send'),
     path('clients/<int:client_id>/whatsapp/followup/', views.api_partner_client_whatsapp_followup, name='api_partner_client_whatsapp_followup'),
     path('clients/<int:client_id>/whatsapp/sync/', views.api_partner_client_whatsapp_sync, name='api_partner_client_whatsapp_sync'),
+    path('clients/<int:client_id>/whatsapp/tickets/', views.api_partner_client_whatsapp_tickets, name='api_partner_client_whatsapp_tickets'),
+    path('clients/<int:client_id>/whatsapp/tickets/<str:ticket_number>/', views.api_partner_client_whatsapp_ticket_detail, name='api_partner_client_whatsapp_ticket_detail'),
 
     # Managed Client Business Hours & Off-Hours Schedule
     path('clients/<int:client_id>/business-hours/', views.api_partner_client_business_hours, name='api_partner_client_business_hours'),

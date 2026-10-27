@@ -1,3 +1,5 @@
+import secrets
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -597,6 +599,200 @@ class DoNotCallEntry(models.Model):
         if len(clean) >= 7:
             q |= Q(phone_number__endswith=clean[-8:])
         return cls.objects.filter(Q(user_id=user_id) | Q(is_global=True)).filter(q).exists()
+
+
+class CRMSupportTicket(models.Model):
+    STATUS_CHOICES = [
+        ('OPEN', 'مفتوحة (Open)'),
+        ('IN_PROGRESS', 'قيد المعالجة (In Progress)'),
+        ('RESOLVED', 'تم الحل (Resolved)'),
+        ('CLOSED', 'مغلقة (Closed)'),
+    ]
+
+    URGENCY_CHOICES = [
+        ('normal', 'عادي (Normal)'),
+        ('urgent', 'عاجل (Urgent)'),
+    ]
+
+    ticket_number = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        verbose_name="رقم التذكرة المرجعي"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='crm_support_tickets',
+        verbose_name="صاحب العمل / الحساب"
+    )
+    customer_phone = models.CharField(
+        max_length=64,
+        db_index=True,
+        verbose_name="رقم هاتف العميل"
+    )
+    customer_name = models.CharField(
+        max_length=150,
+        blank=True,
+        default='',
+        verbose_name="اسم العميل"
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        default='طلب دعم بشري / شكوى',
+        verbose_name="سبب التصعيد"
+    )
+    urgency = models.CharField(
+        max_length=32,
+        choices=URGENCY_CHOICES,
+        default='normal',
+        db_index=True,
+        verbose_name="مستوى الأهمية"
+    )
+    summary = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="ملخص الذكاء الاصطناعي للمشكلة"
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=STATUS_CHOICES,
+        default='OPEN',
+        db_index=True,
+        verbose_name="حالة التذكرة"
+    )
+    operating_hours_snapshot = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="لقطة مواعيد العمل وساعات التشغيل"
+    )
+    assigned_employee = models.ForeignKey(
+        'call_center.EmployeeProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_support_tickets',
+        verbose_name="الموظف المعين"
+    )
+    resolution_notes = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="ملاحظات الحل والإغلاق"
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        verbose_name="تاريخ الإنشاء"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاريخ التحديث"
+    )
+    resolved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاريخ الحل"
+    )
+
+    class Meta:
+        db_table = 'crm_support_ticket'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['user', 'customer_phone']),
+            models.Index(fields=['customer_phone', 'status']),
+        ]
+        verbose_name = "تذكرة دعم فني CRM"
+        verbose_name_plural = "تذاكر الدعم الفني CRM"
+
+    @classmethod
+    def generate_ticket_number(cls) -> str:
+        """
+        Generate unique ticket number formatted as TCK-YYYYMMDD-XXXXXX.
+        Uses 6 random uppercase hex characters (e.g. TCK-20261024-8E4B1F).
+        """
+        date_str = timezone.now().strftime("%Y%m%d")
+        for _ in range(50):
+            suffix = secrets.token_hex(3).upper()
+            candidate = f"TCK-{date_str}-{suffix}"
+            if not cls.objects.filter(ticket_number=candidate).exists():
+                return candidate
+        return f"TCK-{date_str}-{uuid.uuid4().hex[:6].upper()}"
+
+    def save(self, *args, **kwargs):
+        if not self.ticket_number:
+            self.ticket_number = self.generate_ticket_number()
+        if self.status in ('RESOLVED', 'CLOSED') and not self.resolved_at:
+            self.resolved_at = timezone.now()
+        elif self.status in ('OPEN', 'IN_PROGRESS'):
+            self.resolved_at = None
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        display_name = self.customer_name or self.customer_phone
+        return f"تذكرة [{self.ticket_number}] - {display_name} ({self.get_status_display()})"
+
+    @property
+    def reference_code(self) -> str:
+        return self.ticket_number
+
+    @reference_code.setter
+    def reference_code(self, value: str):
+        self.ticket_number = value
+
+    @property
+    def phone_number(self) -> str:
+        return self.customer_phone
+
+    @phone_number.setter
+    def phone_number(self, value: str):
+        self.customer_phone = value
+
+    @property
+    def assigned_agent(self):
+        return self.assigned_employee
+
+    @assigned_agent.setter
+    def assigned_agent(self, value):
+        self.assigned_employee = value
+
+    @property
+    def operating_hours_text(self) -> str:
+        return self.operating_hours_snapshot
+
+    @operating_hours_text.setter
+    def operating_hours_text(self, value: str):
+        self.operating_hours_snapshot = value
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ticket_number": self.ticket_number,
+            "reference_code": self.ticket_number,
+            "user_id": self.user_id,
+            "customer_phone": self.customer_phone,
+            "phone_number": self.customer_phone,
+            "customer_name": self.customer_name,
+            "reason": self.reason,
+            "urgency": self.urgency,
+            "summary": self.summary,
+            "status": self.status,
+            "status_display": self.get_status_display(),
+            "operating_hours_snapshot": self.operating_hours_snapshot,
+            "operating_hours_text": self.operating_hours_snapshot,
+            "assigned_employee_id": self.assigned_employee_id,
+            "assigned_employee_name": self.assigned_employee.display_name if self.assigned_employee else None,
+            "assigned_employee_extension": self.assigned_employee.extension if self.assigned_employee else None,
+            "resolution_notes": self.resolution_notes,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M") if self.created_at else None,
+            "created_at_iso": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M") if self.updated_at else None,
+            "updated_at_iso": self.updated_at.isoformat() if self.updated_at else None,
+            "resolved_at": self.resolved_at.strftime("%Y-%m-%d %H:%M") if self.resolved_at else None,
+            "resolved_at_iso": self.resolved_at.isoformat() if self.resolved_at else None,
+        }
+
 
 
 

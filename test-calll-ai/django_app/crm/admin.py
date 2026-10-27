@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import CustomerMemory, CallSession, UserCampaignLimit, OutboundCampaign, CampaignContact
+from .models import (
+    CustomerMemory,
+    CallSession,
+    UserCampaignLimit,
+    OutboundCampaign,
+    CampaignContact,
+    CRMSupportTicket,
+)
 
 @admin.register(UserCampaignLimit)
 class UserCampaignLimitAdmin(admin.ModelAdmin):
@@ -44,4 +51,29 @@ class CampaignContactAdmin(admin.ModelAdmin):
     list_filter = ('call_status', 'interest_level', 'campaign')
     search_fields = ('customer_name', 'phone_number', 'call_summary', 'campaign__name')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(CRMSupportTicket)
+class CRMSupportTicketAdmin(admin.ModelAdmin):
+    list_display = (
+        'ticket_number',
+        'user',
+        'customer_phone',
+        'customer_name',
+        'urgency',
+        'status',
+        'assigned_employee',
+        'created_at',
+        'resolved_at',
+    )
+    list_filter = ('status', 'urgency', 'created_at', 'user')
+    search_fields = (
+        'ticket_number',
+        'customer_phone',
+        'customer_name',
+        'reason',
+        'summary',
+    )
+    readonly_fields = ('ticket_number', 'created_at', 'updated_at')
+
 

@@ -61,6 +61,7 @@ urlpatterns = [
 
     path('calls/', views.api_user_calls, name='developer_calls'),
     path('calls/dial/', views.api_user_call_dial, name='developer_calls_dial'),
+    path('calls/webrtc/', views.api_user_call_webrtc, name='developer_calls_webrtc'),
     path('calls/hangup/', views.api_user_call_hangup, name='developer_calls_hangup'),
     path('calls/<str:call_id>/', views.api_user_call_detail, name='developer_call_detail'),
     path('webhooks/', views.api_user_webhooks, name='developer_webhooks'),
@@ -88,9 +89,15 @@ urlpatterns = [
     path('whatsapp/conversations/', views.api_user_whatsapp_conversations, name='developer_whatsapp_conversations'),
     path('whatsapp/conversations/<str:phone>/messages/', views.api_user_whatsapp_conversation_messages, name='developer_whatsapp_conversation_messages'),
     path('whatsapp/conversations/<str:phone>/reply/', views.api_user_whatsapp_conversation_reply, name='developer_whatsapp_conversation_reply'),
+    path('whatsapp/conversations/<str:phone>/escalate/', views.api_user_whatsapp_conversation_escalate, name='developer_whatsapp_conversation_escalate'),
+    path('whatsapp/conversations/<str:phone>/claim/', views.api_user_whatsapp_conversation_claim, name='developer_whatsapp_conversation_claim'),
+    path('whatsapp/conversations/<str:phone>/release/', views.api_user_whatsapp_conversation_release, name='developer_whatsapp_conversation_release'),
+    path('whatsapp/conversations/<str:phone>/resolve/', views.api_user_whatsapp_conversation_resolve, name='developer_whatsapp_conversation_resolve'),
     path('whatsapp/conversations/<str:phone>/toggle-ai/', views.api_user_whatsapp_conversation_toggle_ai, name='developer_whatsapp_conversation_toggle_ai'),
     path('whatsapp/send/', views.api_user_whatsapp_send, name='developer_whatsapp_send'),
     path('whatsapp/followup/', views.api_user_whatsapp_followup, name='developer_whatsapp_followup'),
+    path('whatsapp/tickets/', views.api_user_whatsapp_tickets, name='developer_whatsapp_tickets'),
+    path('whatsapp/tickets/<str:ticket_number>/', views.api_user_whatsapp_ticket_detail, name='developer_whatsapp_ticket_detail'),
 
     # Business Hours & Off-Hours Schedule
     path('business-hours/', views.api_user_business_hours, name='developer_business_hours'),

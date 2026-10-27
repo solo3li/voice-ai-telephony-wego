@@ -81,6 +81,7 @@ async function loadHeaderBalance() {
 
 // Centrifugo Real-Time Connection
 let globalCentrifugeClient = null;
+window.globalCentrifugeClient = null;
 
 async function initGlobalCentrifugo() {
   const statusEl = document.getElementById('centrifugo-status');
@@ -91,6 +92,7 @@ async function initGlobalCentrifugo() {
       globalCentrifugeClient = new Centrifuge(data.centrifugo_ws_url, {
         token: data.centrifugo_token
       });
+      window.globalCentrifugeClient = globalCentrifugeClient;
 
       globalCentrifugeClient.on('connecting', function() {
         if (statusEl) {

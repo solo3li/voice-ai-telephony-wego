@@ -911,6 +911,18 @@ def whatsapp_page_view(request):
 
 
 @login_required
+def whatsapp_desk_page_view(request):
+    """Render dedicated Tier 2 WhatsApp Human Support Desk."""
+    context = {
+        'page_title': 'مكتب دعم عملاء الواتساب (الدعم البشري)',
+        'page_icon': '🎧',
+        'active_nav': 'whatsapp_desk',
+    }
+    return render(request, 'voice_assistant/pages/whatsapp_desk.html', context)
+
+
+
+@login_required
 def rag_page_view(request):
     """Render dedicated Knowledge Base RAG page."""
     context = {

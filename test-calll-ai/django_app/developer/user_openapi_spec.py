@@ -940,6 +940,61 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                 }
             }
         },
+        "/calls/webrtc/": {
+            "post": {
+                "tags": [tag_map["tag_cdr"]],
+                "summary": "بدء جلسة مكالمة صوتية مباشرة عبر المتصفح (Direct WebRTC Voice Session)" if is_ar else "Initiate Direct WebRTC Voice Session",
+                "description": (
+                    "توليد جلسة صوتية ذكية مشفرة وتوكن LiveKit للاتصال المباشر بالذكاء الاصطناعي عبر الويب RTC بدون الحاجة لشبكة الهواتف، مع إمكانية تحديد سقف مدة المكالمة وتخصيص رسالة الترحيب وسياق الجلسة."
+                    if is_ar else
+                    "Generates an authenticated LiveKit WebRTC room session and scoped AccessToken to talk directly with the AI voice assistant via browser WebRTC without PSTN/telephony routing."
+                ),
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "caller_name": {"type": "string", "example": "أحمد (عميل موقع)", "description": "اسم المتصل المعروض في لوحة التحكم"},
+                                    "caller_phone": {"type": "string", "example": "+201099887766", "description": "رقم هاتف العميل أو معرفه لربط الذاكرة وسجل CRM"},
+                                    "profile_id": {"type": "integer", "example": 1, "description": "معرف شخصية الذكاء الاصطناعي (AgentProfile ID) المراد التحدث معها"},
+                                    "welcome_message": {"type": "string", "example": "أهلاً بك في متجرنا! كيف يمكنني مساعدتك اليوم؟", "description": "رسالة ترحيب مخصصة تُنطق فور فتح الخط"},
+                                    "context": {"type": "string", "example": "العميل في صفحة سلة المشتريات ولديه 3 منتجات", "description": "سياق إضافي يُحقن في تعليمات الإيجنت لهذه الجلسة فقط"},
+                                    "max_duration_seconds": {"type": "integer", "default": 300, "example": 300, "description": "سقف مدة المكالمة بالثواني (افتراضي: 300 ثانية / 5 دقائق)"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء جلسة الـ WebRTC بنجاح" if is_ar else "WebRTC session initiated successfully",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "success",
+                                    "call_id": 483,
+                                    "room_name": "room_webrtc_dev_1_ab12cd34",
+                                    "livekit_url": "wss://livekit.169.58.32.179.nip.io",
+                                    "livekit_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                                    "max_duration_seconds": 300,
+                                    "expires_in": 300,
+                                    "agent_profile": {
+                                        "id": 1,
+                                        "name": "نورهان - خدمة عملاء",
+                                        "voice": "Aoede",
+                                        "dialect": "egyptian"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "402": {"description": "رصيد المحفظة غير كافٍ لبدء الجلسة الصوتية" if is_ar else "Insufficient wallet balance"},
+                    "404": {"description": "شخصية الذكاء الاصطناعي المحددة غير موجودة" if is_ar else "Agent profile not found"}
+                }
+            }
+        },
         "/calls/hangup/": {
             "post": {
                 "tags": [tag_map["tag_cdr"]],
@@ -1667,6 +1722,101 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                     }
                 },
                 "responses": {"200": {"description": "تم إرسال رسالة المتابعة بنجاح" if is_ar else "Followup message sent successfully"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/escalate/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تحويل المحادثة إلى الدعم البشري (Escalate to Human Support)" if is_ar else "Escalate Conversation to Human Support",
+                "description": "تحويل المحادثة إلى طابور الدعم البشري وإسنادها لموظف متاح أو إنشاء تذكرة دعم في حال عدم التوفر." if is_ar else "Escalate chat to online human agent queue or generate CRM support ticket.",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "reason": "طلب العميل التحدث مع موظف بشري بخصوص استرجاع منتج",
+                                "urgency": "urgent",
+                                "summary": "العميل استلم منتج تالف ويرغب في التبديل فوراً."
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم تحويل المحادثة بنجاح" if is_ar else "Conversation escalated successfully"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/claim/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "حجز المحادثة المحولة لموظف (Claim Conversation)" if is_ar else "Claim Escalated Conversation",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {"agent_user_id": 5}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم حجز المحادثة بنجاح" if is_ar else "Conversation claimed successfully"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/release/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إعادة إفلات المحادثة للطابور العام (Release Conversation)" if is_ar else "Release Conversation to Queue",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {"reason": "الموظف غير متاح حالياً"}
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إفلات المحادثة للطابور بنجاح" if is_ar else "Conversation released successfully"}}
+            }
+        },
+        "/whatsapp/conversations/{phone}/resolve/": {
+            "post": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "إنهاء الدعم واستئناف الذكاء الاصطناعي (Resolve & Resume AI)" if is_ar else "Resolve Support & Resume AI",
+                "description": "إغلاق التذكرة وتحديث حالة المحادثة إلى RESOLVED وإعادة تفعيل الرد الآلي للذكاء الاصطناعي." if is_ar else "Mark conversation resolved and reactivate AI auto-replies.",
+                "parameters": [{"name": "phone", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "resolution_notes": "تم حل مشكلة العميل وإرسال بوليصة الاسترجاع بنجاح.",
+                                "resolution_status": "RESOLVED"
+                            }
+                        }
+                    }
+                },
+                "responses": {"200": {"description": "تم إنهاء الدعم واستئناف الذكاء الاصطناعي بنجاح" if is_ar else "Resolved successfully"}}
+            }
+        },
+        "/whatsapp/tickets/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "استعراض تذاكر دعم الواتساب (List WhatsApp Support Tickets)" if is_ar else "List WhatsApp Support Tickets",
+                "description": "استعراض تذاكر الدعم الفني المنشأة آلياً أو يدوياً عبر الواتساب مع دعم الفلاتر والصفحات." if is_ar else "List all CRM support tickets created from WhatsApp escalations.",
+                "parameters": [
+                    {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]}},
+                    {"name": "urgency", "in": "query", "schema": {"type": "string", "enum": ["normal", "urgent"]}},
+                    {"name": "phone", "in": "query", "schema": {"type": "string"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}}
+                ],
+                "responses": {"200": {"description": "قائمة تذاكر الدعم" if is_ar else "Support tickets list"}}
+            }
+        },
+        "/whatsapp/tickets/{ticket_number}/": {
+            "get": {
+                "tags": [tag_map["tag_whatsapp"]],
+                "summary": "تفاصيل تذكرة دعم واتساب (Get WhatsApp Ticket Detail)" if is_ar else "Get WhatsApp Ticket Detail",
+                "parameters": [{"name": "ticket_number", "in": "path", "required": True, "schema": {"type": "string"}}],
+                "responses": {"200": {"description": "تفاصيل التذكرة" if is_ar else "Ticket detail"}}
             }
         },
     }
