@@ -357,6 +357,8 @@ def run_tests():
     )
 
     client_user, _ = User.objects.get_or_create(username="partner_client_usr", defaults={"email": "client@partner.com"})
+    TenantCustomRole.objects.filter(user=client_user).delete()
+    AgentProfile.objects.filter(user=client_user).delete()
     PartnerClientRelationship.objects.get_or_create(
         partner=partner_prof,
         client=client_user,
