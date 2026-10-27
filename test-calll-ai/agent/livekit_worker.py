@@ -44,6 +44,8 @@ from agent.config import (
 from agent.clients.centrifugo_client import notify_centrifugo_async
 from agent.clients.django_client import (
     fetch_agent_bootstrap_async,
+    get_room_bootstrap_from_redis,
+    push_call_finish_to_redis_stream,
     parse_mcp_servers_from_bootstrap,
     parse_customer_memory_from_bootstrap,
     parse_active_profile_from_bootstrap,
@@ -57,6 +59,35 @@ from agent.prompts import build_dynamic_system_instruction, generate_welcome_gre
 from agent.transfer.transfer_bot import execute_ai_transfer_and_hold
 from agent.queue_manager import run_queue_session
 from agent.session.memory import distill_and_update_memory
+
+
+async def _run_background_distillation(
+    user_id: int,
+    room_name: str,
+    started_at: float,
+    messages: list,
+    current_profile: dict,
+    caller_phone: str,
+    outbound_context: Optional[dict],
+    api_key: Optional[str],
+    duration: float,
+):
+    """Run memory distillation in a detached background task without delaying room termination."""
+    try:
+        await distill_and_update_memory(
+            user_id=user_id,
+            room_name=room_name,
+            started_at=started_at,
+            messages=messages,
+            current_profile=current_profile,
+            caller_phone=caller_phone,
+            genai_client=None,
+            outbound_context=outbound_context,
+            api_key=api_key,
+        )
+        logger.info(f"[LiveKit Agent Background Distill] Completed memory distillation for room '{room_name}'")
+    except Exception as dist_err:
+        logger.warning(f"[LiveKit Agent Background Distill Note] Distillation note for '{room_name}': {dist_err}")
 
 
 async def entrypoint(ctx: JobContext):
@@ -143,20 +174,32 @@ async def entrypoint(ctx: JobContext):
         "جاري تهيئة المساعدة الصوتية وتجهيز قاعدة المستندات والإجراءات عبر LiveKit Agents...",
     )
 
-    # 3. Fetch unified Bootstrap bundle from Django
+    # 3. Fetch unified Bootstrap bundle (Redis Fast Read <1ms with HTTP fallback)
     bootstrap: Dict[str, Any] = {}
-    try:
-        bootstrap = await fetch_agent_bootstrap_async(
-            user_id=user_id,
-            caller_phone=caller_phone,
-            room_name=room_name,
-            caller_extension=caller_ext or ""
-        )
-        if not user_id and bootstrap.get("user_id"):
-            user_id = bootstrap.get("user_id")
-            logger.info(f"[LiveKit Agent] Auto-resolved user_id={user_id} from Django bootstrap for room '{room_name}'")
-    except Exception as err:
-        logger.error(f"Failed to fetch agent bootstrap for room '{room_name}': {err}")
+    if room_name:
+        try:
+            redis_boot = await get_room_bootstrap_from_redis(room_name)
+            if redis_boot and isinstance(redis_boot, dict) and redis_boot.get("status") == "success":
+                bootstrap = redis_boot
+                logger.info(f"[LiveKit Agent] Sub-millisecond bootstrap hit from Redis for room '{room_name}' (<1ms)")
+        except Exception as r_err:
+            logger.debug(f"[LiveKit Agent] Redis fast bootstrap check note: {r_err}")
+
+    if not bootstrap:
+        try:
+            logger.info(f"[LiveKit Agent] Fetching bootstrap via HTTP fallback for room '{room_name}'")
+            bootstrap = await fetch_agent_bootstrap_async(
+                user_id=user_id,
+                caller_phone=caller_phone,
+                room_name=room_name,
+                caller_extension=caller_ext or ""
+            )
+        except Exception as err:
+            logger.error(f"Failed to fetch agent bootstrap for room '{room_name}': {err}")
+
+    if not user_id and bootstrap.get("user_id"):
+        user_id = bootstrap.get("user_id")
+        logger.info(f"[LiveKit Agent] Auto-resolved user_id={user_id} from bootstrap for room '{room_name}'")
 
     # Resolve active Gemini API key: prioritize Django SystemSetting from bootstrap, fallback to .env
     active_api_key = (bootstrap.get("gemini_api_key") or "").strip() or GEMINI_API_KEY
@@ -647,7 +690,7 @@ async def entrypoint(ctx: JobContext):
 
     watchdog_task = asyncio.create_task(silent_drop_watchdog())
 
-    # 9. Register Call Cleanup & Memory Distillation Callback
+    # 9. Register Zero-Latency Call Cleanup & Stream Persistence Callback
     async def cleanup_and_distill():
         nonlocal call_active
         call_active = False
@@ -661,37 +704,61 @@ async def entrypoint(ctx: JobContext):
                 {"speaker": "user" if item.get("role") == "user" else "assistant", "text": item.get("text", "")}
                 for item in conversation_history
             ]
+            lines = [f"{m['speaker']}: {m['text']}" for m in dialogue_messages]
+            transcript_text = "\n".join(lines)
+            basic_summary = f"مكالمة صوتية مكتملة ({len(dialogue_messages)} ردود، المدة: {int(duration)} ثانية)." if dialogue_messages else "لم يرد العميل على المكالمة أو تم إغلاقها فوراً."
+            current_profile = dict(memory_data.get("permanent_profile") or memory_data.get("card_data") or {})
+
+            payload = {
+                "user_id": user_id,
+                "room_name": room_name,
+                "started_at": call_start_time,
+                "duration_seconds": int(duration),
+                "caller_phone": caller_phone,
+                "caller_extension": caller_ext or "",
+                "destination_phone": (destination_phone or caller_phone) if is_outbound_ai else "",
+                "direction": "outbound_ai" if is_outbound_ai else ("internal_test" if bootstrap.get("is_internal_test") else "inbound"),
+                "call_goal": call_goal if is_outbound_ai else "",
+                "transcript_text": transcript_text,
+                "summary": basic_summary,
+                "permanent_profile": current_profile,
+                "messages": dialogue_messages,
+            }
+
+            # Zero-latency persistence: XADD to call_finish_stream (<1ms)
             try:
-                await asyncio.wait_for(
-                    distill_and_update_memory(
+                stream_id = await push_call_finish_to_redis_stream(payload)
+                if not stream_id:
+                    logger.warning(f"[LiveKit Agent] Stream push failed, falling back to HTTP complete-call for '{room_name}'")
+                    await save_call_session_and_update_memory_async(
+                        user_id=user_id,
+                        room_name=room_name,
+                        started_at=call_start_time,
+                        transcript_text=transcript_text,
+                        summary=basic_summary,
+                        updated_profile=current_profile,
+                        caller_phone=caller_phone,
+                        outbound_context=outbound_context,
+                        duration_seconds=int(duration),
+                    )
+            except Exception as stream_err:
+                logger.error(f"[LiveKit Agent] Error offloading call finish to Redis Stream: {stream_err}")
+
+            # Fire-and-forget background distillation if turns exist without delaying room termination
+            if len(dialogue_messages) >= 2:
+                asyncio.create_task(
+                    _run_background_distillation(
                         user_id=user_id,
                         room_name=room_name,
                         started_at=call_start_time,
                         messages=dialogue_messages,
-                        current_profile=dict(memory_data.get("permanent_profile") or memory_data.get("card_data") or {}),
+                        current_profile=current_profile,
                         caller_phone=caller_phone,
-                        genai_client=None,
                         outbound_context=outbound_context,
                         api_key=active_api_key,
-                    ),
-                    timeout=6.0,
+                        duration=duration,
+                    )
                 )
-            except asyncio.TimeoutError:
-                logger.warning(f"[LiveKit Agent] Memory distillation timed out for room '{room_name}'. Saving basic session in Django...")
-                lines = [f"{m['speaker']}: {m['text']}" for m in dialogue_messages]
-                await save_call_session_and_update_memory_async(
-                    user_id=user_id,
-                    room_name=room_name,
-                    started_at=call_start_time,
-                    transcript_text="\n".join(lines),
-                    summary=f"مكالمة صوتية مكتملة ({len(dialogue_messages)} ردود، المدة: {int(duration)} ثانية).",
-                    updated_profile=dict(memory_data.get("permanent_profile") or memory_data.get("card_data") or {}),
-                    caller_phone=caller_phone,
-                    outbound_context=outbound_context,
-                    duration_seconds=int(duration),
-                )
-            except Exception as dist_err:
-                logger.error(f"[LiveKit Agent] Error finalizing call memory for room '{room_name}': {dist_err}")
 
     ctx.add_shutdown_callback(cleanup_and_distill)
 

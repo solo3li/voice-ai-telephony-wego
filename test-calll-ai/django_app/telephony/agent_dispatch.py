@@ -58,6 +58,22 @@ def dispatch_agent_to_room(room_name: str, payload: Dict[str, Any]) -> bool:
             r.set(f"agent_room:{clean}", room_name, ex=7200)
         # Always cache full job metadata for worker fallback lookups
         r.set(f"room_job_meta:{room_name}", json.dumps(payload, ensure_ascii=False), ex=3600)
+
+        # Assemble and inject Just-In-Time Room Bootstrap into Redis (<1ms fast read for agent)
+        try:
+            from agents.bootstrap_service import assemble_agent_bootstrap_data, inject_room_bootstrap_to_redis
+            bundle = assemble_agent_bootstrap_data(
+                user_id=payload.get("user_id"),
+                caller_phone=payload.get("caller_phone") or payload.get("destination_phone"),
+                caller_extension=payload.get("caller_extension") or payload.get("extension"),
+                room_name=room_name,
+                wazo_context=payload.get("wazo_context") or payload.get("context"),
+            )
+            if bundle and bundle.get("status") == "success":
+                inject_room_bootstrap_to_redis(room_name, bundle, ttl=600)
+                logger.info(f"[DISPATCH] JIT pre-cached room_bootstrap for room '{room_name}' (user #{bundle.get('user_id')})")
+        except Exception as boot_err:
+            logger.warning(f"[DISPATCH] Could not pre-cache room_bootstrap for '{room_name}': {boot_err}")
     except Exception as redis_ex:
         logger.error(f"[DISPATCH] Redis setup failed: {redis_ex}")
 

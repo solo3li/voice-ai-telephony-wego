@@ -649,7 +649,7 @@ def api_internal_agent_bootstrap(request):
     """
     Consolidated internal bootstrap API for AI Voice Agent session.
     Fetches active profile, custom HTTP actions, MCP servers, and customer memory in a single fast call.
-    Accepts: { user_id: int }
+    Accepts: { user_id: int, caller_phone: str, room_name: str, caller_extension: str, wazo_context: str }
     """
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
@@ -662,169 +662,27 @@ def api_internal_agent_bootstrap(request):
         user_id = data.get('user_id')
         wazo_ctx = data.get('wazo_context') or data.get('context')
         caller_ext = data.get('caller_extension') or data.get('extension')
+        caller_phone = data.get('caller_phone')
         room_name = data.get('room_name')
 
-        is_internal_test = False
+        from agents.bootstrap_service import assemble_agent_bootstrap_data, inject_room_bootstrap_to_redis
+        res = assemble_agent_bootstrap_data(
+            user_id=user_id,
+            caller_phone=caller_phone,
+            caller_extension=caller_ext,
+            room_name=room_name,
+            wazo_context=wazo_ctx,
+        )
+
+        if res.get("status") == "error":
+            http_status = 404 if "not found" in res.get("message", "") else 400
+            return JsonResponse(res, status=http_status)
+
+        # Cache in Redis key room_bootstrap:{room_name} if room_name provided (<1ms future hits)
         if room_name:
-            try:
-                import redis
-                r = redis.Redis.from_url(settings.REDIS_URL)
-                is_internal_test = bool(r.get(f"is_internal_test:{room_name}"))
-                if not caller_ext:
-                    c_ext = r.get(f"caller_ext:{room_name}")
-                    if c_ext:
-                        caller_ext = c_ext.decode() if isinstance(c_ext, bytes) else str(c_ext)
-            except Exception:
-                pass
+            inject_room_bootstrap_to_redis(room_name, res, ttl=600)
 
-        if not caller_ext and room_name and "__" in room_name:
-            try:
-                cand = room_name.split("__", 1)[1].split("_")[0]
-                if cand:
-                    caller_ext = cand
-            except Exception:
-                pass
-
-        if not user_id and (wazo_ctx or caller_ext):
-            from telephony.models import resolve_tenant_from_context_and_ext
-            tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_ctx, caller_ext)
-            if tenant_u:
-                user_id = tenant_u.id
-                is_internal_test = True
-
-        if not user_id:
-            return JsonResponse({"status": "error", "message": "user_id is required"}, status=400)
-        user = User.objects.filter(id=user_id).first()
-        if not user:
-            return JsonResponse({"status": "error", "message": f"User #{user_id} not found"}, status=404)
-
-        # 1. Agent Profile
-        profile = AgentProfile.objects.filter(user=user, is_active=True).first()
-        profile_data = profile.to_dict() if profile else {
-            "name": "البروفايل الافتراضي",
-            "voice_name": "Aoede",
-            "gender": "female",
-            "dialect": "egyptian",
-            "persona_role": "customer_support",
-            "speaking_style": "friendly",
-            "welcome_message": "",
-            "is_welcome_message_enabled": True,
-            "custom_instructions": "",
-            "off_topic_response": "",
-            "is_active": True
-        }
-
-        # 2. External FastMCP Servers
-        mcp_servers = UserMCPServer.objects.filter(user=user, is_active=True)
-        mcp_list = [s.to_dict() for s in mcp_servers]
-
-        # 2.1 Inherit Partner Shared MCP Server if user is a sub-client
-        partner_info = None
-        try:
-            from partners.models import PartnerClientRelationship
-            partner_rel = PartnerClientRelationship.objects.select_related('partner').filter(
-                client=user,
-                partner__status='approved'
-            ).first()
-            if partner_rel and partner_rel.partner:
-                partner = partner_rel.partner
-                partner_info = {
-                    "partner_id": partner.id,
-                    "partner_code": partner.partner_code,
-                    "custom_rate": float(partner.custom_rate_per_minute),
-                    "client_id": user.id,
-                    "external_reference": partner_rel.external_reference,
-                }
-                if partner.shared_mcp_server and partner.shared_mcp_server.is_active:
-                    shared_dict = partner.shared_mcp_server.to_dict()
-                    shared_dict['is_partner_inherited'] = True
-                    shared_dict['client_id'] = user.id
-                    if not any(s['id'] == shared_dict['id'] for s in mcp_list):
-                        mcp_list.append(shared_dict)
-        except Exception:
-            pass
-
-        # 3. Customer Memory (Lazy import to avoid circular dependency)
-        from crm.models import CustomerMemory
-        from django.db.models import Q
-        caller_phone = str(data.get('caller_phone') or 'web_dashboard').strip()
-        caller_ext = str(data.get('caller_extension') or '').strip()
-
-        # Resolve employee phone number if calling from internal extension/SIP
-        if caller_ext or caller_phone.startswith('emp'):
-            try:
-                from call_center.models import EmployeeProfile
-                ext_q = caller_ext or caller_phone.replace('emp', '')
-                emp_obj = EmployeeProfile.objects.filter(Q(extension=ext_q) | Q(sip_username__icontains=caller_phone)).first()
-                if emp_obj and emp_obj.phone_number:
-                    caller_phone = emp_obj.phone_number
-            except Exception:
-                pass
-
-        # Use fixed default test phone for web dashboard sessions
-        if caller_phone == 'web_dashboard':
-            caller_phone = '+201000000000'
-
-        memory = CustomerMemory.objects.filter(user=user, phone_number=caller_phone).first()
-        if not memory and len(caller_phone) >= 7:
-            clean_digits = re.sub(r'\D', '', caller_phone)
-            suffix = clean_digits[-8:] if len(clean_digits) >= 8 else caller_phone[-8:]
-            memory = CustomerMemory.objects.filter(user=user, phone_number__endswith=suffix).first()
-
-        memory_data = memory.to_dict() if memory else {
-            "phone_number": caller_phone,
-            "customer_name": "",
-            "permanent_profile": {},
-            "card_data": {},
-            "last_interaction_summary": "",
-            "card_text": "",
-            "total_calls_count": 0
-        }
-
-        # 4. Active Call Queues for this tenant/user
-        from call_center.models import CallQueue
-        queues = CallQueue.objects.filter(user=user, is_active=True).order_by('code')
-        queues_list = [
-            {
-                "id": q.id,
-                "name": q.name,
-                "code": q.code,
-                "description": q.description or "",
-                "strategy": q.strategy,
-                "ring_timeout_seconds": q.ring_timeout_seconds,
-                "total_timeout_seconds": q.total_timeout_seconds,
-                "members_count": q.memberships.filter(is_active=True).count()
-            }
-            for q in queues
-        ]
-
-        # 5. Structured Live Context (Cached in Redis)
-        from agents.live_context_service import get_user_live_context_cached, format_live_context_for_prompt
-        live_ctx_data = get_user_live_context_cached(user.id)
-
-        # 6. Knowledge Documents Manifest (titles of indexed documents)
-        knowledge_manifest = []
-        try:
-            from knowledge.models import Document
-            docs = Document.objects.filter(user=user, status='ready').values('id', 'title')[:15]
-            knowledge_manifest = [{"id": d["id"], "title": d["title"]} for d in docs]
-        except Exception as k_err:
-            logger.warning(f"Error loading knowledge manifest for user {user.id}: {k_err}")
-
-        return JsonResponse({
-            "status": "success",
-            "user_id": user.id,
-            "gemini_api_key": SystemSetting.get_gemini_api_key(),
-            "profile": profile_data,
-            "mcp_servers": mcp_list,
-            "customer_memory": memory_data,
-            "partner_info": partner_info,
-            "call_queues": queues_list,
-            "live_context": live_ctx_data,
-            "knowledge_manifest": knowledge_manifest,
-            "is_internal_test": is_internal_test,
-            "caller_extension": caller_ext or ""
-        })
+        return JsonResponse(res)
 
     except Exception as e:
         logger.error(f"Error in api_internal_agent_bootstrap: {e}", exc_info=True)

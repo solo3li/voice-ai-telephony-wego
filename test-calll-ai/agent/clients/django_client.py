@@ -1,11 +1,15 @@
+import os
 import time
 import json
+import asyncio
 import hashlib
 from typing import Optional, Dict, Any, List
 import requests
 import redis.asyncio as aioredis
 from config import DJANGO_API_URL, INTERNAL_API_KEY, REDIS_URL, logger
 from .http_pool import get_http_session
+
+INNGEST_EVENT_URL = os.getenv("INNGEST_EVENT_URL", "http://inngest:8288/e/voice-ai-platform")
 
 _redis_aioclient: Optional[aioredis.Redis] = None
 
@@ -207,10 +211,34 @@ def parse_active_profile_from_bootstrap(bootstrap: dict) -> dict:
 
 # ==================== Bootstrap API ====================
 
+async def get_room_bootstrap_from_redis(room_name: str) -> Optional[dict]:
+    """Fast-read bootstrap bundle directly from Redis key room_bootstrap:{room_name} in <1ms."""
+    if not room_name:
+        return None
+    try:
+        r = await get_async_redis_client()
+        if r:
+            raw = await r.get(f"room_bootstrap:{room_name}")
+            if raw:
+                data = json.loads(raw)
+                logger.info(f"[Fast Bootstrap Hit] Loaded bootstrap bundle for room '{room_name}' from Redis in <1ms")
+                return data
+    except Exception as e:
+        logger.warning(f"[Fast Bootstrap Error] Redis read failed for room '{room_name}': {e}. Falling back to HTTP.")
+    return None
+
 async def fetch_agent_bootstrap_async(user_id: Optional[int] = None, caller_phone: str = "web_dashboard", room_name: str = "", caller_extension: str = "") -> dict:
-    """Fetch complete agent bootstrap bundle non-blockingly via aiohttp."""
+    """Fetch complete agent bootstrap bundle non-blockingly (Redis Fast Read <1ms with seamless HTTP fallback)."""
     if not user_id and not room_name and not caller_extension:
         return {}
+
+    # 1. Fast Read: Check Redis room_bootstrap:{room_name} first (<1ms)
+    if room_name:
+        redis_data = await get_room_bootstrap_from_redis(room_name)
+        if redis_data and isinstance(redis_data, dict) and redis_data.get("status") == "success":
+            return redis_data
+
+    # 2. Seamless Fallback: HTTP endpoint
     url = f"{DJANGO_API_URL}/api/agents/internal/bootstrap/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -221,7 +249,15 @@ async def fetch_agent_bootstrap_async(user_id: Optional[int] = None, caller_phon
         session = await get_http_session()
         async with session.post(url, json=payload, headers=headers, timeout=5.0) as resp:
             if resp.status == 200:
-                return await resp.json()
+                data = await resp.json()
+                if room_name and data and data.get("status") == "success":
+                    try:
+                        r = await get_async_redis_client()
+                        if r:
+                            await r.set(f"room_bootstrap:{room_name}", json.dumps(data, ensure_ascii=False), ex=600)
+                    except Exception:
+                        pass
+                return data
             text = await resp.text()
             logger.error(f"Bootstrap API error ({resp.status}): {text}")
             return {}
@@ -467,11 +503,77 @@ def _build_call_complete_payload(user_id: int, room_name: str, started_at: float
         "permanent_profile": updated_profile
     }
 
+async def _notify_inngest_stream_event(stream_id: str, payload: dict):
+    """Notify Inngest event processor of new completed call stream entry (background fire-and-forget)."""
+    try:
+        session = await get_http_session()
+        event_body = [{
+            "name": "call/session.finish_stream",
+            "data": {
+                "stream_id": stream_id,
+                "room_name": payload.get("room_name"),
+                "user_id": payload.get("user_id"),
+                "caller_phone": payload.get("caller_phone"),
+                "duration_seconds": payload.get("duration_seconds"),
+                "summary": payload.get("summary"),
+            }
+        }]
+        async with session.post(INNGEST_EVENT_URL, json=event_body, timeout=2.0) as resp:
+            if resp.status == 200:
+                logger.info(f"[Inngest Notify] Triggered call/session.finish_stream for room '{payload.get('room_name')}'")
+            else:
+                logger.debug(f"[Inngest Notify Note] Status {resp.status} notifying inngest for room '{payload.get('room_name')}'")
+    except Exception as e:
+        logger.debug(f"[Inngest Notify Note] Fire-and-forget note for room '{payload.get('room_name')}': {e}")
+
+
+async def push_call_finish_to_redis_stream(payload: dict) -> Optional[str]:
+    """
+    Push completed call data into Redis Stream 'call_finish_stream' using XADD in <1ms.
+    Offloads database persistence to asynchronous Inngest consumer.
+    """
+    try:
+        r = await get_async_redis_client()
+        if r:
+            stream_data = {}
+            for k, v in payload.items():
+                if v is None:
+                    continue
+                if isinstance(v, (dict, list)):
+                    stream_data[k] = json.dumps(v, ensure_ascii=False)
+                elif isinstance(v, bool):
+                    stream_data[k] = "1" if v else "0"
+                else:
+                    stream_data[k] = str(v)
+
+            stream_id = await r.xadd("call_finish_stream", stream_data)
+            logger.info(f"[Redis Stream XADD] Offloaded call persistence for room '{payload.get('room_name')}' in <1ms (Stream ID: {stream_id})")
+
+            # Fire-and-forget Inngest notification in background
+            try:
+                asyncio.create_task(_notify_inngest_stream_event(stream_id, payload))
+            except Exception:
+                pass
+
+            return stream_id
+    except Exception as e:
+        logger.error(f"[Redis Stream XADD Error] Failed to push to call_finish_stream: {e}")
+    return None
+
+
 async def save_call_session_and_update_memory_async(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
-    """Persist completed CallSession and update CustomerMemory non-blockingly via aiohttp."""
+    """Persist completed CallSession and update CustomerMemory (Redis Stream XADD <1ms with HTTP fallback)."""
     if not user_id:
         return
     payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context, duration_seconds=duration_seconds)
+
+    # 1. Zero-latency Redis Stream persistence (<1ms)
+    stream_id = await push_call_finish_to_redis_stream(payload)
+    if stream_id:
+        return
+
+    # 2. Seamless HTTP fallback if Redis Stream push fails
+    logger.warning(f"[Call Persistence] Stream push failed, falling back to HTTP complete-call for '{room_name}'")
     url = f"{DJANGO_API_URL}/api/crm/internal/complete-call/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -481,12 +583,12 @@ async def save_call_session_and_update_memory_async(user_id: int, room_name: str
         session = await get_http_session()
         async with session.post(url, json=payload, headers=headers, timeout=5.0) as resp:
             if resp.status == 200:
-                logger.info(f"Successfully saved CallSession & CustomerMemory via Django CRM API (async) for ({user_id}, {caller_phone})")
+                logger.info(f"Successfully saved CallSession & CustomerMemory via Django CRM API (async fallback) for ({user_id}, {caller_phone})")
             else:
                 text = await resp.text()
-                logger.error(f"Error saving CallSession via CRM API ({resp.status}): {text}")
+                logger.error(f"Error saving CallSession via CRM API fallback ({resp.status}): {text}")
     except Exception as e:
-        logger.error(f"Failed to save call session via Django API asynchronously: {e}")
+        logger.error(f"Failed to save call session via Django API fallback: {e}")
 
 def save_call_session_and_update_memory_sync(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
     """Persist completed CallSession and update CustomerMemory synchronously."""

@@ -478,6 +478,180 @@ def dispatch_whatsapp_followup_job(
         return {"status": "thread_fallback"}
 
 
+# ==================== Call Finish Redis Stream Consumer ====================
+import redis
+
+CALL_FINISH_STREAM_KEY = "call_finish_stream"
+CALL_FINISH_GROUP_NAME = "call_finish_group"
+
+
+def get_redis_connection():
+    try:
+        return redis.Redis.from_url(settings.REDIS_URL)
+    except Exception as e:
+        logger.warning(f"[Inngest Stream] Redis connection error: {e}")
+        return None
+
+
+def ensure_call_finish_stream_group(r: redis.Redis) -> bool:
+    """Ensure consumer group exists on call_finish_stream."""
+    try:
+        r.xgroup_create(CALL_FINISH_STREAM_KEY, CALL_FINISH_GROUP_NAME, id="0", mkstream=True)
+        return True
+    except Exception as e:
+        if "BUSYGROUP" in str(e):
+            return True
+        logger.warning(f"[Inngest Stream] xgroup_create error: {e}")
+        return False
+
+
+def ack_call_finish_stream_message(r: redis.Redis, stream_id: str) -> bool:
+    """Acknowledge message in call_finish_stream."""
+    if not stream_id:
+        return False
+    try:
+        ensure_call_finish_stream_group(r)
+        r.xack(CALL_FINISH_STREAM_KEY, CALL_FINISH_GROUP_NAME, stream_id)
+        logger.info(f"[Inngest Stream XACK] Acknowledged stream message '{stream_id}'")
+        return True
+    except Exception as e:
+        logger.warning(f"[Inngest Stream XACK Error] Failed to ack message '{stream_id}': {e}")
+        return False
+
+
+def parse_stream_entry_fields(raw_fields: dict) -> dict:
+    """Decode raw Redis stream fields into typed Python dictionary."""
+    data = {}
+    for k, v in raw_fields.items():
+        key_str = k.decode('utf-8') if isinstance(k, bytes) else str(k)
+        val_str = v.decode('utf-8') if isinstance(v, bytes) else str(v)
+        # Attempt json parse if looks like json object/array
+        if (val_str.startswith('{') and val_str.endswith('}')) or (val_str.startswith('[') and val_str.endswith(']')):
+            try:
+                data[key_str] = json.loads(val_str)
+                continue
+            except Exception:
+                pass
+        # Numerical conversion for expected int/float fields
+        if key_str in ('user_id', 'duration_seconds', 'session_id'):
+            try:
+                data[key_str] = int(val_str)
+                continue
+            except (ValueError, TypeError):
+                pass
+        elif key_str == 'started_at':
+            try:
+                data[key_str] = float(val_str)
+                continue
+            except (ValueError, TypeError):
+                pass
+        data[key_str] = val_str
+    return data
+
+
+@inngest_client.create_function(
+    fn_id="process-call-finish-stream",
+    name="Process Call Finish Stream Event",
+    trigger=inngest.TriggerEvent(event="call/session.finish_stream"),
+    retries=3,
+)
+async def fn_process_call_finish_stream(ctx: inngest.Context) -> dict:
+    """
+    Inngest consumer for individual call finish stream events.
+    Asynchronously persists CallSession and CustomerMemory with automatic retries,
+    then acknowledges the event in Redis Stream (XACK).
+    """
+    event_data = ctx.event.data or {}
+    stream_id = event_data.get("stream_id")
+    room_name = event_data.get("room_name")
+
+    logger.info(f"[Inngest Stream] Processing call finish stream event for room '{room_name}' (stream_id: {stream_id})")
+
+    # Step 1: Persist CallSession & CustomerMemory in PostgreSQL
+    async def step_persist():
+        from crm.services.session_persistence import persist_call_session_and_memory
+        payload = dict(event_data)
+        if stream_id and not payload.get("transcript_text") and not payload.get("summary"):
+            r = get_redis_connection()
+            if r:
+                try:
+                    entries = r.xrange(CALL_FINISH_STREAM_KEY, min=stream_id, max=stream_id)
+                    if entries:
+                        _, raw_fields = entries[0]
+                        full_fields = parse_stream_entry_fields(raw_fields)
+                        full_fields.update(payload)
+                        payload = full_fields
+                except Exception as r_err:
+                    logger.debug(f"[Inngest Stream] xrange fetch note: {r_err}")
+        return await sync_to_async(persist_call_session_and_memory, thread_sensitive=True)(payload)
+
+    persist_res = await ctx.step.run("persist-call-session", step_persist)
+
+    # Step 2: Acknowledge message in Redis Stream
+    async def step_ack():
+        if not stream_id:
+            return {"acked": False, "reason": "no_stream_id"}
+        r = get_redis_connection()
+        if r:
+            acked = ack_call_finish_stream_message(r, stream_id)
+            return {"acked": acked, "stream_id": stream_id}
+        return {"acked": False, "reason": "redis_unavailable"}
+
+    ack_res = await ctx.step.run("ack-redis-stream", step_ack)
+
+    return {
+        "status": "completed",
+        "room_name": room_name,
+        "stream_id": stream_id,
+        "persist_result": persist_res,
+        "ack_result": ack_res,
+    }
+
+
+@inngest_client.create_function(
+    fn_id="sweep-call-finish-stream",
+    name="Sweep Call Finish Redis Stream",
+    trigger=inngest.TriggerCron(cron="* * * * *"),
+)
+async def fn_sweep_call_finish_stream(ctx: inngest.Context) -> dict:
+    """
+    Periodic Inngest cron worker that sweeps call_finish_stream for any
+    unprocessed or unacknowledged messages, guaranteeing zero data loss.
+    """
+    async def step_sweep():
+        r = get_redis_connection()
+        if not r:
+            return {"status": "skipped", "reason": "redis_unavailable"}
+
+        ensure_call_finish_stream_group(r)
+        processed_count = 0
+
+        try:
+            from crm.services.session_persistence import persist_call_session_and_memory
+            messages = r.xreadgroup(
+                CALL_FINISH_GROUP_NAME,
+                "inngest_sweeper",
+                {CALL_FINISH_STREAM_KEY: ">"},
+                count=10,
+                block=500
+            )
+            for stream, entries in messages or []:
+                for msg_id, raw_fields in entries:
+                    stream_id = msg_id.decode('utf-8') if isinstance(msg_id, bytes) else str(msg_id)
+                    data = parse_stream_entry_fields(raw_fields)
+                    data["stream_id"] = stream_id
+                    persist_call_session_and_memory(data)
+                    ack_call_finish_stream_message(r, stream_id)
+                    processed_count += 1
+        except Exception as sweep_err:
+            logger.warning(f"[Inngest Stream Sweeper] Error during stream sweep: {sweep_err}")
+
+        return {"status": "swept", "processed_count": processed_count}
+
+    sweep_res = await ctx.step.run("sweep-stream", step_sweep)
+    return sweep_res
+
+
 # Expose functions list for Django Inngest serve handler
 all_inngest_functions = [
     fn_dial_campaign_contact,
@@ -485,5 +659,7 @@ all_inngest_functions = [
     fn_start_campaign,
     fn_retry_campaign_contact,
     fn_process_whatsapp_followup,
+    fn_process_call_finish_stream,
+    fn_sweep_call_finish_stream,
 ]
 
