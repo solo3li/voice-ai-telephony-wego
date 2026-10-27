@@ -71,6 +71,32 @@ class Command(BaseCommand):
         consumer_name = f"django_worker_{int(time.time())}"
         processed_total = 0
 
+        # Auto-claim and recover unacknowledged pending messages (PEL) from crashed workers
+        try:
+            claimed_res = r.xautoclaim(
+                CALL_FINISH_STREAM_KEY,
+                CALL_FINISH_GROUP_NAME,
+                consumer_name,
+                min_idle_time=500,
+                start_id='0-0',
+                count=batch_size
+            )
+            # xautoclaim returns (next_id, [(msg_id, fields), ...], [deleted_ids...])
+            claimed_entries = claimed_res[1] if claimed_res and len(claimed_res) > 1 else []
+            for msg_id, raw_fields in claimed_entries:
+                stream_id = msg_id.decode('utf-8') if isinstance(msg_id, bytes) else str(msg_id)
+                data = parse_stream_entry_fields(raw_fields)
+                data['stream_id'] = stream_id
+                res = persist_call_session_and_memory(data)
+                ack_call_finish_stream_message(r, stream_id)
+                processed_total += 1
+                room = data.get('room_name', 'unknown')
+                self.stdout.write(self.style.SUCCESS(
+                    f"[PEL Auto-Claimed] Persisted room '{room}' (Stream ID: {stream_id}, Session #{res.get('session_id')}) -> XACK sent."
+                ))
+        except Exception as pel_err:
+            logger.debug(f"PEL recovery note: {pel_err}")
+
         while running:
             try:
                 # Read new entries from stream

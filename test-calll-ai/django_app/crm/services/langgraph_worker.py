@@ -10,6 +10,7 @@ Features:
    - WhatsApp Memory (what happened in the chat)
 5. Cross-Channel Continuity: Voice Agent and WhatsApp Agent share the same brain and context.
 """
+import re
 import logging
 import json
 import time

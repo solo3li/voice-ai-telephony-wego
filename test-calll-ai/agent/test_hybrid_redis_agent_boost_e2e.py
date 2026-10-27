@@ -161,12 +161,39 @@ async def run_agent_hybrid_tests():
     assert save_ms < 10.0, f"save_call_session took too long: {save_ms:.3f}ms"
     print("✅ TEST 5 PASSED: Stream priority for save_call_session confirmed.")
 
+    # -------------------------------------------------------------------------
+    # TEST 6: Simulated Redis Failure & Resilient HTTP Fallback
+    # -------------------------------------------------------------------------
+    print("\n[TEST 6] Testing simulated Redis failure fallback for save_call_session_and_update_memory_async...")
+    import unittest.mock as mock
+
+    fallback_room_name = f"test_redis_down_{int(time.time())}"
+    # Mock push_call_finish_to_redis_stream to raise an exception (simulating Redis down / network partition)
+    with mock.patch("clients.django_client.push_call_finish_to_redis_stream", side_effect=ConnectionError("Simulated Redis connection failure")):
+        saved = await save_call_session_and_update_memory_async(
+            user_id=1,
+            room_name=fallback_room_name,
+            started_at=time.time() - 15,
+            transcript_text="Test fallback transcript",
+            summary="مكالمة تم حفظها عبر مسار HTTP عند تعطل ريديس",
+            updated_profile={"customer_name": "Fallback User"},
+            caller_phone="+201099881122",
+            duration_seconds=15,
+        )
+        assert saved is True, "save_call_session_and_update_memory_async should succeed via HTTP fallback when Redis fails"
+        print(f"  [+] Resilient HTTP fallback succeeded when Redis failed for room '{fallback_room_name}'")
+    print("✅ TEST 6 PASSED: Redis failure resilience and HTTP fallback verified.")
+
     # Cleanup
     await r.delete(f"room_bootstrap:{test_room}")
     await r.delete(f"room_bootstrap:{missing_room}")
 
+    # Cleanly close http session to avoid unclosed connector warning
+    from clients.http_pool import close_http_session
+    await close_http_session()
+
     print("\n======================================================================")
-    print("🎉 ALL 5 AGENT HYBRID REDIS E2E TESTS PASSED 100% PERFECTLY!")
+    print("🎉 ALL 6 AGENT HYBRID REDIS E2E TESTS PASSED 100% PERFECTLY!")
     print("======================================================================")
 
 

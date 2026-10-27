@@ -472,35 +472,54 @@ def trigger_ai_transfer_sync(room_name: str, user_id: int, queue_code: str, call
 
 # ==================== Call Session & Memory Save API ====================
 
-def _build_call_complete_payload(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None) -> dict:
+def _build_call_complete_payload(
+    user_id: int,
+    room_name: str,
+    started_at: float,
+    transcript_text: str,
+    summary: str,
+    updated_profile: dict,
+    caller_phone: str = "web_dashboard",
+    outbound_context: dict = None,
+    duration_seconds: Optional[int] = None,
+    caller_extension: str = "",
+    is_internal_test: bool = False,
+    destination_phone: str = "",
+    direction: str = "",
+    messages: Optional[list] = None,
+) -> dict:
     now_ts = time.time()
     if duration_seconds is not None:
         duration = max(0, int(duration_seconds))
     else:
         duration = max(0, int(now_ts - started_at))
-    direction = 'inbound'
-    destination_phone = ''
+    final_direction = direction or 'inbound'
+    final_dest_phone = destination_phone or ''
     call_goal = ''
     if outbound_context:
         if outbound_context.get("is_outbound_ai"):
-            direction = 'outbound_ai'
+            final_direction = 'outbound_ai'
         elif outbound_context.get("direction"):
-            direction = outbound_context.get("direction")
-        destination_phone = str(outbound_context.get("destination_phone") or "")
+            final_direction = outbound_context.get("direction")
+        if not final_dest_phone:
+            final_dest_phone = str(outbound_context.get("destination_phone") or "")
         call_goal = str(outbound_context.get("call_goal") or "")
 
     return {
         "user_id": user_id,
         "room_name": room_name,
         "caller_phone": caller_phone,
+        "caller_extension": caller_extension,
+        "is_internal_test": is_internal_test,
         "started_at": started_at,
         "duration_seconds": duration,
-        "direction": direction,
-        "destination_phone": destination_phone,
+        "direction": final_direction,
+        "destination_phone": final_dest_phone,
         "call_goal": call_goal,
         "transcript_text": transcript_text,
         "summary": summary,
-        "permanent_profile": updated_profile
+        "permanent_profile": updated_profile,
+        "messages": messages or [],
     }
 
 async def _notify_inngest_stream_event(stream_id: str, payload: dict):
@@ -546,7 +565,8 @@ async def push_call_finish_to_redis_stream(payload: dict) -> Optional[str]:
                 else:
                     stream_data[k] = str(v)
 
-            stream_id = await r.xadd("call_finish_stream", stream_data)
+            # Cap stream size at 10,000 to prevent unbounded memory growth in production
+            stream_id = await r.xadd("call_finish_stream", stream_data, maxlen=10000, approximate=True)
             logger.info(f"[Redis Stream XADD] Offloaded call persistence for room '{payload.get('room_name')}' in <1ms (Stream ID: {stream_id})")
 
             # Fire-and-forget Inngest notification in background
@@ -561,19 +581,52 @@ async def push_call_finish_to_redis_stream(payload: dict) -> Optional[str]:
     return None
 
 
-async def save_call_session_and_update_memory_async(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
-    """Persist completed CallSession and update CustomerMemory (Redis Stream XADD <1ms with HTTP fallback)."""
+async def save_call_session_and_update_memory_async(
+    user_id: int,
+    room_name: str,
+    started_at: float,
+    transcript_text: str,
+    summary: str,
+    updated_profile: dict,
+    caller_phone: str = "web_dashboard",
+    outbound_context: dict = None,
+    duration_seconds: Optional[int] = None,
+    caller_extension: str = "",
+    is_internal_test: bool = False,
+    destination_phone: str = "",
+    direction: str = "",
+    messages: Optional[list] = None,
+) -> bool:
+    """Persist completed CallSession and update CustomerMemory (Redis Stream XADD <1ms with robust HTTP fallback)."""
     if not user_id:
-        return
-    payload = _build_call_complete_payload(user_id, room_name, started_at, transcript_text, summary, updated_profile, caller_phone, outbound_context, duration_seconds=duration_seconds)
+        return False
+    payload = _build_call_complete_payload(
+        user_id=user_id,
+        room_name=room_name,
+        started_at=started_at,
+        transcript_text=transcript_text,
+        summary=summary,
+        updated_profile=updated_profile,
+        caller_phone=caller_phone,
+        outbound_context=outbound_context,
+        duration_seconds=duration_seconds,
+        caller_extension=caller_extension,
+        is_internal_test=is_internal_test,
+        destination_phone=destination_phone,
+        direction=direction,
+        messages=messages,
+    )
 
     # 1. Zero-latency Redis Stream persistence (<1ms)
-    stream_id = await push_call_finish_to_redis_stream(payload)
-    if stream_id:
-        return
+    try:
+        stream_id = await push_call_finish_to_redis_stream(payload)
+        if stream_id:
+            return True
+    except Exception as stream_err:
+        logger.warning(f"[Call Persistence] Stream push exception for '{room_name}': {stream_err}")
 
-    # 2. Seamless HTTP fallback if Redis Stream push fails
-    logger.warning(f"[Call Persistence] Stream push failed, falling back to HTTP complete-call for '{room_name}'")
+    # 2. Seamless HTTP fallback if Redis Stream push fails or throws
+    logger.warning(f"[Call Persistence] Stream push unavailable, falling back to HTTP complete-call for '{room_name}'")
     url = f"{DJANGO_API_URL}/api/crm/internal/complete-call/"
     headers = {
         "X-Internal-API-Key": INTERNAL_API_KEY,
@@ -584,11 +637,14 @@ async def save_call_session_and_update_memory_async(user_id: int, room_name: str
         async with session.post(url, json=payload, headers=headers, timeout=5.0) as resp:
             if resp.status == 200:
                 logger.info(f"Successfully saved CallSession & CustomerMemory via Django CRM API (async fallback) for ({user_id}, {caller_phone})")
+                return True
             else:
                 text = await resp.text()
                 logger.error(f"Error saving CallSession via CRM API fallback ({resp.status}): {text}")
+                return False
     except Exception as e:
         logger.error(f"Failed to save call session via Django API fallback: {e}")
+        return False
 
 def save_call_session_and_update_memory_sync(user_id: int, room_name: str, started_at: float, transcript_text: str, summary: str, updated_profile: dict, caller_phone: str = "web_dashboard", outbound_context: dict = None, duration_seconds: Optional[int] = None):
     """Persist completed CallSession and update CustomerMemory synchronously."""

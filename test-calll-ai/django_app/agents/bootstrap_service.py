@@ -70,15 +70,25 @@ def assemble_agent_bootstrap_data(
         except Exception:
             pass
 
-    if not user_id and (wazo_context or clean_caller_ext):
+    if not user_id and clean_room_name and r:
         try:
-            from telephony.models import resolve_tenant_from_context_and_ext
-            tenant_u, emp_prof, ext_prof = resolve_tenant_from_context_and_ext(wazo_context, clean_caller_ext)
-            if tenant_u:
-                user_id = tenant_u.id
-                is_internal_test = True
-        except Exception as t_err:
-            logger.debug(f"[Bootstrap] Error resolving tenant from wazo context: {t_err}")
+            cached_meta = r.get(f"room_job_meta:{clean_room_name}")
+            if cached_meta:
+                meta_json = json.loads(cached_meta)
+                if meta_json.get("user_id"):
+                    user_id = meta_json.get("user_id")
+        except Exception:
+            pass
+
+    if not user_id and clean_room_name:
+        parts = clean_room_name.split("_")
+        for part in parts:
+            if part.isdigit() and len(part) <= 6 and part != "999":
+                try:
+                    user_id = int(part)
+                    break
+                except ValueError:
+                    pass
 
     if not user_id:
         return {"status": "error", "message": "user_id is required"}

@@ -93,6 +93,70 @@ def persist_call_session_and_memory(data: Dict[str, Any]) -> Dict[str, Any]:
 
     # 1. Update existing CallSession (e.g. created by outbound dialer) or create a new record
     session = CallSession.objects.filter(room_name=room_name).first()
+    has_billing_tx = session.billing_transactions.filter(transaction_type='call_deduction').exists() if session else False
+    is_already_completed = bool(session and session.ended_at is not None and (session.billed_minutes > 0 or has_billing_tx))
+
+    if is_already_completed:
+        # Idempotent path: Call was already billed and call count incremented.
+        # Update summary, transcript, recording, and permanent memory without re-billing.
+        update_fields = []
+        if summary and (not session.summary or len(summary) > len(session.summary) or "مكالمة صوتية مكتملة" in session.summary):
+            session.summary = summary
+            update_fields.append('summary')
+        if transcript_text and (not session.transcript_text or len(transcript_text) > len(session.transcript_text)):
+            session.transcript_text = transcript_text
+            update_fields.append('transcript_text')
+        if duration_seconds > session.duration_seconds:
+            session.duration_seconds = duration_seconds
+            update_fields.append('duration_seconds')
+        if req_recording_url and not session.recording_url:
+            session.recording_url = req_recording_url
+            update_fields.append('recording_url')
+        if update_fields:
+            session.save(update_fields=update_fields)
+
+        # Update CustomerMemory with permanent profile & distilled summary without incrementing total_calls_count
+        total_calls_count = 0
+        memory = None
+        if not is_internal_test and caller_phone:
+            memory, _ = CustomerMemory.objects.get_or_create(user=user, phone_number=caller_phone)
+            if customer_name:
+                memory.customer_name = customer_name
+            if permanent_profile is not None:
+                if isinstance(permanent_profile, dict):
+                    memory.permanent_profile = permanent_profile
+                elif isinstance(permanent_profile, str):
+                    try:
+                        memory.permanent_profile = json.loads(permanent_profile)
+                    except Exception:
+                        pass
+            if summary:
+                memory.last_interaction_summary = summary
+            memory.last_interaction_at = now_dt
+            total_calls_count = memory.total_calls_count
+
+            cm = memory.call_memory or {}
+            if summary:
+                cm["last_call_summary"] = summary
+            cm["last_call_at"] = now_dt.strftime("%Y-%m-%d %H:%M")
+            if isinstance(permanent_profile, dict) and permanent_profile.get("agreed_next_steps"):
+                cm["agreed_next_steps"] = permanent_profile.get("agreed_next_steps")
+            memory.call_memory = cm
+            memory.save()
+
+        logger.info(f"Idempotent update applied for CallSession #{session.id} (room {room_name}) without duplicate billing.")
+        return {
+            "status": "success",
+            "session_id": session.id,
+            "caller_phone": caller_phone,
+            "phone_number": caller_phone,
+            "duration_seconds": session.duration_seconds,
+            "billed_minutes": session.billed_minutes,
+            "cost": float(session.cost),
+            "total_calls_count": total_calls_count,
+            "is_idempotent_update": True
+        }
+
     if session:
         session.ended_at = now_dt
         session.duration_seconds = duration_seconds

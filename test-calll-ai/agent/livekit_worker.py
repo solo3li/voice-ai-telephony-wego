@@ -174,28 +174,18 @@ async def entrypoint(ctx: JobContext):
         "جاري تهيئة المساعدة الصوتية وتجهيز قاعدة المستندات والإجراءات عبر LiveKit Agents...",
     )
 
-    # 3. Fetch unified Bootstrap bundle (Redis Fast Read <1ms with HTTP fallback)
+    # 3. Fetch unified Bootstrap bundle (Redis Fast Read <1ms with automatic HTTP fallback)
     bootstrap: Dict[str, Any] = {}
-    if room_name:
-        try:
-            redis_boot = await get_room_bootstrap_from_redis(room_name)
-            if redis_boot and isinstance(redis_boot, dict) and redis_boot.get("status") == "success":
-                bootstrap = redis_boot
-                logger.info(f"[LiveKit Agent] Sub-millisecond bootstrap hit from Redis for room '{room_name}' (<1ms)")
-        except Exception as r_err:
-            logger.debug(f"[LiveKit Agent] Redis fast bootstrap check note: {r_err}")
-
-    if not bootstrap:
-        try:
-            logger.info(f"[LiveKit Agent] Fetching bootstrap via HTTP fallback for room '{room_name}'")
-            bootstrap = await fetch_agent_bootstrap_async(
-                user_id=user_id,
-                caller_phone=caller_phone,
-                room_name=room_name,
-                caller_extension=caller_ext or ""
-            )
-        except Exception as err:
-            logger.error(f"Failed to fetch agent bootstrap for room '{room_name}': {err}")
+    try:
+        bootstrap = await fetch_agent_bootstrap_async(
+            user_id=user_id,
+            caller_phone=caller_phone,
+            room_name=room_name,
+            caller_extension=caller_ext or ""
+        )
+    except Exception as err:
+        logger.error(f"Failed to fetch agent bootstrap for room '{room_name}': {err}")
+        bootstrap = {}
 
     if not user_id and bootstrap.get("user_id"):
         user_id = bootstrap.get("user_id")
@@ -725,24 +715,26 @@ async def entrypoint(ctx: JobContext):
                 "messages": dialogue_messages,
             }
 
-            # Zero-latency persistence: XADD to call_finish_stream (<1ms)
+            # Zero-latency persistence: XADD to call_finish_stream (<1ms) with automatic HTTP fallback
             try:
-                stream_id = await push_call_finish_to_redis_stream(payload)
-                if not stream_id:
-                    logger.warning(f"[LiveKit Agent] Stream push failed, falling back to HTTP complete-call for '{room_name}'")
-                    await save_call_session_and_update_memory_async(
-                        user_id=user_id,
-                        room_name=room_name,
-                        started_at=call_start_time,
-                        transcript_text=transcript_text,
-                        summary=basic_summary,
-                        updated_profile=current_profile,
-                        caller_phone=caller_phone,
-                        outbound_context=outbound_context,
-                        duration_seconds=int(duration),
-                    )
-            except Exception as stream_err:
-                logger.error(f"[LiveKit Agent] Error offloading call finish to Redis Stream: {stream_err}")
+                await save_call_session_and_update_memory_async(
+                    user_id=user_id,
+                    room_name=room_name,
+                    started_at=call_start_time,
+                    transcript_text=transcript_text,
+                    summary=basic_summary,
+                    updated_profile=current_profile,
+                    caller_phone=caller_phone,
+                    outbound_context=outbound_context,
+                    duration_seconds=int(duration),
+                    caller_extension=caller_ext or "",
+                    is_internal_test=bool(bootstrap.get("is_internal_test")),
+                    destination_phone=(destination_phone or caller_phone) if is_outbound_ai else "",
+                    direction="outbound_ai" if is_outbound_ai else ("internal_test" if bootstrap.get("is_internal_test") else "inbound"),
+                    messages=dialogue_messages,
+                )
+            except Exception as persist_err:
+                logger.error(f"[LiveKit Agent] Error during call finish persistence: {persist_err}")
 
             # Fire-and-forget background distillation if turns exist without delaying room termination
             if len(dialogue_messages) >= 2:

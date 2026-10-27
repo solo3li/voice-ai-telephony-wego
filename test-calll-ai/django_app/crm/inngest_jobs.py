@@ -506,12 +506,13 @@ def ensure_call_finish_stream_group(r: redis.Redis) -> bool:
 
 
 def ack_call_finish_stream_message(r: redis.Redis, stream_id: str) -> bool:
-    """Acknowledge message in call_finish_stream."""
+    """Acknowledge message in call_finish_stream and clear from stream."""
     if not stream_id:
         return False
     try:
         ensure_call_finish_stream_group(r)
         r.xack(CALL_FINISH_STREAM_KEY, CALL_FINISH_GROUP_NAME, stream_id)
+        r.xdel(CALL_FINISH_STREAM_KEY, stream_id)
         logger.info(f"[Inngest Stream XACK] Acknowledged stream message '{stream_id}'")
         return True
     except Exception as e:
@@ -571,7 +572,7 @@ async def fn_process_call_finish_stream(ctx: inngest.Context) -> dict:
     async def step_persist():
         from crm.services.session_persistence import persist_call_session_and_memory
         payload = dict(event_data)
-        if stream_id and not payload.get("transcript_text") and not payload.get("summary"):
+        if stream_id:
             r = get_redis_connection()
             if r:
                 try:
@@ -579,7 +580,9 @@ async def fn_process_call_finish_stream(ctx: inngest.Context) -> dict:
                     if entries:
                         _, raw_fields = entries[0]
                         full_fields = parse_stream_entry_fields(raw_fields)
-                        full_fields.update(payload)
+                        for k, v in payload.items():
+                            if v is not None and v != "":
+                                full_fields[k] = v
                         payload = full_fields
                 except Exception as r_err:
                     logger.debug(f"[Inngest Stream] xrange fetch note: {r_err}")
@@ -618,7 +621,7 @@ async def fn_sweep_call_finish_stream(ctx: inngest.Context) -> dict:
     Periodic Inngest cron worker that sweeps call_finish_stream for any
     unprocessed or unacknowledged messages, guaranteeing zero data loss.
     """
-    async def step_sweep():
+    def _do_sweep_sync():
         r = get_redis_connection()
         if not r:
             return {"status": "skipped", "reason": "redis_unavailable"}
@@ -628,6 +631,28 @@ async def fn_sweep_call_finish_stream(ctx: inngest.Context) -> dict:
 
         try:
             from crm.services.session_persistence import persist_call_session_and_memory
+            # 1. Recover unacknowledged pending messages (PEL) from crashed workers
+            try:
+                claimed_res = r.xautoclaim(
+                    CALL_FINISH_STREAM_KEY,
+                    CALL_FINISH_GROUP_NAME,
+                    "inngest_sweeper",
+                    min_idle_time=500,
+                    start_id='0-0',
+                    count=10
+                )
+                claimed_entries = claimed_res[1] if claimed_res and len(claimed_res) > 1 else []
+                for msg_id, raw_fields in claimed_entries:
+                    stream_id = msg_id.decode('utf-8') if isinstance(msg_id, bytes) else str(msg_id)
+                    data = parse_stream_entry_fields(raw_fields)
+                    data["stream_id"] = stream_id
+                    persist_call_session_and_memory(data)
+                    ack_call_finish_stream_message(r, stream_id)
+                    processed_count += 1
+            except Exception as pel_err:
+                logger.debug(f"[Inngest Stream Sweeper] PEL recovery note: {pel_err}")
+
+            # 2. Process new unread messages
             messages = r.xreadgroup(
                 CALL_FINISH_GROUP_NAME,
                 "inngest_sweeper",
@@ -648,7 +673,7 @@ async def fn_sweep_call_finish_stream(ctx: inngest.Context) -> dict:
 
         return {"status": "swept", "processed_count": processed_count}
 
-    sweep_res = await ctx.step.run("sweep-stream", step_sweep)
+    sweep_res = await ctx.step.run("sweep-stream", sync_to_async(_do_sweep_sync, thread_sensitive=True))
     return sweep_res
 
 
