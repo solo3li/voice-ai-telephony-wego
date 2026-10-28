@@ -1,19 +1,31 @@
 {% load static %}
 <!-- ==================== Minimalist Sidebar (5 Dedicated Core Portals) ==================== -->
-<aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 border-b md:border-b-0 md:border-e border-[#eaedf0] md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
+<aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-[#eaedf0] md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
   
   <style>
     /* Minimalist text-only sidebar dimensions */
-    #sidebar {
-      width: 15rem;
+    @media (min-width: 768px) {
+      #sidebar,
+      #sidebar.sidebar-collapsed,
+      #sidebar.sidebar-expanded {
+        width: 15rem;
+      }
     }
-    #sidebar.sidebar-collapsed,
-    #sidebar.sidebar-expanded {
-      width: 15rem;
+    @media (max-width: 767px) {
+      #sidebar,
+      #sidebar.sidebar-collapsed,
+      #sidebar.sidebar-expanded {
+        width: 100%;
+      }
     }
     #sidebar.sidebar-collapsed .brand-text,
     #sidebar.sidebar-collapsed .nav-text {
       display: block !important;
+    }
+    #sidebar.sidebar-collapsed .nav-item {
+      justify-content: flex-start !important;
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
     }
   </style>
 
@@ -40,7 +52,7 @@
   <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-1 text-xs custom-sidebar-scroll min-h-0">
     
     <!-- 1. Voice & Telephony Suite Portal -->
-    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours' or not active_nav %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours,whatsapp,whatsapp_desk' or not active_nav %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text">المساعد الصوتي والاتصالات</span>
     </a>
 

@@ -3612,10 +3612,11 @@
         activeTopBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
 
-      // Update sidebar nav active styling
+      // Update sidebar nav active styling (minimalist text-only)
       document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.remove('bg-[#eff8ff]', 'text-[#1f93ff]', 'font-bold', 'border', 'border-[#b2ddff]/60', 'shadow-2xs');
-        btn.classList.add('text-slate-600', 'font-medium');
+        btn.classList.remove('bg-[#eff8ff]', 'text-[#1f93ff]', 'font-bold', 'font-semibold', 'border', 'border-[#b2ddff]/60', 'shadow-2xs');
+        btn.classList.add('text-slate-600', 'font-normal');
+        btn.classList.remove('font-medium');
         const icon = btn.querySelector('svg');
         if (icon) {
           icon.classList.remove('text-[#1f93ff]');
@@ -3623,10 +3624,13 @@
         }
       });
       
-      const activeNavBtn = document.getElementById('nav-btn-' + tabId) || (tabId === 'hours' ? document.getElementById('nav-btn-business-hours') : null);
+      const isTelephony = ['voice', 'calls', 'rag', 'personas', 'crm', 'store', 'campaigns', 'callcenter', 'telephony', 'hours', 'business_hours'].includes(tabId);
+      const activeNavBtn = isTelephony
+        ? document.getElementById('nav-btn-telephony-portal')
+        : (document.getElementById('nav-btn-' + tabId) || (tabId === 'hours' ? document.getElementById('nav-btn-business-hours') : null));
       if (activeNavBtn) {
-        activeNavBtn.classList.add('bg-[#eff8ff]', 'text-[#1f93ff]', 'font-bold', 'border', 'border-[#b2ddff]/60', 'shadow-2xs');
-        activeNavBtn.classList.remove('text-slate-600', 'font-medium');
+        activeNavBtn.classList.add('bg-[#eff8ff]', 'text-[#1f93ff]', 'font-semibold');
+        activeNavBtn.classList.remove('text-slate-600', 'font-normal', 'font-medium');
         const icon = activeNavBtn.querySelector('svg');
         if (icon) {
           icon.classList.remove('text-slate-400');
