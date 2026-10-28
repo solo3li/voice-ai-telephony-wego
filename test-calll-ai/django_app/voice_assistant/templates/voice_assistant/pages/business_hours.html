@@ -19,7 +19,7 @@
       <div class="text-start">
         <span class="block text-[10px] text-slate-400 font-medium" data-i18n="hours_status_label">الحالة الآن:</span>
         <span id="current-status-badge" class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
-          <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> جاري التحقق...
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> <span data-i18n="hours_checking_status">جاري التحقق...</span>
         </span>
       </div>
 
@@ -47,14 +47,14 @@
         <div class="flex items-center gap-2 text-xs">
           <label for="field-timezone" class="text-slate-400 font-medium" data-i18n="hours_timezone">المنطقة الزمنية:</label>
           <select id="field-timezone" onchange="calculateCurrentStatus()" class="px-2.5 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-slate-700 text-xs font-medium focus:outline-none focus:border-[#1f93ff]">
-            <option value="Africa/Cairo">مصر (Africa/Cairo - GMT+2/3)</option>
-            <option value="Asia/Riyadh">السعودية (Asia/Riyadh - GMT+3)</option>
-            <option value="Asia/Dubai">الإمارات (Asia/Dubai - GMT+4)</option>
-            <option value="Asia/Kuwait">الكويت (Asia/Kuwait - GMT+3)</option>
-            <option value="Asia/Qatar">قطر (Asia/Qatar - GMT+3)</option>
-            <option value="Asia/Amman">الأردن (Asia/Amman - GMT+3)</option>
-            <option value="Europe/London">لندن (Europe/London - GMT+0/1)</option>
-            <option value="UTC">التوقيت العالمي (UTC)</option>
+            <option value="Africa/Cairo" data-i18n="tz_cairo">مصر (Africa/Cairo - GMT+2/3)</option>
+            <option value="Asia/Riyadh" data-i18n="tz_riyadh">السعودية (Asia/Riyadh - GMT+3)</option>
+            <option value="Asia/Dubai" data-i18n="tz_dubai">الإمارات (Asia/Dubai - GMT+4)</option>
+            <option value="Asia/Kuwait" data-i18n="tz_kuwait">الكويت (Asia/Kuwait - GMT+3)</option>
+            <option value="Asia/Qatar" data-i18n="tz_qatar">قطر (Asia/Qatar - GMT+3)</option>
+            <option value="Asia/Amman" data-i18n="tz_amman">الأردن (Asia/Amman - GMT+3)</option>
+            <option value="Europe/London" data-i18n="tz_london">لندن (Europe/London - GMT+0/1)</option>
+            <option value="UTC" data-i18n="tz_utc">التوقيت العالمي (UTC)</option>
           </select>
         </div>
       </div>
@@ -122,7 +122,7 @@
           <label for="field-ai-message" class="font-medium text-slate-700" data-i18n="hours_ai_msg_label">نص الرسالة المنطوقة للمتصل:</label>
           <button type="button" onclick="resetDefaultAiMessage()" class="text-[11px] text-[#1f93ff] hover:underline" data-i18n="hours_restore_default">استعادة النص الافتراضي</button>
         </div>
-        <textarea id="field-ai-message" rows="4" placeholder="اكتب الرسالة التي سينطقها المساعد الصوتي خارج مواعيد العمل..." class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] text-xs leading-relaxed"></textarea>
+        <textarea id="field-ai-message" rows="4" placeholder="اكتب الرسالة التي سينطقها المساعد الصوتي خارج مواعيد العمل..." data-i18n-placeholder="hours_message_placeholder" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] text-xs leading-relaxed"></textarea>
       </div>
 
       <!-- Section B: Audio File Upload -->
@@ -134,14 +134,14 @@
           <button type="button" onclick="document.getElementById('field-audio-file').click()" class="px-3.5 py-1.5 bg-white border border-[#eaedf0] rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition shadow-2xs">
             <span data-i18n="hours_btn_choose_audio">اختر ملف صوتي من جهازك</span>
           </button>
-          <p id="audio-file-name" class="text-[11px] text-slate-400">يدعم صيغ MP3 و WAV حتى 10 ميجابايت</p>
+          <p id="audio-file-name" class="text-[11px] text-slate-400" data-i18n="hours_audio_formats">يدعم صيغ MP3 و WAV حتى 10 ميجابايت</p>
         </div>
 
         <!-- Audio Player Preview Widget -->
         <div id="audio-preview-container" class="hidden bg-slate-50 border border-[#eaedf0] rounded-lg p-3 space-y-1.5">
           <div class="flex justify-between items-center text-[11px]">
             <span class="font-medium text-slate-700" data-i18n="hours_audio_preview_label">معاينة الملف الصوتي المعتمد:</span>
-            <span id="audio-source-type" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">جاهز للتشغيل</span>
+            <span id="audio-source-type" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200" data-i18n="hours_ready_to_play">جاهز للتشغيل</span>
           </div>
           <audio id="audio-player-preview" controls class="w-full h-8"></audio>
         </div>

@@ -330,12 +330,12 @@ async function loadPbxTrunks() {
       grid.innerHTML = `
         <div class="col-span-full bg-white border-2 border-dashed border-slate-200 rounded-xl p-8 text-center space-y-3">
           <div class="text-3xl">🏢</div>
-          <div class="text-slate-900 font-semibold text-sm">لا يوجد سنترال محلي مربوط حالياً</div>
+          <div class="text-slate-900 font-semibold text-sm">${window.t ? window.t("tel_pbx_empty", "لا يوجد سنترال محلي مربوط حالياً") : "لا يوجد سنترال محلي مربوط حالياً"}</div>
           <p class="text-slate-500 text-xs max-w-md mx-auto">
             اضغط على زر "ربط سنترال Issabel / Asterisk جديد" لإنشاء جذع SIP والحصول على كود PEER Details الجاهز للصق في السنترال.
           </p>
           <button type="button" onclick="openNewPbxModal()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white font-medium text-xs inline-flex items-center gap-1.5 shadow-2xs">
-            <span>➕ ربط أول سنترال</span>
+            <span>${window.t ? window.t("tel_pbx_btn_new", "➕ ربط أول سنترال") : "➕ ربط أول سنترال"}</span>
           </button>
         </div>
       `;
@@ -349,7 +349,7 @@ async function loadPbxTrunks() {
         : `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200">User: ${escapeHtml(t.auth_username || 'غير محدد')}</span>`;
 
       const destBadge = t.destination_type === 'ai'
-        ? `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><span>🤖</span> <span>المساعد الذكي (Smart IVR)</span> ${t.target_profile_name ? `<span class="text-[10px] text-slate-500 font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
+        ? `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><span>🤖</span> <span>${window.t ? window.t("tel_dest_smart_ivr", "المساعد الذكي (Smart IVR)") : "المساعد الذكي (Smart IVR)"}</span> ${t.target_profile_name ? `<span class="text-[10px] text-slate-500 font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
         : `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><span>👥</span> <span>طابور: ${escapeHtml(t.target_queue_name || 'غير محدد')} [${escapeHtml(t.target_queue_code || '')}]</span></div>`;
 
       let numDisplay = '';
@@ -360,7 +360,7 @@ async function loadPbxTrunks() {
       }
       const numbersBadge = numDisplay
         ? `<span class="font-mono text-slate-700">${escapeHtml(numDisplay)}</span>`
-        : `<span class="text-slate-400">جميع المكالمات الواردة</span>`;
+        : `<span class="text-slate-400">${window.t ? window.t("tel_all_inbound_calls", "جميع المكالمات الواردة") : "جميع المكالمات الواردة"}</span>`;
 
       const bidiBadge = t.enable_outbound
         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-100" title="صادر ووارد">🔄 ${t.is_default_outbound ? 'ثنائي (افتراضي)' : 'ثنائي الاتجاه'}</span>`
@@ -381,7 +381,7 @@ async function loadPbxTrunks() {
                 </div>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-medium ${t.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
-                ${t.is_active ? '🟢 متصل' : '⚪ معطل'}
+                ${t.is_active ? (window.t ? window.t('status_connected', '🟢 متصل') : '🟢 متصل') : (window.t ? window.t('status_disabled', '⚪ معطل') : '⚪ معطل')}
               </span>
             </div>
 
@@ -897,3 +897,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDids();
 });
 
+
+// Re-render PBX trunks and DIDs on language toggle
+window.addEventListener('appLanguageChanged', () => {
+  loadPbxTrunks();
+  loadDids();
+});

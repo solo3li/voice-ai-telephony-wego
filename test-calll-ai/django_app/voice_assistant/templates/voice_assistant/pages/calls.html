@@ -30,7 +30,7 @@
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_minutes">الدقائق المحتسبة</span>
-    <p id="calls-stat-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 د</p>
+    <p id="calls-stat-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_mins_short">د</span></p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_cost">التكلفة الإجمالية</span>
@@ -38,7 +38,7 @@
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_seconds">إجمالي الثواني الصوتية</span>
-    <p id="calls-stat-seconds" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 ث</p>
+    <p id="calls-stat-seconds" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_secs_short">ث</span></p>
   </div>
 </div>
 
@@ -127,7 +127,7 @@
       </thead>
       <tbody id="calls-table-tbody" class="divide-y divide-[#eaedf0]">
         <tr>
-          <td colspan="8" class="py-8 text-center text-slate-400">
+          <td colspan="8" class="py-8 text-center text-slate-400" data-i18n="calls_loading_logs">
             جاري تحميل سجل المكالمات...
           </td>
         </tr>
@@ -160,7 +160,7 @@
         </div>
         <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
           <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</span>
-          <span id="cdm-billed-mins" class="font-mono font-semibold text-[#1f93ff]">0 دقيقة</span>
+          <span id="cdm-billed-mins" class="font-mono font-semibold text-[#1f93ff]">0 <span data-i18n="unit_mins">دقيقة</span></span>
         </div>
         <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
           <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_cost">التكلفة</span>
@@ -168,7 +168,7 @@
         </div>
         <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
           <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_direction">الاتجاه</span>
-          <span id="cdm-direction" class="font-medium text-slate-700">واردة</span>
+          <span id="cdm-direction" class="font-medium text-slate-700" data-i18n="calls_dir_inbound">واردة</span>
         </div>
       </div>
 
@@ -203,7 +203,7 @@
         <h5 class="font-medium text-slate-700 text-xs">
           <span data-i18n="calls_modal_summary_title">ملخص المكالمة التراكمي (AI Summary):</span>
         </h5>
-        <p id="cdm-summary" class="text-slate-600 text-xs leading-relaxed">
+        <p id="cdm-summary" class="text-slate-600 text-xs leading-relaxed" data-i18n="calls_modal_no_summary">
           لا يوجد ملخص مسجل لهذه المكالمة.
         </p>
       </div>
@@ -213,7 +213,7 @@
         <h5 class="font-medium text-slate-700 text-xs">
           <span data-i18n="calls_modal_transcript_title">نص المحادثة الكامل (Full Transcript):</span>
         </h5>
-        <div id="cdm-transcript" class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] text-xs leading-relaxed text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans">
+        <div id="cdm-transcript" class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] text-xs leading-relaxed text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans" data-i18n="calls_modal_no_transcript">
           لا يوجد نص مفرغ متاح.
         </div>
       </div>

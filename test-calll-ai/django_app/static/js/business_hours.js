@@ -93,7 +93,7 @@ function updateStatusBadge(isEnabled, isOpenNow) {
   if (!isEnabled) {
     badge.innerHTML = `
       <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-      <span class="text-gray-600">الجدول غير مفعل (المساعد يستقبل دائماً)</span>
+      <span class="text-gray-600">${window.t ? window.t('hours_status_disabled_hint', 'الجدول غير مفعل (المساعد يستقبل دائماً)') : 'الجدول غير مفعل (المساعد يستقبل دائماً)'}</span>
     `;
     return;
   }
@@ -325,4 +325,11 @@ async function saveBusinessHoursSchedule() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadBusinessHours();
+});
+
+// Re-render schedule on language toggle
+window.addEventListener('appLanguageChanged', () => {
+  if (currentSchedule) {
+    populateScheduleForm(currentSchedule);
+  }
 });

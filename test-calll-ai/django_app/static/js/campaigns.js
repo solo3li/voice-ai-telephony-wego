@@ -55,9 +55,9 @@ function updateGatewayAlertUI() {
   if (btnStart) {
     let warning = '';
     if (['calls', 'hybrid'].includes(channel) && !hasActiveOutboundGateway) {
-      warning = 'لا يوجد خط اتصال صادر (SIP Trunk) مفعل حالياً';
+      warning = (window.t ? window.t('camp_warn_no_sip', 'لا يوجد خط اتصال صادر (SIP Trunk) مفعل حالياً') : 'لا يوجد خط اتصال صادر (SIP Trunk) مفعل حالياً');
     } else if (['whatsapp', 'hybrid'].includes(channel) && !hasWhatsAppConnected) {
-      warning = 'حساب الواتساب غير متصل في لوحة التحكم';
+      warning = (window.t ? window.t('camp_warn_no_wa', 'حساب الواتساب غير متصل في لوحة التحكم') : 'حساب الواتساب غير متصل في لوحة التحكم');
     }
 
     if (warning) {
@@ -1041,3 +1041,14 @@ async function deleteDncNumber(entryId) {
   }
 }
 
+
+// Listen to language changes to re-render dynamic content
+window.addEventListener('appLanguageChanged', () => {
+  if (currentCampaignData) {
+    renderCampaignHeaderAndStats(currentCampaignData);
+  }
+  if (currentCampaignContacts && currentCampaignContacts.length > 0) {
+    renderCampaignContactsTable(currentCampaignContacts);
+  }
+  updateGatewayAlertUI();
+});

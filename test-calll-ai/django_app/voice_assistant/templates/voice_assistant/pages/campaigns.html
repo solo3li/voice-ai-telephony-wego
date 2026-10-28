@@ -63,22 +63,22 @@
   <!-- Outbound Gateway Missing Warning Banner -->
   <div id="camp-no-gateway-alert" class="hidden p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-wrap items-center justify-between gap-3">
     <div>
-      <strong class="block text-amber-950 font-medium">تنبيه: لا يوجد مسار اتصال صادر (SIP Trunk) مفعل حالياً</strong>
-      <span class="text-[11px] text-amber-800">لإجراء المكالمات الهاتفية، يرجى تفعيل خط اتصال صادر من تبويب الربط الهاتفي والسنترال.</span>
+      <strong class="block text-amber-950 font-medium" data-i18n="camp_sip_warning_title">تنبيه: لا يوجد مسار اتصال صادر (SIP Trunk) مفعل حالياً</strong>
+      <span class="text-[11px] text-amber-800" data-i18n="camp_sip_warning_desc">لإجراء المكالمات الهاتفية، يرجى تفعيل خط اتصال صادر من تبويب الربط الهاتفي والسنترال.</span>
     </div>
     <a href="{% url 'voice_assistant:room' %}?tab=telephony" class="px-3 py-1 rounded-md bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs transition">
-      <span>إعداد مسار الاتصال</span>
+      <span data-i18n="camp_sip_warning_action">إعداد مسار الاتصال</span>
     </a>
   </div>
 
   <!-- WhatsApp Disconnected Warning Banner -->
   <div id="camp-no-whatsapp-alert" class="hidden p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs flex flex-wrap items-center justify-between gap-3">
     <div>
-      <strong class="block text-emerald-950 font-medium">تنبيه: حساب الواتساب غير متصل حالياً (Evolution API)</strong>
-      <span class="text-[11px] text-emerald-800">لإرسال رسائل الواتساب للحملة، يرجى ربط ومسح كود الواتساب (QR Code) أولاً من تبويب الواتساب.</span>
+      <strong class="block text-emerald-950 font-medium" data-i18n="camp_wa_warning_title">تنبيه: حساب الواتساب غير متصل حالياً (Evolution API)</strong>
+      <span class="text-[11px] text-emerald-800" data-i18n="camp_wa_warning_desc">لإرسال رسائل الواتساب للحملة، يرجى ربط ومسح كود الواتساب (QR Code) أولاً من تبويب الواتساب.</span>
     </div>
     <a href="{% url 'voice_assistant:room' %}?tab=whatsapp" class="px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs transition">
-      <span>ربط حساب الواتساب</span>
+      <span data-i18n="camp_wa_warning_action">ربط حساب الواتساب</span>
     </a>
   </div>
 
@@ -88,7 +88,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-xs font-medium text-slate-700" data-i18n="camp_select_label">اختر الحملة:</span>
         <select id="campaign-select" onchange="onCampaignSelected(this.value)" class="px-2.5 py-1.5 rounded-lg border border-[#eaedf0] text-xs font-medium bg-white text-slate-900 focus:outline-none focus:border-[#1f93ff] min-w-[200px]">
-          <option value="">جارِ تحميل الحملات...</option>
+          <option value="" data-i18n="camp_loading_campaigns">جارِ تحميل الحملات...</option>
         </select>
         <span id="camp-channel-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/60" data-i18n="camp_badge_calls">مكالمات</span>
         <span id="camp-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/60" data-i18n="camp_badge_draft">مسودة</span>
@@ -106,7 +106,7 @@
           <span data-i18n="camp_btn_reset">إعادة ضبط القائمة</span>
         </button>
         <button type="button" onclick="exportCurrentCampaign('xlsx')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition shadow-2xs">
-          <span>تصدير Excel</span>
+          <span data-i18n="camp_export_excel">تصدير Excel</span>
         </button>
         <button type="button" onclick="exportCurrentCampaign('csv')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition shadow-2xs">
           <span>CSV</span>
@@ -117,13 +117,13 @@
     <!-- Progress Bar & Prompt Preview -->
     <div class="space-y-1.5">
       <div class="flex justify-between items-center text-xs text-slate-500">
-        <span>نسبة الإنجاز: <strong id="camp-progress-text" class="text-slate-900 font-medium">0% (0 / 0)</strong></span>
-        <span>القناة: <strong id="camp-channel-text" class="text-[#1f93ff] font-medium">مكالمات</strong> | المساعد: <strong id="camp-agent-name" class="text-slate-800 font-medium">-</strong></span>
+        <span><span data-i18n="camp_progress_label">نسبة الإنجاز:</span> <strong id="camp-progress-text" class="text-slate-900 font-medium">0% (0 / 0)</strong></span>
+        <span><span data-i18n="camp_channel_label">القناة:</span> <strong id="camp-channel-text" class="text-[#1f93ff] font-medium">مكالمات</strong> <span data-i18n="camp_agent_label">| المساعد:</span> <strong id="camp-agent-name" class="text-slate-800 font-medium">-</strong></span>
       </div>
       <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
         <div id="camp-progress-bar" class="h-full bg-[#1f93ff] rounded-full transition-all duration-300" style="width: 0%"></div>
       </div>
-      <p id="camp-prompt-preview" class="text-[11px] text-slate-400 italic line-clamp-2 mt-1">السيناريو: -</p>
+      <p id="camp-prompt-preview" class="text-[11px] text-slate-400 italic line-clamp-2 mt-1" data-i18n="camp_scenario_label">السيناريو: -</p>
     </div>
   </div>
 
@@ -131,13 +131,13 @@
   <div class="space-y-3">
     <div class="flex flex-wrap justify-between items-center gap-3">
       <div class="flex flex-wrap items-center gap-1.5 text-xs">
-        <button type="button" onclick="filterCampaignContacts('all')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-[#1f93ff] text-white font-medium transition" data-filter="all">الكل (<span id="count-filter-all">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('pending')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="pending">في الانتظار (<span id="count-filter-pending">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('answered')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="answered">تم الرد (<span id="count-filter-answered">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('wa_sent')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="wa_sent">تم إرسال واتساب (<span id="count-filter-wa-sent">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('hot')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="hot">مهتم جداً (<span id="count-filter-hot">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('warm')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="warm">متابعة (<span id="count-filter-warm">0</span>)</button>
-        <button type="button" onclick="filterCampaignContacts('cold')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="cold">غير مهتم (<span id="count-filter-cold">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('all')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-[#1f93ff] text-white font-medium transition" data-filter="all"><span data-i18n="camp_filter_all">الكل</span> (<span id="count-filter-all">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('pending')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="pending"><span data-i18n="camp_filter_pending">في الانتظار</span> (<span id="count-filter-pending">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('answered')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="answered"><span data-i18n="camp_filter_answered">تم الرد</span> (<span id="count-filter-answered">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('wa_sent')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="wa_sent"><span data-i18n="camp_filter_wa_sent">تم إرسال واتساب</span> (<span id="count-filter-wa-sent">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('hot')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="hot"><span data-i18n="camp_filter_hot">مهتم جداً</span> (<span id="count-filter-hot">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('warm')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="warm"><span data-i18n="camp_filter_warm">متابعة</span> (<span id="count-filter-warm">0</span>)</button>
+        <button type="button" onclick="filterCampaignContacts('cold')" class="camp-filter-btn px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#eaedf0] font-normal transition" data-filter="cold"><span data-i18n="camp_filter_cold">غير مهتم</span> (<span id="count-filter-cold">0</span>)</button>
       </div>
 
       <!-- Search -->
@@ -178,81 +178,81 @@
   <div class="bg-white border border-[#eaedf0] shadow-md rounded-xl max-w-xl w-full p-5 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
       <div>
-        <h3 class="text-sm font-semibold text-slate-900">إنشاء حملة تسويق وتواصل جديدة</h3>
-        <p class="text-[11px] text-slate-500">حدد قناة الحملة (مكالمات، واتساب، أو هجينة) وارفع قائمة العملاء لفرزهم وتنظيمهم</p>
+        <h3 class="text-sm font-semibold text-slate-900" data-i18n="camp_modal_new_title">إنشاء حملة تسويق وتواصل جديدة</h3>
+        <p class="text-[11px] text-slate-500" data-i18n="camp_modal_new_desc">حدد قناة الحملة (مكالمات، واتساب، أو هجينة) وارفع قائمة العملاء لفرزهم وتنظيمهم</p>
       </div>
       <button type="button" onclick="closeNewCampaignModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">&times;</button>
     </div>
 
     <form id="create-campaign-form" onsubmit="submitNewCampaign(event)" class="space-y-3.5">
       <div>
-        <label class="block font-medium text-slate-700 mb-1">اسم الحملة *</label>
-        <input type="text" id="camp-input-name" required placeholder="مثال: حملة تجديد الاشتراكات" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff]" />
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="camp_modal_name_label">اسم الحملة *</label>
+        <input type="text" id="camp-input-name" required placeholder="مثال: حملة تجديد الاشتراكات" data-i18n-placeholder="camp_modal_name_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <!-- Channel Selector Radio Cards -->
       <div>
-        <label class="block font-medium text-slate-700 mb-1.5">نوع وقناة الحملة *</label>
+        <label class="block font-medium text-slate-700 mb-1.5" data-i18n="camp_modal_channel_label">نوع وقناة الحملة *</label>
         <div class="grid grid-cols-3 gap-2">
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-lg border border-[#1f93ff] bg-[#eff8ff] cursor-pointer transition text-center" id="card-channel-calls">
             <input type="radio" name="camp_channel" value="calls" checked onchange="onCampaignChannelChanged('calls')" class="hidden" />
-            <strong class="text-xs text-[#1f93ff] block font-semibold">مكالمات فقط</strong>
-            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight">اتصال صوتي آلي بالذكاء الاصطناعي</span>
+            <strong class="text-xs text-[#1f93ff] block font-semibold" data-i18n="camp_channel_calls_only">مكالمات فقط</strong>
+            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight" data-i18n="camp_channel_calls_desc">اتصال صوتي آلي بالذكاء الاصطناعي</span>
           </label>
 
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-lg border border-[#eaedf0] bg-white hover:border-[#1f93ff] cursor-pointer transition text-center" id="card-channel-whatsapp">
             <input type="radio" name="camp_channel" value="whatsapp" onchange="onCampaignChannelChanged('whatsapp')" class="hidden" />
-            <strong class="text-xs text-slate-800 block font-semibold">واتساب فقط</strong>
-            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight">رسائل مخصصة فورية</span>
+            <strong class="text-xs text-slate-800 block font-semibold" data-i18n="camp_channel_wa_only">واتساب فقط</strong>
+            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight" data-i18n="camp_channel_wa_desc">رسائل مخصصة فورية</span>
           </label>
 
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-lg border border-[#eaedf0] bg-white hover:border-[#1f93ff] cursor-pointer transition text-center" id="card-channel-hybrid">
             <input type="radio" name="camp_channel" value="hybrid" onchange="onCampaignChannelChanged('hybrid')" class="hidden" />
-            <strong class="text-xs text-slate-800 block font-semibold">هجينة</strong>
-            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight">اتصال أولاً ومتابعة بالواتساب</span>
+            <strong class="text-xs text-slate-800 block font-semibold" data-i18n="camp_channel_hybrid">هجينة</strong>
+            <span class="text-[10px] text-slate-500 mt-0.5 leading-tight" data-i18n="camp_channel_hybrid_desc">اتصال أولاً ومتابعة بالواتساب</span>
           </label>
         </div>
       </div>
 
       <!-- Agent Profile (Calls / Hybrid) -->
       <div id="container-camp-agent">
-        <label class="block font-medium text-slate-700 mb-1">المساعد الصوتي المنفذ للحملة</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="camp_modal_agent_label">المساعد الصوتي المنفذ للحملة</label>
         <select id="camp-input-agent" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff]">
-          <option value="">المساعد الافتراضي</option>
+          <option value="" data-i18n="camp_default_agent">المساعد الافتراضي</option>
         </select>
       </div>
 
       <!-- Call Prompt Container (Calls / Hybrid) -->
       <div id="container-call-prompt">
         <div class="flex justify-between items-center mb-1">
-          <label class="font-medium text-slate-700">سيناريو وهدف المكالمة (Call Scenario Prompt) *</label>
-          <span class="text-[10px] text-slate-400">مرن لكافة المجالات</span>
+          <label class="font-medium text-slate-700" data-i18n="camp_modal_prompt_label">سيناريو وهدف المكالمة (Call Scenario Prompt) *</label>
+          <span class="text-[10px] text-slate-400" data-i18n="camp_modal_flexible_hint">مرن لكافة المجالات</span>
         </div>
-        <textarea id="camp-input-prompt" rows="3" placeholder="أنت ممثل خدمة العملاء أو المبيعات..." class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff] font-sans"></textarea>
-        <p class="text-[10px] text-slate-400 mt-0.5">استخدم المتغيرات مثل {name} لدمج بيانات كل عميل تلقائياً في المكالمة.</p>
+        <textarea id="camp-input-prompt" rows="3" placeholder="أنت ممثل خدمة العملاء أو المبيعات..." data-i18n-placeholder="camp_modal_prompt_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff] font-sans"></textarea>
+        <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="camp_modal_prompt_vars_hint">استخدم المتغيرات مثل {name} لدمج بيانات كل عميل تلقائياً في المكالمة.</p>
       </div>
 
       <!-- WhatsApp Prompt Container (WhatsApp / Hybrid) -->
       <div id="container-whatsapp-prompt" class="hidden">
         <div class="flex justify-between items-center mb-1">
-          <label class="font-medium text-slate-700">توجيهات ورسالة الواتساب المخصصة (WhatsApp Prompt) *</label>
+          <label class="font-medium text-slate-700" data-i18n="camp_modal_wa_template_label">توجيهات ورسالة الواتساب المخصصة (WhatsApp Prompt) *</label>
           <span class="text-[10px] text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Gemini 2.5 Flash</span>
         </div>
-        <textarea id="camp-input-wa-prompt" rows="3" placeholder="اكتب نص الرسالة أو حدد التوجيهات والعرض المطلوب ليقوم الذكاء الاصطناعي بصياغة رسالة احترافية ومخصصة لكل عميل..." class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-emerald-600 font-sans"></textarea>
+        <textarea id="camp-input-wa-prompt" rows="3" placeholder="اكتب نص الرسالة أو حدد التوجيهات والعرض المطلوب ليقوم الذكاء الاصطناعي بصياغة رسالة احترافية ومخصصة لكل عميل..." data-i18n-placeholder="camp_modal_wa_template_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs focus:outline-none focus:border-emerald-600 font-sans"></textarea>
         <div class="mt-0.5 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400">
-          <span>يدعم المتغيرات: <code class="font-mono text-[#1f93ff]">{name}</code>, <code class="font-mono text-[#1f93ff]">{phone}</code>.</span>
-          <span class="text-emerald-700">يصيغ الذكاء الاصطناعي الرسائل بأسلوب ودود.</span>
+          <span data-i18n="camp_modal_wa_vars_hint">يدعم المتغيرات: <code class="font-mono text-[#1f93ff]">{name}</code>, <code class="font-mono text-[#1f93ff]">{phone}</code>.</span>
+          <span class="text-emerald-700" data-i18n="camp_modal_wa_friendly">يصيغ الذكاء الاصطناعي الرسائل بأسلوب ودود.</span>
         </div>
       </div>
 
       <!-- File Upload Zone -->
       <div>
-        <label class="block font-medium text-slate-700 mb-1">ملف بيانات العملاء (Excel, CSV, TXT, JSON) *</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="camp_modal_contacts_label">ملف بيانات العملاء (Excel, CSV, TXT, JSON) *</label>
         <div id="camp-file-dropzone" class="border border-dashed border-[#eaedf0] hover:border-[#1f93ff] rounded-lg p-4 text-center cursor-pointer transition bg-slate-50">
           <input type="file" id="camp-input-file" accept=".csv, .xlsx, .xls, .txt, .json" onchange="onCampaignFileSelected(this)" class="hidden" required />
           <div onclick="document.getElementById('camp-input-file').click()" class="space-y-1">
-            <p id="camp-file-label" class="text-xs font-medium text-slate-800">اضغط لاختيار ملف من جهازك أو اسحبه وأفلته هنا</p>
-            <p class="text-[10px] text-slate-400">يدعم: Excel (.xlsx, .xls), CSV, نصي (.txt), JSON</p>
+            <p id="camp-file-label" class="text-xs font-medium text-slate-800" data-i18n="camp_modal_upload_csv">اضغط لاختيار ملف من جهازك أو اسحبه وأفلته هنا</p>
+            <p class="text-[10px] text-slate-400" data-i18n="camp_modal_csv_hint">يدعم: Excel (.xlsx, .xls), CSV, نصي (.txt), JSON</p>
           </div>
         </div>
         <div id="camp-file-preview" class="hidden mt-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center justify-between">
@@ -264,17 +264,17 @@
       <!-- Retries (for Calls / Hybrid) -->
       <div id="container-camp-retries" class="grid grid-cols-2 gap-3 pt-1">
         <div>
-          <label class="block font-medium text-slate-700 mb-1">محاولات الإعادة في حال عدم الرد</label>
+          <label class="block font-medium text-slate-700 mb-1" data-i18n="camp_modal_retries_label">محاولات الإعادة في حال عدم الرد</label>
           <input type="number" id="camp-input-retries" value="1" min="0" max="5" class="w-full px-3 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs" />
         </div>
         <div>
-          <label class="block font-medium text-slate-700 mb-1">الفارق بين المحاولات (دقائق)</label>
+          <label class="block font-medium text-slate-700 mb-1" data-i18n="camp_modal_delay_label">الفارق بين المحاولات (دقائق)</label>
           <input type="number" id="camp-input-delay" value="15" min="1" max="1440" class="w-full px-3 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs" />
         </div>
       </div>
 
       <div class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] text-slate-600 text-[11px] leading-relaxed">
-        <span class="font-medium text-slate-800">إدارة الجدولة والتزامن الذكي عبر Inngest:</span>
+        <span class="font-medium text-slate-800" data-i18n="camp_modal_inngest_sync">إدارة الجدولة والتزامن الذكي عبر Inngest:</span>
         <p class="mt-0.5 text-[10px] text-slate-500">
           يتم تنظيم العمليات المتوازية تلقائياً بحسب الحد المسموح لحسابك (<strong id="camp-modal-limit-text">1 مكالمة متزامنة</strong>).
         </p>
@@ -283,9 +283,9 @@
       <div id="camp-modal-error" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
 
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#eaedf0]">
-        <button type="button" onclick="closeNewCampaignModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition">إلغاء</button>
+        <button type="button" onclick="closeNewCampaignModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition" data-i18n="cancel">إلغاء</button>
         <button type="submit" id="camp-btn-submit" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
-          <span>رفع وتنظيم العملاء في الـ CRM</span>
+          <span data-i18n="camp_modal_submit">رفع وتنظيم العملاء في الـ CRM</span>
         </button>
       </div>
     </form>
@@ -306,19 +306,19 @@
     <div class="space-y-3">
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0] text-center">
         <div>
-          <span class="text-[10px] text-slate-400 block font-medium">حالة الاتصال</span>
+          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="camp_modal_call_status">حالة الاتصال</span>
           <span id="contact-modal-status" class="font-medium text-slate-800 mt-0.5 block">-</span>
         </div>
         <div>
-          <span class="text-[10px] text-slate-400 block font-medium">حالة الواتساب</span>
+          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="camp_modal_wa_status">حالة الواتساب</span>
           <span id="contact-modal-wa-status" class="font-medium text-slate-800 mt-0.5 block">-</span>
         </div>
         <div>
-          <span class="text-[10px] text-slate-400 block font-medium">تصنيف الاهتمام</span>
+          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="camp_modal_interest">تصنيف الاهتمام</span>
           <span id="contact-modal-interest" class="font-medium text-slate-800 mt-0.5 block">-</span>
         </div>
         <div>
-          <span class="text-[10px] text-slate-400 block font-medium">محاولات الاتصال</span>
+          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="camp_modal_retries_count">محاولات الاتصال</span>
           <span id="contact-modal-retries" class="font-medium text-slate-800 mt-0.5 block">0</span>
         </div>
       </div>
@@ -326,7 +326,7 @@
       <!-- WhatsApp Sent Message Box -->
       <div id="contact-modal-wa-box" class="hidden">
         <div class="flex justify-between items-center mb-1">
-          <h4 class="font-medium text-slate-700">رسالة الواتساب المرسلة:</h4>
+          <h4 class="font-medium text-slate-700" data-i18n="camp_modal_wa_sent_label">رسالة الواتساب المرسلة:</h4>
           <span id="contact-modal-wa-time" class="text-[10px] text-slate-400 font-mono">-</span>
         </div>
         <div id="contact-modal-wa-text" class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0] text-slate-800 leading-relaxed whitespace-pre-wrap font-sans">
@@ -335,19 +335,19 @@
       </div>
 
       <div>
-        <h4 class="font-medium text-slate-700 mb-1">ملخص المكالمة:</h4>
+        <h4 class="font-medium text-slate-700 mb-1" data-i18n="camp_modal_summary_label">ملخص المكالمة:</h4>
         <div id="contact-modal-summary" class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0] text-slate-700 leading-relaxed whitespace-pre-wrap">لا يوجد ملخص مكالمة بعد.</div>
       </div>
 
       <div>
-        <h4 class="font-medium text-slate-700 mb-1">استخلاصات الذكاء الاصطناعي (AI Insights):</h4>
+        <h4 class="font-medium text-slate-700 mb-1" data-i18n="camp_modal_insights_label">استخلاصات الذكاء الاصطناعي (AI Insights):</h4>
         <div id="contact-modal-insights" class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0] text-slate-700 space-y-1">
           <!-- Dynamically populated -->
         </div>
       </div>
 
       <div>
-        <h4 class="font-medium text-slate-700 mb-1">البيانات الإضافية المرفوعة (Attributes):</h4>
+        <h4 class="font-medium text-slate-700 mb-1" data-i18n="camp_modal_attrs_label">البيانات الإضافية المرفوعة (Attributes):</h4>
         <div id="contact-modal-attrs" class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0] max-h-32 overflow-y-auto">
           <!-- Dynamically populated -->
         </div>
@@ -357,13 +357,13 @@
     <div class="flex items-center justify-between pt-2.5 border-t border-[#eaedf0]">
       <div class="flex items-center gap-2">
         <button type="button" id="contact-modal-dial-btn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition shadow-2xs">
-          <span>اتصال الآن</span>
+          <span data-i18n="camp_modal_btn_dial">اتصال الآن</span>
         </button>
         <button type="button" id="contact-modal-wa-btn" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white font-medium transition shadow-2xs">
-          <span>إرسال واتساب</span>
+          <span data-i18n="camp_modal_btn_wa">إرسال واتساب</span>
         </button>
       </div>
-      <button type="button" onclick="closeContactModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs">إغلاق</button>
+      <button type="button" onclick="closeContactModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs" data-i18n="close">إغلاق</button>
     </div>
   </div>
 </div>
@@ -373,8 +373,8 @@
   <div class="bg-white rounded-xl border border-[#eaedf0] shadow-md w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden text-xs">
     <div class="p-4 border-b border-[#eaedf0] flex items-center justify-between bg-white">
       <div>
-        <h3 class="text-sm font-semibold text-slate-900">قائمة عدم الاتصال والمراسلة (DNC List)</h3>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <h3 class="text-sm font-semibold text-slate-900" data-i18n="camp_dnc_modal_title">قائمة عدم الاتصال والمراسلة (DNC List)</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="camp_dnc_modal_desc">
           الأرقام المسجلة هنا سيتم استبعادها وتخطيها تلقائياً من جميع حملات الاتصال والمراسلة.
         </p>
       </div>
@@ -385,20 +385,20 @@
     <div class="p-3.5 bg-slate-50 border-b border-[#eaedf0]">
       <form id="add-dnc-form" onsubmit="handleAddDncNumber(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
         <div class="sm:col-span-4">
-          <label class="block text-[11px] font-medium text-slate-700 mb-1">رقم الهاتف *</label>
+          <label class="block text-[11px] font-medium text-slate-700 mb-1" data-i18n="camp_dnc_phone_label">رقم الهاتف *</label>
           <input type="text" id="dnc-input-phone" required placeholder="+201012345678" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white text-xs focus:outline-none focus:border-[#1f93ff] font-mono">
         </div>
         <div class="sm:col-span-3">
-          <label class="block text-[11px] font-medium text-slate-700 mb-1">اسم العميل (اختياري)</label>
-          <input type="text" id="dnc-input-name" placeholder="محمد علي" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white text-xs focus:outline-none focus:border-[#1f93ff]">
+          <label class="block text-[11px] font-medium text-slate-700 mb-1" data-i18n="camp_dnc_name_label">اسم العميل (اختياري)</label>
+          <input type="text" id="dnc-input-name" placeholder="محمد علي" data-i18n-placeholder="camp_dnc_name_ph" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white text-xs focus:outline-none focus:border-[#1f93ff]">
         </div>
         <div class="sm:col-span-3">
-          <label class="block text-[11px] font-medium text-slate-700 mb-1">السبب</label>
-          <input type="text" id="dnc-input-reason" placeholder="طلب عدم الاتصال" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white text-xs focus:outline-none focus:border-[#1f93ff]">
+          <label class="block text-[11px] font-medium text-slate-700 mb-1" data-i18n="camp_dnc_reason_label">السبب</label>
+          <input type="text" id="dnc-input-reason" placeholder="طلب عدم الاتصال" data-i18n-placeholder="camp_dnc_reason_ph" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white text-xs focus:outline-none focus:border-[#1f93ff]">
         </div>
         <div class="sm:col-span-2">
           <button type="submit" class="w-full py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition shadow-2xs">
-            <span>إضافة</span>
+            <span data-i18n="add">إضافة</span>
           </button>
         </div>
       </form>
@@ -406,18 +406,18 @@
 
     <!-- DNC List Table -->
     <div class="p-4 overflow-y-auto flex-1">
-      <div id="dnc-loading" class="text-center py-8 text-slate-400">جاري تحميل قائمة الأرقام المحظورة...</div>
-      <div id="dnc-empty" class="hidden text-center py-8 text-slate-500">
+      <div id="dnc-loading" class="text-center py-8 text-slate-400" data-i18n="camp_dnc_loading">جاري تحميل قائمة الأرقام المحظورة...</div>
+      <div id="dnc-empty" class="hidden text-center py-8 text-slate-500" data-i18n="camp_dnc_empty">
         لا توجد أي أرقام في قائمة عدم الاتصال حالياً.
       </div>
       <table id="dnc-table" class="hidden w-full text-start border-collapse text-xs">
         <thead>
           <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
-            <th class="py-2 px-3 text-start font-medium">رقم الهاتف</th>
-            <th class="py-2 px-3 text-start font-medium">اسم العميل</th>
-            <th class="py-2 px-3 text-start font-medium">السبب</th>
-            <th class="py-2 px-3 text-start font-medium">تاريخ الحظر</th>
-            <th class="py-2 px-3 text-center font-medium">إجراء</th>
+            <th class="py-2 px-3 text-start font-medium" data-i18n="camp_dnc_th_phone">رقم الهاتف</th>
+            <th class="py-2 px-3 text-start font-medium" data-i18n="camp_dnc_th_name">اسم العميل</th>
+            <th class="py-2 px-3 text-start font-medium" data-i18n="camp_dnc_th_reason">السبب</th>
+            <th class="py-2 px-3 text-start font-medium" data-i18n="camp_dnc_th_date">تاريخ الحظر</th>
+            <th class="py-2 px-3 text-center font-medium" data-i18n="camp_dnc_th_action">إجراء</th>
           </tr>
         </thead>
         <tbody id="dnc-table-body" class="divide-y divide-[#eaedf0] text-slate-700">
@@ -427,8 +427,8 @@
     </div>
 
     <div class="p-3 border-t border-[#eaedf0] flex justify-between items-center bg-slate-50">
-      <span id="dnc-total-count" class="text-[11px] text-slate-500 font-medium">إجمالي الأرقام: 0</span>
-      <button type="button" onclick="closeDncModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs">إغلاق</button>
+      <span id="dnc-total-count" class="text-[11px] text-slate-500 font-medium" data-i18n="camp_dnc_total_count">إجمالي الأرقام: 0</span>
+      <button type="button" onclick="closeDncModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs" data-i18n="close">إغلاق</button>
     </div>
   </div>
 </div>

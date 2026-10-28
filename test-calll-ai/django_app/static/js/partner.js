@@ -85,9 +85,9 @@ async function loadPartnerDashboard() {
     const cEl = document.getElementById('partner-kpi-clients');
     const mEl = document.getElementById('partner-kpi-minutes');
     if (bEl) bEl.innerText = `$${(wallet.balance || 0).toFixed(2)}`;
-    if (rEl) rEl.innerText = `$${(kpis.custom_rate || 0).toFixed(4)} / د`;
+    if (rEl) rEl.innerText = `$${(kpis.custom_rate || 0).toFixed(4)} / ` + (window.t ? window.t('minute_short', 'د') : 'د');
     if (cEl) cEl.innerText = kpis.total_clients || 0;
-    if (mEl) mEl.innerText = `${kpis.total_minutes || 0} د`;
+    if (mEl) mEl.innerText = `${kpis.total_minutes || 0} ` + (window.t ? window.t('minute_short', 'د') : 'د');
 
     // 2. Credentials
     const codeInp = document.getElementById('partner-code-input');
@@ -100,7 +100,7 @@ async function loadPartnerDashboard() {
     // 3. Shared MCP Servers dropdown
     const mcpSelect = document.getElementById('partner-shared-mcp-select');
     if (mcpSelect) {
-      mcpSelect.innerHTML = '<option value="">-- بدون خادم موروث --</option>' +
+      mcpSelect.innerHTML = '<option value="">-- ' + (window.t ? window.t('partner_no_inherited_mcp', 'بدون خادم موروث') : 'بدون خادم موروث') + ' --</option>' +
         mcpServers.map(s => `<option value="${s.id}" ${partner.shared_mcp_server_id == s.id ? 'selected' : ''}>${escapeHtml(s.name)} (${escapeHtml(s.server_url)})</option>`).join('');
     }
 
@@ -108,7 +108,7 @@ async function loadPartnerDashboard() {
     const cTbody = document.getElementById('partner-clients-tbody');
     if (cTbody) {
       if (clients.length === 0) {
-        cTbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.</td></tr>`;
+        cTbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">${window.t ? window.t('partner_no_clients', 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.') : 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.'}</td></tr>`;
       } else {
         cTbody.innerHTML = clients.map(c => `
           <tr class="hover:bg-slate-50/60 transition">
@@ -141,7 +141,7 @@ async function loadPartnerDashboard() {
     const callsTbody = document.getElementById('partner-calls-tbody');
     if (callsTbody) {
       if (calls.length === 0) {
-        callsTbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.</td></tr>`;
+        callsTbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">${window.t ? window.t('partner_no_calls', 'لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.') : 'لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.'}</td></tr>`;
       } else {
         callsTbody.innerHTML = calls.map(cl => `
           <tr class="hover:bg-slate-50/60 transition">
@@ -400,5 +400,10 @@ async function submitPartnerApply(event) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadPartnerDashboard();
+});
+
+// Re-render partner dashboard on language toggle
+window.addEventListener('appLanguageChanged', () => {
   loadPartnerDashboard();
 });

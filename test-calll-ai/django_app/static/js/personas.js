@@ -183,7 +183,7 @@ function renderProfileCards() {
   if (!userProfiles || userProfiles.length === 0) {
     container.innerHTML = `
       <div class="col-span-2 text-center py-10 bg-white rounded-xl border border-[#eaedf0] text-slate-400 text-xs">
-        لا توجد شخصيات مسجلة حالياً. اضغط على "إنشاء شخصية جديدة" للبدء.
+        ${window.t ? window.t("personas_empty_catalog", "لا توجد شخصيات مسجلة حالياً. اضغط على \"إنشاء شخصية جديدة\" للبدء.") : "لا توجد شخصيات مسجلة حالياً. اضغط على \"إنشاء شخصية جديدة\" للبدء."}
       </div>
     `;
     return;
@@ -217,17 +217,17 @@ function renderProfileCards() {
         <!-- Card Voice Timber & Details -->
         <div class="bg-slate-50/60 p-3 rounded-lg border border-[#eaedf0] text-xs space-y-1.5">
           <div class="flex justify-between items-center">
-            <span class="text-slate-500">صوت Google:</span>
+            <span class="text-slate-500">${window.t ? window.t("personas_google_voice_lbl", "صوت Google:") : "صوت Google:"}</span>
             <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">${escapeHtml(p.voice || p.voice_name)}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-500">الأسلوب:</span>
+            <span class="text-slate-500">${window.t ? window.t("personas_style_lbl", "الأسلوب:") : "الأسلوب:"}</span>
             <span class="text-slate-800 font-medium">${escapeHtml(p.style_display || p.style || p.speaking_style)}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-500">الترحيب الافتتاحي:</span>
+            <span class="text-slate-500">${window.t ? window.t("personas_greeting_lbl", "الترحيب الافتتاحي:") : "الترحيب الافتتاحي:"}</span>
             <span class="text-[11px] font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#1f93ff]' : 'text-slate-400'}">
-              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `💬 "${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : 'ترحيب تلقائي ذكي') : 'انتظار المتصل أولاً'}
+              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `💬 "${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : (window.t ? window.t('personas_auto_greeting', 'ترحيب تلقائي ذكي') : 'ترحيب تلقائي ذكي')) : (window.t ? window.t('personas_wait_caller', 'انتظار المتصل أولاً') : 'انتظار المتصل أولاً')}
             </span>
           </div>
           ${p.off_topic_response ? `
@@ -248,7 +248,7 @@ function renderProfileCards() {
         <!-- Card Actions -->
         <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#eaedf0]">
           <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition flex items-center gap-1">
-            <span>تعديل التفاصيل</span>
+            <span>${window.t ? window.t("personas_btn_edit_profile", "تعديل التفاصيل") : "تعديل التفاصيل"}</span>
           </button>
           ${isActive ? `
             <span class="text-xs text-emerald-700 font-medium flex items-center gap-1">
@@ -256,7 +256,7 @@ function renderProfileCards() {
             </span>
           ` : `
             <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition shadow-2xs flex items-center gap-1">
-              <span>تفعيل للمكالمات</span>
+              <span>${window.t ? window.t("personas_btn_activate", "تفعيل للمكالمات") : "تفعيل للمكالمات"}</span>
             </button>
           `}
         </div>
@@ -796,4 +796,10 @@ document.addEventListener('DOMContentLoaded', () => {
   newProfOffTopic = document.getElementById('new-prof-off-topic');
 
   loadProfiles();
+});
+
+// Re-render profile cards and dropdown on language toggle
+window.addEventListener('appLanguageChanged', () => {
+  renderProfileCards();
+  renderProfileDropdown();
 });

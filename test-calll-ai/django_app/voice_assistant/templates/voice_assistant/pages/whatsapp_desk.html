@@ -67,7 +67,7 @@
         id="btn-sound-toggle"
         onclick="toggleSoundMute()"
         class="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs flex items-center gap-1.5"
-        title="كتم/تفعيل صوت الرنين"
+        title="كتم/تفعيل صوت الرنين" data-i18n-title="desk_title_toggle_sound"
         data-i18n-title="desk_sound_title"
       >
         <span id="sound-icon">🔔</span>
@@ -168,7 +168,7 @@
               type="button" 
               onclick="releaseActiveChat()" 
               class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-medium transition flex items-center gap-1 shadow-2xs"
-              title="إعادة المحادثة للطابور العام لترن عند الزملاء"
+              title="إعادة المحادثة للطابور العام لترن عند الزملاء" data-i18n-title="desk_title_requeue"
               data-i18n-title="desk_btn_release_title"
             >
               <span data-i18n="desk_btn_release">إعادة للطابور</span>
@@ -177,7 +177,7 @@
               type="button" 
               onclick="resolveActiveChat()" 
               class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
-              title="إنهاء التذكرة واستئناف الرد الآلي للذكاء الاصطناعي"
+              title="إنهاء التذكرة واستئناف الرد الآلي للذكاء الاصطناعي" data-i18n-title="desk_title_resolve"
               data-i18n-title="desk_btn_resolve_title"
             >
               <span data-i18n="desk_btn_resolve">حل المشكلة واستئناف الـ AI</span>
@@ -190,7 +190,7 @@
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" data-i18n="desk_brief_escalation">شكوى / تصعيد</span>
-              <span class="font-medium text-slate-900" id="desk-brief-reason">سبب التصعيد: -</span>
+              <span class="font-medium text-slate-900" id="desk-brief-reason" data-i18n="desk_brief_reason">سبب التصعيد: -</span>
             </div>
             <!-- 5-Minute Countdown Badge -->
             <div class="flex items-center gap-1.5 font-mono text-[11px] font-medium px-2.5 py-0.5 rounded-md border bg-white shadow-2xs" id="sla-timer-container">
@@ -215,7 +215,7 @@
               <input 
                 type="text" 
                 id="desk-reply-input" 
-                placeholder="اكتب رداً مباشراً على العميل على الواتساب..." 
+                placeholder="اكتب رداً مباشراً على العميل على الواتساب..." data-i18n-placeholder="desk_input_placeholder" 
                 data-i18n-placeholder="desk_reply_placeholder"
                 required
                 autocomplete="off"

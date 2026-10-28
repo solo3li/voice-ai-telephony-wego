@@ -21,7 +21,7 @@ async function loadDeveloperKeys() {
 
       if (keyInput) keyInput.value = currentDeveloperKey;
       if (createdEl) createdEl.innerText = keyObj.created_at || '--';
-      if (usedEl) usedEl.innerText = keyObj.last_used_at || 'لم يُستخدم بعد';
+      if (usedEl) usedEl.innerText = keyObj.last_used_at || (window.t ? window.t('dev_never_used', 'لم يُستخدم بعد') : 'لم يُستخدم بعد');
 
       if (curlSample) {
         curlSample.innerText = `curl -X GET "${window.location.origin}/api/v1/account/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Accept: application/json"`;
@@ -70,10 +70,10 @@ function updateLiveContextBadges(cachedInRedis, sizeBytes, updatedAt) {
   if (redisBadge) {
     if (cachedInRedis) {
       redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1';
-      redisBadge.innerHTML = '<span>🟢</span> <span>متزامن في الذاكرة (Redis Active)</span>';
+      redisBadge.innerHTML = '<span>🟢</span> <span>' + (window.t ? window.t('dev_redis_active', 'متزامن في الذاكرة (Redis Active)') : 'متزامن في الذاكرة (Redis Active)') + '</span>';
     } else {
       redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1';
-      redisBadge.innerHTML = '<span>⚪</span> <span>فارغ / غير محمل</span>';
+      redisBadge.innerHTML = '<span>⚪</span> <span>' + (window.t ? window.t('dev_redis_empty', 'فارغ / غير محمل') : 'فارغ / غير محمل') + '</span>';
     }
   }
 
@@ -360,3 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLiveContext();
 });
 
+
+// Re-render developer live context on language toggle
+window.addEventListener('appLanguageChanged', () => {
+  loadLiveContext();
+});
