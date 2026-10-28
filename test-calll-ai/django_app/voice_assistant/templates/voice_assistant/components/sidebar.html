@@ -1,5 +1,5 @@
 {% load static %}
-<!-- ==================== Chatwoot-Engineered Clean Sidebar (Dedicated Omnichannel & Admin) ==================== -->
+<!-- ==================== Clean Dedicated Sidebar (5 Core Portals) ==================== -->
 <aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-300 z-30 shadow-xs shrink-0 sidebar-expanded border-l md:border-l-0 md:border-e border-[#eaedf0] md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
   
   <!-- Top Brand & Toggle (Pinned) -->
@@ -27,15 +27,28 @@
     </button>
   </div>
 
-  <!-- Navigation Links: ONLY 4 Dedicated Items -->
+  <!-- Navigation Links: Exactly 5 Dedicated Items -->
   <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1 text-xs custom-sidebar-scroll min-h-0">
     
-    <!-- Group 1: قنوات المحادثات والرسائل -->
+    <!-- Group 1: قنوات الاتصال والمحادثة -->
     <div class="px-2 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-      قنوات المحادثة
+      الاتصالات والمحادثات
     </div>
 
-    <!-- 1. Chatwoot Omnichannel Chat -->
+    <!-- 1. Voice & Telephony Suite Portal -->
+    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours' or not active_nav %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+      <div class="flex items-center gap-2.5 truncate">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours' or not active_nav %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" x2="12" y1="19" y2="22"/>
+        </svg>
+        <span class="nav-text">المساعد الصوتي والاتصالات</span>
+      </div>
+      <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold rounded bg-sky-50 text-sky-700 border border-sky-200">Voice</span>
+    </a>
+
+    <!-- 2. Chatwoot Omnichannel Chat -->
     <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'chat' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -51,7 +64,7 @@
       إدارة الحساب والنظام
     </div>
 
-    <!-- 2. Billing & Wallet -->
+    <!-- 3. Billing & Wallet -->
     <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'billing' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
@@ -59,7 +72,7 @@
       <span class="nav-text" data-i18n="nav_billing">الرصيد والفواتير</span>
     </a>
 
-    <!-- 3. Developer API -->
+    <!-- 4. Developer API -->
     <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'developer' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -70,7 +83,7 @@
       <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">REST</span>
     </a>
 
-    <!-- 4. Partner & SaaS -->
+    <!-- 5. Partner & SaaS -->
     <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'partner' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>

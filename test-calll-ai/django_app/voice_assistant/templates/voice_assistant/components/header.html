@@ -1,5 +1,5 @@
 {% load static %}
-<!-- Top Chatwoot-Style Clean Header Component with Option 2 Telephony Horizontal Bar -->
+<!-- Top Clean Header Component with Conditional Minimalist Telephony Horizontal Bar -->
 <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[#eaedf0] shadow-2xs">
   
   <!-- Row 1: Section Title & Live Service Badges -->
@@ -46,125 +46,93 @@
     </div>
   </header>
 
-  <!-- Row 2: Flat Horizontal Scrolling Bar (The 10 Voice Telephony Modules) -->
-  <div class="relative px-2 py-1.5 bg-[#f8fafc]/90 flex items-center">
+  {% if active_nav in "voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours" or not active_nav or request.resolver_match.url_name == 'room' %}
+  <!-- Row 2: Minimalist Flat Horizontal Scrolling Bar (Only for the 10 Telephony Pages) -->
+  <div class="relative px-3 py-1.5 bg-[#f8fafc]/95 border-t border-[#eaedf0]/60 flex items-center">
     
     <!-- Left Smooth Scroll Arrow -->
-    <button type="button" onclick="scrollTopTabs('left')" class="hidden md:flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليسار">
+    <button type="button" onclick="scrollTopTabs('left')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليسار">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
 
-    <!-- Horizontal Tabs Track: 10 Core Telephony Pages -->
-    <nav id="top-tabs-container" class="flex-1 flex items-center gap-1.5 overflow-x-auto scroll-smooth py-0.5 px-1 no-scrollbar text-xs">
+    <!-- Horizontal Tabs Track: 10 Pure Minimalist Text-Only Pills -->
+    <nav id="top-tabs-container" class="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
       
       <!-- 1. Voice Room -->
-      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav and request.resolver_match.url_name == 'room' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'voice' or not active_nav and request.resolver_match.url_name == 'room' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>
-        </svg>
+      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>غرفة المساعد الصوتي</span>
       </a>
 
-      <!-- 2. Calls (CDR) -->
-      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'calls' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-        </svg>
+      <!-- 2. CDR Calls -->
+      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>سجل المكالمات (CDR)</span>
       </a>
 
       <!-- 3. RAG Knowledge Base -->
-      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'rag' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/>
-        </svg>
+      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>قاعدة المعرفة RAG</span>
-        <span class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">موحد</span>
       </a>
 
       <!-- 4. Personas & Voices -->
-      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'personas' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="m9 11 2 2 4-4"/>
-        </svg>
+      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>الشخصيات واللهجات</span>
       </a>
 
-      <!-- 5. CRM & Customer Memory -->
-      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'crm' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
+      <!-- 5. Customers & CRM Memory -->
+      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>ذاكرة وسجل العملاء</span>
       </a>
 
-      <!-- 6. FastMCP Store -->
-      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'store' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 9 3 3-3 3"/><path d="m15 9-3 3 3 3"/>
-        </svg>
+      <!-- 6. MCP Tools Store -->
+      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>متجر وأدوات MCP</span>
-        <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-slate-100 text-slate-600">FastMCP</span>
       </a>
 
-      <!-- 7. Calling Campaigns -->
-      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'campaigns' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
-        </svg>
+      <!-- 7. Campaigns & CRM -->
+      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>حملات الاتصال والعملاء</span>
-        <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold rounded bg-amber-50 text-amber-700 border border-amber-200">AI CRM</span>
       </a>
 
       <!-- 8. Call Center & Queues -->
-      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'callcenter' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
-        </svg>
+      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>مركز الاتصالات والطوابير</span>
       </a>
 
       <!-- 9. Telephony & PBX -->
-      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'telephony' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
-        </svg>
+      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>الربط الهاتفي والسنترال</span>
       </a>
 
       <!-- 10. Business Hours -->
-      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn group shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
+      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
         <span>مواعيد العمل والخطة البديلة</span>
-        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">جديد</span>
       </a>
 
     </nav>
 
     <!-- Right Smooth Scroll Arrow -->
-    <button type="button" onclick="scrollTopTabs('right')" class="hidden md:flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليمين">
+    <button type="button" onclick="scrollTopTabs('right')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليمين">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="9 18 15 12 9 6"/>
       </svg>
     </button>
 
   </div>
+  {% endif %}
 </div>
 
 <script>
   function scrollTopTabs(dir) {
     const container = document.getElementById('top-tabs-container');
     if (!container) return;
-    const isRtl = document.documentElement.dir === 'rtl';
-    let delta = 240;
+    const isRtl = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+    let delta = 220;
     if (dir === 'left') {
-      delta = isRtl ? 240 : -240;
+      delta = isRtl ? 220 : -220;
     } else {
-      delta = isRtl ? -240 : 240;
+      delta = isRtl ? -220 : 220;
     }
     container.scrollBy({ left: delta, behavior: 'smooth' });
   }
