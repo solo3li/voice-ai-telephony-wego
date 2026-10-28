@@ -1249,55 +1249,61 @@ def api_hangup_call(request):
         if not room_name and not target_employee_id:
             return JsonResponse({"status": "error", "message": "room_name or target_employee_id is required"}, status=400)
 
-        r = redis.Redis.from_url(settings.REDIS_URL)
+        try:
+            r = redis.Redis.from_url(settings.REDIS_URL)
 
-        # 0. Check if this room is in the middle of a transfer / queue ringing
-        active_transfer_id = r.get(f"room:{room_name}:transfer_id") if room_name else None
-        if active_transfer_id:
-            if isinstance(active_transfer_id, bytes):
-                active_transfer_id = active_transfer_id.decode('utf-8')
-            logger.info(f"Hangup called while transfer {active_transfer_id} is active for room {room_name}. Cancelling transfer.")
-            r.set(f"transfer:{active_transfer_id}:state", "cancelled", ex=300)
-            current_cand = r.get(f"transfer:{active_transfer_id}:current_candidate")
-            if current_cand:
-                if isinstance(current_cand, bytes):
-                    current_cand = current_cand.decode('utf-8')
-                publish_to_centrifugo(f"employee:{current_cand}", {
-                    "event": "call_ended",
-                    "transfer_id": active_transfer_id,
-                    "room_name": room_name,
-                    "reason": "cancelled"
-                })
-            try:
-                async_to_sync(inngest_client.send)(
-                    inngest.Event(
-                        name="call_center/transfer.action",
-                        data={
-                            "transfer_id": active_transfer_id,
-                            "action": "cancel",
-                            "reason": "caller_hungup"
-                        }
+            # 0. Check if this room is in the middle of a transfer / queue ringing
+            active_transfer_id = r.get(f"room:{room_name}:transfer_id") if room_name else None
+            if active_transfer_id:
+                if isinstance(active_transfer_id, bytes):
+                    active_transfer_id = active_transfer_id.decode('utf-8')
+                logger.info(f"Hangup called while transfer {active_transfer_id} is active for room {room_name}. Cancelling transfer.")
+                r.set(f"transfer:{active_transfer_id}:state", "cancelled", ex=300)
+                current_cand = r.get(f"transfer:{active_transfer_id}:current_candidate")
+                if current_cand:
+                    if isinstance(current_cand, bytes):
+                        current_cand = current_cand.decode('utf-8')
+                    publish_to_centrifugo(f"employee:{current_cand}", {
+                        "event": "call_ended",
+                        "transfer_id": active_transfer_id,
+                        "room_name": room_name,
+                        "reason": "cancelled"
+                    })
+                try:
+                    async_to_sync(inngest_client.send)(
+                        inngest.Event(
+                            name="call_center/transfer.action",
+                            data={
+                                "action": "hangup",
+                                "transfer_id": active_transfer_id,
+                                "room_name": room_name,
+                            }
+                        )
                     )
-                )
-            except Exception as inngest_err:
-                logger.warning(f"Error cancelling Inngest transfer: {inngest_err}")
+                except Exception as inngest_err:
+                    logger.warning(f"Failed to trigger Inngest transfer hangup: {inngest_err}")
+        except Exception as r_err:
+            logger.warning(f"Redis transfer lookup failed during hangup: {r_err}")
 
         # Always clear transferring keys and ringing keys when hangup is requested
         if room_name:
-            r.delete(f"room:{room_name}:is_transferring")
-            r.delete(f"room:{room_name}:transfer_id")
-            room_ringing = r.get(f"call_center:ringing:room:{room_name}")
-            if room_ringing:
-                try:
+            try:
+                r.delete(f"room:{room_name}:is_transferring")
+                r.delete(f"room:{room_name}:transfer_id")
+                room_ringing = r.get(f"call_center:ringing:room:{room_name}")
+                if room_ringing:
                     emp_ids = json.loads(room_ringing.decode('utf-8'))
                     for eid in emp_ids:
                         r.delete(f"call_center:ringing:employee:{eid}")
                     r.delete(f"call_center:ringing:room:{room_name}")
-                except Exception as re:
-                    pass
+            except Exception:
+                pass
 
         if employee:
-            r.delete(f"call_center:ringing:employee:{employee.id}")
+            try:
+                r.delete(f"call_center:ringing:employee:{employee.id}")
+            except Exception:
+                pass
 
         # 1. Direct peer employee channel notification if explicitly provided
         if target_employee_id:

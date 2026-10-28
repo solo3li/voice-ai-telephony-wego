@@ -771,7 +771,12 @@ def api_user_live_context_web(request):
         ctx_obj = TenantLiveContext.objects.filter(user=user).first()
         r = get_redis_client()
         redis_key = REDIS_KEY_TEMPLATE.format(user_id=user.id)
-        cached_in_redis = bool(r and r.exists(redis_key))
+        cached_in_redis = False
+        if r:
+            try:
+                cached_in_redis = bool(r.exists(redis_key))
+            except Exception as re_err:
+                logger.warning(f"Redis exists check error for {redis_key}: {re_err}")
         return JsonResponse({
             "status": "success",
             "context": ctx_obj.to_dict() if ctx_obj else {"data": {}, "size_bytes": 0, "updated_at": None},

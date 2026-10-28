@@ -134,8 +134,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Redis
-REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+# Redis (Prefer voice_redis to avoid DNS collisions in multi-network environments)
+_raw_redis_url = os.getenv('REDIS_URL', 'redis://voice_redis:6379/0')
+if '//redis:' in _raw_redis_url:
+    try:
+        import socket
+        socket.gethostbyname('voice_redis')
+        REDIS_URL = _raw_redis_url.replace('//redis:', '//voice_redis:')
+    except Exception:
+        REDIS_URL = _raw_redis_url
+else:
+    REDIS_URL = _raw_redis_url
 
 # LiveKit
 LIVEKIT_URL = os.getenv('LIVEKIT_URL', 'wss://livekit.localhost')
