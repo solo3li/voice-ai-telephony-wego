@@ -149,6 +149,7 @@ def room_view(request):
         'livekit_url': settings.LIVEKIT_URL,
         'username': request.user.username,
         'user_id': request.user.id,
+        'chatwoot_url': getattr(settings, 'CHATWOOT_BASE_URL', 'https://chatwoot.169.58.32.179.nip.io') + '/app/accounts/2',
     }
     return render(request, 'voice_assistant/room.html', context)
 

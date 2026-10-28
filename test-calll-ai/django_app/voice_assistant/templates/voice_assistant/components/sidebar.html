@@ -55,7 +55,7 @@
     </a>
 
     <!-- 2. Chatwoot Omnichannel Chat -->
-    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" onclick="if(typeof switchTab==='function'){switchTab('chat');return false;}" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'chat' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -66,7 +66,7 @@
     </a>
 
     <!-- 3. All Calls & CDR -->
-    <a href="{% url 'voice_assistant:calls_page' %}" id="nav-btn-calls" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'calls' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:calls_page' %}" id="nav-btn-calls" onclick="if(typeof switchTab==='function'){switchTab('calls');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'calls' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'calls' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
       </svg>
@@ -79,7 +79,7 @@
     </div>
 
     <!-- 4. RAG Knowledge Base -->
-    <a href="{% url 'voice_assistant:rag_page' %}" id="nav-btn-rag" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'rag' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:rag_page' %}" id="nav-btn-rag" onclick="if(typeof switchTab==='function'){switchTab('rag');return false;}" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'rag' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'rag' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/>
@@ -90,7 +90,7 @@
     </a>
 
     <!-- 5. Personas -->
-    <a href="{% url 'voice_assistant:personas_page' %}" id="nav-btn-personas" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'personas' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:personas_page' %}" id="nav-btn-personas" onclick="if(typeof switchTab==='function'){switchTab('personas');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'personas' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'personas' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="m9 11 2 2 4-4"/>
       </svg>
@@ -98,7 +98,7 @@
     </a>
 
     <!-- 6. CRM & Customer Memory -->
-    <a href="{% url 'voice_assistant:crm_page' %}" id="nav-btn-crm" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'crm' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:crm_page' %}" id="nav-btn-crm" onclick="if(typeof switchTab==='function'){switchTab('crm');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'crm' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'crm' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
@@ -106,7 +106,7 @@
     </a>
 
     <!-- 7. Store MCP -->
-    <a href="{% url 'voice_assistant:store_page' %}" id="nav-btn-store" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'store' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:store_page' %}" id="nav-btn-store" onclick="if(typeof switchTab==='function'){switchTab('store');return false;}" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'store' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'store' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 9 3 3-3 3"/><path d="m15 9-3 3 3 3"/>
@@ -122,7 +122,7 @@
     </div>
 
     <!-- 8. Outbound Campaigns -->
-    <a href="{% url 'voice_assistant:campaigns_page' %}" id="nav-btn-campaigns" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'campaigns' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:campaigns_page' %}" id="nav-btn-campaigns" onclick="if(typeof switchTab==='function'){switchTab('campaigns');return false;}" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'campaigns' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'campaigns' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
@@ -133,7 +133,7 @@
     </a>
 
     <!-- 9. Call Center -->
-    <a href="{% url 'voice_assistant:callcenter_page' %}" id="nav-btn-callcenter" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'callcenter' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:callcenter_page' %}" id="nav-btn-callcenter" onclick="if(typeof switchTab==='function'){switchTab('callcenter');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'callcenter' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'callcenter' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
       </svg>
@@ -141,7 +141,7 @@
     </a>
 
     <!-- 10. Telephony -->
-    <a href="{% url 'voice_assistant:telephony_page' %}" id="nav-btn-telephony" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'telephony' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:telephony_page' %}" id="nav-btn-telephony" onclick="if(typeof switchTab==='function'){switchTab('telephony');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'telephony' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'telephony' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
       </svg>
@@ -149,8 +149,8 @@
     </a>
 
     <!-- 11. Business Hours -->
-    <a href="{% url 'voice_assistant:business_hours_page' %}" id="nav-btn-business-hours" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'business_hours' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'business_hours' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="{% url 'voice_assistant:business_hours_page' %}" id="nav-btn-hours" onclick="if(typeof switchTab==='function'){switchTab('hours');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'business_hours' or active_nav == 'hours' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'business_hours' or active_nav == 'hours' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
       </svg>
       <span class="nav-text">مواعيد العمل والخطة البديلة</span>
@@ -162,7 +162,7 @@
     </div>
 
     <!-- 12. Billing -->
-    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" onclick="if(typeof switchTab==='function'){switchTab('billing');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'billing' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
       </svg>
@@ -170,7 +170,7 @@
     </a>
 
     <!-- 13. Partner -->
-    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" onclick="if(typeof switchTab==='function'){switchTab('partner');return false;}" class="nav-item group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'partner' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
       </svg>
@@ -178,7 +178,7 @@
     </a>
 
     <!-- 14. Developer API -->
-    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
+    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" onclick="if(typeof switchTab==='function'){switchTab('developer');return false;}" class="nav-item group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium{% endif %}">
       <div class="flex items-center gap-2.5 truncate">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 {% if active_nav == 'developer' %}text-[#1f93ff]{% else %}text-slate-400 group-hover:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
