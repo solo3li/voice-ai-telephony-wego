@@ -68,21 +68,29 @@
       font-family: 'Inter', sans-serif;
     }
 
-    /* Collapsible Sidebar States */
-    .sidebar-expanded {
-      width: 16.5rem;
+    /* Minimalist text-only sidebar dimensions */
+    @media (min-width: 768px) {
+      #sidebar,
+      #sidebar.sidebar-collapsed,
+      #sidebar.sidebar-expanded {
+        width: 15rem;
+      }
     }
-    .sidebar-collapsed {
-      width: 4.75rem;
+    @media (max-width: 767px) {
+      #sidebar,
+      #sidebar.sidebar-collapsed,
+      #sidebar.sidebar-expanded {
+        width: 100%;
+      }
     }
-    .sidebar-collapsed .nav-text,
-    .sidebar-collapsed .brand-text {
-      display: none;
+    #sidebar.sidebar-collapsed .brand-text,
+    #sidebar.sidebar-collapsed .nav-text {
+      display: block !important;
     }
-    .sidebar-collapsed .nav-item {
-      justify-content: center;
-      padding-left: 0;
-      padding-right: 0;
+    #sidebar.sidebar-collapsed .nav-item {
+      justify-content: flex-start !important;
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
     }
 
     /* Clean Minimalist Scrollbar (Chatwoot Style) */

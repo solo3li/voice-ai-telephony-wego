@@ -496,7 +496,7 @@ def api_export_campaign_contacts(request, campaign_id):
         ws.views.sheetView[0].rightToLeft = True  # Arabic RTL Excel layout!
 
         # Define Styles
-        header_fill = PatternFill(start_color="680E23", end_color="680E23", fill_type="solid")
+        header_fill = PatternFill(start_color="1F93FF", end_color="1F93FF", fill_type="solid")
         header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
         regular_font = Font(name="Segoe UI", size=10)
         bold_font = Font(name="Segoe UI", size=10, bold=True)

@@ -50,7 +50,7 @@ class UserMCPServerAdmin(admin.ModelAdmin):
     def connection_test_badge(self, obj):
         test_url = reverse('admin:agents_usermcpserver_test', args=[obj.id])
         return format_html(
-            '<a class="button" style="padding:4px 10px; font-size:11px; font-weight:600; background:#FAF0F2; color:#680E23; border:1px solid #E8CCD2; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" href="{}" title="اختبار الاتصال بالخادم وتحديث أدواته فوراً">'
+            '<a class="button" style="padding:4px 10px; font-size:11px; font-weight:600; background:#eff8ff; color:#1f93ff; border:1px solid #b2ddff; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" href="{}" title="اختبار الاتصال بالخادم وتحديث أدواته فوراً">'
             '<span>🔌</span> <span>فحص الآن</span>'
             '</a>',
             test_url
@@ -63,10 +63,10 @@ class UserMCPServerAdmin(admin.ModelAdmin):
         test_url = reverse('admin:agents_usermcpserver_test', args=[obj.id])
         return format_html(
             '<div style="margin: 6px 0;">'
-            '<a class="button" style="background:#680E23; color:#fff; font-weight:bold; padding:9px 18px; border-radius:10px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(104,14,35,0.25);" href="{}">'
+            '<a class="button" style="background:#1f93ff; color:#fff; font-weight:bold; padding:9px 18px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 1px 3px rgba(31,147,255,0.2);" href="{}">'
             '<span>🔌</span> <span>فحص الاتصال وتحديث الأدوات الحية الآن (Live Test & Sync)</span>'
             '</a>'
-            '<p style="margin: 6px 0 0 0; font-size:11px; color:#6E645D;">يقوم هذا الإجراء بالاتصال الفوري بنقطة نهاية SSE للخادم، وقياس سرعة الاستجابة، وتحديث قائمة الأدوات تلقائياً.</p>'
+            '<p style="margin: 6px 0 0 0; font-size:11px; color:#64748b;">يقوم هذا الإجراء بالاتصال الفوري بنقطة نهاية SSE للخادم، وقياس سرعة الاستجابة، وتحديث قائمة الأدوات تلقائياً.</p>'
             '</div>',
             test_url
         )
@@ -99,13 +99,13 @@ class UserMCPServerAdmin(admin.ModelAdmin):
                     is_req = p_name in required
                     if is_req:
                         param_badges.append(
-                            f'<span style="background:#FAF0F2; color:#680E23; border:1px solid #E8CCD2; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:bold; margin:2px;" title="حقل إلزامي">{p_name}*</span>'
+                            f'<span style="background:#eff8ff; color:#1f93ff; border:1px solid #b2ddff; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:bold; margin:2px;" title="حقل إلزامي">{p_name}*</span>'
                         )
                     else:
                         param_badges.append(
-                            f'<span style="background:#F5EFE6; color:#6E645D; border:1px solid #DDD5C7; padding:2px 7px; border-radius:5px; font-size:10px; margin:2px;">{p_name}</span>'
+                            f'<span style="background:#f8fafc; color:#64748b; border:1px solid #eaedf0; padding:2px 7px; border-radius:5px; font-size:10px; margin:2px;">{p_name}</span>'
                         )
-            params_html = "".join(param_badges) if param_badges else '<span style="color:#8C827A; font-size:11px;">بدون معاملات</span>'
+            params_html = "".join(param_badges) if param_badges else '<span style="color:#94a3b8; font-size:11px;">بدون معاملات</span>'
 
             test_res = t.get('test_result', {})
             st = test_res.get('status')
@@ -127,20 +127,20 @@ class UserMCPServerAdmin(admin.ModelAdmin):
                 )
             else:
                 status_html = (
-                    f'<span id="status-badge-{idx}" style="background:#F5EFE6; color:#6E645D; border:1px solid #DDD5C7; padding:3px 9px; border-radius:6px; font-weight:600; font-size:11px; display:inline-flex; align-items:center; gap:4px;">'
+                    f'<span id="status-badge-{idx}" style="background:#f8fafc; color:#64748b; border:1px solid #eaedf0; padding:3px 9px; border-radius:6px; font-weight:600; font-size:11px; display:inline-flex; align-items:center; gap:4px;">'
                     f'<span>⚪ لم يُختبر</span>'
                     f'</span>'
                 )
 
             rows.append(f"""
-            <tr style="border-bottom:1px solid #EAE3D9; transition:background 0.2s;" onmouseover="this.style.background='#FAF7F2'" onmouseout="this.style.background='#fff'">
-              <td style="padding:10px 8px; text-align:center; color:#8C827A; font-weight:bold;">{idx}</td>
-              <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#680E23; font-size:12px;">{name}</td>
-              <td style="padding:10px 12px; color:#443D39; line-height:1.4;">{desc}</td>
+            <tr style="border-bottom:1px solid #eaedf0; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+              <td style="padding:10px 8px; text-align:center; color:#94a3b8; font-weight:bold;">{idx}</td>
+              <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#1f93ff; font-size:12px;">{name}</td>
+              <td style="padding:10px 12px; color:#334155; line-height:1.4;">{desc}</td>
               <td style="padding:10px 12px; display:flex; flex-wrap:wrap; gap:3px;">{params_html}</td>
               <td style="padding:10px 12px; text-align:center;">{status_html}</td>
               <td style="padding:10px 12px; text-align:center;">
-                <button type="button" onclick="adminOpenTestToolModal({obj.id}, '{name}', {idx})" style="background:#680E23; color:#fff; border:none; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(104,14,35,0.25);" onmouseover="this.style.background='#7E152F'" onmouseout="this.style.background='#680E23'">
+                <button type="button" onclick="adminOpenTestToolModal({obj.id}, '{name}', {idx})" style="background:#1f93ff; color:#fff; border:none; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(31,147,255,0.25);" onmouseover="this.style.background='#1570ef'" onmouseout="this.style.background='#1f93ff'">
                   <span>⚡</span> <span>اختبار الأداة</span>
                 </button>
               </td>
@@ -151,10 +151,10 @@ class UserMCPServerAdmin(admin.ModelAdmin):
 
         html = f"""
         <script id="mcp-admin-tools-data" type="application/json">{tools_json}</script>
-        <div style="overflow-x:auto; margin-top:8px; border-radius:14px; border:1px solid #EAE3D9; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+        <div style="overflow-x:auto; margin-top:8px; border-radius:12px; border:1px solid #eaedf0; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
           <table id="mcp-admin-tools-table" style="width:100%; border-collapse:collapse; background:#fff; font-size:12px; text-align:right;">
             <thead>
-              <tr style="background:#FAF7F2; border-bottom:2px solid #EAE3D9; color:#443D39;">
+              <tr style="background:#f8fafc; border-bottom:1px solid #eaedf0; color:#334155;">
                 <th style="padding:12px 10px; width:35px; text-align:center;">#</th>
                 <th style="padding:12px 12px; width:210px;">اسم الأداة</th>
                 <th style="padding:12px 12px;">الوصف والغرض</th>
@@ -170,32 +170,32 @@ class UserMCPServerAdmin(admin.ModelAdmin):
         </div>
 
         <!-- Testing Modal -->
-        <div id="admin-tool-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(28,25,23,0.6); backdrop-filter:blur(3px); z-index:99999; align-items:center; justify-content:center; padding:15px; direction:rtl; box-sizing:border-box;">
-          <div style="background:#fff; border-radius:20px; width:100%; max-width:620px; box-shadow:0 25px 50px rgba(0,0,0,0.25); overflow:hidden; font-family:inherit; border:1px solid #EAE3D9;">
-            <div style="background:#FAF7F2; padding:16px 22px; border-bottom:1px solid #EAE3D9; display:flex; justify-content:space-between; align-items:center;">
-              <h3 style="margin:0; font-size:15px; color:#1C1917; font-weight:bold; display:flex; align-items:center; gap:8px;">
-                <span>⚡</span> <span>اختبار الأداة حياً:</span> <code id="admin-modal-tool-name" style="color:#680E23; font-size:14px; font-family:monospace;"></code>
+        <div id="admin-tool-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.4); backdrop-filter:blur(3px); z-index:99999; align-items:center; justify-content:center; padding:15px; direction:rtl; box-sizing:border-box;">
+          <div style="background:#fff; border-radius:14px; width:100%; max-width:620px; box-shadow:0 10px 25px rgba(0,0,0,0.1); overflow:hidden; font-family:inherit; border:1px solid #eaedf0;">
+            <div style="background:#f8fafc; padding:14px 20px; border-bottom:1px solid #eaedf0; display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="margin:0; font-size:14px; color:#0f172a; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                <span>⚡</span> <span>اختبار الأداة حياً:</span> <code id="admin-modal-tool-name" style="color:#1f93ff; font-size:13px; font-family:monospace;"></code>
               </h3>
-              <button type="button" onclick="adminCloseTestToolModal()" style="background:none; border:none; font-size:24px; color:#8C827A; cursor:pointer; line-height:1;">&times;</button>
+              <button type="button" onclick="adminCloseTestToolModal()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">&times;</button>
             </div>
 
-            <div style="padding:22px; max-height:75vh; overflow-y:auto; font-size:12px; box-sizing:border-box;">
+            <div style="padding:20px; max-height:75vh; overflow-y:auto; font-size:12px; box-sizing:border-box;">
               <div style="margin-bottom:14px;">
-                <label style="font-weight:bold; color:#443D39; display:block; margin-bottom:4px;">وصف الأداة:</label>
-                <p id="admin-modal-tool-desc" style="margin:0; color:#1C1917; line-height:1.5; background:#FAF7F2; padding:10px 14px; border-radius:10px; border:1px solid #DDD5C7;"></p>
+                <label style="font-weight:bold; color:#334155; display:block; margin-bottom:4px;">وصف الأداة:</label>
+                <p id="admin-modal-tool-desc" style="margin:0; color:#0f172a; line-height:1.5; background:#f8fafc; padding:10px 14px; border-radius:8px; border:1px solid #eaedf0;"></p>
               </div>
 
               <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                  <label style="font-weight:bold; color:#1C1917;">مُدخلات الاختبار (JSON Arguments):</label>
-                  <button type="button" onclick="adminFillSampleArgs()" style="background:none; border:none; color:#680E23; font-weight:bold; font-size:11px; cursor:pointer; text-decoration:underline;">🪄 ملء تلقائي للبيانات</button>
+                  <label style="font-weight:bold; color:#0f172a;">مُدخلات الاختبار (JSON Arguments):</label>
+                  <button type="button" onclick="adminFillSampleArgs()" style="background:none; border:none; color:#1f93ff; font-weight:bold; font-size:11px; cursor:pointer; text-decoration:underline;">🪄 ملء تلقائي للبيانات</button>
                 </div>
-                <textarea id="admin-modal-args" rows="4" style="width:100%; padding:10px; border:1px solid #DDD5C7; border-radius:10px; font-family:monospace; font-size:12px; box-sizing:border-box; outline:none; background:#FAF7F2; color:#1C1917;" placeholder="{{}}"></textarea>
+                <textarea id="admin-modal-args" rows="4" style="width:100%; padding:10px; border:1px solid #eaedf0; border-radius:8px; font-family:monospace; font-size:12px; box-sizing:border-box; outline:none; background:#f8fafc; color:#0f172a;" placeholder="{{}}"></textarea>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
-                <button type="button" onclick="adminCloseTestToolModal()" style="padding:8px 16px; border:1px solid #DDD5C7; border-radius:10px; background:#F5EFE6; color:#443D39; font-weight:bold; cursor:pointer;">إلغاء</button>
-                <button type="button" id="btn-admin-modal-run" onclick="adminExecuteToolTest()" style="padding:8px 20px; border:none; border-radius:10px; background:#680E23; color:#fff; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(104,14,35,0.2);">
+                <button type="button" onclick="adminCloseTestToolModal()" style="padding:7px 14px; border:1px solid #eaedf0; border-radius:8px; background:#fff; color:#334155; font-weight:600; cursor:pointer;">إلغاء</button>
+                <button type="button" id="btn-admin-modal-run" onclick="adminExecuteToolTest()" style="padding:7px 18px; border:none; border-radius:8px; background:#1f93ff; color:#fff; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(31,147,255,0.2);">
                   <span>⚡</span> <span id="btn-admin-modal-run-text">تنفيذ الاستدعاء الحَي</span>
                 </button>
               </div>
