@@ -133,7 +133,7 @@ def build_dynamic_system_instruction(
         f"  - يُمنع منعاً باتاً وحاسماً أن تفترض أن أي عطل فني ذُكر في تواصل سابق ما زال قائماً الآن. السيستم يعمل بالكامل في المكالمة الحالية، ويجب دائماً تنفيذ الأدوات البرمجية ومساعدة العميل دون أي افتراضات مسبقة.\n"
     ) if memory_card else ""
 
-    # 6. Structured Live Context (Restaurant menus, branches, delivery zones, out of stock)
+    # 6. Structured Live Context (Products/Services catalog, branches, service zones, unavailable items/services)
     live_context_text = format_live_context_for_prompt(live_context) if live_context else ""
 
     # 7. Knowledge Manifest (indexed documents awareness)
@@ -188,11 +188,43 @@ def build_dynamic_system_instruction(
         )
 
     # 9. Off-topic response rule (custom or default)
+    lang_key = (language or "arabic").lower().strip()
+    dia_key = (dialect or "egyptian").lower().strip()
+    is_non_arabic = (
+        lang_key in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"]
+        or any(dia_key.startswith(p) for p in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"])
+    )
+
     if off_topic_response:
         off_topic_rule = (
             f"اعتذر للمتصل بلباقة وصغ هذا الرد بلهجتك الطبيعية وبأسلوبك ضمن سياق الحوار بمرونة، "
             f"بحيث لا يبدو قالباً جامداً أو محفوظاً، مع الحفاظ التام على مضمونه وفكرته الأساسية:\n"
             f"«{off_topic_response}»"
+        )
+    elif is_non_arabic:
+        off_topic_rule = (
+            "Politely apologize and clarify your scope in your configured language:\n"
+            '"I apologize, but I am specifically dedicated to our organization\'s services and inquiries. How may I assist you with your request today?"'
+        )
+    elif "saudi" in dia_key or "gulf" in dia_key or "emirati" in dia_key or "kuwaiti" in dia_key:
+        off_topic_rule = (
+            "اعتذر للمتصل بلباقة ومرونة بلهجتك الطبيعية كإنسان حقيقي ضمن سياق الحوار، موضحاً بأسلوب لطيف اختصاص عملك:\n"
+            "«المعذرة منك طال عمرك، إحنا هنا مخصصين لخدمات واستفسارات المنشأة، تفضل إيش أقدر أخدمك فيه بخصوص طلبك؟»"
+        )
+    elif "levantine" in dia_key or "jordanian" in dia_key or "palestinian" in dia_key:
+        off_topic_rule = (
+            "اعتذر للمتصل بلباقة ومرونة بلهجتك الطبيعية كإنسان حقيقي ضمن سياق الحوار، موضحاً بأسلوب لطيف اختصاص عملك:\n"
+            "«بعتذر من حضرتك، نحنا هون مخصصين لخدمات واستفسارات المؤسسة، تفضل كيف بقدر ساعدك بطلبك أو استفسارك؟»"
+        )
+    elif "moroccan" in dia_key or "algerian" in dia_key or "tunisian" in dia_key:
+        off_topic_rule = (
+            "اعتذر للمتصل بلباقة ومرونة بلهجتك الطبيعية كإنسان حقيقي ضمن سياق الحوار، موضحاً بأسلوب لطيف اختصاص عملك:\n"
+            "«كنعتذر منك، حنا هنا مخصصين للخدمات والطلبات ديال المنشأة، تفضل كيفاش نقدر نعاونك بخصوص طلبك؟»"
+        )
+    elif "fusha" in dia_key:
+        off_topic_rule = (
+            "اعتذر للمتصل بلباقة ومرونة بأسلوبك كإنسان حقيقي ضمن سياق الحوار، موضحاً بأسلوب لطيف اختصاص عملك:\n"
+            "«أعتذر منك يا سيدي، نحن هنا مخصصون لخدمات واستفسارات المنشأة، تفضل كيف يمكنني مساعدتك فيما يخص طلبك؟»"
         )
     else:
         off_topic_rule = (
@@ -254,13 +286,13 @@ def build_dynamic_system_instruction(
      أ. البديهيات الإنسانية والمحادثة الطبيعية (Natural Chit-Chat & Common Sense):
         (مثل التحيات والتأكيدات الودية: 'أهلاً'، 'تمام'، 'شكراً'، 'تسلم'، 'الله يبارك فيك'..): رد عليها ببديهية ولباقة وإيجابية فورية وبأعلى سرعة دون أي بحث في المستندات ودون أي اعتذار أو قول 'خارج خدماتنا'!
      ب. الملاحظات والطلبات التكميلية والخدمية (Service Requests & Notes):
-        أي ملاحظات أو طلبات خاصة يبديها العميل لتخصيص الخدمة أو إتمام الطلب: هذه ليست خدمات غير متاحة! استقبلها فوراً بكل ترحاب ولباقة واحترافية: «حاضر بكل سرور، هسجل الملاحظة دي مع طلبك بعناية» ومررها في خانة الملاحظات (notes) الخاصة بالعملية.
+        أي ملاحظات أو طلبات خاصة يبديها العميل لتخصيص الخدمة أو إتمام الطلب: هذه ليست خدمات غير متاحة! استقبلها فوراً بكل ترحاب ولباقة واحترافية: «حاضر بكل سرور، سأسجل هذه الملاحظة مع طلبك بعناية» ومررها في خانة الملاحظات (notes) الخاصة بالعملية.
      ج. منتجات أو خدمات غير متوفرة في الكتالوج المعتمد (Unavailable Products or Services):
-        إذا سأل العميل عن منتج أو خدمة غير مدرجة في البيانات المعتمدة: يُحظر تماماً نطق جمل روبوتية جافة مثل 'المستندات' أو 'خارج خدماتنا'! بل رد بلباقة واحترافية: «للأسف يا فندم غير متاح لدينا حالياً، بس عندنا بداله [اقترح بديلاً متاحاً من الكتالوج أو الخدمات] يناسب احتياجك، تحب أساعدك بيه؟».
+        إذا سأل العميل عن منتج أو خدمة غير مدرجة في البيانات المعتمدة: يُحظر تماماً نطق جمل روبوتية جافة مثل 'المستندات' أو 'خارج خدماتنا'! بل رد بلباقة واحترافية: «للأسف غير متاح لدينا حالياً، ولكن يتوفر لدينا بديل مناسب [اقترح بديلاً متاحاً من الكتالوج أو الخدمات]، تحب نعتمد هذا البديل؟».
      د. الخروج الصريح التام عن نشاط المنشأة (True Out-of-Domain):
         يقتصر الاعتذار الصريح فقط وحصراً على الموضوعات التي لا علاقة لها بنشاط المنشأة إطلاقاً (مثل: طلب صيانة سيارات، تأجير عقارات، سياسة، أديان، مواضيع شخصية): {off_topic_rule}
    - القائمة السوداء للعبارات الروبوتية الجافة (Robotic Phrase Blacklist - يُحظر نطقها إطلاقاً):
-     يُمنع منعاً باتاً وحاسماً أن تقول للعميل: ('المستندات المرفوعة'، 'المستندات الرسمية'، 'قواعد المعرفة'، 'أنا مخصص فقط للمستندات'، 'المعلومة دي مش في ملفاتي'، 'ده برا خدماتنا' للأمور البديهية والخدمية). تحدث دائماً بلسان المنشأة البشري الطبيعي والودود ('عندنا'، 'في فروعنا'، 'في خدماتنا المتاحة'، 'تحت أمرك يا فندم').
+     يُمنع منعاً باتاً وحاسماً أن تقول للعميل: ('المستندات المرفوعة'، 'المستندات الرسمية'، 'قواعد المعرفة'، 'أنا مخصص فقط للمستندات'، 'المعلومة دي مش في ملفاتي'، 'ده برا خدماتنا' للأمور البديهية والخدمية). تحدث دائماً بلسان المنشأة البشري الطبيعي والودود ('عندنا'، 'في فروعنا'، 'في خدماتنا المتاحة'، 'تحت أمرك').
    - البحث الصامت المباشر وحظر الجمل التمهيدية تماماً: عند ورود أي سؤال عن تفاصيل منتجات أو فروع أو مواعيد أو خدمات رسمية، استدعِ أداة 'search_knowledge_base' في الخلفية بصمت تام دون جمل تمهيدية ('ثواني أبحث')، وانطق الإجابة بسلاسة وتدفق طبيعي.
    - إذا ذكر المتصل اسمه أو رقمه الهاتفي، استدعِ أداة 'lookup_customer_memory' فوراً لاسترجاع بياناته وسياقه بصمت.
 5. الإجابة من نتائج الأدوات الناجحة: لخص نتائج الأداة الناجحة للمستخدم بأسلوبك ولهجتك المحددة، بوضوح وأرقام دقيقة ومباشرة وطبيعية.
@@ -279,7 +311,7 @@ def build_dynamic_system_instruction(
 {verbosity_instruction}{memory_text}{live_context_text}{manifest_text}{tools_manifest_text}"""
 
     from .skills.human_transfer import build_human_transfer_instruction
-    queues_instruction = "\n\n" + build_human_transfer_instruction(call_queues, channel=ch)
+    queues_instruction = "\n\n" + build_human_transfer_instruction(call_queues, channel=ch, language=language, dialect=dialect)
 
     lang_name = LANGUAGE_NAMES_MAP.get((language or "arabic").lower().strip(), (language or "arabic").capitalize())
     dialect_name = DIALECT_NAMES_MAP.get((dialect or "egyptian").lower().strip(), dialect or "egyptian")

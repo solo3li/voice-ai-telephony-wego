@@ -27,6 +27,6 @@ DELIVERY_ADDRESS_SKILL = Skill(
     name="بروتوكول تفصيل العناوين الجغرافية وسؤال الحسم السريع",
     description="فحص وتفصيل العناوين حسب الأنماط العمرانية مع سؤال الحسم السريع للمعالم ونقاط الالتقاء.",
     prompt_instruction=DELIVERY_ADDRESS_INSTRUCTION,
-    required_tools=["create_callcenter_order", "preview_callcenter_order"],
+    required_tools=[],
     tags=["logistics", "delivery", "field_service", "appointments"]
 )

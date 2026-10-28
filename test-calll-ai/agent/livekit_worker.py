@@ -661,25 +661,25 @@ async def entrypoint(ctx: JobContext):
                 lang = str(active_profile.get("language", "arabic")).lower().strip()
                 dialect = str(active_profile.get("dialect", "egyptian")).lower().strip()
 
-                if lang in ["english"] or dialect.startswith("english"):
+                if lang in ["english", "en"] or dialect.startswith(("english", "en")):
                     recovery_nudge = "I'm right here with you, I can hear you clearly. Please go ahead."
-                elif lang in ["french"] or dialect.startswith("french"):
+                elif lang in ["french", "fr"] or dialect.startswith(("french", "fr")):
                     recovery_nudge = "Je suis là, je vous écoute très bien. Je vous en prie, continuez."
-                elif lang in ["spanish"] or dialect.startswith("spanish"):
+                elif lang in ["spanish", "es"] or dialect.startswith(("spanish", "es")):
                     recovery_nudge = "Aquí estoy, le escucho claramente. Por favor continúe."
-                elif lang in ["german"] or dialect.startswith("german"):
+                elif lang in ["german", "de"] or dialect.startswith(("german", "de")):
                     recovery_nudge = "Ich bin da und höre Sie gut. Bitte sprechen Sie weiter."
-                elif lang in ["turkish"] or dialect.startswith("turkish"):
+                elif lang in ["turkish", "tr"] or dialect.startswith(("turkish", "tr")):
                     recovery_nudge = "Buradayım, sizi dinliyorum. Buyrun lütfen."
-                elif lang in ["russian"] or dialect.startswith("russian"):
+                elif lang in ["russian", "ru"] or dialect.startswith(("russian", "ru")):
                     recovery_nudge = "Я здесь, я вас отлично слышу. Пожалуйста, говорите."
-                elif lang in ["italian"] or dialect.startswith("italian"):
+                elif lang in ["italian", "it"] or dialect.startswith(("italian", "it")):
                     recovery_nudge = "Ci sono, la sento perfettamente. Prego, mi dica."
-                elif lang in ["urdu"] or dialect.startswith("urdu"):
+                elif lang in ["urdu", "ur"] or dialect.startswith(("urdu", "ur")):
                     recovery_nudge = "جی میں سن رہا ہوں، فرمائیے۔"
-                elif lang in ["hindi"] or dialect.startswith("hindi"):
+                elif lang in ["hindi", "hi"] or dialect.startswith(("hindi", "hi")):
                     recovery_nudge = "जी मैं सुन रहा हूँ, कृपया बताएं।"
-                elif lang in ["chinese"] or dialect.startswith("chinese"):
+                elif lang in ["chinese", "zh"] or dialect.startswith(("chinese", "zh")):
                     recovery_nudge = "我在听，请问有什么可以帮您？"
                 elif "saudi" in dialect or "gulf" in dialect or "emirati" in dialect or "kuwaiti" in dialect:
                     recovery_nudge = "سمّ آمرني طال عمرك، أسمعك تفضل."

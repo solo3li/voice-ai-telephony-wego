@@ -112,16 +112,27 @@ DIALECT_RULES_MAP = {
 
 LANGUAGE_NAMES_MAP = {
     "arabic": "العربية (Arabic)",
+    "ar": "العربية (Arabic)",
     "english": "English",
+    "en": "English",
     "french": "Français (French)",
+    "fr": "Français (French)",
     "spanish": "Español (Spanish)",
+    "es": "Español (Spanish)",
     "german": "Deutsch (German)",
+    "de": "Deutsch (German)",
     "italian": "Italiano (Italian)",
+    "it": "Italiano (Italian)",
     "turkish": "Türkçe (Turkish)",
+    "tr": "Türkçe (Turkish)",
     "russian": "Русский (Russian)",
+    "ru": "Русский (Russian)",
     "urdu": "اردو (Urdu)",
+    "ur": "اردو (Urdu)",
     "hindi": "हिन्दी (Hindi)",
+    "hi": "हिन्दी (Hindi)",
     "chinese": "中文 (Mandarin Chinese)",
+    "zh": "中文 (Mandarin Chinese)",
 }
 
 DIALECT_NAMES_MAP = {
@@ -166,22 +177,32 @@ def build_language_lock_instruction(language: str = "arabic", dialect: str = "eg
     dialect_name = DIALECT_NAMES_MAP.get(dia_key, dia_key)
 
     is_non_arabic = (
-        lang_key in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"]
-        or any(dia_key.startswith(p) for p in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"])
+        lang_key in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"]
+        or any(dia_key.startswith(p) for p in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"])
     )
 
     if is_non_arabic:
         non_arabic_refusals = {
             "english": "I apologize, I can only assist in English for customer service. How may I help you today?",
+            "en": "I apologize, I can only assist in English for customer service. How may I help you today?",
             "french": "Je vous présente mes excuses, je réponds uniquement en français pour le service client. Comment puis-je vous aider ?",
+            "fr": "Je vous présente mes excuses, je réponds uniquement en français pour le service client. Comment puis-je vous aider ?",
             "spanish": "Disculpe, solo puedo atenderle en español para el servicio de atención al cliente. ¿En qué puedo ayudarle?",
+            "es": "Disculpe, solo puedo atenderle en español para el servicio de atención al cliente. ¿En qué puedo ayudarle?",
             "german": "Es tut mir leid, ich spreche ausschließlich Deutsch für den Kundenservice. Wie kann ich Ihnen helfen?",
+            "de": "Es tut mir leid, ich spreche ausschließlich Deutsch für den Kundenservice. Wie kann ich Ihnen helfen?",
             "turkish": "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum. Size nasıl yardımcı olabilirim?",
+            "tr": "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum. Size nasıl yardımcı olabilirim?",
             "russian": "Прошу прощения, я могу помочь только на русском языке. Подскажите, чем я могу вам помочь?",
+            "ru": "Прошу прощения, я могу помочь только на русском языке. Подскажите, чем я могу вам помочь?",
             "italian": "Mi scusi, posso assisterla solo in italiano per l'assistenza clienti. Come posso aiutarla?",
+            "it": "Mi scusi, posso assisterla solo in italiano per l'assistenza clienti. Come posso aiutarla?",
             "urdu": "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں۔ فرمائیے میں آپ کی کیا مدد کر سکتا ہوں؟",
+            "ur": "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں۔ فرمائیے میں آپ کی کیا مدد کر سکتا ہوں؟",
             "hindi": "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ?",
+            "hi": "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ?",
             "chinese": "非常抱歉，我仅支持使用中文提供客户服务。请问有什么可以帮您？",
+            "zh": "非常抱歉，我仅支持使用中文提供客户服务。请问有什么可以帮您？",
         }
         matched_lang = next((k for k in non_arabic_refusals if lang_key.startswith(k) or dia_key.startswith(k)), "english")
         refusal_phrase = non_arabic_refusals.get(matched_lang, non_arabic_refusals["english"])

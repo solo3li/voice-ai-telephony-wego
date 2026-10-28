@@ -82,7 +82,14 @@ def run_agent_e2e_tests():
         }
         prompt = build_dynamic_system_instruction(profile)
         assert expected_rule.lower() in prompt.lower(), f"Missing rule '{expected_rule}' for dialect '{dialect_code}'"
-        assert "بعتذر لحضرتك جداً يا فندم" in prompt, f"Missing neutral fallback apology for dialect '{dialect_code}'"
+        if dialect_code == "egyptian":
+            assert "بعتذر لحضرتك جداً يا فندم" in prompt, f"Missing Egyptian fallback apology for dialect '{dialect_code}'"
+        else:
+            has_apology = any(w in prompt.lower() for w in [
+                'المعذرة', 'أعتذر', 'بعتذر', 'كنعتذر', 'سامحني', 'عذراً', 'اسمحلي', 'سمح ليا', 'العذر',
+                'apologize', 'excuse', 'disculp', 'leid', 'scusi', 'dilerim', 'прощения', 'معذرت', 'क्षما', '抱歉'
+            ])
+            assert has_apology, f"Missing localized apology for dialect '{dialect_code}'"
         print(f"    [+] Dialect '{dialect_code:22}': Verified rule & neutral apology phrases ({len(prompt)} chars).")
 
     print(f"✅ TEST 2 PASSED: All {len(ALL_DIALECT_CHECKS)} dialects properly generated with authentic cultural rules.")

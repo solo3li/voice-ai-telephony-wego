@@ -13,8 +13,8 @@ def build_universal_voice_rules(language: str = "arabic", dialect: str = "egypti
     dia_key = (dialect or "egyptian").lower().strip()
 
     is_non_arabic = (
-        lang_key in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"]
-        or any(dia_key.startswith(p) for p in ["english", "french", "spanish", "german", "italian", "turkish", "russian", "urdu", "hindi", "chinese"])
+        lang_key in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"]
+        or any(dia_key.startswith(p) for p in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"])
     )
 
     if is_non_arabic:

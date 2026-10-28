@@ -120,9 +120,9 @@ def resolve_active_skills(
                 active_skills[dk] = SKILLS_REGISTRY[dk]
 
         # Automatic tool-driven skill activation:
-        # If order creation tools or menu lookups are present, activate delivery address skill
-        order_tool_indicators = {"create_callcenter_order", "preview_callcenter_order", "search_knowledge_base"}
-        if tool_names.intersection(order_tool_indicators) and clean_role in ["restaurant_orders", "delivery_dispatch", ""]:
+        # If order creation or dispatch tools are present, activate delivery address skill
+        order_tool_indicators = {"create_callcenter_order", "preview_callcenter_order", "create_order", "dispatch_shipment", "schedule_delivery"}
+        if tool_names.intersection(order_tool_indicators) and clean_role in ["restaurant_orders", "delivery_dispatch"]:
             active_skills["delivery_address"] = DELIVERY_ADDRESS_SKILL
 
         # Human transfer skill is active for all agents by default

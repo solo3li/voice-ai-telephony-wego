@@ -141,7 +141,7 @@ def test_2_strict_language_and_dialect_lock():
         ("russian", "russian_ru", "Прошу прощения, я могу помочь только на русском языке"),
         ("italian", "italian_it", "Mi scusi, posso assisterla solo in italiano"),
         ("urdu", "urdu_pk", "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں"),
-        ("hindi", "hindi_in", "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी میں बात कर सकता हूँ".replace("میں", "में")),
+        ("hindi", "hindi_in", "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ"),
         ("chinese", "chinese_zh", "非常抱歉，我仅支持使用中文提供客户服务"),
     ]
 
@@ -393,6 +393,72 @@ async def test_7_core_telephony_tools_scope_vapi_model():
     print("✅ TEST 7 PASSED: Core Voice AI Call Center engine tools scope verified.")
 
 
+def test_8_unconfigured_role_rag_no_delivery_address_leakage():
+    print("\n[TEST 8] Verifying Unconfigured Agent with RAG Tool Does NOT Leak Delivery Address Skill...")
+    from agent.prompts.skills.delivery_address import DELIVERY_ADDRESS_SKILL
+
+    # Assert skill has decoupled required_tools
+    assert DELIVERY_ADDRESS_SKILL.required_tools == [], "DELIVERY_ADDRESS_SKILL still coupled to food order tools"
+
+    # Default profile without role and with search_knowledge_base
+    unconfigured_profile = {
+        "name": "المساعد الذكي للمنشأة",
+        "language": "arabic",
+        "dialect": "saudi",
+        "persona_role": "",
+    }
+    tools = [{"name": "search_knowledge_base", "description": "RAG search"}]
+
+    prompt = build_dynamic_system_instruction(unconfigured_profile, available_tools=tools)
+
+    # Must NOT contain delivery address skill
+    assert "قاعدة جمع وتفصيل العنوان الذكي المتكيف لطلبات التوصيل" not in prompt, (
+        "Delivery address skill leaked into unconfigured enterprise agent with RAG tool!"
+    )
+    assert "الشيخ زايد" not in prompt
+    assert "سؤال الحسم السريع الإلزامي" not in prompt
+    print("  [+] Verified: Generic enterprise bot with RAG tool does not leak delivery address rules.")
+    print("✅ TEST 8 PASSED: Delivery address skill is strictly isolated from generic RAG bots.")
+
+
+def test_9_dialect_aware_off_topic_and_handoff_isolation():
+    print("\n[TEST 9] Verifying Dialect & Language Awareness in Off-Topic and Human Handoff Instructions...")
+    from agent.prompts.skills.human_transfer import build_human_transfer_instruction
+
+    # 1. English Profile: zero Egyptian slang in off-topic or handoff
+    en_profile = {"name": "Alex", "language": "english", "dialect": "english_us"}
+    en_prompt = build_dynamic_system_instruction(en_profile, call_queues=[])
+    assert "specifically dedicated to our organization's services" in en_prompt
+    assert "بعتذر لحضرتك جداً يا فندم" not in en_prompt, "Egyptian apology leaked into English off-topic prompt!"
+    assert "outside of regular business hours" in en_prompt
+    assert "ممثلو خدمة العملاء غير متاحين حالياً" not in en_prompt, "Egyptian handoff apology leaked into English prompt!"
+    print("  [+] English profile: Verified clean English off-topic and off-hours handoff instructions.")
+
+    # 2. Saudi Profile: authentic Saudi phrasing in off-topic and handoff
+    saudi_profile = {"name": "سالم", "language": "arabic", "dialect": "saudi"}
+    saudi_prompt = build_dynamic_system_instruction(saudi_profile, call_queues=[])
+    assert "المعذرة منك طال عمرك، إحنا هنا مخصصين لخدمات واستفسارات المنشأة" in saudi_prompt
+    assert "المعذرة منك طال عمرك، ممثلو خدمة العملاء غير متاحين حالياً" in saudi_prompt
+    assert "بعتذر لحضرتك جداً يا فندم" not in saudi_prompt, "Egyptian apology leaked into Saudi profile!"
+    print("  [+] Saudi profile: Verified authentic Saudi off-topic and off-hours handoff instructions.")
+
+    # 3. Multi-Queue Saudi routing discovery
+    queues = [{"name": "الدعم الفني", "code": "support"}]
+    saudi_mq = build_human_transfer_instruction(queues, language="arabic", dialect="saudi")
+    assert "أبشر طال عمرك، بحولك الحين لممثل الدعم الفني" in saudi_mq
+    assert "حاضر يا فندم، هحول حضرتك حالاً" not in saudi_mq, "Egyptian phrasing leaked into Saudi queue handoff!"
+    print("  [+] Saudi multi-queue: Verified authentic queue transfer phrasing.")
+
+    # 4. ISO 639-1 2-letter language code support
+    iso_en_lock = build_language_lock_instruction(language="en", dialect="english_us")
+    assert "I apologize, I can only assist in English" in iso_en_lock
+    iso_ar_lock = build_language_lock_instruction(language="ar", dialect="saudi")
+    assert "أنا أتحدث باللغة العربية فقط لخدمة العملاء" in iso_ar_lock
+    print("  [+] ISO 639-1 codes: Verified language lock handles 2-letter codes seamlessly.")
+
+    print("✅ TEST 9 PASSED: Dialect and language awareness completely verified across all flows.")
+
+
 async def run_all():
     print("=" * 70)
     print("🚀 RUNNING CLEAN VAPI ENGINE & STRICT LANGUAGE LOCK BOOST E2E SUITE")
@@ -405,9 +471,11 @@ async def run_all():
     test_5_customer_memory_crm_agnostic()
     test_6_watchdog_silent_drop_dialect_nudges()
     await test_7_core_telephony_tools_scope_vapi_model()
+    test_8_unconfigured_role_rag_no_delivery_address_leakage()
+    test_9_dialect_aware_off_topic_and_handoff_isolation()
 
     print("\n" + "=" * 70)
-    print("🎉 ALL 7 CLEAN VAPI ENGINE & LANGUAGE LOCK TESTS PASSED 100% PERFECTLY!")
+    print("🎉 ALL 9 CLEAN VAPI ENGINE & LANGUAGE LOCK TESTS PASSED 100% PERFECTLY!")
     print("=" * 70)
 
 
