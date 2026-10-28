@@ -25,7 +25,10 @@ async function loadWalletData() {
       if (bCurr) bCurr.innerText = `${w.currency} (${sym})`;
 
       const rPill = document.getElementById('billing-rate-pill');
-      if (rPill) rPill.innerText = `${sym}${cfg.cost_per_minute.toFixed(4)} / دقيقة`;
+      if (rPill) {
+        const perMin = (window.t ? window.t('billing_per_minute', '/ دقيقة') : '/ دقيقة');
+        rPill.innerText = `${sym}${cfg.cost_per_minute.toFixed(4)} ${perMin.trim()}`;
+      }
 
       const sDep = document.getElementById('billing-stat-deposited');
       if (sDep) sDep.innerText = `${sym}${w.total_deposited.toFixed(2)}`;
@@ -38,10 +41,12 @@ async function loadWalletData() {
       if (statusBadge) {
         if (data.can_call) {
           statusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm';
-          statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> جاهز للاتصال';
+          const readyText = window.t ? window.t('billing_status_ready', 'جاهز للاتصال') : 'جاهز للاتصال';
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ${readyText}`;
         } else {
           statusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-sm';
-          statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> رصيد غير كافٍ - يرجى الشحن';
+          const lowText = window.t ? window.t('billing_status_low', 'رصيد غير كافٍ - يرجى الشحن') : 'رصيد غير كافٍ - يرجى الشحن';
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ${lowText}`;
         }
       }
 
@@ -66,7 +71,7 @@ async function loadTransactions(type = 'all') {
   } catch (err) {
     console.error('Error loading transactions:', err);
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-rose-600">فشل تحميل سجل المعاملات.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-rose-600">${window.t ? window.t('billing_ledger_failed', 'فشل تحميل سجل المعاملات.') : 'فشل تحميل سجل المعاملات.'}</td></tr>`;
     }
   }
 }
@@ -79,7 +84,7 @@ function renderTransactionsTable(txs, sym = '$') {
     tbody.innerHTML = `
       <tr>
         <td colspan="7" class="py-8 text-center text-slate-400">
-          لا توجد حركات مالية مسجلة حتى الآن.
+          ${window.t ? window.t('billing_no_transactions', 'لا توجد حركات مالية مسجلة حتى الآن.') : 'لا توجد حركات مالية مسجلة حتى الآن.'}
         </td>
       </tr>
     `;
@@ -94,15 +99,17 @@ function renderTransactionsTable(txs, sym = '$') {
 
     let typeBadge = '';
     if (t.transaction_type === 'topup') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">شحن رصيد</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${window.t ? window.t('billing_type_topup', 'شحن رصيد') : 'شحن رصيد'}</span>`;
     } else if (t.transaction_type === 'call_deduction') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">خصم مكالمة</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${window.t ? window.t('billing_type_deduction', 'خصم مكالمة') : 'خصم مكالمة'}</span>`;
     } else {
       typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(t.transaction_type_display)}</span>`;
     }
 
+    const minUnit = window.t ? window.t('minute_short', 'د') : 'د';
+    const secUnit = window.t ? window.t('second_short', 'ث') : 'ث';
     const minsDisplay = t.billed_minutes > 0
-      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} د</span> <span class="text-[10px] text-slate-400">(${t.actual_seconds} ث)</span>`
+      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} ${minUnit}</span> <span class="text-[10px] text-slate-400">(${t.actual_seconds} ${secUnit})</span>`
       : `<span class="text-slate-400">-</span>`;
 
     const rateDisplay = t.rate_applied > 0
@@ -204,6 +211,11 @@ async function submitTopup() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadWalletData();
+  loadTransactions('all');
+});
+
+window.addEventListener('appLanguageChanged', () => {
   loadWalletData();
   loadTransactions('all');
 });

@@ -8,18 +8,18 @@
 <div class="bg-white p-3 rounded-xl border border-[#eaedf0] shadow-2xs flex flex-wrap items-center justify-between gap-3">
   <div class="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-200/80 rounded-lg text-xs">
     <button type="button" onclick="switchTelephonySubtab('outbound')" id="subtab-btn-outbound" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-semibold shadow-2xs">
-      <span>المكالمات الصادرة والجذع الخارجي (SIP Trunk)</span>
+      <span data-i18n="tel_subtab_outbound">المكالمات الصادرة والجذع الخارجي (SIP Trunk)</span>
     </button>
     <button type="button" onclick="switchTelephonySubtab('pbx')" id="subtab-btn-pbx" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium">
-      <span>سنترالات Issabel و Asterisk</span>
+      <span data-i18n="tel_subtab_pbx">سنترالات Issabel و Asterisk</span>
     </button>
     <button type="button" onclick="switchTelephonySubtab('dids')" id="subtab-btn-dids" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium">
-      <span>أرقام DID المخصصة والمستأجرين</span>
+      <span data-i18n="tel_subtab_dids">أرقام DID المخصصة والمستأجرين</span>
     </button>
   </div>
   
   <div class="text-xs text-slate-400 flex items-center gap-2">
-    <span>إدارة بوابات الاتصال الصادر والربط مع السنترالات المحلية</span>
+    <span data-i18n="tel_header_hint">إدارة الاتصالات والسنترالات (PBX &amp; SIP Trunks)</span>
   </div>
 </div>
 
@@ -29,10 +29,10 @@
     <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
       <div>
         <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-          <span>المكالمات الصادرة والجذع الخارجي (Generic Outbound SIP Trunk &amp; AI Auto-Dialer)</span>
+          <span data-i18n="tel_outbound_title">المكالمات الصادرة والجذع الخارجي (Generic Outbound SIP Trunk &amp; AI Auto-Dialer)</span>
         </h2>
-        <p class="text-xs text-slate-500 mt-1">
-          اربط أي مزود اتصالات سحابي خارجي مثل <span class="text-[#1f93ff] font-medium">Telnyx</span> أو <span class="text-[#1f93ff] font-medium">Twilio</span> لتمكين الذكاء الاصطناعي والموظفين من الاتصال بأرقام الهواتف المحمولة والأرضية مباشرة مع التصحيح التلقائي للأرقام المحلية والدولية.
+        <p class="text-xs text-slate-500 mt-1" data-i18n="tel_outbound_desc">
+          اربط أي مزود اتصالات سحابي خارجي مثل Telnyx أو Twilio لتمكين الذكاء الاصطناعي والموظفين من الاتصال بأرقام الهواتف مباشرة.
         </p>
       </div>
 
@@ -42,7 +42,7 @@
           onclick="openNewAICallModal()" 
           class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
         >
-          <span>اتصال جديد عبر الـ AI</span>
+          <span data-i18n="tel_btn_ai_call">اتصال جديد عبر الـ AI</span>
         </button>
       </div>
     </div>
@@ -52,15 +52,15 @@
       <!-- Status Card -->
       <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="font-medium text-slate-800 text-xs flex items-center gap-1.5">
+          <span class="font-medium text-slate-800 text-xs flex items-center gap-1.5" data-i18n="tel_trunk_status_title">
             حالة الجذع في LiveKit
           </span>
-          <span id="outbound-trunk-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+          <span id="outbound-trunk-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200" data-i18n="tel_trunk_not_configured">
             غير مهيأ
           </span>
         </div>
         <div id="outbound-trunk-details" class="space-y-2 text-xs text-slate-700">
-          <div class="text-slate-400 text-center py-4">لم يتم ضبط مزود خارجي بعد. أدخل بيانات المزود في النموذج لحفظه.</div>
+          <div class="text-slate-400 text-center py-4" data-i18n="tel_trunk_not_set">لم يتم ضبط مزود خارجي بعد. أدخل بيانات المزود في النموذج لحفظه.</div>
         </div>
       </div>
 
@@ -69,28 +69,28 @@
         <form id="outbound-trunk-form" onsubmit="handleSaveOutboundTrunk(event)" class="space-y-4 text-xs">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-700 font-medium mb-1">اسم الجذع / المزود</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_name">اسم الجذع / المزود</label>
               <input type="text" id="outbound-name" placeholder="مثال: حساب Telnyx الأساسي" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-slate-700 font-medium mb-1">خادم الـ SIP (Host / Termination URI) *</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_host">خادم الـ SIP (Host / Termination URI) *</label>
               <input type="text" id="outbound-host" required placeholder="مثال: sip.telnyx.com أو mytrunk.pstn.twilio.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-slate-700 font-medium mb-1">اسم مستخدم المصادقة (SIP Username)</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_user">اسم مستخدم المصادقة (SIP Username)</label>
               <input type="text" id="outbound-username" placeholder="اختياري حسب إعداد المزود" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-slate-700 font-medium mb-1">كلمة المرور (SIP Password)</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_pass">كلمة المرور (SIP Password)</label>
               <input type="password" id="outbound-password" placeholder="••••••••" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-slate-700 font-medium mb-1">الرقم المعتمد كمتصل (Caller ID Number)</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_caller_id">الرقم المعتمد كمتصل (Caller ID Number)</label>
               <input type="text" id="outbound-caller-id" placeholder="مثال: +12055550199 أو 01012345678" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
               <span class="text-[10px] text-slate-400">الرقم الذي يظهر للمتلقي (يقبل الصيغ المصرية والدولية ويصحح تلقائياً)</span>
             </div>
             <div>
-              <label class="block text-slate-700 font-medium mb-1">بروتوكول النقل (Transport) والمنفذ</label>
+              <label class="block text-slate-700 font-medium mb-1" data-i18n="tel_field_transport">بروتوكول النقل (Transport) والمنفذ</label>
               <div class="flex gap-2">
                 <select id="outbound-transport" class="w-1/2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
                   <option value="UDP">UDP (الافتراضي)</option>
@@ -106,7 +106,7 @@
 
           <div class="flex justify-end gap-3 pt-2">
             <button type="submit" id="btn-save-outbound" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold shadow-2xs transition flex items-center gap-1.5">
-              <span>حفظ وتفعيل الجذع الخارجي</span>
+              <span data-i18n="tel_btn_save_trunk">حفظ وتفعيل مسار الاتصال</span>
             </button>
           </div>
         </form>

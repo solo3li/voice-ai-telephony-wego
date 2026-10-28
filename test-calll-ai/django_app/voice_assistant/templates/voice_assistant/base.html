@@ -4,6 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function() {
+      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      document.documentElement.lang = savedLang;
+      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+    })();
+  </script>
   <title>{% block title %}{{ page_title|default:"المساعد الصوتي الذكي" }}{% endblock %} | Enterprise Voice AI</title>
   
   <!-- Favicon -->
@@ -61,11 +68,11 @@
       --text-muted: #64748b;
     }
 
-    html[dir="rtl"] body {
-      font-family: 'Cairo', sans-serif;
+    html[dir="rtl"] body, html[lang="ar"] body {
+      font-family: 'Cairo', sans-serif !important;
     }
-    html[dir="ltr"] body {
-      font-family: 'Inter', sans-serif;
+    html[dir="ltr"] body, html[lang="en"] body {
+      font-family: 'Inter', sans-serif !important;
     }
 
     /* Minimalist text-only sidebar dimensions */
@@ -165,5 +172,6 @@
 
   <!-- Page Specific Scripts -->
   {% block extra_scripts %}{% endblock %}
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

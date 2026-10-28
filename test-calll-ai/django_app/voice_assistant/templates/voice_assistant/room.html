@@ -4,6 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function() {
+      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      document.documentElement.lang = savedLang;
+      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+    })();
+  </script>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -3346,6 +3353,9 @@
   <!-- Business Hours JavaScript Dependencies -->
   <script src="{% static 'js/business_hours.js' %}"></script>
 
+  <!-- Common Shared Script -->
+  <script src="{% static 'js/common.js' %}"></script>
+
   <!-- ==================== Scripts + Luxury UI Orchestrator ==================== -->
   <script>
     // Bilingual Localization Dictionary
@@ -3480,21 +3490,25 @@
       }
     };
 
-    let currentLanguage = localStorage.getItem('voice_app_lang') || 'ar';
+    let currentLanguage = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
     let activeTabId = 'voice';
 
     function applyLanguage(lang) {
       currentLanguage = lang;
-      localStorage.setItem('voice_app_lang', lang);
-      const isRtl = lang === 'ar';
-      
-      document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-      document.documentElement.lang = lang;
+      if (typeof window.applyCommonLanguage === 'function') {
+        window.applyCommonLanguage(lang);
+      } else {
+        localStorage.setItem('app_lang', lang);
+        localStorage.setItem('voice_app_lang', lang);
+        const isRtl = lang === 'ar';
+        document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+        document.documentElement.lang = lang;
+      }
       
       // Update lang switch button text
       const langText = document.getElementById('lang-text');
       if (langText) {
-        langText.innerText = I18N[lang].switch_to;
+        langText.innerText = (I18N[lang] && I18N[lang].switch_to) || (lang === 'ar' ? 'English' : 'العربية');
       }
 
       // Update all elements with data-i18n
@@ -3513,6 +3527,13 @@
       const nextLang = currentLanguage === 'ar' ? 'en' : 'ar';
       applyLanguage(nextLang);
     }
+
+    window.addEventListener('appLanguageChanged', function(e) {
+      if (e.detail && e.detail.lang && e.detail.lang !== currentLanguage) {
+        currentLanguage = e.detail.lang;
+        updateHeaderTitle();
+      }
+    });
 
     function updateHeaderTitle() {
       const titleEl = document.querySelector('#current-section-title span');

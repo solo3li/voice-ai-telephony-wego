@@ -15,7 +15,7 @@ function handleFileSelect(e) {
     uploadLabel.innerText = fileInput.files[0].name;
     btnUpload.disabled = false;
   } else {
-    uploadLabel.innerText = 'اختر ملفاً (PDF/DOCX/TXT)';
+    uploadLabel.innerText = window.t ? window.t('rag_btn_choose', 'اختر ملفاً (PDF/DOCX/TXT)') : 'اختر ملفاً (PDF/DOCX/TXT)';
     btnUpload.disabled = true;
   }
 }
@@ -39,24 +39,31 @@ async function loadDocuments() {
 function renderDocuments(docs) {
   if (!docsTbody) return;
   if (!docs || docs.length === 0) {
+    const noDocsMsg = window.t ? window.t('rag_no_docs', 'لا توجد مستندات مرفوعة بعد. ارفع أول ملف لبدء الإجابة منه!') : 'لا توجد مستندات مرفوعة بعد. ارفع أول ملف لبدء الإجابة منه!';
     docsTbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center py-6 text-slate-400">
-          لا توجد مستندات مرفوعة بعد. ارفع أول ملف لبدء الإجابة منه!
+          ${noDocsMsg}
         </td>
       </tr>
     `;
     return;
   }
 
+  const pendingText = window.t ? window.t('rag_status_pending', 'قيد الفهرسة') : 'قيد الفهرسة';
+  const failedText = window.t ? window.t('rag_status_failed', 'فشل') : 'فشل';
+  const readyText = window.t ? window.t('rag_status_ready', 'جاهز') : 'جاهز';
+  const chunksSuffix = window.t ? window.t('rag_chunks_suffix', 'مقطع') : 'مقطع';
+  const deleteTitle = window.t ? window.t('rag_delete_doc', 'حذف المستند') : 'حذف المستند';
+
   docsTbody.innerHTML = docs.map(d => {
     let statusBadge = '';
     if (d.status === 'pending') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">قيد الفهرسة</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${pendingText}</span>`;
     } else if (d.status === 'failed') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(d.error_message || '')}">فشل</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(d.error_message || '')}">${failedText}</span>`;
     } else {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">جاهز</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${readyText}</span>`;
     }
 
     return `
@@ -70,13 +77,13 @@ function renderDocuments(docs) {
       <td class="py-3 px-3 text-slate-600 uppercase">${escapeHtml(d.file_type)}</td>
       <td class="py-3 px-3">
         <div class="flex items-center gap-2">
-          <span class="text-slate-900 font-medium">${d.chunks_count} مقطع</span>
+          <span class="text-slate-900 font-medium">${d.chunks_count} ${chunksSuffix}</span>
           ${statusBadge}
         </div>
       </td>
       <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">${escapeHtml(d.created_at)}</td>
       <td class="py-3 px-3 text-center">
-        <button onclick="deleteDocument(${d.id})" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition" title="حذف المستند">
+        <button onclick="deleteDocument(${d.id})" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition" title="${deleteTitle}">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -95,17 +102,22 @@ async function uploadDocument(e) {
   formData.append('file', file);
 
   btnUpload.disabled = true;
+  const procText = window.t ? window.t('rag_processing', 'جاري المعالجة والتضمين...') : 'جاري المعالجة والتضمين...';
+  const extText = window.t ? window.t('rag_extracting', 'جاري استخراج النصوص وتوليد التضمينات الدلالية عبر Gemini...') : 'جاري استخراج النصوص وتوليد التضمينات الدلالية عبر Gemini...';
+  const btnUploadText = window.t ? window.t('rag_btn_upload', 'رفع ومعالجة') : 'رفع ومعالجة';
+  const chooseFileText = window.t ? window.t('rag_btn_choose', 'اختر ملفاً (PDF/DOCX/TXT)') : 'اختر ملفاً (PDF/DOCX/TXT)';
+
   btnUpload.innerHTML = `
     <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
     </svg>
-    جاري المعالجة والتضمين...
+    ${procText}
   `;
 
   if (uploadStatus) {
     uploadStatus.className = 'mt-4 p-3 rounded-lg text-xs bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2';
-    uploadStatus.innerHTML = 'جاري استخراج النصوص وتوليد التضمينات الدلالية عبر Gemini...';
+    uploadStatus.innerHTML = extText;
     uploadStatus.classList.remove('hidden');
   }
 
@@ -124,7 +136,7 @@ async function uploadDocument(e) {
         uploadStatus.innerHTML = '✅ ' + escapeHtml(result.message);
       }
       fileInput.value = '';
-      if (uploadLabel) uploadLabel.innerText = 'اختر ملفاً (PDF/DOCX/TXT)';
+      if (uploadLabel) uploadLabel.innerText = chooseFileText;
       showToast('تم رفع المستند وبدء الفهرسة بنجاح', 'success');
       await loadDocuments();
     } else {
@@ -142,12 +154,13 @@ async function uploadDocument(e) {
     showToast('خطأ في الاتصال بالخادم أثناء الرفع.', 'error');
   } finally {
     btnUpload.disabled = false;
-    btnUpload.innerHTML = '<span>رفع ومعالجة</span>';
+    btnUpload.innerHTML = `<span>${btnUploadText}</span>`;
   }
 }
 
 async function deleteDocument(docId) {
-  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المستند وحذف جميع مقاطعه الدلالية؟')) return;
+  const confirmMsg = window.t ? window.t('rag_confirm_delete', 'هل أنت متأكد من رغبتك في حذف هذا المستند وحذف جميع مقاطعه الدلالية؟') : 'هل أنت متأكد من رغبتك في حذف هذا المستند وحذف جميع مقاطعه الدلالية؟';
+  if (!confirm(confirmMsg)) return;
   try {
     const res = await fetch(`/api/knowledge/documents/${docId}/delete/`, {
       method: 'POST',
@@ -175,4 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
   docsTbody = document.getElementById('docs-tbody');
 
   loadDocuments();
+});
+
+window.addEventListener('appLanguageChanged', () => {
+  loadDocuments();
+  if (uploadLabel && (!fileInput || !fileInput.files || fileInput.files.length === 0)) {
+    uploadLabel.innerText = window.t ? window.t('rag_btn_choose', 'اختر ملفاً (PDF/DOCX/TXT)') : 'اختر ملفاً (PDF/DOCX/TXT)';
+  }
 });

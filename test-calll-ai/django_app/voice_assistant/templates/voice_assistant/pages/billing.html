@@ -17,7 +17,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
-      <span>تحديث الرصيد</span>
+      <span data-i18n="billing_refresh_btn">تحديث الرصيد</span>
     </button>
     <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <span data-i18n="billing_btn_topup">شحن الرصيد</span>
@@ -37,22 +37,22 @@
     </div>
     <div class="text-end flex flex-col sm:items-end gap-2">
       <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> جاهز للاتصال
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span data-i18n="billing_ready_for_calls">جاهز للاتصال</span>
       </span>
       <button type="button" onclick="openTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs">
-        <span>شحن المحفظة</span>
+        <span data-i18n="billing_btn_topup">شحن المحفظة</span>
       </button>
     </div>
   </div>
 
   <div class="pt-3 border-t border-[#eaedf0] flex flex-wrap items-center justify-between gap-3 text-xs">
     <div class="flex items-center gap-2">
-      <span class="text-slate-500">التسعيرة الحالية للدقيقة:</span>
+      <span class="text-slate-500" data-i18n="billing_rate_label">التسعيرة الحالية للدقيقة:</span>
       <span id="billing-rate-pill" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-mono font-medium text-xs border border-slate-200/60">$0.0500</span>
-      <span class="text-[11px] text-slate-400">(تقريب لأعلى دقيقة مرتفع)</span>
+      <span class="text-[11px] text-slate-400" data-i18n="billing_rate_rounding">(تقريب لأعلى دقيقة مرتفع)</span>
     </div>
     <button type="button" onclick="openTopupModal()" class="text-[#1f93ff] hover:text-[#1570ef] font-medium text-xs">
-      <span>+ إضافة رصيد للمحفظة</span>
+      <span data-i18n="billing_add_funds">+ إضافة رصيد للمحفظة</span>
     </button>
   </div>
 </div>
@@ -85,7 +85,7 @@
 
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs flex items-center justify-between">
     <div>
-      <span class="text-xs text-slate-500">إجمالي الدقائق المحتسبة</span>
+      <span class="text-xs text-slate-500" data-i18n="billing_total_minutes">إجمالي الدقائق المحتسبة</span>
       <p id="billing-stat-minutes" class="text-lg font-semibold font-mono text-slate-900 mt-1">0 دقيقة</p>
     </div>
     <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 flex items-center justify-center">
@@ -103,14 +103,14 @@
       <h4 class="font-semibold text-slate-900 text-sm flex items-center gap-2">
         <span data-i18n="billing_ledger_title">سجل الحركات المالية</span>
       </h4>
-      <p class="text-xs text-slate-500 mt-0.5">توثيق كامل لكل عملية شحن وخصم مكالمة وتحديث رصيد لحظي</p>
+      <p class="text-xs text-slate-500 mt-0.5" data-i18n="billing_ledger_desc">توثيق كامل لكل عملية شحن وخصم مكالمة وتحديث رصيد لحظي</p>
     </div>
     <div class="flex items-center gap-2">
       <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-xs text-slate-700 focus:outline-none focus:border-[#1f93ff]">
-        <option value="all">جميع الحركات</option>
-        <option value="call_deduction">خصم مكالمات صوتية</option>
-        <option value="topup">شحن رصيد</option>
-        <option value="welcome_bonus">رصيد ترحيبي</option>
+        <option value="all" data-i18n="billing_filter_all">جميع الحركات</option>
+        <option value="call_deduction" data-i18n="billing_filter_deduction">خصم مكالمات صوتية</option>
+        <option value="topup" data-i18n="billing_filter_topup">شحن رصيد</option>
+        <option value="welcome_bonus" data-i18n="billing_filter_bonus">رصيد ترحيبي</option>
       </select>
     </div>
   </div>
@@ -120,18 +120,18 @@
     <table class="w-full text-xs text-start">
       <thead>
         <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
-          <th class="py-2.5 px-3.5 text-start font-medium">التاريخ والوقت</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">نوع الحركة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">المبلغ</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الرصيد بعد الحركة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الدقائق / الثواني</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">السعر المطبق</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">البيان والتفاصيل</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_date">التاريخ والوقت</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_type">نوع الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_amount">المبلغ</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_balance_after">الرصيد بعد الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_duration">الدقائق / الثواني</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_rate">السعر المطبق</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_details">البيان والتفاصيل</th>
         </tr>
       </thead>
       <tbody id="billing-transactions-tbody" class="divide-y divide-[#eaedf0]">
         <tr>
-          <td colspan="7" class="py-8 text-center text-slate-400">
+          <td colspan="7" class="py-8 text-center text-slate-400" data-i18n="billing_loading_transactions">
             جاري تحميل سجل الحركات المالية...
           </td>
         </tr>
@@ -147,18 +147,18 @@
   <div class="bg-white border border-[#eaedf0] rounded-xl max-w-md w-full p-5 shadow-md space-y-4 text-xs">
     <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
       <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-        <span>شحن رصيد المحفظة</span>
+        <span data-i18n="billing_topup_title">شحن رصيد المحفظة</span>
       </h3>
       <button type="button" onclick="closeTopupModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
     </div>
 
-    <p class="text-slate-600 text-xs leading-relaxed">
+    <p class="text-slate-600 text-xs leading-relaxed" data-i18n="billing_topup_desc">
       أدخل المبلغ المطلوب شحنه أو اختر من المبالغ السريعة. يتم إيداع الرصيد فوراً في محفظتك المسبقة الدفع.
     </p>
 
     <!-- Fast Preset Amount Buttons -->
     <div>
-      <label class="block font-medium text-slate-700 mb-1.5">مبالغ شحن سريعة:</label>
+      <label class="block font-medium text-slate-700 mb-1.5" data-i18n="billing_topup_presets">مبالغ شحن سريعة:</label>
       <div class="grid grid-cols-4 gap-2">
         <button type="button" onclick="setTopupAmount(10)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">10 $</button>
         <button type="button" onclick="setTopupAmount(25)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">25 $</button>
@@ -169,7 +169,7 @@
 
     <!-- Custom Amount Input -->
     <div>
-      <label class="block font-medium text-slate-700 mb-1">المبلغ المطلوب شحنه ($) *</label>
+      <label class="block font-medium text-slate-700 mb-1" data-i18n="billing_topup_amount_label">المبلغ المطلوب شحنه ($) *</label>
       <input 
         type="number" 
         id="topup-amount-input" 
@@ -184,9 +184,9 @@
     <div id="topup-modal-alert" class="hidden p-2.5 rounded-lg text-xs"></div>
 
     <div class="flex justify-end gap-2 pt-3 border-t border-[#eaedf0]">
-      <button type="button" onclick="closeTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 transition font-medium">إلغاء</button>
+      <button type="button" onclick="closeTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
       <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
-        <span>تأكيد الشحن</span>
+        <span data-i18n="billing_topup_confirm">تأكيد الشحن</span>
       </button>
     </div>
   </div>

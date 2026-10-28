@@ -41,25 +41,39 @@ function renderMcpServersGrid(servers) {
   if (mcpToolsCount) mcpToolsCount.innerText = allActiveTools.length;
 
   if (servers.length === 0) {
+    const noServersTitle = window.t ? window.t('store_no_servers_title', 'لا توجد خوادم MCP مربوطة حالياً') : 'لا توجد خوادم MCP مربوطة حالياً';
+    const noServersDesc = window.t ? window.t('store_no_servers_desc', 'يمكنك ربط خادم أدوات خارجي عبر بروتوكول FastMCP SSE لتمكين المساعد الصوتي من استدعاء دواله أثناء المكالمات.') : 'يمكنك ربط خادم أدوات خارجي عبر بروتوكول FastMCP SSE لتمكين المساعد الصوتي من استدعاء دواله أثناء المكالمات.';
+    const btnNewLink = window.t ? window.t('store_btn_new_server_link', 'ربط خادم MCP جديد') : 'ربط خادم MCP جديد';
     mcpServersGrid.innerHTML = `
       <div class="col-span-full text-center py-10 px-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 space-y-3">
         <span class="text-3xl block">⚡</span>
-        <h4 class="text-sm font-bold text-slate-900">لا توجد خوادم MCP مربوطة حالياً</h4>
-        <p class="text-xs text-slate-500">يمكنك ربط خادم أدوات خارجي عبر بروتوكول FastMCP SSE لتمكين المساعد الصوتي من استدعاء دواله أثناء المكالمات.</p>
+        <h4 class="text-sm font-bold text-slate-900">${noServersTitle}</h4>
+        <p class="text-xs text-slate-500">${noServersDesc}</p>
         <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition inline-flex items-center gap-1.5 shadow-2xs">
-          <span>+</span> <span>ربط خادم MCP جديد</span>
+          <span>+</span> <span>${btnNewLink}</span>
         </button>
       </div>
     `;
   } else {
+    const discToolsLabel = window.t ? window.t('store_discovered_tools', 'الدوال المكتشفة:') : 'الدوال المكتشفة:';
+    const syncedLabel = window.t ? window.t('store_synced_at', 'مزامنة:') : 'مزامنة:';
+    const neverSyncedLabel = window.t ? window.t('store_never_synced', 'لم تتم المزامنة') : 'لم تتم المزامنة';
+    const syncHint = window.t ? window.t('store_btn_sync_hint', 'فحص وتحديث الأدوات') : 'فحص وتحديث الأدوات';
+    const editHint = window.t ? window.t('store_btn_edit_hint', 'تعديل الإعدادات') : 'تعديل الإعدادات';
+    const deleteHint = window.t ? window.t('store_btn_delete_hint', 'حذف الخادم') : 'حذف الخادم';
+
     mcpServersGrid.innerHTML = servers.map(s => {
       const toolsCount = (s.cached_tools || []).length;
       const statusDotClass = s.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400';
       const badgeClass = s.is_active 
         ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
         : 'bg-slate-100 border border-slate-200 text-slate-600';
-      const badgeText = s.is_active ? 'مفعل للمكالمات' : 'معطل';
-      const toggleBtnText = s.is_active ? 'تعطيل' : 'تفعيل';
+      const badgeText = s.is_active 
+        ? (window.t ? window.t('store_status_active', 'مفعل للمكالمات') : 'مفعل للمكالمات') 
+        : (window.t ? window.t('store_status_disabled', 'معطل') : 'معطل');
+      const toggleBtnText = s.is_active 
+        ? (window.t ? window.t('store_btn_disable', 'تعطيل') : 'تعطيل') 
+        : (window.t ? window.t('store_btn_enable', 'تفعيل') : 'تفعيل');
       const toggleBtnClass = s.is_active
         ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
         : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium';
@@ -80,8 +94,8 @@ function renderMcpServersGrid(servers) {
             </div>
 
             <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-              <span>الدوال المكتشفة: <strong class="text-slate-900 font-mono">${toolsCount}</strong></span>
-              <span>${s.last_synced_at ? `مزامنة: ${s.last_synced_at}` : 'لم تتم المزامنة'}</span>
+              <span>${discToolsLabel} <strong class="text-slate-900 font-mono">${toolsCount}</strong></span>
+              <span>${s.last_synced_at ? `${syncedLabel} ${s.last_synced_at}` : neverSyncedLabel}</span>
             </div>
           </div>
 
@@ -90,13 +104,13 @@ function renderMcpServersGrid(servers) {
               ${toggleBtnText}
             </button>
             <div class="flex items-center gap-1">
-              <button type="button" onclick="syncMcpServer(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="فحص وتحديث الأدوات">
+              <button type="button" onclick="syncMcpServer(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="${syncHint}">
                 🔄
               </button>
-              <button type="button" onclick="openMcpModal(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="تعديل الإعدادات">
+              <button type="button" onclick="openMcpModal(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="${editHint}">
                 ✏️
               </button>
-              <button type="button" onclick="deleteMcpServer(${s.id})" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="حذف الخادم">
+              <button type="button" onclick="deleteMcpServer(${s.id})" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="${deleteHint}">
                 🗑️
               </button>
             </div>
@@ -108,12 +122,15 @@ function renderMcpServersGrid(servers) {
 
   if (!mcpToolsContainer) return;
   if (allActiveTools.length === 0) {
+    const noToolsMsg = window.t ? window.t('store_no_tools_discovered', 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.') : 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.';
     mcpToolsContainer.innerHTML = `
       <div class="col-span-full text-center py-6 text-slate-500 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
-        لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.
+        ${noToolsMsg}
       </div>
     `;
   } else {
+    const noDesc = window.t ? window.t('store_no_desc', 'بدون وصف') : 'بدون وصف';
+    const paramsLabel = window.t ? window.t('store_params_label', 'المعاملات:') : 'المعاملات:';
     mcpToolsContainer.innerHTML = allActiveTools.map(t => {
       const paramsList = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
       const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px] font-medium">${p}</span>`).join(' ');
@@ -128,8 +145,8 @@ function renderMcpServersGrid(servers) {
               ${escapeHtml(t.server_name)}
             </span>
           </div>
-          <p class="text-slate-600 text-[11px] leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || 'بدون وصف')}</p>
-          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-[10px] text-slate-400">المعاملات:</span> ${badges}</div>` : ''}
+          <p class="text-slate-600 text-[11px] leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || noDesc)}</p>
+          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-[10px] text-slate-400">${paramsLabel}</span> ${badges}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -589,4 +606,8 @@ document.addEventListener('DOMContentLoaded', () => {
   mcpModal = document.getElementById('mcp-modal');
 
   loadMcpServers();
+});
+
+window.addEventListener('appLanguageChanged', () => {
+  renderMcpServersGrid(userMcpServers);
 });

@@ -9,29 +9,29 @@
   <div class="flex flex-wrap justify-between items-center gap-4 pb-3 border-b border-[#eaedf0]">
     <div>
       <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-        <span>حملات الاتصال وإدارة العملاء (Campaigns & Leads CRM)</span>
+        <span data-i18n="camp_title">حملات الاتصال وإدارة العملاء (Campaigns & Leads CRM)</span>
         <span class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">Inngest Powered</span>
       </h2>
-      <p class="text-xs text-slate-500 mt-0.5">
+      <p class="text-xs text-slate-500 mt-0.5" data-i18n="camp_subtitle">
         ارفع قوائم العملاء بصيغ متعددة (Excel, CSV, TXT, JSON)، ونظمهم داخل CRM تفاعلي، وأطلق حملات الاتصال المتوازية بفرز واستخلاص ذكي فوري.
       </p>
     </div>
 
     <div class="flex items-center gap-2">
       <a href="https://inngest.169.58.32.179.nip.io" target="_blank" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-[#eaedf0] transition flex items-center gap-1.5 shadow-2xs">
-        <span>مراقبة Inngest</span>
+        <span data-i18n="camp_btn_inngest">مراقبة Inngest</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
       </a>
       <button type="button" onclick="loadCampaignsList()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-[#eaedf0] transition flex items-center gap-1.5 shadow-2xs">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-        <span>تحديث</span>
+        <span data-i18n="camp_btn_refresh">تحديث</span>
       </button>
       <button type="button" onclick="openDncModal()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-[#eaedf0] transition flex items-center gap-1.5 shadow-2xs">
-        <span>قائمة عدم الاتصال (DNC)</span>
+        <span data-i18n="camp_btn_dnc">قائمة عدم الاتصال (DNC)</span>
       </button>
       <button type="button" onclick="openNewCampaignModal()" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        <span>إنشاء حملة جديدة</span>
+        <span data-i18n="camp_btn_new">إنشاء حملة جديدة</span>
       </button>
     </div>
   </div>
@@ -39,23 +39,23 @@
   <!-- Quick Stats Row -->
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
     <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs">
-      <span class="text-xs text-slate-500 font-medium block">إجمالي الحملات</span>
+      <span class="text-xs text-slate-500 font-medium block" data-i18n="camp_stat_total">إجمالي الحملات</span>
       <span id="camp-stat-total-campaigns" class="text-xl font-semibold font-mono text-slate-900 mt-1 block">0</span>
     </div>
     <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs">
-      <span class="text-xs text-slate-500 font-medium block">إجمالي جهات الاتصال</span>
+      <span class="text-xs text-slate-500 font-medium block" data-i18n="camp_stat_contacts">إجمالي جهات الاتصال</span>
       <span id="camp-stat-total-contacts" class="text-xl font-semibold font-mono text-slate-900 mt-1 block">0</span>
     </div>
     <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs">
-      <span class="text-xs text-slate-500 font-medium block">تم الرد هاتفياً</span>
+      <span class="text-xs text-slate-500 font-medium block" data-i18n="camp_stat_answered">تم الرد هاتفياً</span>
       <span id="camp-stat-answered-contacts" class="text-xl font-semibold font-mono text-emerald-700 mt-1 block">0</span>
     </div>
     <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs">
-      <span class="text-xs text-slate-500 font-medium block">رسائل واتساب مرسلة</span>
+      <span class="text-xs text-slate-500 font-medium block" data-i18n="camp_stat_whatsapp">رسائل واتساب مرسلة</span>
       <span id="camp-stat-whatsapp-sent" class="text-xl font-semibold font-mono text-slate-900 mt-1 block">0</span>
     </div>
     <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs">
-      <span class="text-xs text-slate-500 font-medium block">عملاء مهتمون</span>
+      <span class="text-xs text-slate-500 font-medium block" data-i18n="camp_stat_hot">عملاء مهتمون</span>
       <span id="camp-stat-total-hot" class="text-xl font-semibold font-mono text-[#1f93ff] mt-1 block">0</span>
     </div>
   </div>
@@ -86,24 +86,24 @@
   <div id="campaign-active-panel" class="p-4 rounded-lg bg-slate-50/60 border border-[#eaedf0] space-y-3">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-medium text-slate-700">اختر الحملة:</span>
+        <span class="text-xs font-medium text-slate-700" data-i18n="camp_select_label">اختر الحملة:</span>
         <select id="campaign-select" onchange="onCampaignSelected(this.value)" class="px-2.5 py-1.5 rounded-lg border border-[#eaedf0] text-xs font-medium bg-white text-slate-900 focus:outline-none focus:border-[#1f93ff] min-w-[200px]">
           <option value="">جارِ تحميل الحملات...</option>
         </select>
-        <span id="camp-channel-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/60">مكالمات</span>
-        <span id="camp-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/60">مسودة</span>
+        <span id="camp-channel-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/60" data-i18n="camp_badge_calls">مكالمات</span>
+        <span id="camp-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/60" data-i18n="camp_badge_draft">مسودة</span>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center gap-1.5">
         <button type="button" id="btn-start-campaign" onclick="startCurrentCampaign()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition shadow-2xs flex items-center gap-1">
-          <span id="btn-start-campaign-label">بدء التنفيذ</span>
+          <span id="btn-start-campaign-label" data-i18n="camp_btn_start">بدء التنفيذ</span>
         </button>
         <button type="button" id="btn-pause-campaign" onclick="pauseCurrentCampaign()" class="hidden px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium transition shadow-2xs">
-          <span>إيقاف مؤقت</span>
+          <span data-i18n="camp_btn_pause">إيقاف مؤقت</span>
         </button>
-        <button type="button" id="btn-reset-campaign" onclick="resetCurrentCampaignContacts()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition shadow-2xs" title="إعادة تعيين كافة جهات الاتصال إلى حالة الانتظار">
-          <span>إعادة ضبط القائمة</span>
+        <button type="button" id="btn-reset-campaign" onclick="resetCurrentCampaignContacts()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition shadow-2xs" title="إعادة تعيين كافة جهات الاتصال إلى حالة الانتظار" data-i18n-title="camp_reset_hint">
+          <span data-i18n="camp_btn_reset">إعادة ضبط القائمة</span>
         </button>
         <button type="button" onclick="exportCurrentCampaign('xlsx')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition shadow-2xs">
           <span>تصدير Excel</span>
@@ -142,7 +142,7 @@
 
       <!-- Search -->
       <div class="relative min-w-[200px]">
-        <input type="text" id="camp-search-input" onkeyup="searchCampaignContacts(this.value)" placeholder="بحث بالاسم أو الرقم..." class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] text-xs bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]">
+        <input type="text" id="camp-search-input" onkeyup="searchCampaignContacts(this.value)" placeholder="بحث بالاسم أو الرقم..." data-i18n-placeholder="camp_search_placeholder" class="w-full px-3 py-1.5 rounded-lg border border-[#eaedf0] text-xs bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]">
       </div>
     </div>
 
@@ -151,19 +151,19 @@
       <table class="w-full text-start border-collapse text-xs">
         <thead>
           <tr class="bg-slate-50/70 border-b border-[#eaedf0] text-slate-500 font-medium">
-            <th class="py-2.5 px-3.5 text-start">العميل</th>
-            <th class="py-2.5 px-3 text-start">الهاتف</th>
-            <th class="py-2.5 px-3 text-start">المكالمة</th>
-            <th class="py-2.5 px-3 text-start">الواتساب</th>
-            <th class="py-2.5 px-3 text-start">التصنيف</th>
-            <th class="py-2.5 px-3.5 text-start">ملخص المكالمة / رسالة الواتساب</th>
-            <th class="py-2.5 px-3 text-start">بيانات إضافية</th>
-            <th class="py-2.5 px-3 text-center">إجراءات</th>
+            <th class="py-2.5 px-3.5 text-start" data-i18n="camp_th_name">العميل</th>
+            <th class="py-2.5 px-3 text-start" data-i18n="camp_th_phone">الهاتف</th>
+            <th class="py-2.5 px-3 text-start" data-i18n="camp_th_call">المكالمة</th>
+            <th class="py-2.5 px-3 text-start" data-i18n="camp_th_whatsapp">الواتساب</th>
+            <th class="py-2.5 px-3 text-start" data-i18n="camp_th_interest">التصنيف</th>
+            <th class="py-2.5 px-3.5 text-start" data-i18n="camp_th_summary">ملخص المكالمة / رسالة الواتساب</th>
+            <th class="py-2.5 px-3 text-start" data-i18n="camp_th_extra">بيانات إضافية</th>
+            <th class="py-2.5 px-3 text-center" data-i18n="camp_th_actions">إجراءات</th>
           </tr>
         </thead>
         <tbody id="camp-contacts-tbody" class="divide-y divide-[#eaedf0] bg-white text-slate-700">
           <tr>
-            <td colspan="8" class="text-center py-8 text-slate-400">اختر حملة أو قم بإنشاء حملة جديدة لرفع وعرض العملاء.</td>
+            <td colspan="8" class="text-center py-8 text-slate-400" data-i18n="camp_no_campaign_selected">اختر حملة أو قم بإنشاء حملة جديدة لرفع وعرض العملاء.</td>
           </tr>
         </tbody>
       </table>

@@ -8,24 +8,24 @@
 <div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
   <div>
     <div class="flex items-center gap-2">
-      <h3 class="text-base font-semibold text-slate-900">واجهات المطورين المباشرة (Direct Developer API &amp; Keys)</h3>
+      <h3 class="text-base font-semibold text-slate-900" data-i18n="dev_title">واجهات المطورين المباشرة (Direct Developer API &amp; Keys)</h3>
       <span class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">v1 Active</span>
     </div>
-    <p class="text-xs text-slate-500 mt-0.5 max-w-2xl leading-relaxed">
+    <p class="text-xs text-slate-500 mt-0.5 max-w-2xl leading-relaxed" data-i18n="dev_subtitle">
       ادمج المساعد الصوتي والذكاء الاصطناعي وخوادم FastMCP وبدء مكالمات WebRTC مباشرة في موقعك أو تطبيقاتك الخاصة باستخدام مفتاح الـ API الشخصي لحسابك (<code class="bg-slate-100 px-1 py-0.5 rounded text-[#1f93ff] font-mono">X-API-Key</code>).
     </p>
   </div>
 
   <div class="flex items-center gap-2 flex-wrap">
     <a href="/api/v1/docs/" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
-      <span>فتح التوثيق التفاعلي (Scalar Docs)</span>
+      <span data-i18n="dev_btn_docs">فتح التوثيق التفاعلي (Scalar Docs)</span>
       <span>↗</span>
     </a>
     <button type="button" onclick="loadDeveloperKeys()" class="px-3.5 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
-      <span>تحديث</span>
+      <span data-i18n="dev_btn_refresh">تحديث</span>
     </button>
   </div>
 </div>
@@ -33,9 +33,9 @@
 <!-- API Key Management Card -->
 <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-2 border-b border-[#eaedf0] pb-3">
-    <h4 class="font-semibold text-sm text-slate-900">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
+    <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_key_title">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
     <button type="button" onclick="rotateDeveloperKeyPrompt()" class="px-3 py-1 rounded-md border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-medium transition flex items-center gap-1">
-      <span>تدوير المفتاح (Regenerate Key)</span>
+      <span data-i18n="dev_btn_rotate">تدوير المفتاح (Regenerate Key)</span>
     </button>
   </div>
 
@@ -55,18 +55,18 @@
           </svg>
         </button>
         <button type="button" onclick="copyDevApiKey()" class="px-2.5 py-1 text-xs font-medium rounded-md bg-[#1f93ff] hover:bg-[#1570ef] text-white transition shadow-2xs">
-          <span>نسخ</span>
+          <span data-i18n="dev_btn_copy">نسخ</span>
         </button>
       </div>
     </div>
 
     <div class="lg:col-span-4 flex items-center gap-3 text-xs text-slate-500">
       <div class="bg-slate-50 border border-[#eaedf0] rounded-lg p-2 flex-1">
-        <span class="block text-[10px] text-slate-400 font-medium">تاريخ الإنشاء:</span>
+        <span class="block text-[10px] text-slate-400 font-medium" data-i18n="dev_created_at">تاريخ الإنشاء:</span>
         <span id="dev-key-created-at" class="font-medium text-slate-900 font-mono">--</span>
       </div>
       <div class="bg-slate-50 border border-[#eaedf0] rounded-lg p-2 flex-1">
-        <span class="block text-[10px] text-slate-400 font-medium">آخر استخدام:</span>
+        <span class="block text-[10px] text-slate-400 font-medium" data-i18n="dev_last_used">آخر استخدام:</span>
         <span id="dev-key-last-used" class="font-medium text-slate-900 font-mono">--</span>
       </div>
     </div>
@@ -75,7 +75,7 @@
   <!-- Quick cURL Code Samples -->
   <div class="mt-4 pt-3 border-t border-[#eaedf0] grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <h5 class="font-medium text-xs text-slate-700 mb-2">استعلام الحساب (Get Account):</h5>
+      <h5 class="font-medium text-xs text-slate-700 mb-2" data-i18n="dev_account_sample">استعلام الحساب (Get Account):</h5>
       <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
         <pre id="dev-curl-sample">curl -X GET "https://localhost/api/v1/account/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
@@ -87,7 +87,7 @@
     </div>
 
     <div>
-      <h5 class="font-medium text-xs text-slate-700 mb-2">إجراء مكالمة صادرة بالذكاء الاصطناعي (Dial Call):</h5>
+      <h5 class="font-medium text-xs text-slate-700 mb-2" data-i18n="dev_dial_sample">إجراء مكالمة صادرة بالذكاء الاصطناعي (Dial Call):</h5>
       <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
         <pre id="dev-curl-dial-sample">curl -X POST "https://localhost/api/v1/calls/dial/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
@@ -106,7 +106,7 @@
   <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
     <div>
       <div class="flex items-center gap-2 flex-wrap">
-        <h4 class="font-semibold text-sm text-slate-900">الذاكرة المنظمة الحية للنشاط (Structured Live Context)</h4>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_context_title">الذاكرة المنظمة الحية للنشاط (Structured Live Context)</h4>
         <span id="live-context-redis-badge" class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-slate-100 text-slate-700 border border-slate-200">
           <span>جاري الفحص...</span>
         </span>
@@ -114,23 +114,23 @@
           الحجم: 0 KB / 100 KB
         </span>
       </div>
-      <p class="text-xs text-slate-500 mt-1 leading-relaxed max-w-3xl">
+      <p class="text-xs text-slate-500 mt-1 leading-relaxed max-w-3xl" data-i18n="dev_context_desc">
         بيانات نشاطك الحية والمنظمة (الفروع، مناطق ورسوم التوصيل، المنيو، وقائمة الأصناف غير المتوفرة اليوم). تُحقن فوراً في بداية كل مكالمة من الذاكرة اللحظية (<code class="bg-slate-100 px-1 py-0.5 rounded text-[#1f93ff] font-mono">Redis &lt; 2ms</code>).
       </p>
     </div>
 
     <div class="flex items-center gap-2 flex-wrap text-xs">
       <button type="button" onclick="loadRestaurantTemplate()" class="px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
-        <span>قالب مطعم</span>
+        <span data-i18n="dev_template_restaurant">قالب مطعم</span>
       </button>
       <button type="button" onclick="formatLiveContextJson()" class="px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
-        <span>تنسيق الـ JSON</span>
+        <span data-i18n="dev_format_json">تنسيق الـ JSON</span>
       </button>
       <button type="button" onclick="togglePromptPreview()" id="btn-toggle-prompt-preview" class="px-3 py-1.5 rounded-lg border border-[#b2ddff] bg-[#eff8ff] text-[#1f93ff] font-medium transition shadow-2xs">
-        <span>معاينة ما يراه الـ AI</span>
+        <span data-i18n="dev_preview_prompt">معاينة ما يراه الـ AI</span>
       </button>
       <button type="button" onclick="clearLiveContext()" class="px-3 py-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 font-medium transition">
-        <span>مسح</span>
+        <span data-i18n="dev_clear">مسح</span>
       </button>
     </div>
   </div>
@@ -165,7 +165,7 @@
     </div>
 
     <button type="button" onclick="saveLiveContext()" id="btn-save-live-context" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs flex items-center gap-2">
-      <span>حفظ واستبدال فوري</span>
+      <span data-i18n="dev_save_context">حفظ واستبدال فوري</span>
     </button>
   </div>
 

@@ -38,21 +38,30 @@ async function loadEmployees() {
     currentEmployees = data.employees || [];
     populateEmployeeFilter();
     if (currentEmployees.length === 0) {
+      const noEmpText = window.t ? window.t('cc_no_employees', 'لا يوجد موظفون مسجلون بعد في النظام.') : 'لا يوجد موظفون مسجلون بعد في النظام.';
       tbody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
-            لا يوجد موظفون مسجلون بعد في النظام.
+            ${noEmpText}
           </td>
         </tr>
       `;
       return;
     }
 
+    const readyText = window.t ? window.t('cc_status_ready', 'متاح (Ready)') : 'متاح (Ready)';
+    const breakText = window.t ? window.t('cc_status_break', 'استراحة (Break)') : 'استراحة (Break)';
+    const busyText = window.t ? window.t('cc_status_busy', 'مشغول (Busy)') : 'مشغول (Busy)';
+    const offlineText = window.t ? window.t('cc_status_offline', 'غير متصل') : 'غير متصل';
+    const sipDataLabel = window.t ? window.t('cc_sip_data', 'بيانات SIP') : 'بيانات SIP';
+    const dialLabel = window.t ? window.t('cc_dial', 'اتصال') : 'اتصال';
+    const generalDept = window.t ? window.t('general_dept', 'عام') : 'عام';
+
     const statusBadges = {
-      'ready': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>متاح (Ready)</span>',
-      'break': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>استراحة (Break)</span>',
-      'busy': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>مشغول (Busy)</span>',
-      'offline': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">غير متصل</span>'
+      'ready': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${readyText}</span>`,
+      'break': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${breakText}</span>`,
+      'busy': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${busyText}</span>`,
+      'offline': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">${offlineText}</span>`
     };
 
     tbody.innerHTML = currentEmployees.map(emp => `
@@ -66,7 +75,7 @@ async function loadEmployees() {
             ${escapeHtml(emp.extension)}
           </span>
         </td>
-        <td class="py-3 px-3 text-slate-700 font-medium">${escapeHtml(emp.department || 'عام')}</td>
+        <td class="py-3 px-3 text-slate-700 font-medium">${escapeHtml(emp.department || generalDept)}</td>
         <td class="py-3 px-3 text-center">
           ${statusBadges[emp.status] || statusBadges['offline']}
         </td>
@@ -83,7 +92,7 @@ async function loadEmployees() {
               class="px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
               title="بيانات اتصال SIP للسوفت فون والهاتف المكتبي"
             >
-              <span>🔑 بيانات SIP</span>
+              <span>🔑 ${sipDataLabel}</span>
             </button>
             <button 
               type="button" 
@@ -91,7 +100,7 @@ async function loadEmployees() {
               class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
               title="اتصال مباشر بالموظف عبر WebRTC"
             >
-              <span>📞 اتصال</span>
+              <span>📞 ${dialLabel}</span>
             </button>
             <button 
               type="button" 
@@ -122,41 +131,48 @@ async function loadQueues() {
 
     currentCallQueues = data.queues || [];
     if (currentCallQueues.length === 0) {
+      const noQueuesText = window.t ? window.t('cc_no_queues', 'لا توجد طوابير انتظار مسجلة بعد. اضغط "طابور جديد" لإنشاء طابور.') : 'لا توجد طوابير انتظار مسجلة بعد. اضغط "طابور جديد" لإنشاء طابور.';
       tbody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
-            لا توجد طوابير انتظار مسجلة بعد. اضغط "طابور جديد" لإنشاء طابور.
+            ${noQueuesText}
           </td>
         </tr>
       `;
       return;
     }
 
+    const readyState = window.t ? window.t('presence_ready', 'متاح') : 'متاح';
+    const ringingState = window.t ? window.t('presence_ringing', 'يرن...') : 'يرن...';
+    const busyState = window.t ? window.t('presence_busy', 'مشغول') : 'مشغول';
+    const extPrefix = window.t ? window.t('cc_ext_prefix', 'تحويلة') : 'تحويلة';
+    const noMembersAssigned = window.t ? window.t('cc_no_members_assigned', 'لا يوجد موظفون مسندون') : 'لا يوجد موظفون مسندون';
+
     tbody.innerHTML = currentCallQueues.map(q => {
       const membersHtml = (q.members && q.members.length > 0)
         ? q.members.map(m => {
             let badgeColor = 'bg-slate-50 text-slate-700 border-slate-200';
             let dotColor = 'bg-emerald-500';
-            let stateLabel = 'متاح';
+            let stateLabel = readyState;
             if (m.presence_state === 'RINGING') {
               badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
               dotColor = 'bg-amber-500 animate-ping';
-              stateLabel = 'يرن...';
+              stateLabel = ringingState;
             } else if (m.presence_state === 'BUSY') {
               badgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
               dotColor = 'bg-rose-500';
-              stateLabel = 'مشغول';
+              stateLabel = busyState;
             }
             return `
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${badgeColor} border mr-1 mb-1 shadow-2xs">
                 <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
                 <span>${escapeHtml(m.sip_account_name || m.sip_username)}</span>
-                <span class="text-slate-500 font-mono text-[9px] font-medium">[تحويلة ${escapeHtml(m.extension || '')}]</span>
+                <span class="text-slate-500 font-mono text-[9px] font-medium">[${extPrefix} ${escapeHtml(m.extension || '')}]</span>
                 <span class="opacity-75 font-mono text-[9px]">(${stateLabel})</span>
               </span>
             `;
           }).join('')
-        : '<span class="text-slate-400 text-[10px]">لا يوجد موظفون مسندون</span>';
+        : `<span class="text-slate-400 text-[10px]">${noMembersAssigned}</span>`;
 
       const waitingBadge = q.waiting_calls_count > 0
         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${q.waiting_calls_count} مكالمة</span>`
@@ -809,6 +825,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadEmployeeCallLogs();
   setInterval(loadQueues, 8000);
   setInterval(loadEmployees, 8000);
+});
+
+window.addEventListener('appLanguageChanged', () => {
+  loadEmployees();
+  loadQueues();
 });
 
 

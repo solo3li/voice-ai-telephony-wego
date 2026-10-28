@@ -8,25 +8,25 @@
 <div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
   <div>
     <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-      <span>برنامج الشركاء وحلول الـ SaaS (Partner &amp; Reseller Portal)</span>
+      <span data-i18n="partner_title">برنامج الشركاء وحلول الـ SaaS (Partner &amp; Reseller Portal)</span>
     </h3>
-    <p class="text-xs text-slate-500 mt-0.5">
+    <p class="text-xs text-slate-500 mt-0.5" data-i18n="partner_subtitle">
       إدارة عملاء الساس التابعين، مفاتيح الربط البرمجي (Headless API)، وتتبع استهلاك المكالمات المجمعة.
     </p>
   </div>
   <div class="flex items-center gap-2 flex-wrap">
     <a href="/api/partner/v1/docs/" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
-      <span>وثائق الـ API للمطورين</span>
+      <span data-i18n="partner_docs_btn">وثائق الـ API للمطورين</span>
       <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
     </a>
     <button type="button" onclick="openPartnerDocsModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
-      <span>الدليل السريع</span>
+      <span data-i18n="partner_quick_guide">الدليل السريع</span>
     </button>
     <button type="button" onclick="loadPartnerDashboard()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
-      <span>تحديث البيانات</span>
+      <span data-i18n="partner_refresh_btn">تحديث البيانات</span>
     </button>
   </div>
 </div>
@@ -37,19 +37,19 @@
 <!-- Partner KPIs Metric Cards -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
-    <span class="text-xs text-slate-500 font-medium">رصيد محفظة الشريك المتاحة</span>
+    <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_balance">رصيد محفظة الشريك المتاحة</span>
     <p id="partner-kpi-balance" class="text-xl font-semibold font-mono text-slate-900 mt-1">$0.00</p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
-    <span class="text-xs text-slate-500 font-medium">سعر الدقيقة المخصص لك</span>
+    <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_rate">سعر الدقيقة المخصص لك</span>
     <p id="partner-kpi-rate" class="text-xl font-semibold font-mono text-emerald-700 mt-1">$0.0300 / د</p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
-    <span class="text-xs text-slate-500 font-medium">إجمالي عملاء الساس النشطين</span>
+    <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_clients">إجمالي عملاء الساس النشطين</span>
     <p id="partner-kpi-clients" class="text-xl font-semibold font-mono text-slate-900 mt-1">0</p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
-    <span class="text-xs text-slate-500 font-medium">إجمالي الدقائق المستهلكة لعملائك</span>
+    <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_minutes">إجمالي الدقائق المستهلكة لعملائك</span>
     <p id="partner-kpi-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 د</p>
   </div>
 </div>
@@ -59,34 +59,34 @@
   <!-- Card 1: API Key & Webhook Settings -->
   <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
     <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-[#eaedf0]">
-      <span>بيانات الربط البرمجي الخلفي (Headless API Access)</span>
+      <span data-i18n="partner_api_access_title">بيانات الربط البرمجي الخلفي (Headless API Access)</span>
     </h4>
 
     <div class="space-y-3 text-xs">
       <div>
-        <label class="block font-medium text-slate-700 mb-1">كود الشريك (Partner Code)</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_code_label">كود الشريك (Partner Code)</label>
         <div class="flex items-center gap-2">
           <input type="text" id="partner-code-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-[#eaedf0] rounded-lg text-[#1f93ff] font-mono font-semibold" />
-          <button type="button" onclick="copyPartnerText('partner-code-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs">نسخ</button>
+          <button type="button" onclick="copyPartnerText('partner-code-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
         </div>
       </div>
 
       <div>
-        <label class="block font-medium text-slate-700 mb-1">مفتاح الوصول الرئيسي (X-Partner-Key)</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_api_key_label">مفتاح الوصول الرئيسي (X-Partner-Key)</label>
         <div class="flex items-center gap-2">
           <input type="password" id="partner-api-key-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-[#eaedf0] rounded-lg text-slate-900 font-mono" />
-          <button type="button" onclick="togglePartnerKeyVisibility()" id="btn-toggle-partner-key" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs">إظهار</button>
-          <button type="button" onclick="copyPartnerText('partner-api-key-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs">نسخ</button>
-          <button type="button" onclick="regeneratePartnerApiKey()" class="px-3 py-2 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 font-medium" title="إعادة توليد المفتاح">تدوير</button>
+          <button type="button" onclick="togglePartnerKeyVisibility()" id="btn-toggle-partner-key" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="show">إظهار</button>
+          <button type="button" onclick="copyPartnerText('partner-api-key-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
+          <button type="button" onclick="regeneratePartnerApiKey()" class="px-3 py-2 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 font-medium" title="إعادة توليد المفتاح" data-i18n="rotate">تدوير</button>
         </div>
       </div>
 
       <div>
-        <label class="block font-medium text-slate-700 mb-1">رابط استقبال الـ Webhook الخاص بنظامك</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_webhook_label">رابط استقبال الـ Webhook الخاص بنظامك</label>
         <div class="flex items-center gap-2">
           <input type="url" id="partner-webhook-url-input" placeholder="https://your-saas.com/api/voice-webhooks/" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
-          <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shrink-0 shadow-2xs">حفظ</button>
-          <button type="button" onclick="testPartnerWebhook()" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shrink-0 shadow-2xs">فحص</button>
+          <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shrink-0 shadow-2xs" data-i18n="save">حفظ</button>
+          <button type="button" onclick="testPartnerWebhook()" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shrink-0 shadow-2xs" data-i18n="test">فحص</button>
         </div>
       </div>
     </div>
@@ -95,23 +95,23 @@
   <!-- Card 2: Shared MCP Server Configuration -->
   <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
     <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-[#eaedf0]">
-      <span>خادم الـ MCP الموروث لعملائك (Shared SaaS Tools)</span>
+      <span data-i18n="partner_shared_mcp_title">خادم الـ MCP الموروث لعملائك (Shared SaaS Tools)</span>
     </h4>
 
-    <p class="text-xs text-slate-500 leading-relaxed">
-      اختر خادم أدوات MCP من خوادمك المربوطة ليتم توريثه وتفعيله تلقائياً لكافة عملاء الساس التابعين لك. عند استدعاء الوكيل الصوتي لأي أداة على هذا الخادم، سيتم تمرير معرف العميل المتحدث <code class="text-[#1f93ff] bg-slate-100 px-1 py-0.5 rounded font-mono">X-Client-ID</code> تلقائياً.
+    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="partner_shared_mcp_desc">
+      اختر خادم أدوات MCP من خوادمك المربوطة ليتم توريثه وتفعيله تلقائياً لكافة عملاء الساس التابعين لك. عند استدعاء الوكيل الصوتي لأي أداة على هذا الخادم، سيتم تمرير معرف العميل المتحدث تلقائياً.
     </p>
 
     <div class="space-y-3 text-xs pt-1">
       <div>
-        <label class="block font-medium text-slate-700 mb-1">خادم الـ MCP المشترك الافتراضي</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_shared_mcp_select_label">خادم الـ MCP المشترك الافتراضي</label>
         <select id="partner-shared-mcp-select" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]">
-          <option value="">-- بدون خادم موروث --</option>
+          <option value="" data-i18n="partner_no_inherited_mcp">-- بدون خادم موروث --</option>
         </select>
       </div>
 
       <div class="flex justify-end pt-2">
-        <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
+        <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs" data-i18n="partner_save_shared_mcp">
           حفظ خادم الـ MCP المشترك
         </button>
       </div>
@@ -124,31 +124,31 @@
   <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
     <div>
       <h4 class="font-semibold text-slate-900 text-sm">
-        <span>إدارة عملاء الساس التابعين (Sub-Clients)</span>
+        <span data-i18n="partner_subclients_title">إدارة عملاء الساس التابعين (Sub-Clients)</span>
       </h4>
-      <p class="text-xs text-slate-500 mt-0.5">قائمة بجميع حسابات العملاء التي تم إنشاؤها عبر الـ API الخلفي</p>
+      <p class="text-xs text-slate-500 mt-0.5" data-i18n="partner_subclients_desc">قائمة بجميع حسابات العملاء التي تم إنشاؤها عبر الـ API الخلفي</p>
     </div>
-    <span class="text-xs text-slate-400">يتم الخصم من محفظتك المركزية بالسعر المخفض</span>
+    <span class="text-xs text-slate-400" data-i18n="partner_discount_hint">يتم الخصم من محفظتك المركزية بالسعر المخفض</span>
   </div>
 
   <div class="overflow-x-auto">
     <table class="w-full text-xs text-start">
       <thead>
         <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
-          <th class="py-2.5 px-3.5 text-start font-medium">معرف العميل (ID)</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الاسم والبيانات</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">المعرف الخارجي (Ref)</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">تاريخ الانضمام</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الدقائق المستهلكة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">إجمالي التكلفة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">سقف الاستهلاك (Cap)</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الحالة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الإجراءات</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_client_id">معرف العميل (ID)</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_name">الاسم والبيانات</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_ref">المعرف الخارجي (Ref)</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_joined">تاريخ الانضمام</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_minutes">الدقائق المستهلكة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_cost">إجمالي التكلفة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_cap">سقف الاستهلاك (Cap)</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_status">الحالة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_actions">الإجراءات</th>
         </tr>
       </thead>
       <tbody id="partner-clients-tbody" class="divide-y divide-[#eaedf0]">
         <tr>
-          <td colspan="9" class="py-8 text-center text-slate-400">
+          <td colspan="9" class="py-8 text-center text-slate-400" data-i18n="partner_loading_clients">
             جاري تحميل عملاء الساس...
           </td>
         </tr>
@@ -162,9 +162,9 @@
   <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
     <div>
       <h4 class="font-semibold text-slate-900 text-sm">
-        <span>سجل مكالمات عملاء الساس (Partner Sub-Clients CDR)</span>
+        <span data-i18n="partner_cdr_title">سجل مكالمات عملاء الساس (Partner Sub-Clients CDR)</span>
       </h4>
-      <p class="text-xs text-slate-500 mt-0.5">تفاصيل استهلاك مكالمات عملائك والدقائق المخصومة من رصيدك بالسعر المخفض</p>
+      <p class="text-xs text-slate-500 mt-0.5" data-i18n="partner_cdr_desc">تفاصيل استهلاك مكالمات عملائك والدقائق المخصومة من رصيدك بالسعر المخفض</p>
     </div>
   </div>
 
@@ -172,18 +172,18 @@
     <table class="w-full text-xs text-start">
       <thead>
         <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
-          <th class="py-2.5 px-3.5 text-start font-medium">وقت المكالمة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">العميل التابع</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الاتجاه والطرف</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">المدة بالثواني</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الدقائق (Ceiling)</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">التكلفة المخصومة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium">الملخص الذكي</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_call_time">وقت المكالمة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_subclient">العميل التابع</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_direction">الاتجاه والطرف</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_sec">المدة بالثواني</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_ceil_mins">الدقائق (Ceiling)</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_deducted">التكلفة المخصومة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_summary">الملخص الذكي</th>
         </tr>
       </thead>
       <tbody id="partner-calls-tbody" class="divide-y divide-[#eaedf0]">
         <tr>
-          <td colspan="7" class="py-8 text-center text-slate-400">
+          <td colspan="7" class="py-8 text-center text-slate-400" data-i18n="partner_no_calls">
             لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.
           </td>
         </tr>

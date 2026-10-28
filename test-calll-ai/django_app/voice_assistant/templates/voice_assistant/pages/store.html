@@ -5,80 +5,156 @@
 
 {% block content %}
 <style>
-  /* Optimize main workspace to fit full height and width for embedded MCP portal */
   main {
     max-width: 100% !important;
-    padding: 1rem !important;
+    padding: 1.25rem !important;
     margin: 0 !important;
   }
 </style>
 
-<div class="flex flex-col space-y-3 h-[calc(100vh-115px)] min-h-[780px]">
+<div class="flex flex-col space-y-4">
   <!-- Header Bar -->
-  <div class="bg-white border border-[#eaedf0] rounded-xl px-5 py-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3 shrink-0">
+  <div class="bg-white border border-[#eaedf0] rounded-xl px-5 py-4 shadow-2xs flex flex-wrap items-center justify-between gap-4 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg border border-slate-200/60">
         ⚡
       </div>
       <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-base font-semibold text-slate-900">متجر وأدوات MCP</h1>
+        <div class="flex items-center gap-2 flex-wrap">
+          <h1 class="text-base font-semibold text-slate-900" data-i18n="store_title">متجر وأدوات MCP</h1>
           <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            15 أداة نشطة
+            <span id="mcp-tools-count" class="font-mono">15</span> <span data-i18n="store_active_tools">أداة نشطة</span>
           </span>
           <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-600 border border-slate-200">
             Universal FastMCP Gateway
           </span>
-          <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70">
+          <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70" data-i18n="store_unified_badge">
             صوت + شات موحد
           </span>
         </div>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="store_subtitle">
           البوابة المركزية لإدارة وربط دوال وخوادم MCP مع المكالمات الصوتية ومنصة شات ووت تلقائياً
         </p>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="flex items-center gap-2">
+    <!-- Actions & View Switcher -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+        <button 
+          type="button" 
+          onclick="switchStoreView('servers')" 
+          id="btn-view-servers" 
+          class="px-3 py-1 rounded-md bg-white text-slate-900 font-medium shadow-2xs transition"
+          data-i18n="store_view_servers"
+        >
+          خوادم MCP
+        </button>
+        <button 
+          type="button" 
+          onclick="switchStoreView('portal')" 
+          id="btn-view-portal" 
+          class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition"
+          data-i18n="store_view_portal"
+        >
+          بوابة FastMCP المدمجة
+        </button>
+      </div>
+
       <button 
         type="button" 
-        onclick="reloadMcpFrame()" 
-        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-2xs"
-        title="تحديث صفحة الأدوات"
+        onclick="openMcpModal(null)" 
+        id="btn-add-mcp-server"
+        class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white transition flex items-center gap-1.5 shadow-2xs"
       >
-        <span>تحديث</span>
+        <span>+</span>
+        <span data-i18n="store_btn_new_server">إضافة خادم MCP جديد</span>
       </button>
 
       <button 
         type="button" 
-        onclick="toggleMcpFullscreen()" 
+        onclick="syncMcpServer(null)" 
+        id="btn-sync-all-mcp"
         class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-2xs"
-        title="ملء الشاشة"
+        title="فحص الاتصال وتحديث أدوات كافة الخوادم"
+        data-i18n-title="store_sync_hint"
       >
-        <span id="mcp-fullscreen-icon">⛶</span>
-        <span id="mcp-fullscreen-text">ملء الشاشة</span>
+        <span>🔄</span>
+        <span data-i18n="store_btn_sync_all">تحديث الكل</span>
       </button>
 
       <a 
         href="{{ mcp_url|default:'https://mcp.169.58.32.179.nip.io/' }}" 
         target="_blank" 
         rel="noopener noreferrer"
-        class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white transition flex items-center gap-1.5 shadow-2xs"
+        class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-2xs"
       >
-        <span>نافذة مستقلة</span>
+        <span data-i18n="store_open_standalone">نافذة مستقلة</span>
         <span>↗</span>
       </a>
     </div>
   </div>
 
-  <!-- Iframe Wrapper -->
-  <div id="mcp-frame-container" class="relative flex-1 w-full bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs transition-all duration-300">
+  <!-- Multi-MCP Servers Management Section -->
+  <section id="store-servers-section" class="bg-white border border-[#eaedf0] rounded-xl p-6 shadow-2xs space-y-6">
+    <!-- Section Header with Stats & New Server Action -->
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+          <span class="text-[#1f93ff] text-base">⚡</span>
+          <span data-i18n="store_multimcp_header">ربط وإدارة خوادم الأدوات الخارجية (Multi-MCP Support)</span>
+        </h2>
+        <p class="text-xs text-slate-500 mt-1" data-i18n="store_multimcp_desc">
+          ربط عدة خوادم MCP مستقلة (عبر SSE) في نفس الوقت لتمكين المساعد الصوتي من استدعاء دوالها مجتمعة أثناء المكالمات الحية.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center gap-2 text-xs">
+          <span id="mcp-active-badge" class="px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 text-slate-700 font-medium">
+            <span data-i18n="store_active_servers_label">خوادم نشطة:</span> <strong id="mcp-active-servers-count" class="text-[#1f93ff] font-mono">0</strong> / <span id="mcp-total-servers-count" class="font-mono">0</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sync Status Alert Notification -->
+    <div id="mcp-sync-alert" class="hidden p-3.5 rounded-lg text-xs flex items-center gap-2.5 transition"></div>
+
+    <!-- MCP Servers Cards Grid -->
+    <div>
+      <h3 class="text-xs font-bold text-[#334155] flex items-center gap-1.5 mb-3">
+        <span>🖥️</span>
+        <span data-i18n="store_servers_title">خوادم MCP المربوطة:</span>
+      </h3>
+      <div id="mcp-servers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Populated dynamically by renderMcpServersGrid -->
+      </div>
+    </div>
+
+    <!-- Discovered Tools Section (Combined from all active MCP servers) -->
+    <div class="pt-5 border-t border-[#eaedf0]">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-bold text-[#334155] flex items-center gap-1.5">
+          <span>🛠️</span>
+          <span data-i18n="store_tools_title">الدوال المكتشفة من الخوادم النشطة:</span>
+        </h3>
+        <span class="text-[11px] text-[#94a3b8]" data-i18n="store_tools_hint">متاحة تلقائياً للمساعد الصوتي أثناء المكالمات الصوتية</span>
+      </div>
+
+      <div id="mcp-tools-container" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Embedded FastMCP Portal Section -->
+  <section id="store-portal-section" class="hidden relative h-[calc(100vh-210px)] min-h-[640px] bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs">
     <!-- Loading Spinner Overlay -->
     <div id="mcp-frame-loader" class="absolute inset-0 bg-[#f8fafc]/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
       <div class="w-8 h-8 border-2 border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
-      <p class="text-xs font-medium text-slate-500">جاري تحميل بوابة أدوات FastMCP...</p>
+      <p class="text-xs font-medium text-slate-500" data-i18n="store_portal_loading">جاري تحميل بوابة أدوات FastMCP...</p>
     </div>
 
     <!-- Embedded FastMCP Iframe -->
@@ -89,12 +165,172 @@
       allow="clipboard-read *; clipboard-write *; fullscreen *"
       onload="onMcpFrameLoaded()"
     ></iframe>
+  </section>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- MCP Settings Modal -->
+<div id="mcp-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full p-6 shadow-lg space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
+      <h3 id="modal-mcp-title" class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        <span>⚙️</span> <span data-i18n="store_modal_title">إعدادات خادم FastMCP الخارجي</span>
+      </h3>
+      <button type="button" onclick="closeMcpModal()" class="text-slate-400 hover:text-slate-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form id="mcp-settings-form" onsubmit="saveMcpSettings(event)" class="space-y-3.5">
+      <input type="hidden" id="modal-mcp-id" value="" />
+      <div>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="store_modal_server_name">اسم الخادم</label>
+        <input type="text" id="modal-mcp-name" required class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]" />
+      </div>
+
+      <div>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="store_modal_server_url">رابط الـ SSE Endpoint (Server URL)</label>
+        <input type="text" id="modal-mcp-url" required placeholder="https://your-mcp-server.com/sse" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
+        <p class="text-[11px] text-slate-400 mt-1" data-i18n="store_modal_server_url_hint">يجب أن يدعم الخادم وسيلة نقل SSE (Server-Sent Events) على شبكة النظام.</p>
+      </div>
+
+      <div>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="store_modal_bearer_token">مفتاح الحماية / Bearer Token (اختياري)</label>
+        <input type="password" id="modal-mcp-token" placeholder="اتركه فارغاً إذا كان الخادم محلياً بدون مصادقة" data-i18n-placeholder="store_modal_token_placeholder" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
+      </div>
+
+      <!-- Test Connection & Tools Live Action -->
+      <div class="pt-1">
+        <div class="flex items-center justify-between gap-2">
+          <button 
+            type="button" 
+            onclick="testMcpConnectionFromModal()" 
+            id="btn-test-mcp-conn"
+            class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
+          >
+            <span>🔌</span>
+            <span id="btn-test-mcp-conn-text" data-i18n="store_modal_test_btn">فحص الاتصال واكتشاف الأدوات</span>
+          </button>
+          <span id="test-conn-latency-badge" class="hidden px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-300"></span>
+        </div>
+
+        <!-- Connection Test Alert Box -->
+        <div id="modal-test-conn-alert" class="hidden mt-2.5 p-3 rounded-lg text-xs space-y-1 transition"></div>
+      </div>
+
+      <!-- Interactive Tool Playground Section -->
+      <div id="modal-tool-playground" class="hidden p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-[#eaedf0]">
+          <h4 class="font-semibold text-slate-900 flex items-center gap-1.5 text-xs">
+            <span>⚡</span>
+            <span data-i18n="store_modal_playground_title">لوحة تجربة الأدوات الحية (Tool Playground):</span>
+          </h4>
+          <span id="playground-tools-count-badge" class="text-[10px] px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff] font-mono font-medium">0 أداة</span>
+        </div>
+
+        <div class="space-y-2.5">
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1" data-i18n="store_modal_choose_tool">اختر الأداة المراد اختبارها:</label>
+            <select id="playground-tool-select" onchange="onPlaygroundToolChange()" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 font-medium text-xs focus:outline-none focus:border-[#1f93ff]">
+            </select>
+          </div>
+          <p id="playground-tool-desc" class="text-[11px] text-slate-500 leading-relaxed p-2 rounded-lg bg-white border border-[#eaedf0]"></p>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] font-medium text-slate-700" data-i18n="store_modal_inputs">المُدخلات (JSON Arguments):</label>
+              <button type="button" onclick="fillPlaygroundSampleArgs()" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+                <span>🪄</span> <span data-i18n="store_modal_autofill">ملء تلقائي للبيانات المطلوبة</span>
+              </button>
+            </div>
+            <textarea id="playground-tool-args" rows="3" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg font-mono text-[11px] text-slate-800 focus:outline-none focus:border-[#1f93ff]" placeholder="{}"></textarea>
+          </div>
+
+          <div class="flex justify-end">
+            <button 
+              type="button" 
+              onclick="testMcpToolFromModal()" 
+              id="btn-execute-test-tool"
+              class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
+            >
+              <span>⚡</span>
+              <span id="btn-execute-test-tool-text" data-i18n="store_modal_execute_btn">تجربة الاستدعاء الآن</span>
+            </button>
+          </div>
+
+          <!-- Tool Execution Live Output Box -->
+          <div id="playground-result-container" class="hidden space-y-1.5 pt-2 border-t border-[#eaedf0]">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-medium text-slate-700" data-i18n="store_modal_output">نتيجة الاستدعاء:</span>
+              <span id="playground-exec-badge" class="font-mono text-[10px] px-2 py-0.5 rounded-md font-medium"></span>
+            </div>
+            <pre id="playground-result-output" class="p-3 rounded-lg bg-white border border-slate-200 font-mono text-[11px] max-h-40 overflow-auto whitespace-pre-wrap break-all text-slate-800 leading-relaxed"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="modal-mcp-active" class="w-4 h-4 rounded text-[#1f93ff] bg-white border-slate-300 focus:ring-0 cursor-pointer" />
+        <label for="modal-mcp-active" class="text-slate-700 font-medium cursor-pointer" data-i18n="store_modal_active_check">تفعيل خادم MCP للاستخدام في المكالمات الصوتية الحية</label>
+      </div>
+
+      <div class="flex justify-between items-center pt-3 border-t border-[#eaedf0]">
+        <div>
+          <button 
+            type="button" 
+            onclick="deleteMcpFromModal()" 
+            id="modal-btn-delete-mcp" 
+            class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-medium transition flex items-center gap-1.5 hidden shadow-2xs"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span data-i18n="store_modal_delete_btn">حذف الخادم</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeMcpModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs" data-i18n="cancel">إلغاء</button>
+          <button type="submit" id="btn-save-mcp-settings" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs" data-i18n="save_changes">حفظ التعديلات</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{% static 'js/store.js' %}"></script>
 <script>
+  function switchStoreView(view) {
+    const serversSection = document.getElementById('store-servers-section');
+    const portalSection = document.getElementById('store-portal-section');
+    const btnServers = document.getElementById('btn-view-servers');
+    const btnPortal = document.getElementById('btn-view-portal');
+
+    if (view === 'portal') {
+      if (serversSection) serversSection.classList.add('hidden');
+      if (portalSection) portalSection.classList.remove('hidden');
+      if (btnServers) {
+        btnServers.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition';
+      }
+      if (btnPortal) {
+        btnPortal.className = 'px-3 py-1 rounded-md bg-white text-slate-900 font-medium shadow-2xs transition';
+      }
+    } else {
+      if (portalSection) portalSection.classList.add('hidden');
+      if (serversSection) serversSection.classList.remove('hidden');
+      if (btnPortal) {
+        btnPortal.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition';
+      }
+      if (btnServers) {
+        btnServers.className = 'px-3 py-1 rounded-md bg-white text-slate-900 font-medium shadow-2xs transition';
+      }
+    }
+  }
+
   function onMcpFrameLoaded() {
     const loader = document.getElementById('mcp-frame-loader');
     if (loader) {
@@ -114,36 +350,5 @@
       frame.src = frame.src;
     }
   }
-
-  function toggleMcpFullscreen() {
-    const container = document.getElementById('mcp-frame-container');
-    const icon = document.getElementById('mcp-fullscreen-icon');
-    const text = document.getElementById('mcp-fullscreen-text');
-
-    if (!document.fullscreenElement) {
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      }
-      if (icon) icon.textContent = '✖';
-      if (text) text.textContent = 'إنهاء التكبير';
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-      if (icon) icon.textContent = '⛶';
-      if (text) text.textContent = 'ملء الشاشة';
-    }
-  }
-
-  document.addEventListener('fullscreenchange', () => {
-    const icon = document.getElementById('mcp-fullscreen-icon');
-    const text = document.getElementById('mcp-fullscreen-text');
-    if (!document.fullscreenElement) {
-      if (icon) icon.textContent = '⛶';
-      if (text) text.textContent = 'ملء الشاشة';
-    }
-  });
 </script>
 {% endblock %}

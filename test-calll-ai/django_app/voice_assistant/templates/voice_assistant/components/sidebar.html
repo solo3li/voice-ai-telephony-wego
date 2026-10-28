@@ -53,12 +53,12 @@
     
     <!-- 1. Voice & Telephony Suite Portal -->
     <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours,whatsapp,whatsapp_desk' or not active_nav %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
-      <span class="nav-text">المساعد الصوتي والاتصالات</span>
+      <span class="nav-text" data-i18n="nav_telephony_suite">المساعد الصوتي والاتصالات</span>
     </a>
 
     <!-- 2. Chatwoot Omnichannel Chat -->
     <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
-      <span class="nav-text">شات (Chatwoot Hub)</span>
+      <span class="nav-text" data-i18n="nav_chat_hub">شات (Chatwoot Hub)</span>
     </a>
 
     <!-- 3. Billing & Wallet -->
@@ -90,7 +90,7 @@
           <span class="text-[10px] text-slate-400" data-i18n="role_admin">مدير النظام</span>
         </div>
       </div>
-      <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50/50 transition" title="تسجيل الخروج">
+      <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50/50 transition" title="تسجيل الخروج" data-i18n-title="btn_logout">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
         </svg>

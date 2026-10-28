@@ -13,18 +13,18 @@
 <div class="bg-white p-3 rounded-xl border border-[#eaedf0] shadow-2xs flex flex-wrap items-center justify-between gap-3">
   <div class="flex items-center gap-1.5 p-1 bg-slate-50 border border-[#eaedf0] rounded-lg text-xs">
     <button type="button" onclick="switchCallcenterSubtab('employees')" id="subtab-btn-employees" class="subtab-btn px-3 py-1.5 rounded-md transition text-xs font-medium flex items-center gap-1.5 bg-white text-slate-900 border border-[#eaedf0] shadow-2xs">
-      <span>دليل الموظفين والتحويلات</span>
+      <span data-i18n="cc_subtab_employees">دليل الموظفين والتحويلات</span>
     </button>
     <button type="button" onclick="switchCallcenterSubtab('queues')" id="subtab-btn-queues" class="subtab-btn px-3 py-1.5 rounded-md transition text-xs font-normal flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-      <span>طوابير الانتظار ومجموعات العمل</span>
+      <span data-i18n="cc_subtab_queues">طوابير الانتظار ومجموعات العمل</span>
     </button>
     <button type="button" onclick="switchCallcenterSubtab('recordings')" id="subtab-btn-recordings" class="subtab-btn px-3 py-1.5 rounded-md transition text-xs font-normal flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-      <span>سجل مكالمات الموظفين والتسجيلات</span>
+      <span data-i18n="cc_subtab_recordings">سجل مكالمات الموظفين والتسجيلات</span>
     </button>
   </div>
   
   <div class="text-xs text-slate-400 flex items-center gap-1.5">
-    <span>نظام الاتصال الهاتفي وسوفت فون WebRTC المباشر</span>
+    <span data-i18n="cc_title">المركز الهاتفي وطوابير الانتظار (WebRTC &amp; Queues)</span>
   </div>
 </div>
 
@@ -34,10 +34,10 @@
     <div class="flex flex-wrap justify-between items-center gap-4 pb-3 border-b border-[#eaedf0]">
       <div>
         <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-          <span>دليل تحويلات الموظفين ومنظومة الاتصال الداخلي (WebRTC Softphone)</span>
+          <span data-i18n="cc_softphone_title">دليل تحويلات الموظفين ومنظومة الاتصال الداخلي (WebRTC Softphone)</span>
         </h2>
-        <p class="text-xs text-slate-500 mt-0.5">
-          أضف موظفين جدد وتحويلات داخلية، واتصل مباشرة بأي موظف أو طابور عبر <span class="text-[#1f93ff] font-medium">WebRTC المباشر</span> من المتصفح.
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="cc_softphone_desc">
+          أضف موظفين جدد وتحويلات داخلية، واتصل مباشرة بأي موظف أو طابور عبر WebRTC المباشر من المتصفح.
         </p>
       </div>
 
@@ -50,7 +50,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>موظف جديد</span>
+          <span data-i18n="cc_btn_new_employee">موظف جديد</span>
         </button>
       </div>
     </div>
@@ -60,8 +60,8 @@
       <div class="flex items-center gap-3">
         <span class="w-2.5 h-2.5 rounded-full bg-[#1f93ff] animate-ping"></span>
         <div>
-          <div id="dashboard-call-title" class="text-xs font-semibold text-[#1f93ff]">جاري الاتصال...</div>
-          <div id="dashboard-call-sub" class="text-[11px] text-slate-500 font-mono">يتم الاتصال والمزامنة عبر WebRTC...</div>
+          <div id="dashboard-call-title" class="text-xs font-semibold text-[#1f93ff]" data-i18n="cc_call_calling">جاري الاتصال...</div>
+          <div id="dashboard-call-sub" class="text-[11px] text-slate-500 font-mono" data-i18n="cc_call_sync">يتم الاتصال والمزامنة عبر WebRTC...</div>
         </div>
       </div>
       <button 
@@ -69,7 +69,7 @@
         onclick="endDashboardCall()" 
         class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition shadow-2xs flex items-center gap-1.5"
       >
-        <span>إنهاء المكالمة</span>
+        <span data-i18n="cc_call_end">إنهاء المكالمة</span>
       </button>
     </div>
 
@@ -78,17 +78,17 @@
       <table class="w-full text-right text-xs">
         <thead>
           <tr class="text-slate-500 border-b border-[#eaedf0] bg-slate-50/70">
-            <th class="py-2.5 px-3 font-medium">الموظف</th>
-            <th class="py-2.5 px-3 text-center text-slate-700 font-semibold">التحويلة الداخلية</th>
-            <th class="py-2.5 px-3 font-medium">القسم</th>
-            <th class="py-2.5 px-3 text-center font-medium">حالة التواجد</th>
-            <th class="py-2.5 px-3 font-medium">بروتوكول الصوت</th>
-            <th class="py-2.5 px-3 text-center font-medium">إجراءات</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_employee">الموظف</th>
+            <th class="py-2.5 px-3 text-center text-slate-700 font-semibold" data-i18n="cc_th_extension">التحويلة الداخلية</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_dept">القسم</th>
+            <th class="py-2.5 px-3 text-center font-medium" data-i18n="cc_th_presence">حالة التواجد</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_protocol">بروتوكول الصوت</th>
+            <th class="py-2.5 px-3 text-center font-medium" data-i18n="cc_th_actions">إجراءات</th>
           </tr>
         </thead>
         <tbody id="employees-tbody" class="divide-y divide-[#eaedf0]">
           <tr>
-            <td colspan="6" class="text-center py-6 text-slate-400">جاري تحميل دليل الموظفين...</td>
+            <td colspan="6" class="text-center py-6 text-slate-400" data-i18n="cc_loading_employees">جاري تحميل دليل الموظفين...</td>
           </tr>
         </tbody>
       </table>
@@ -102,9 +102,9 @@
     <div class="flex flex-wrap justify-between items-center gap-4 pb-3 border-b border-[#eaedf0]">
       <div>
         <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-          <span>طوابير الانتظار ومجموعات الاتصال (Call Queues &amp; Routing)</span>
+          <span data-i18n="cc_queues_title">طوابير الانتظار ومجموعات الاتصال (Call Queues &amp; Routing)</span>
         </h2>
-        <p class="text-xs text-slate-500 mt-0.5">
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="cc_queues_desc">
           أنشئ طوابير فرق العمل مع نظام الرنين بالتناوب (Round-Robin)، موسيقى انتظار مخصصة، والتحويل التلقائي للذكاء الاصطناعي في حال عدم الرد.
         </p>
       </div>
@@ -118,7 +118,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>طابور جديد</span>
+          <span data-i18n="cc_btn_new_queue">طابور جديد</span>
         </button>
       </div>
     </div>
@@ -128,17 +128,17 @@
       <table class="w-full text-right text-xs">
         <thead>
           <tr class="text-slate-500 border-b border-[#eaedf0] bg-slate-50/70">
-            <th class="py-2.5 px-3 font-medium">كود الطابور</th>
-            <th class="py-2.5 px-3 font-medium">اسم الطابور</th>
-            <th class="py-2.5 px-3 font-medium">استراتيجية التوزيع</th>
-            <th class="py-2.5 px-3 font-medium">الموظفون المسندون والحالة الحية</th>
-            <th class="py-2.5 px-3 text-center font-medium">المكالمات المنتظرة</th>
-            <th class="py-2.5 px-3 text-center font-medium">إجراءات</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_queue_code">كود الطابور</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_queue_name">اسم الطابور</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_strategy">استراتيجية التوزيع</th>
+            <th class="py-2.5 px-3 font-medium text-start" data-i18n="cc_th_members">الموظفون المسندون والحالة الحية</th>
+            <th class="py-2.5 px-3 text-center font-medium" data-i18n="cc_th_waiting">المكالمات المنتظرة</th>
+            <th class="py-2.5 px-3 text-center font-medium" data-i18n="cc_th_actions">إجراءات</th>
           </tr>
         </thead>
         <tbody id="queues-tbody" class="divide-y divide-[#eaedf0]">
           <tr>
-            <td colspan="6" class="text-center py-6 text-slate-400">جاري تحميل طوابير الانتظار...</td>
+            <td colspan="6" class="text-center py-6 text-slate-400" data-i18n="cc_loading_queues">جاري تحميل طوابير الانتظار...</td>
           </tr>
         </tbody>
       </table>
@@ -152,9 +152,9 @@
     <div class="flex flex-wrap justify-between items-center gap-4 pb-3 border-b border-[#eaedf0]">
       <div>
         <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-          <span>سجل مكالمات الموظفين والتسجيلات الصوتية (Call Recordings &amp; Logs)</span>
+          <span data-i18n="cc_recordings_title">سجل مكالمات الموظفين والتسجيلات الصوتية (Call Recordings &amp; Logs)</span>
         </h2>
-        <p class="text-xs text-slate-500 mt-0.5">
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="cc_recordings_desc">
           مراقبة واستماع تسجيلات مكالمات الموظفين مع إمكانية التشغيل المباشر والتحميل بصيغة MP3.
         </p>
       </div>

@@ -30,12 +30,12 @@
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-base font-semibold text-slate-900">محادثات الواتساب والموظف الذكي 24/7</h1>
-          <span id="gateway-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+          <h1 class="text-base font-semibold text-slate-900" data-i18n="whatsapp_page_title">محادثات الواتساب والموظف الذكي 24/7</h1>
+          <span id="gateway-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200" data-i18n="whatsapp_gateway_checking">
             جارٍ التحقق من البوابة...
           </span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5">
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="whatsapp_page_desc">
           صندوق محادثات الواتساب الموحد (Omnichannel Inbox): استعراض كامل لمحادثات العملاء، مراقبة ردود الذكاء الاصطناعي، والرد البشري المباشر.
         </p>
       </div>
@@ -49,9 +49,10 @@
         id="btn-sync-whatsapp"
         class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
         title="مزامنة كافة محادثات ورسائل هاتفك الحقيقية المسجلة في واتساب"
+        data-i18n-title="whatsapp_sync_title"
       >
         <span id="sync-icon">🔄</span>
-        <span id="sync-text">مزامنة شات الهاتف</span>
+        <span id="sync-text" data-i18n="whatsapp_sync_phone">مزامنة شات الهاتف</span>
       </button>
 
       <button 
@@ -60,7 +61,7 @@
         id="btn-open-qr"
         class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
       >
-        <span>ربط واتساب (QR Code)</span>
+        <span data-i18n="whatsapp_connect_qr">ربط واتساب (QR Code)</span>
       </button>
 
       <button 
@@ -68,6 +69,7 @@
         onclick="loadConversationsList()" 
         class="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs"
         title="تحديث المحادثات"
+        data-i18n-title="whatsapp_refresh_chats"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -79,7 +81,7 @@
         onclick="openTestModal()" 
         class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
       >
-        <span>تجربة إرسال</span>
+        <span data-i18n="whatsapp_test_send">تجربة إرسال</span>
       </button>
     </div>
   </div>
@@ -98,6 +100,7 @@
             type="text" 
             id="search-conversations"
             placeholder="بحث بالاسم أو رقم الهاتف..." 
+            data-i18n-placeholder="whatsapp_search_placeholder"
             oninput="filterConversations(this.value)"
             class="w-full bg-slate-50 border border-slate-200 rounded-lg pr-8 pl-3 py-1.5 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
           />
@@ -108,6 +111,7 @@
             type="button" 
             onclick="setConvFilter('all', this)" 
             class="conv-filter-btn flex-1 py-1 px-2 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 transition text-center shadow-2xs"
+            data-i18n="whatsapp_filter_all"
           >
             الكل
           </button>
@@ -115,6 +119,7 @@
             type="button" 
             onclick="setConvFilter('ai_active', this)" 
             class="conv-filter-btn flex-1 py-1 px-2 rounded-md text-slate-600 hover:bg-slate-100 transition text-center"
+            data-i18n="whatsapp_filter_ai"
           >
             AI نشط
           </button>
@@ -122,6 +127,7 @@
             type="button" 
             onclick="setConvFilter('manual', this)" 
             class="conv-filter-btn flex-1 py-1 px-2 rounded-md text-slate-600 hover:bg-slate-100 transition text-center"
+            data-i18n="whatsapp_filter_manual"
           >
             يدوي
           </button>
@@ -132,16 +138,16 @@
       <div id="conversations-list" class="flex-1 overflow-y-auto chat-scroll divide-y divide-[#eaedf0]/70 min-h-0">
         <div class="p-8 text-center text-slate-500 text-xs">
           <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto mb-2"></div>
-          جارٍ تحميل المحادثات...
+          <span data-i18n="whatsapp_loading_convs">جارٍ تحميل المحادثات...</span>
         </div>
       </div>
 
       <!-- Footer Info -->
       <div class="p-2.5 border-t border-[#eaedf0] bg-white text-[11px] text-slate-500 flex items-center justify-between px-4">
-        <span>المحادثات النشطة: <strong id="conversations-count" class="text-slate-900 font-medium">0</strong></span>
+        <span><span data-i18n="whatsapp_active_convs">المحادثات النشطة:</span> <strong id="conversations-count" class="text-slate-900 font-medium">0</strong></span>
         <span class="flex items-center gap-1 text-emerald-700">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          تحديث تلقائي
+          <span data-i18n="whatsapp_auto_refresh">تحديث تلقائي</span>
         </span>
       </div>
     </div>
@@ -154,8 +160,8 @@
         <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center text-2xl shadow-2xs">
           💬
         </div>
-        <h3 class="text-base font-semibold text-slate-900">اختر محادثة من القائمة للبدء</h3>
-        <p class="text-xs text-slate-500 max-w-sm leading-relaxed">
+        <h3 class="text-base font-semibold text-slate-900" data-i18n="whatsapp_empty_title">اختر محادثة من القائمة للبدء</h3>
+        <p class="text-xs text-slate-500 max-w-sm leading-relaxed" data-i18n="whatsapp_empty_desc">
           اضغط على أي عميل من القائمة الجانبية للاطلاع على تاريخ المحادثة بالكامل، ومتابعة ردود الموظف الذكي، أو التدخل والرد يدوياً في أي وقت.
         </p>
       </div>
@@ -173,15 +179,15 @@
               <div class="flex items-center gap-2">
                 <h3 id="chat-active-name" class="font-semibold text-sm text-slate-900">-</h3>
                 <span id="chat-active-phone" class="font-mono text-xs text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 dir-ltr">-</span>
-                <button type="button" onclick="openEditContactModal()" class="text-[11px] bg-white hover:bg-slate-50 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 font-medium flex items-center gap-1 transition" title="تعديل اسم أو رقم العميل">
-                  <span>تعديل</span>
+                <button type="button" onclick="openEditContactModal()" class="text-[11px] bg-white hover:bg-slate-50 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 font-medium flex items-center gap-1 transition" title="تعديل اسم أو رقم العميل" data-i18n-title="whatsapp_edit_contact_title">
+                  <span data-i18n="whatsapp_edit_contact">تعديل</span>
                 </button>
               </div>
               <div class="flex items-center gap-2 mt-0.5 text-[11px]">
-                <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-medium cursor-pointer" onclick="toggleCallSummary()">
+                <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-medium cursor-pointer" onclick="toggleCallSummary()" data-i18n="whatsapp_call_history">
                   مكالمات سابقة مسجلة (اضغط للعرض)
                 </span>
-                <span id="chat-active-status" class="text-emerald-700 font-medium">محادثة نشطة</span>
+                <span id="chat-active-status" class="text-emerald-700 font-medium" data-i18n="whatsapp_active_status">محادثة نشطة</span>
               </div>
             </div>
           </div>
@@ -194,9 +200,10 @@
               onclick="toggleCurrentAiAutoReply()"
               class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-2xs bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
               title="تفعيل أو إيقاف الرد الآلي للذكاء الاصطناعي لهذا العميل"
+              data-i18n-title="whatsapp_ai_toggle_title"
             >
               <span id="ai-toggle-icon">🤖</span>
-              <span id="ai-toggle-text">الرد الذكي: نشط</span>
+              <span id="ai-toggle-text" data-i18n="whatsapp_ai_active">الرد الذكي: نشط</span>
             </button>
 
             <button 
@@ -204,6 +211,7 @@
               onclick="loadActiveMessages(true)" 
               class="p-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs"
               title="تحديث الرسائل"
+              data-i18n-title="whatsapp_refresh_messages"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -216,7 +224,7 @@
         <div id="chat-call-summary-banner" class="hidden px-5 py-2.5 bg-slate-50 border-b border-slate-200 text-xs text-slate-700 shrink-0">
           <div class="flex items-start justify-between gap-2">
             <div>
-              <span class="font-medium text-slate-900">سياق المكالمات الهاتفية السابقة:</span>
+              <span class="font-medium text-slate-900" data-i18n="whatsapp_call_context">سياق المكالمات الهاتفية السابقة:</span>
               <p id="chat-call-summary-text" class="text-[11px] text-slate-600 mt-1 leading-relaxed">-</p>
             </div>
             <button type="button" onclick="toggleCallSummary()" class="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
@@ -227,7 +235,7 @@
         <div id="chat-escalation-banner" class="hidden px-5 py-3 bg-amber-50/80 border-b border-amber-200 text-xs text-slate-700 shrink-0">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">محول للدعم البشري</span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" data-i18n="whatsapp_escalated_tag">محول للدعم البشري</span>
               <span class="font-medium text-slate-900" id="escalation-reason-text">سبب التصعيد: -</span>
             </div>
             <div class="flex items-center gap-2">
@@ -237,8 +245,9 @@
                 onclick="resolveCurrentConversation()"
                 class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1 shadow-2xs"
                 title="حل المشكلة وإعادة تفعيل الرد الآلي للذكاء الاصطناعي"
+                data-i18n-title="whatsapp_resolve_ai_title"
               >
-                <span>حل المشكلة واستئناف الـ AI</span>
+                <span data-i18n="whatsapp_resolve_ai">حل المشكلة واستئناف الـ AI</span>
               </button>
             </div>
           </div>
@@ -249,7 +258,7 @@
 
         <!-- Chat Messages Stream -->
         <div id="chat-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 chat-scroll bg-slate-50/30 min-h-0">
-          <div class="p-8 text-center text-slate-400 text-xs">جارٍ جلب المحادثة...</div>
+          <div class="p-8 text-center text-slate-400 text-xs" data-i18n="whatsapp_loading_messages">جارٍ جلب المحادثة...</div>
         </div>
 
         <!-- Chat Input Composer -->
@@ -260,6 +269,7 @@
                 type="text" 
                 id="chat-reply-input" 
                 placeholder="اكتب رداً يدوياً على العميل عبر الواتساب..." 
+                data-i18n-placeholder="whatsapp_reply_placeholder"
                 required
                 autocomplete="off"
                 class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
@@ -269,14 +279,14 @@
                 id="btn-send-reply" 
                 class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
               >
-                <span>إرسال</span>
+                <span data-i18n="whatsapp_btn_send">إرسال</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </button>
             </div>
             <div class="flex items-center justify-between text-[10px] text-slate-400 px-1">
-              <span>يتم الإرسال فوراً لرقم العميل عبر بوابة Evolution API المربوطة.</span>
+              <span data-i18n="whatsapp_gateway_notice">يتم الإرسال فوراً لرقم العميل عبر بوابة Evolution API المربوطة.</span>
               <span id="reply-status-text" class="text-emerald-700 font-medium"></span>
             </div>
           </form>
@@ -298,8 +308,8 @@
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
       <div class="flex items-center gap-2">
         <div>
-          <h3 class="font-semibold text-sm text-slate-900">ربط رقم الواتساب (QR Code)</h3>
-          <p class="text-[11px] text-slate-500">امسح الكود لربط رقمك الشخصي أو رقم العمل</p>
+          <h3 class="font-semibold text-sm text-slate-900" data-i18n="whatsapp_qr_title">ربط رقم الواتساب (QR Code)</h3>
+          <p class="text-[11px] text-slate-500" data-i18n="whatsapp_qr_desc">امسح الكود لربط رقمك الشخصي أو رقم العمل</p>
         </div>
       </div>
       <button type="button" onclick="closeQrModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
@@ -308,7 +318,7 @@
     <!-- QR Container -->
     <div id="qr-modal-container" class="flex flex-col items-center justify-center p-6 bg-slate-50/50 rounded-lg border border-dashed border-slate-200 min-h-[280px] text-center space-y-3">
       <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto"></div>
-      <p class="text-xs text-slate-500">جارٍ فحص حالة الاتصال بالسيرفر...</p>
+      <p class="text-xs text-slate-500" data-i18n="whatsapp_qr_checking">جارٍ فحص حالة الاتصال بالسيرفر...</p>
     </div>
 
     <!-- Actions -->
@@ -319,7 +329,7 @@
         id="btn-generate-qr"
         class="flex-1 py-2 px-4 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs"
       >
-        <span>توليد كود QR للربط</span>
+        <span data-i18n="whatsapp_qr_btn_generate">توليد كود QR للربط</span>
       </button>
 
       <button 
@@ -328,7 +338,7 @@
         id="btn-disconnect-whatsapp"
         class="hidden py-2 px-4 rounded-lg bg-white hover:bg-rose-50 text-rose-700 border border-slate-200 text-xs font-medium transition items-center justify-center gap-1.5"
       >
-        <span>قطع الاتصال</span>
+        <span data-i18n="whatsapp_qr_btn_disconnect">قطع الاتصال</span>
       </button>
     </div>
   </div>
@@ -339,32 +349,34 @@
   <div class="bg-white rounded-xl max-w-sm w-full border border-[#eaedf0] shadow-lg p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
       <h3 class="font-semibold text-sm text-slate-900 flex items-center gap-2">
-        <span>تعديل بيانات العميل</span>
+        <span data-i18n="whatsapp_edit_title">تعديل بيانات العميل</span>
       </h3>
       <button type="button" onclick="closeEditContactModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="edit-contact-form" onsubmit="submitSaveContact(event)" class="space-y-3 text-xs">
       <div>
-        <label class="block font-medium text-slate-700 mb-1">اسم العميل / النشاط:</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_label_name">اسم العميل / النشاط:</label>
         <input 
           type="text" 
           id="edit-contact-name" 
           placeholder="مثال: أحمد السيد / شركة النور" 
+          data-i18n-placeholder="whatsapp_placeholder_name"
           required 
           class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-medium text-slate-700 mb-1">رقم هاتف العميل (الصريح):</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_label_phone">رقم هاتف العميل (الصريح):</label>
         <input 
           type="text" 
           id="edit-contact-phone" 
           placeholder="مثال: 01019431866 أو 201019431866+" 
+          data-i18n-placeholder="whatsapp_placeholder_phone"
           class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono dir-ltr text-left focus:border-[#1f93ff] focus:outline-none"
         />
-        <p class="text-[10px] text-slate-400 mt-1">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
+        <p class="text-[10px] text-slate-400 mt-1" data-i18n="whatsapp_phone_hint">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#eaedf0]">
@@ -372,6 +384,7 @@
           type="button" 
           onclick="closeEditContactModal()" 
           class="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition text-xs font-medium"
+          data-i18n="btn_cancel"
         >
           إلغاء
         </button>
@@ -380,7 +393,7 @@
           id="btn-save-contact"
           class="px-4 py-2 rounded-lg bg-[#1f93ff] text-white font-semibold hover:bg-[#1570ef] transition shadow-2xs text-xs"
         >
-          حفظ التعديلات
+          <span data-i18n="whatsapp_btn_save_changes">حفظ التعديلات</span>
         </button>
       </div>
     </form>
@@ -391,7 +404,7 @@
 <div id="test-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
   <div class="bg-white rounded-xl max-w-md w-full border border-[#eaedf0] shadow-lg p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
-      <h3 class="font-semibold text-sm text-slate-900">
+      <h3 class="font-semibold text-sm text-slate-900" data-i18n="whatsapp_test_title">
         تجربة محرك الواتساب و LangGraph
       </h3>
       <button type="button" onclick="closeTestModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
@@ -399,52 +412,55 @@
 
     <form id="test-form" onsubmit="submitTestWhatsApp(event)" class="space-y-3 text-xs">
       <div>
-        <label class="block font-medium text-slate-700 mb-1">رقم هاتف العميل (مع كود الدولة):</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_test_phone_label">رقم هاتف العميل (مع كود الدولة):</label>
         <input 
           type="text" 
           id="test-phone" 
           placeholder="مثال: 201012345678 أو 966501234567" 
+          data-i18n-placeholder="whatsapp_test_phone_placeholder"
           required 
           class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-medium text-slate-700 mb-1">اسم العميل (اختياري):</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_test_name_label">اسم العميل (اختياري):</label>
         <input 
           type="text" 
           id="test-customer-name" 
           placeholder="مثال: أحمد السيد" 
+          data-i18n-placeholder="whatsapp_placeholder_name"
           class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-medium text-slate-700 mb-1">نوع الاختبار:</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_test_type_label">نوع الاختبار:</label>
         <select 
           id="test-type" 
           onchange="toggleTestType(this.value)"
           class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         >
-          <option value="langgraph_followup">تشغيل LangGraph تلقائياً (محاكاة متابعة ما بعد المكالمة)</option>
-          <option value="direct_message">إرسال رسالة مباشرة مخصصة</option>
+          <option value="langgraph_followup" data-i18n="whatsapp_test_opt_langgraph">تشغيل LangGraph تلقائياً (محاكاة متابعة ما بعد المكالمة)</option>
+          <option value="direct_message" data-i18n="whatsapp_test_opt_direct">إرسال رسالة مباشرة مخصصة</option>
         </select>
       </div>
 
       <div id="test-custom-msg-group" class="hidden">
-        <label class="block font-medium text-slate-700 mb-1">نص الرسالة المخصصة:</label>
+        <label class="block font-medium text-slate-700 mb-1" data-i18n="whatsapp_test_msg_label">نص الرسالة المخصصة:</label>
         <textarea 
           id="test-message-text" 
           rows="3" 
           placeholder="اكتب نص الرسالة التجريبية هنا..."
+          data-i18n-placeholder="whatsapp_test_msg_placeholder"
           class="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         ></textarea>
       </div>
 
       <div class="pt-2 flex items-center justify-end gap-2 border-t border-[#eaedf0]">
-        <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">إلغاء</button>
+        <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition" data-i18n="btn_cancel">إلغاء</button>
         <button type="submit" id="btn-submit-test" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
-          <span>إرسال التجربة</span>
+          <span data-i18n="whatsapp_test_btn_send">إرسال التجربة</span>
         </button>
       </div>
     </form>
@@ -537,8 +553,8 @@
       listEl.innerHTML = `
         <div class="p-8 text-center text-[#64748b] text-xs space-y-1">
           <div class="text-2xl mb-1">💬</div>
-          <p class="font-bold text-[#0f172a]">لا توجد محادثات مطابقة</p>
-          <p class="text-[11px] text-[#94a3b8]">ستظهر المحادثات هنا فور بدء العملاء بمراسلتكم على الواتساب.</p>
+          <p class="font-bold text-[#0f172a]">${window.t('whatsapp_no_convs', 'لا توجد محادثات مطابقة')}</p>
+          <p class="text-[11px] text-[#94a3b8]">${window.t('whatsapp_no_convs_desc', 'ستظهر المحادثات هنا فور بدء العملاء بمراسلتكم على الواتساب.')}</p>
         </div>
       `;
       return;
@@ -548,7 +564,7 @@
       const isActive = (c.phone_number === currentActivePhone);
       const isAi = c.ai_active;
       const lastMsg = c.last_message || {};
-      const displayName = c.customer_name || 'عميل واتساب جديد';
+      const displayName = c.customer_name || window.t('whatsapp_new_customer', 'عميل واتساب جديد');
       const displayPhone = c.display_phone || c.real_phone || c.phone_number;
       const initial = displayName.trim().charAt(0).toUpperCase();
 
@@ -559,15 +575,15 @@
 
       let escalationBadge = '';
       if (c.needs_human_attention) {
-        escalationBadge = `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse" title="${escapeHtml(c.escalation_reason || 'شكوى عميل')}">⚠️ شكوى عميل</span>`;
+        escalationBadge = `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse" title="${escapeHtml(c.escalation_reason || window.t('whatsapp_badge_escalation', 'شكوى عميل'))}">${window.t('whatsapp_badge_escalation', '⚠️ شكوى عميل')}</span>`;
       }
 
       const aiBadge = isAi
-        ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 AI</span>'
-        : '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">⏸️ يدوي</span>';
+        ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">${window.t('whatsapp_badge_ai', '🟢 AI')}</span>`
+        : `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">${window.t('whatsapp_badge_manual', '⏸️ يدوي')}</span>`;
 
       const callBadge = c.has_call_history 
-        ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-[#1f93ff] border border-rose-200">📞 مكالمة</span>' 
+        ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-[#1f93ff] border border-rose-200">${window.t('whatsapp_badge_call', '📞 مكالمة')}</span>` 
         : '';
 
       const activeClasses = isActive 
@@ -595,14 +611,14 @@
             </div>
             <!-- السطر الثالث: مقتطف آخر رسالة -->
             <p class="text-[11px] text-[#64748b] truncate leading-tight">
-              <span class="font-semibold">${dirPrefix}</span>${escapeHtml(lastMsg.text || 'بدء المحادثة')}
+              <span class="font-semibold">${dirPrefix}</span>${escapeHtml(lastMsg.text || window.t('whatsapp_start_conv', 'بدء المحادثة'))}
             </p>
             <!-- السطر الرابع: الشارات وحالة الرد وعدد الرسائل -->
             <div class="flex items-center gap-1.5 pt-0.5">
               ${escalationBadge}
               ${aiBadge}
               ${callBadge}
-              <span class="text-[9px] text-[#94a3b8] font-mono">(${c.messages_count} رسائل)</span>
+              <span class="text-[9px] text-[#94a3b8] font-mono">(${c.messages_count} ${window.t('whatsapp_messages_count', 'رسائل')})</span>
             </div>
           </div>
         </div>
@@ -655,7 +671,7 @@
 
   function updateChatHeader(data) {
     activeConvMeta = data;
-    document.getElementById('chat-active-name').textContent = data.customer_name || 'عميل واتساب جديد';
+    document.getElementById('chat-active-name').textContent = data.customer_name || window.t('whatsapp_new_customer', 'عميل واتساب جديد');
     document.getElementById('chat-active-phone').textContent = data.display_phone || data.real_phone || data.phone_number;
     document.getElementById('chat-active-avatar').textContent = (data.customer_name || 'U').trim().charAt(0).toUpperCase();
 
@@ -678,8 +694,8 @@
     if (data.needs_human_attention || data.conversation_state === 'PENDING_AGENT_REPLY' || data.escalation_reason) {
       if (escBanner) {
         escBanner.classList.remove('hidden');
-        if (escReason) escReason.textContent = 'سبب التصعيد: ' + (data.escalation_reason || 'طلب دعم بشري / شكوى');
-        if (escSummary) escSummary.textContent = '📌 ملخص الذكاء الاصطناعي: ' + (data.escalation_summary || 'العميل بانتظار استلام الموظف البشري للمحادثة.');
+        if (escReason) escReason.textContent = window.t('whatsapp_escalation_reason', 'سبب التصعيد:') + ' ' + (data.escalation_reason || window.t('whatsapp_escalation_fallback', 'طلب دعم بشري / شكوى'));
+        if (escSummary) escSummary.textContent = window.t('whatsapp_ai_summary_prefix', '📌 ملخص الذكاء الاصطناعي: ') + (data.escalation_summary || window.t('whatsapp_escalation_summary_fallback', 'العميل بانتظار استلام الموظف البشري للمحادثة.'));
       }
     } else {
       if (escBanner) escBanner.classList.add('hidden');
@@ -693,11 +709,11 @@
     if (data.ai_active) {
       btnToggle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100';
       toggleIcon.textContent = '🤖';
-      toggleText.textContent = 'الرد الذكي: نشط (اضغط للإيقاف)';
+      toggleText.textContent = window.t('whatsapp_ai_active_btn', 'الرد الذكي: نشط (اضغط للإيقاف)');
     } else {
       btnToggle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100';
       toggleIcon.textContent = '⏸️';
-      toggleText.textContent = 'وضع الموظف البشري (AI متوقف)';
+      toggleText.textContent = window.t('whatsapp_ai_manual_btn', 'وضع الموظف البشري (AI متوقف)');
     }
   }
 
@@ -753,7 +769,7 @@
     if (!messages || messages.length === 0) {
       stream.innerHTML = `
         <div class="p-8 text-center text-[#64748b] text-xs">
-          لا توجد رسائل سابقة في هذه المحادثة بعد.
+          ${window.t('whatsapp_no_messages', 'لا توجد رسائل سابقة في هذه المحادثة بعد.')}
         </div>
       `;
       return;
@@ -773,7 +789,7 @@
             </div>
             <div class="max-w-md sm:max-w-lg bg-white border border-[#e2e8f0] rounded-2xl rounded-tr-xs p-3 shadow-xs space-y-1">
               <div class="flex items-center justify-between gap-3 text-[10px] text-[#64748b]">
-                <span class="font-bold text-[#0f172a]">${escapeHtml(m.customer_name || (activeConvMeta && activeConvMeta.customer_name) || 'العميل')}</span>
+                <span class="font-bold text-[#0f172a]">${escapeHtml(m.customer_name || (activeConvMeta && activeConvMeta.customer_name) || window.t('whatsapp_customer', 'العميل'))}</span>
                 <span class="font-mono">${escapeHtml(m.created_at_time || m.created_at)}</span>
               </div>
               <p class="text-xs text-[#0f172a] whitespace-pre-wrap leading-relaxed">${escapeHtml(m.message_text)}</p>
@@ -783,8 +799,8 @@
       } else {
         // Outbound Bubble (AI or Human Agent - Aligned Left in RTL)
         const badgeTag = isAi 
-          ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">🤖 الموظف الذكي</span>'
-          : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-200">👤 موظف بشري</span>';
+          ? `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">${window.t('whatsapp_bubble_ai', '🤖 الموظف الذكي')}</span>`
+          : `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-200">${window.t('whatsapp_bubble_human', '👤 موظف بشري')}</span>`;
 
         const bubbleBg = isAi 
           ? 'bg-gradient-to-br from-[#eff8ff] to-[#f8fafc] border border-[#b2ddff]' 
@@ -801,7 +817,7 @@
               </div>
               <p class="text-xs text-[#0f172a] whitespace-pre-wrap leading-relaxed">${escapeHtml(m.message_text)}</p>
               <div class="text-left">
-                <span class="text-[9px] text-emerald-700 font-bold">✓ تم الإرسال للواتساب</span>
+                <span class="text-[9px] text-emerald-700 font-bold">${window.t('whatsapp_bubble_sent', '✓ تم الإرسال للواتساب')}</span>
               </div>
             </div>
             <div class="w-7 h-7 rounded-full ${avatarBg} font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
@@ -892,17 +908,17 @@
 
       if (isConn) {
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20';
-        badge.textContent = 'بوابة الواتساب: متصلة 🟢';
+        badge.textContent = window.t('whatsapp_gateway_connected', 'بوابة الواتساب: متصلة 🟢');
         document.getElementById('btn-disconnect-whatsapp').classList.remove('hidden');
         document.getElementById('btn-disconnect-whatsapp').classList.add('flex');
       } else {
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 border border-rose-500/20';
-        badge.textContent = 'بوابة الواتساب: غير متصلة 🔴';
+        badge.textContent = window.t('whatsapp_gateway_disconnected', 'بوابة الواتساب: غير متصلة 🔴');
         document.getElementById('btn-disconnect-whatsapp').classList.add('hidden');
         document.getElementById('btn-disconnect-whatsapp').classList.remove('flex');
       }
     } catch (err) {
-      badge.textContent = 'خطأ في فحص البوابة';
+      badge.textContent = window.t('whatsapp_gateway_error', 'خطأ في فحص البوابة');
     }
   }
 
@@ -911,7 +927,7 @@
     const syncText = document.getElementById('sync-text');
     const syncIcon = document.getElementById('sync-icon');
     if (btn) btn.disabled = true;
-    if (syncText) syncText.textContent = 'جارٍ المزامنة...';
+    if (syncText) syncText.textContent = window.t('whatsapp_syncing', 'جارٍ المزامنة...');
     if (syncIcon) syncIcon.classList.add('animate-spin');
 
     try {
@@ -934,7 +950,7 @@
       alert('❌ خطأ في الاتصال بالسيرفر: ' + err.message);
     } finally {
       if (btn) btn.disabled = false;
-      if (syncText) syncText.textContent = 'مزامنة شات الهاتف';
+      if (syncText) syncText.textContent = window.t('whatsapp_sync_phone', 'مزامنة شات الهاتف');
       if (syncIcon) syncIcon.classList.remove('animate-spin');
     }
   }
@@ -956,7 +972,7 @@
 
     if (isClick) {
       btn.disabled = true;
-      btn.textContent = 'جارٍ التوليد...';
+      btn.textContent = window.t('whatsapp_generating', 'جارٍ التوليد...');
     }
 
     try {
@@ -968,8 +984,8 @@
           container.innerHTML = `
             <div class="space-y-2 py-6">
               <div class="text-4xl">✅</div>
-              <h4 class="font-bold text-sm text-[#0f172a]">واتساب متصل ويعمل بنجاح</h4>
-              <p class="text-xs text-[#64748b]">البوابة جاهزة لإرسال واستقبال الرسائل على مدار الساعة.</p>
+              <h4 class="font-bold text-sm text-[#0f172a]">${window.t('whatsapp_qr_connected_title', 'واتساب متصل ويعمل بنجاح')}</h4>
+              <p class="text-xs text-[#64748b]">${window.t('whatsapp_qr_connected_desc', 'البوابة جاهزة لإرسال واستقبال الرسائل على مدار الساعة.')}</p>
             </div>
           `;
           checkConnectionStatus();
@@ -982,18 +998,18 @@
               <div class="p-2 bg-white rounded-2xl border border-[#e2e8f0] inline-block shadow-md">
                 <img src="${data.base64}" alt="QR Code" class="w-52 h-52 object-contain rounded-xl mx-auto" />
               </div>
-              <p class="text-xs font-bold text-[#0f172a]">امسح الكود بكاميرا تطبيق واتساب</p>
-              <p class="text-[10px] text-[#64748b]">الإعدادات > الأجهزة المرتبطة > ربط جهاز</p>
+              <p class="text-xs font-bold text-[#0f172a]">${window.t('whatsapp_qr_scan_inst1', 'امسح الكود بكاميرا تطبيق واتساب')}</p>
+              <p class="text-[10px] text-[#64748b]">${window.t('whatsapp_qr_scan_inst2', 'الإعدادات > الأجهزة المرتبطة > ربط جهاز')}</p>
             </div>
           `;
         }
       }
     } catch (err) {
-      container.innerHTML = `<p class="text-xs text-rose-600">تعذر جلب رمز QR: ${err.message}</p>`;
+      container.innerHTML = `<p class="text-xs text-rose-600">${window.t('whatsapp_qr_error_prefix', 'تعذر جلب رمز QR:')} ${err.message}</p>`;
     } finally {
       if (isClick) {
         btn.disabled = false;
-        btn.textContent = 'توليد كود QR للربط';
+        btn.textContent = window.t('whatsapp_qr_btn_generate', 'توليد كود QR للربط');
       }
     }
   }
@@ -1139,5 +1155,13 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  // Handle dynamic language switch
+  window.addEventListener('appLanguageChanged', () => {
+    checkConnectionStatus();
+    renderConversationsList(conversationsData);
+    if (activeConvMeta) updateChatHeader(activeConvMeta);
+    if (currentActivePhone) loadActiveMessages(false);
+  });
 </script>
 {% endblock %}
