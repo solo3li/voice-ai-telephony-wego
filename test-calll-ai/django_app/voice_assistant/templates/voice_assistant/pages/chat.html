@@ -1,0 +1,44 @@
+{% extends 'voice_assistant/base.html' %}
+{% load static %}
+
+{% block title %}شات - منصة المحادثات الشاملة{% endblock %}
+
+{% block content %}
+<style>
+  /* Full-bleed responsive container for Chatwoot */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+</style>
+
+<div class="relative w-full h-[calc(100vh-65px)] min-h-[750px] bg-white overflow-hidden">
+  <!-- Loading Spinner Overlay -->
+  <div id="chat-frame-loader" class="absolute inset-0 bg-[#FAF7F2]/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+    <div class="w-9 h-9 border-3 border-[#680E23]/20 border-t-[#680E23] rounded-full animate-spin"></div>
+    <p class="text-xs font-medium text-[#6E645D]">جاري تحميل منصة المحادثات...</p>
+  </div>
+
+  <!-- Embedded Chatwoot Iframe -->
+  <iframe 
+    id="chatwoot-frame"
+    src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2' }}"
+    class="w-full h-full border-0 block"
+    allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
+    onload="onChatFrameLoaded()"
+  ></iframe>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function onChatFrameLoaded() {
+    const loader = document.getElementById('chat-frame-loader');
+    if (loader) {
+      loader.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => loader.style.display = 'none', 300);
+    }
+  }
+</script>
+{% endblock %}

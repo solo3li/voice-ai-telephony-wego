@@ -900,6 +900,18 @@ def crm_page_view(request):
 
 
 @login_required
+def chat_page_view(request):
+    """Render dedicated Chatwoot Omnichannel Chat page."""
+    context = {
+        'page_title': 'شات',
+        'page_icon': '💬',
+        'active_nav': 'chat',
+        'chatwoot_url': 'https://chatwoot.169.58.32.179.nip.io/app/accounts/2',
+    }
+    return render(request, 'voice_assistant/pages/chat.html', context)
+
+
+@login_required
 def whatsapp_page_view(request):
     """Render dedicated WhatsApp & Omnichannel 24/7 Follow-up page."""
     context = {
@@ -957,11 +969,12 @@ def campaigns_page_view(request):
 
 @login_required
 def store_page_view(request):
-    """Render dedicated Tools & MCP Store page."""
+    """Render dedicated Tools & MCP Store page embedding Universal FastMCP Hub."""
     context = {
         'page_title': 'متجر وأدوات MCP',
         'page_icon': '🛍️',
         'active_nav': 'store',
+        'mcp_url': 'https://mcp.169.58.32.179.nip.io/',
     }
     return render(request, 'voice_assistant/pages/store.html', context)
 
