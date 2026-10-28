@@ -90,6 +90,12 @@ async def fn_process_document_rag(ctx: inngest.Context) -> dict:
         doc.error_message = ''
         doc.save(update_fields=['status', 'error_message'])
 
+        try:
+            from .services.chatwoot_sync import sync_document_to_chatwoot
+            sync_document_to_chatwoot(doc)
+        except Exception as cs_err:
+            logger.warning(f"Failed to auto-sync document {doc.id} to Chatwoot: {cs_err}")
+
         publish_to_centrifugo(f"knowledge:{user_id}", {
             "type": "document_status",
             "document_id": doc_id,

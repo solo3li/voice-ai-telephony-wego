@@ -1,8 +1,12 @@
-<!-- Top Chatwoot-Style Header Component -->
+<!-- Top Chatwoot-Style Clean Header Component -->
 <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[#eaedf0] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
   <div class="flex items-center gap-3">
     <h2 id="current-section-title" class="text-base font-bold text-slate-900 flex items-center gap-2">
-      <span class="text-[#1f93ff]">{{ page_icon|default:"⚡" }}</span> <span>{{ page_title|default:"لوحة التحكم" }}</span>
+      <!-- Lucide Sparkles Line Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-[#1f93ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+      </svg>
+      <span>{{ page_title|default:"لوحة التحكم" }}</span>
     </h2>
   </div>
 
@@ -14,7 +18,10 @@
 
     <!-- Header Wallet Balance Pill -->
     <a href="{% url 'voice_assistant:billing_page' %}" id="header-wallet-badge" class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition cursor-pointer">
-      <span class="text-sm">🪙</span>
+      <!-- Lucide Wallet Line Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#1f93ff] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+      </svg>
       <span class="text-slate-500 font-normal text-[11px]" data-i18n="header_balance">الرصيد:</span>
       <span id="header-balance-val" class="font-mono text-xs font-bold text-[#1f93ff]">--.--</span>
       <span id="header-balance-curr" class="text-[10px] text-slate-500">USD</span>
@@ -23,7 +30,11 @@
 
     <!-- Bilingual Switcher Toggle Button -->
     <button type="button" onclick="toggleLanguage()" id="lang-switch-btn" class="px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition flex items-center gap-1.5 shadow-2xs">
-      🌐 <span id="lang-text">English</span>
+      <!-- Lucide Globe Line Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+      </svg>
+      <span id="lang-text">English</span>
     </button>
   </div>
 </header>

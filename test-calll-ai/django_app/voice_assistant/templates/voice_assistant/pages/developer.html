@@ -54,7 +54,7 @@
               👁️
             </button>
             <button type="button" onclick="copyDevApiKey()" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#1f93ff] text-white hover:bg-[#520B1C] transition shadow-sm flex items-center gap-1">
-              <span>📋</span> <span>نسخ</span>
+               <span>نسخ</span>
             </button>
           </div>
         </div>
@@ -89,7 +89,7 @@
 
         <div>
           <h5 class="font-bold text-xs text-[#1f93ff] mb-2 flex items-center gap-1.5">
-            <span>📞</span> <span>إجراء مكالمة صادرة بالذكاء الاصطناعي (Dial Call):</span>
+             <span>إجراء مكالمة صادرة بالذكاء الاصطناعي (Dial Call):</span>
           </h5>
           <div class="relative bg-[#181514] rounded-xl p-3.5 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
             <pre id="dev-curl-dial-sample">curl -X POST "https://localhost/api/v1/calls/dial/" \
@@ -125,10 +125,10 @@
 
         <div class="flex items-center gap-2 flex-wrap text-xs">
           <button type="button" onclick="loadRestaurantTemplate()" class="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold transition flex items-center gap-1 shadow-sm">
-            <span>📋</span> <span>قالب مطعم نموذجي</span>
+             <span>قالب مطعم نموذجي</span>
           </button>
           <button type="button" onclick="formatLiveContextJson()" class="px-3 py-1.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] hover:bg-white text-[#0f172a] font-semibold transition flex items-center gap-1 shadow-sm">
-            <span>⚡</span> <span>تنسيق الـ JSON</span>
+             <span>تنسيق الـ JSON</span>
           </button>
           <button type="button" onclick="togglePromptPreview()" id="btn-toggle-prompt-preview" class="px-3 py-1.5 rounded-xl border border-[#1f93ff] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#1f93ff] font-bold transition flex items-center gap-1 shadow-sm">
             <span>👁️</span> <span>معاينة ما يراه الـ AI</span>
@@ -211,7 +211,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>🎙️</span> <span>2. الشخصيات واللهجات</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>2. الشخصيات واللهجات</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">/profiles/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">إنشاء وتعديل وتفعيل شخصيات الذكاء الاصطناعي واللهجات فورياً.</p>
@@ -219,7 +219,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>🧠</span> <span>3. ذاكرة وسياق العملاء</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>3. ذاكرة وسياق العملاء</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">/memory/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">استرجاع وتحديث سجل وسياق المتصل التراكمي برقم هاتفه قبل أو أثناء المحادثة.</p>
@@ -227,7 +227,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>📚</span> <span>4. قواعد المعرفة RAG</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>4. قواعد المعرفة RAG</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">/rag/query/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">رفع وفهرسة ملفات PDF ومستندات الشركة والبحث الدلالي بالمتجهات المدمجة مع Gemini.</p>
@@ -243,7 +243,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>⚡</span> <span>6. بدء مكالمة WebRTC</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>6. بدء مكالمة WebRTC</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">POST /token/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">إصدار توكن LiveKit مؤقت مشفر لبدء مكالمة صوتية حية فائقة السرعة من المتصفح أو التطبيق.</p>
@@ -251,7 +251,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>📞</span> <span>7. السنترالات و DIDs</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>7. السنترالات و DIDs</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">/telephony/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">ربط خطوط السنترال الداخلي وأرقام الاستقبال وتوجيه الاتصالات الهاتفية.</p>
@@ -267,7 +267,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>📋</span> <span>9. سجلات المكالمات والويبهوك</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>9. سجلات المكالمات والويبهوك</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#64748b]">/calls/ &amp; /webhooks/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">استعراض تفاصيل المكالمات، التسجيلات، الملخصات الذكية، واستقبال إشعارات انتهاء المكالمات.</p>
@@ -275,7 +275,7 @@
 
       <div class="p-4 rounded-2xl bg-white border border-[#1f93ff]/50 shadow-sm space-y-2 bg-gradient-to-br from-white to-[#f8fafc]">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"><span>⚡</span> <span>10. الذاكرة المنظمة اللحظية</span></span>
+          <span class="font-bold text-xs text-[#1f93ff] flex items-center gap-1.5"> <span>10. الذاكرة المنظمة اللحظية</span></span>
           <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#f8fafc] text-[#1f93ff] font-bold">/context/</span>
         </div>
         <p class="text-xs text-[#64748b] leading-relaxed">حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة (&lt; 2ms) لمنع الهلوسة في المكالمات.</p>

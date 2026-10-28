@@ -141,170 +141,54 @@
 </head>
 <body class="bg-[#f8fafc] text-[#0f172a] min-h-screen flex flex-col md:flex-row antialiased">
 
-  <!-- ==================== Clean Slate Light Sidebar (Chatwoot Style) ==================== -->
-  <aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-300 z-30 shadow-xs shrink-0 sidebar-expanded border-l md:border-l-0 md:border-e border-[#eaedf0] md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
-    
-    <!-- Top Brand & Toggle (Pinned) -->
-    <div class="h-16 px-4 flex items-center justify-between border-b border-[#eaedf0] shrink-0 bg-white">
-      <div class="flex items-center gap-3 overflow-hidden cursor-pointer" onclick="switchTab('voice')">
-        <div class="w-9 h-9 rounded-xl bg-[#1f93ff] text-white shadow-xs flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" x2="12" y1="19" y2="22"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1 class="text-sm font-bold text-slate-900 tracking-tight" data-i18n="app_title">المساعد الصوتي الذكي</h1>
-          <p class="text-[10px] text-slate-500 font-medium" data-i18n="app_subtitle">منظومة الذكاء الاصطناعي</p>
-        </div>
-      </div>
-      
-      <!-- Toggle Collapse Button -->
-      <button type="button" onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition" title="طي/توسيع القائمة">
-        <svg id="sidebar-toggle-icon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Navigation Links -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 text-xs font-semibold custom-sidebar-scroll min-h-0">
-      <!-- 1. Voice Room -->
-      <button type="button" onclick="switchTab('voice')" id="nav-btn-voice" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start bg-[#eff8ff] text-[#1f93ff] font-bold border border-[#b2ddff]/60 shadow-2xs">
-        <span class="text-base shrink-0">🎙️</span>
-        <span class="nav-text" data-i18n="nav_voice">غرفة المساعد الصوتي</span>
-      </button>
-
-      <!-- 2. Personas (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:personas_page' %}" id="nav-btn-personas" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">🎭</span>
-        <span class="nav-text" data-i18n="nav_personas">الشخصيات واللهجات</span>
-      </a>
-
-      <!-- 3. RAG (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:rag_page' %}" id="nav-btn-rag" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">📚</span>
-        <span class="nav-text" data-i18n="nav_rag">قاعدة المعرفة RAG</span>
-      </a>
-
-      <!-- 4. Call Center (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:callcenter_page' %}" id="nav-btn-callcenter" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">🎧</span>
-        <span class="nav-text" data-i18n="nav_callcenter">مركز الاتصالات والطوابير</span>
-      </a>
-
-      <!-- 5. Telephony (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:telephony_page' %}" id="nav-btn-telephony" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">📞</span>
-        <span class="nav-text" data-i18n="nav_telephony">الربط الهاتفي والسنترال</span>
-      </a>
-
-      <!-- 6. CRM (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:crm_page' %}" id="nav-btn-crm" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">🧠</span>
-        <span class="nav-text" data-i18n="nav_crm">ذاكرة وسجل العملاء</span>
-      </a>
-
-      <!-- 6.5. Outbound Campaigns (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:campaigns_page' %}" id="nav-btn-campaigns" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">🚀</span>
-        <span class="nav-text">حملات الاتصال والعملاء</span>
-        <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">AI CRM</span>
-      </a>
-
-      <!-- 6.6. Chatwoot Omnichannel Chat (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">💬</span>
-        <span class="nav-text">شات</span>
-        <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">Omnichannel</span>
-      </a>
-
-      <!-- 7. Store MCP (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:store_page' %}" id="nav-btn-store" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">🛍️</span>
-        <span class="nav-text" data-i18n="nav_store">متجر وأدوات MCP</span>
-      </a>
-
-      <!-- 8. Usage & Billing (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">💳</span>
-        <span class="nav-text" data-i18n="nav_billing">الرصيد والفواتير</span>
-      </a>
-
-      <!-- 9. All Calls & CDR (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:calls_page' %}" id="nav-btn-calls" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">📋</span>
-        <span class="nav-text" data-i18n="nav_calls">سجل المكالمات (CDR)</span>
-      </a>
-
-      <!-- 10. Partner & SaaS Portal (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">💼</span>
-        <span class="nav-text" data-i18n="nav_partner">الشريك والـ SaaS</span>
-      </a>
-
-      <!-- 11. Developer API Portal (Dedicated Page) -->
-      <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-start text-slate-600 hover:text-slate-900 hover:bg-slate-100/70">
-        <span class="text-base shrink-0">⚡</span>
-        <span class="nav-text" data-i18n="nav_developer">واجهات المطورين (API)</span>
-        <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">REST</span>
-      </a>
-    </nav>
-
-    <!-- Sidebar Bottom Profile / Status (Pinned) -->
-    <div class="p-3 border-t border-[#eaedf0] space-y-2 shrink-0 bg-slate-50/50">
-      <div class="flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
-        <div class="w-8 h-8 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff] font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-          {{ request.user.username|slice:":2"|upper }}
-        </div>
-        <div class="brand-text overflow-hidden text-xs">
-          <p class="font-bold text-slate-900 truncate">{{ request.user.username }}</p>
-          <span class="text-[10px] text-slate-500 block" data-i18n="role_admin">حساب المستخدم</span>
-        </div>
-      </div>
-      
-      <div class="pt-1">
-        <a href="{% url 'voice_assistant:logout' %}" class="w-full text-slate-500 hover:text-red-600 hover:bg-red-50 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl transition text-xs font-semibold" data-i18n="btn_logout">
-          🚪 خروج
-        </a>
-      </div>
-    </div>
-  </aside>
+  <!-- ==================== Shared Clean Sidebar (Chatwoot Style) ==================== -->
+  {% include "voice_assistant/components/sidebar.html" %}
 
   <!-- ==================== Main App Workspace ==================== -->
   <div id="main-wrapper" class="flex-1 flex flex-col min-w-0 min-h-screen">
     
-    <!-- Top Luxury Header -->
-    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[#eaedf0] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+    <!-- Top Clean Header (Chatwoot Style) -->
+    <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[#eaedf0] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
       <div class="flex items-center gap-3">
-        <!-- Section Title Breadcrumb -->
-        <h2 id="current-section-title" class="text-base font-bold text-[#1f93ff] flex items-center gap-2">
-          🎙️ <span data-i18n="nav_voice">غرفة المساعد الصوتي</span>
+        <h2 id="current-section-title" class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <!-- Lucide Microphone Line Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-[#1f93ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+          <span data-i18n="nav_voice">غرفة المساعد الصوتي</span>
         </h2>
       </div>
 
       <!-- Live Service Status Badges -->
       <div class="flex flex-wrap items-center gap-3 text-xs">
-        <span id="livekit-status" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8fafc] border border-[#eaedf0] text-[#64748b] font-medium shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span> LiveKit: جاري التحقق...
+        <span id="livekit-status" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span> LiveKit: جاري التحقق...
         </span>
-        <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8fafc] border border-[#eaedf0] text-[#64748b] font-medium shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span> Centrifugo: جاري التحقق...
+        <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Centrifugo: متصل
         </span>
 
-        <!-- Header Wallet Balance Pill (OpenRouter Style) -->
-        <a href="{% url 'voice_assistant:billing_page' %}" id="header-wallet-badge" class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#1f93ff]/60 text-[#1f93ff] text-xs font-bold shadow-sm transition hover:shadow cursor-pointer">
-          <span class="text-sm">🪙</span>
-          <span class="text-[#94a3b8] font-normal text-[11px]" data-i18n="header_balance">الرصيد:</span>
+        <!-- Header Wallet Balance Pill -->
+        <a href="{% url 'voice_assistant:billing_page' %}" id="header-wallet-badge" class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition cursor-pointer">
+          <!-- Lucide Wallet Line Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#1f93ff] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+          </svg>
+          <span class="text-slate-500 font-normal text-[11px]" data-i18n="header_balance">الرصيد:</span>
           <span id="header-balance-val" class="font-mono text-xs font-bold text-[#1f93ff]">--.--</span>
-          <span id="header-balance-curr" class="text-[10px] text-[#64748b]">USD</span>
+          <span id="header-balance-curr" class="text-[10px] text-slate-500">USD</span>
           <span class="w-4 h-4 rounded-full bg-[#1f93ff] text-white flex items-center justify-center text-[10px] group-hover:scale-110 transition font-bold" title="شحن الرصيد">+</span>
         </a>
 
         <!-- Bilingual Switcher Toggle Button -->
-        <button type="button" onclick="toggleLanguage()" id="lang-switch-btn" class="px-3.5 py-1.5 rounded-full bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] text-xs font-bold hover:bg-[#dbeafe] transition flex items-center gap-1.5 shadow-sm">
-          🌐 <span id="lang-text">English</span>
+        <button type="button" onclick="toggleLanguage()" id="lang-switch-btn" class="px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition flex items-center gap-1.5 shadow-2xs">
+          <!-- Lucide Globe Line Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+          </svg>
+          <span id="lang-text">English</span>
         </button>
       </div>
     </header>

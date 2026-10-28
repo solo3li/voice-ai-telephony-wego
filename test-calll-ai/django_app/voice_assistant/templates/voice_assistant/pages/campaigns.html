@@ -9,7 +9,7 @@
       <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
         <div>
           <h2 class="text-xl font-bold text-[#0f172a] flex items-center gap-2">
-            <span class="text-2xl">🚀</span>
+            
             <span>حملات الاتصال وإدارة العملاء (Campaigns & Leads CRM)</span>
             <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Inngest Powered</span>
           </h2>
@@ -20,7 +20,7 @@
 
         <div class="flex items-center gap-2.5">
           <a href="https://inngest.169.58.32.179.nip.io" target="_blank" class="px-3.5 py-2 rounded-xl bg-[#eff8ff] hover:bg-[#F3DCE1] text-[#1f93ff] text-xs font-semibold border border-[#b2ddff] transition flex items-center gap-1.5 shadow-sm">
-            <span>⚡</span>
+            
             <span>لوحة مراقبة Inngest</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
           </a>
@@ -81,7 +81,7 @@
       <!-- WhatsApp Disconnected Warning Banner -->
       <div id="camp-no-whatsapp-alert" class="hidden p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-emerald-950 text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div class="flex items-center gap-2.5">
-          <span class="text-xl">💬</span>
+          
           <div>
             <strong class="block text-emerald-950">تنبيه: حساب الواتساب غير متصل حالياً (Evolution API)</strong>
             <span class="text-[11px] text-emerald-800">لإرسال رسائل الواتساب للحملة، يرجى ربط ومسح كود الواتساب (QR Code) أولاً من تبويب الواتساب.</span>
@@ -101,7 +101,7 @@
             <select id="campaign-select" onchange="onCampaignSelected(this.value)" class="px-3 py-1.5 rounded-xl border border-[#e2e8f0] text-xs font-semibold bg-white text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff]/30 min-w-[220px]">
               <option value="">جارِ تحميل الحملات...</option>
             </select>
-            <span id="camp-channel-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">📞 مكالمات</span>
+            <span id="camp-channel-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">مكالمات</span>
             <span id="camp-status-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">مسودة</span>
           </div>
 
@@ -150,7 +150,7 @@
             <button type="button" onclick="filterCampaignContacts('all')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#1f93ff] text-white font-semibold transition" data-filter="all">الكل (<span id="count-filter-all">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('pending')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#f1f5f9] text-[#64748b] hover:bg-[#eaedf0] font-semibold transition" data-filter="pending">في الانتظار (<span id="count-filter-pending">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('answered')" class="camp-filter-btn px-3 py-1 rounded-xl bg-[#f1f5f9] text-[#64748b] hover:bg-[#eaedf0] font-semibold transition" data-filter="answered">تم الرد (<span id="count-filter-answered">0</span>)</button>
-            <button type="button" onclick="filterCampaignContacts('wa_sent')" class="camp-filter-btn px-3 py-1 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 font-semibold transition" data-filter="wa_sent">💬 تم إرسال واتساب (<span id="count-filter-wa-sent">0</span>)</button>
+            <button type="button" onclick="filterCampaignContacts('wa_sent')" class="camp-filter-btn px-3 py-1 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 font-semibold transition" data-filter="wa_sent">تم إرسال واتساب (<span id="count-filter-wa-sent">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('hot')" class="camp-filter-btn px-3 py-1 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 font-semibold transition" data-filter="hot">🔥 مهتم جداً (<span id="count-filter-hot">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('warm')" class="camp-filter-btn px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 font-semibold transition" data-filter="warm">🟡 متابعة (<span id="count-filter-warm">0</span>)</button>
             <button type="button" onclick="filterCampaignContacts('cold')" class="camp-filter-btn px-3 py-1 rounded-xl bg-slate-50 text-slate-800 border border-slate-200 font-semibold transition" data-filter="cold">❄️ غير مهتم (<span id="count-filter-cold">0</span>)</button>
@@ -216,21 +216,21 @@
         <div class="grid grid-cols-3 gap-2.5">
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-[#1f93ff] bg-[#eff8ff] cursor-pointer transition text-center" id="card-channel-calls">
             <input type="radio" name="camp_channel" value="calls" checked onchange="onCampaignChannelChanged('calls')" class="hidden" />
-            <span class="text-xl mb-1">📞</span>
+            
             <strong class="text-xs text-[#1f93ff] block">مكالمات فقط</strong>
             <span class="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">اتصال صوتي آلي بالذكاء الاصطناعي</span>
           </label>
 
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] hover:border-emerald-500 cursor-pointer transition text-center" id="card-channel-whatsapp">
             <input type="radio" name="camp_channel" value="whatsapp" onchange="onCampaignChannelChanged('whatsapp')" class="hidden" />
-            <span class="text-xl mb-1">💬</span>
+            
             <strong class="text-xs text-[#0f172a] block">واتساب فقط</strong>
             <span class="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">رسائل مخصصة فورية بـ Gemini</span>
           </label>
 
           <label class="channel-card flex flex-col items-center justify-center p-3 rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] hover:border-purple-500 cursor-pointer transition text-center" id="card-channel-hybrid">
             <input type="radio" name="camp_channel" value="hybrid" onchange="onCampaignChannelChanged('hybrid')" class="hidden" />
-            <span class="text-xl mb-1">⚡</span>
+            
             <strong class="text-xs text-[#0f172a] block">هجينة (مكالمات + واتساب)</strong>
             <span class="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">اتصال أولاً ومتابعة فورية بالواتساب</span>
           </label>
@@ -259,7 +259,7 @@
       <div id="container-whatsapp-prompt" class="hidden">
         <div class="flex justify-between items-center mb-1">
           <label class="font-bold text-[#334155] flex items-center gap-1.5">
-            <span>💬</span>
+            
             <span>توجيهات ورسالة الواتساب المخصصة (WhatsApp Prompt) *</span>
           </label>
           <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Gemini 2.5 Flash</span>
@@ -315,7 +315,7 @@
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#eaedf0]">
         <button type="button" onclick="closeNewCampaignModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] font-medium transition">إلغاء</button>
         <button type="submit" id="camp-btn-submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#1f93ff] to-[#8C1D40] hover:from-[#500B1B] hover:to-[#1f93ff] text-white font-bold transition shadow-md flex items-center gap-1.5">
-          <span>🚀</span>
+          
           <span>رفع وتنظيم العملاء في الـ CRM</span>
         </button>
       </div>
@@ -361,7 +361,7 @@
       <div id="contact-modal-wa-box" class="hidden">
         <div class="flex justify-between items-center mb-1">
           <h4 class="font-bold text-teal-900 flex items-center gap-1">
-            <span>💬</span>
+            
             <span>رسالة الواتساب المرسلة:</span>
           </h4>
           <span id="contact-modal-wa-time" class="text-[10px] text-teal-700 font-mono">-</span>
@@ -394,11 +394,11 @@
     <div class="flex items-center justify-between pt-3 border-t border-[#eaedf0]">
       <div class="flex items-center gap-2">
         <button type="button" id="contact-modal-dial-btn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
-          <span>📞</span>
+          
           <span>اتصال الآن</span>
         </button>
         <button type="button" id="contact-modal-wa-btn" class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
-          <span>💬</span>
+          
           <span>إرسال واتساب</span>
         </button>
       </div>

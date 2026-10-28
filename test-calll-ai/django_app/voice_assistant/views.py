@@ -871,7 +871,7 @@ def calls_page_view(request):
     """Render dedicated Call Detail Records & Recordings page."""
     context = {
         'page_title': 'سجل المكالمات (CDR) والتسجيلات',
-        'page_icon': '📋',
+        'page_icon': '',
         'active_nav': 'calls',
     }
     return render(request, 'voice_assistant/pages/calls.html', context)
@@ -882,7 +882,7 @@ def billing_page_view(request):
     """Render dedicated Usage & Billing page."""
     context = {
         'page_title': 'الرصيد والفواتير',
-        'page_icon': '💳',
+        'page_icon': '',
         'active_nav': 'billing',
     }
     return render(request, 'voice_assistant/pages/billing.html', context)
@@ -893,7 +893,7 @@ def crm_page_view(request):
     """Render dedicated CRM & Customer Memory page."""
     context = {
         'page_title': 'ذاكرة وسجل العملاء',
-        'page_icon': '🧠',
+        'page_icon': '',
         'active_nav': 'crm',
     }
     return render(request, 'voice_assistant/pages/crm.html', context)
@@ -904,7 +904,7 @@ def chat_page_view(request):
     """Render dedicated Chatwoot Omnichannel Chat page."""
     context = {
         'page_title': 'شات',
-        'page_icon': '💬',
+        'page_icon': '',
         'active_nav': 'chat',
         'chatwoot_url': 'https://chatwoot.169.58.32.179.nip.io/app/accounts/2',
     }
@@ -916,7 +916,7 @@ def whatsapp_page_view(request):
     """Render dedicated WhatsApp & Omnichannel 24/7 Follow-up page."""
     context = {
         'page_title': 'واتساب ومتابعة الذكاء الاصطناعي 24/7',
-        'page_icon': '💬',
+        'page_icon': '',
         'active_nav': 'whatsapp',
     }
     return render(request, 'voice_assistant/pages/whatsapp.html', context)
@@ -927,7 +927,7 @@ def whatsapp_desk_page_view(request):
     """Render dedicated Tier 2 WhatsApp Human Support Desk."""
     context = {
         'page_title': 'مكتب دعم عملاء الواتساب (الدعم البشري)',
-        'page_icon': '🎧',
+        'page_icon': '',
         'active_nav': 'whatsapp_desk',
     }
     return render(request, 'voice_assistant/pages/whatsapp_desk.html', context)
@@ -939,7 +939,7 @@ def rag_page_view(request):
     """Render dedicated Knowledge Base RAG page."""
     context = {
         'page_title': 'قاعدة المعرفة RAG',
-        'page_icon': '📚',
+        'page_icon': '',
         'active_nav': 'rag',
     }
     return render(request, 'voice_assistant/pages/rag.html', context)
@@ -950,7 +950,7 @@ def personas_page_view(request):
     """Render dedicated AI Personas & Voice Studio page."""
     context = {
         'page_title': 'الشخصيات واللهجات',
-        'page_icon': '🎭',
+        'page_icon': '',
         'active_nav': 'personas',
     }
     return render(request, 'voice_assistant/pages/personas.html', context)
@@ -961,7 +961,7 @@ def campaigns_page_view(request):
     """Render dedicated Outbound Campaigns & Leads CRM page."""
     context = {
         'page_title': 'حملات الاتصال والعملاء',
-        'page_icon': '🚀',
+        'page_icon': '',
         'active_nav': 'campaigns',
     }
     return render(request, 'voice_assistant/pages/campaigns.html', context)
@@ -972,7 +972,7 @@ def store_page_view(request):
     """Render dedicated Tools & MCP Store page embedding Universal FastMCP Hub."""
     context = {
         'page_title': 'متجر وأدوات MCP',
-        'page_icon': '🛍️',
+        'page_icon': '',
         'active_nav': 'store',
         'mcp_url': 'https://mcp.169.58.32.179.nip.io/',
     }
@@ -984,7 +984,7 @@ def developer_page_view(request):
     """Render dedicated Developer API Portal page."""
     context = {
         'page_title': 'واجهات المطورين (API)',
-        'page_icon': '⚡',
+        'page_icon': '',
         'active_nav': 'developer',
     }
     return render(request, 'voice_assistant/pages/developer.html', context)
@@ -995,7 +995,7 @@ def callcenter_page_view(request):
     """Render dedicated Call Center & Queues page."""
     context = {
         'page_title': 'المركز الهاتفي وطوابير الانتظار',
-        'page_icon': '🎧',
+        'page_icon': '',
         'active_nav': 'callcenter',
     }
     return render(request, 'voice_assistant/pages/callcenter.html', context)
@@ -1006,7 +1006,7 @@ def telephony_page_view(request):
     """Render dedicated Telephony & PBX Trunks page."""
     context = {
         'page_title': 'الاتصالات وسنترالات PBX',
-        'page_icon': '📞',
+        'page_icon': '',
         'active_nav': 'telephony',
     }
     return render(request, 'voice_assistant/pages/telephony.html', context)
@@ -1017,7 +1017,7 @@ def partner_page_view(request):
     """Render dedicated Partner & SaaS Portal page."""
     context = {
         'page_title': 'بوابة الشركاء وحلول الـ SaaS',
-        'page_icon': '💼',
+        'page_icon': '',
         'active_nav': 'partner',
     }
     return render(request, 'voice_assistant/pages/partner.html', context)
@@ -1028,7 +1028,7 @@ def business_hours_page_view(request):
     """Render dedicated Business Hours & Off-Hours Schedule page."""
     context = {
         'page_title': 'مواعيد العمل والخطة البديلة',
-        'page_icon': '⏰',
+        'page_icon': '',
         'active_nav': 'business_hours',
     }
     return render(request, 'voice_assistant/pages/business_hours.html', context)

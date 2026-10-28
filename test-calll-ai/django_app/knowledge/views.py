@@ -181,6 +181,11 @@ def upload_document(request):
         logger.info(f"Synchronously processed document '{filename}' for user {request.user.username}: {len(chunks)} chunks embedded.")
 
         invalidate_tenant_rag_cache(request.user.id)
+        try:
+            from .services.chatwoot_sync import sync_document_to_chatwoot
+            sync_document_to_chatwoot(doc)
+        except Exception as cs_err:
+            logger.warning(f"Failed to auto-sync document {doc.id} to Chatwoot: {cs_err}")
         return JsonResponse({
             "status": "success",
             "message": f"تمت معالجة المستند '{filename}' بنجاح وفهرسة {len(chunks)} مقطعاً دلالياً.",

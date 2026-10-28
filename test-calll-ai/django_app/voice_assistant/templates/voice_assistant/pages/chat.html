@@ -5,19 +5,29 @@
 
 {% block content %}
 <style>
-  /* Full-bleed responsive container for Chatwoot */
+  /* Full-bleed seamless container for Chatwoot: hide app header & use full viewport */
+  header {
+    display: none !important;
+  }
+  #main-wrapper {
+    background-color: #ffffff !important;
+    overflow: hidden !important;
+  }
   main {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
   }
 </style>
 
-<div class="relative w-full h-[calc(100vh-65px)] min-h-[750px] bg-white overflow-hidden">
+<div class="relative w-full h-screen bg-white overflow-hidden">
   <!-- Loading Spinner Overlay -->
-  <div id="chat-frame-loader" class="absolute inset-0 bg-[#f8fafc]/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
-    <div class="w-9 h-9 border-3 border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
-    <p class="text-xs font-medium text-[#64748b]">جاري تحميل منصة المحادثات...</p>
+  <div id="chat-frame-loader" class="absolute inset-0 bg-[#f8fafc]/95 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+    <div class="w-8 h-8 border-2 border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
+    <p class="text-xs font-medium text-slate-500 font-sans">جاري تحميل منصة المحادثات...</p>
   </div>
 
   <!-- Embedded Chatwoot Iframe -->
