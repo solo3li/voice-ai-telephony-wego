@@ -26,18 +26,17 @@ def sync_document_to_chatwoot(document):
         conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
         cur = conn.cursor()
 
-        # Check existing captain document
-        cur.execute("SELECT id FROM captain_documents WHERE name = %s AND assistant_id = 1", (document.title,))
+        cur.execute("SELECT id FROM captain_documents WHERE (name = %s OR metadata->>'django_doc_id' = %s) AND assistant_id = 1", (document.title, str(document.id)))
         row = cur.fetchone()
 
         if row:
             doc_id = row[0]
             cur.execute("""
                 UPDATE captain_documents
-                SET content = %s, status = 1, sync_status = 1, updated_at = NOW(),
-                    metadata = %s
+                SET name = %s, content = %s, status = 1, sync_status = 1, updated_at = NOW(),
+                    metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{django_doc_id}', %s::jsonb, true)
                 WHERE id = %s
-            """, (full_content, f'{{"source": "django_rag_sync", "doc_id": {document.id}}}', doc_id))
+            """, (document.title, full_content, str(document.id), doc_id))
         else:
             cur.execute("""
                 INSERT INTO captain_documents (
@@ -47,13 +46,18 @@ def sync_document_to_chatwoot(document):
                     1, 2, %s, %s, %s, 1, 1,
                     %s, NOW(), NOW()
                 ) RETURNING id
-            """, (document.title, f"MARKDOWN: doc_{document.id}.md", full_content, f'{{"source": "django_rag_sync", "doc_id": {document.id}}}'))
+            """, (
+                document.title,
+                f"MARKDOWN: doc_{document.id}.md",
+                full_content,
+                f'{{"source": "django_rag_sync", "django_doc_id": {document.id}}}'
+            ))
             doc_id = cur.fetchone()[0]
 
         # Refresh assistant responses
         cur.execute("DELETE FROM captain_assistant_responses WHERE documentable_id = %s AND documentable_type = 'Captain::Document'", (doc_id,))
 
-        for idx, chunk in enumerate(chunks):
+        for idx, chunk in enumerate(chunks[:25]):
             question = f"معلومات مستند {document.title} - مقطع {idx+1}:"
             answer = chunk.content
             cur.execute("""
@@ -71,3 +75,28 @@ def sync_document_to_chatwoot(document):
         logger.info(f"[ChatwootSync] Successfully synced document {document.id} ('{document.title}') to Chatwoot Captain AI (ID {doc_id}).")
     except Exception as e:
         logger.error(f"[ChatwootSync] Failed to sync document {document.id} to Chatwoot: {e}")
+
+
+def delete_document_from_chatwoot(doc_title: str, django_doc_id: int = None):
+    """
+    Remove document and responses from Chatwoot when deleted from Django.
+    """
+    try:
+        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        cur = conn.cursor()
+
+        if django_doc_id:
+            cur.execute("SELECT id FROM captain_documents WHERE metadata->>'django_doc_id' = %s OR name = %s", (str(django_doc_id), doc_title))
+        else:
+            cur.execute("SELECT id FROM captain_documents WHERE name = %s", (doc_title,))
+
+        rows = cur.fetchall()
+        for (c_id,) in rows:
+            cur.execute("DELETE FROM captain_assistant_responses WHERE documentable_id = %s AND documentable_type = 'Captain::Document'", (c_id,))
+            cur.execute("DELETE FROM captain_documents WHERE id = %s", (c_id,))
+            logger.info(f"[ChatwootSync] Deleted Chatwoot captain_document #{c_id} ('{doc_title}')")
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"[ChatwootSync] Error deleting document '{doc_title}' from Chatwoot: {e}")

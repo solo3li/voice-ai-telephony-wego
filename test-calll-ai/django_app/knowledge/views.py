@@ -212,6 +212,11 @@ def delete_document(request, doc_id):
     title = doc.title
     doc.delete()
     invalidate_tenant_rag_cache(request.user.id)
+    try:
+        from .services.chatwoot_sync import delete_document_from_chatwoot
+        delete_document_from_chatwoot(title, doc_id)
+    except Exception as del_err:
+        logger.warning(f"Failed to delete document from Chatwoot: {del_err}")
     logger.info(f"Deleted document '{title}' (id={doc_id}) for user {request.user.username}")
     return JsonResponse({"status": "success", "message": f"تم حذف المستند '{title}' بنجاح."})
 

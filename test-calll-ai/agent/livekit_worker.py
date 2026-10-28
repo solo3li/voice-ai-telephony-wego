@@ -97,6 +97,24 @@ async def entrypoint(ctx: JobContext):
     job_id = ctx.job.id if ctx.job else "direct"
     logger.info(f"==> [LiveKit Agent] New Job assigned (job_id={job_id}, room={room_name})")
 
+    # 0. Deduplication Guard: Strictly ONE agent job allowed per room
+    try:
+        import redis.asyncio as aioredis
+        r_dedup = aioredis.from_url(REDIS_URL, decode_responses=True)
+        room_lock_key = f"livekit_room_agent_lock:{room_name}"
+        lock_acquired = await r_dedup.set(room_lock_key, job_id, nx=True, ex=900)
+        if not lock_acquired:
+            existing_job = await r_dedup.get(room_lock_key)
+            logger.warning(
+                f"==> [AGENT DEDUPLICATION] Room '{room_name}' is already being served by job '{existing_job}'. "
+                f"Rejecting duplicate job '{job_id}' immediately."
+            )
+            await r_dedup.aclose()
+            return
+        await r_dedup.aclose()
+    except Exception as lock_err:
+        logger.warning(f"[AGENT DEDUP] Redis lock check failed: {lock_err}")
+
     # 1. Parse Metadata from Job or Room
     raw_meta = (ctx.job.metadata if ctx.job else "") or (ctx.room.metadata or "")
     payload: Dict[str, Any] = {}
@@ -275,6 +293,14 @@ async def entrypoint(ctx: JobContext):
     # 4. Connect to Room
     await ctx.connect()
     logger.info(f"[LiveKit Agent] Connected to LiveKit room '{room_name}'")
+
+    # Deduplication Guard 2: Disconnect if another agent participant is already connected
+    for p in ctx.room.remote_participants.values():
+        p_id = str(p.identity or "").lower()
+        if p_id.startswith("agent") or "ai-agent" in p_id or "livekit-agent" in p_id:
+            logger.warning(f"==> [AGENT DEDUP] Found existing agent participant '{p.identity}' in room '{room_name}'. Disconnecting duplicate.")
+            await ctx.room.disconnect()
+            return
 
     # 5. Handle Off-Hours if applicable
     if is_off_hours:
@@ -761,6 +787,15 @@ async def entrypoint(ctx: JobContext):
                 )
             except Exception as persist_err:
                 logger.error(f"[LiveKit Agent] Error during call finish persistence: {persist_err}")
+
+            # Release Room Agent Lock
+            try:
+                import redis.asyncio as aioredis
+                r_rel = aioredis.from_url(REDIS_URL, decode_responses=True)
+                await r_rel.delete(f"livekit_room_agent_lock:{room_name}")
+                await r_rel.aclose()
+            except Exception:
+                pass
 
             # Fire-and-forget background distillation if turns exist without delaying room termination
             if len(dialogue_messages) >= 2:
