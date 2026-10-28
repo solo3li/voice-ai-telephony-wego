@@ -123,19 +123,37 @@ def parse_customer_memory_from_bootstrap(bootstrap: dict, caller_phone: str = "w
     elif prof.get("city") or prof.get("address"):
         items.append(f"العنوان المسجل: {prof.get('city') or prof.get('address')}")
 
-    # 3. Preferences & Dietary Notes (with explicit confirmation instruction)
+    # 3. Interests & Preferences (Generic CRM)
+    interests = prof.get("interests_and_preferences") or prof.get("interests")
+    if interests:
+        if isinstance(interests, list):
+            int_str = "، ".join(str(i) for i in interests if str(i).strip())
+        else:
+            int_str = str(interests).strip()
+        if int_str:
+            items.append(f"اهتمامات وتفضيلات سابقة: {int_str}")
+
     prefs = prof.get("preferences")
     if isinstance(prefs, dict):
-        if prefs.get("favorite_items"):
-            favs = "، ".join(str(i) for i in prefs["favorite_items"])
-            items.append(f"الأصناف والوجبات المفضلة: {favs}")
+        legacy_items = []
+        if prefs.get("interests_and_preferences"):
+            val = prefs["interests_and_preferences"]
+            legacy_items.append("، ".join(str(i) for i in val if str(i).strip()) if isinstance(val, list) else str(val).strip())
+        elif prefs.get("favorite_items"):
+            favs = "، ".join(str(i) for i in prefs["favorite_items"] if str(i).strip())
+            if favs: legacy_items.append(favs)
         if prefs.get("dietary_restrictions"):
-            diet = "، ".join(str(d) for d in prefs["dietary_restrictions"])
-            items.append(f"اشتراطات غذائية خاصة (تأكيد مع العميل أولاً): {diet} (راعِ هذا التفضيل وتأكد منه مع العميل بلباقة)")
+            diet = "، ".join(str(d) for d in prefs["dietary_restrictions"] if str(d).strip())
+            if diet: legacy_items.append(diet)
+        if legacy_items and not interests:
+            items.append(f"اهتمامات وتفضيلات سابقة: {'، '.join(legacy_items)}")
         if prefs.get("payment_method"):
             items.append(f"طريقة الدفع المعتادة: {prefs['payment_method']}")
-    elif isinstance(prefs, list) and prefs:
-        items.append(f"تفضيلات واهتمامات سابقة: {'، '.join(str(p) for p in prefs)}")
+    elif isinstance(prefs, list) and prefs and not interests:
+        items.append(f"اهتمامات وتفضيلات سابقة: {'، '.join(str(p) for p in prefs if str(p).strip())}")
+
+    if prof.get("payment_method") and not (isinstance(prefs, dict) and prefs.get("payment_method")):
+        items.append(f"طريقة الدفع المعتادة: {prof['payment_method']}")
 
     # 4. Past Issues / Complaints (No promises)
     past_issues = prof.get("past_issues")

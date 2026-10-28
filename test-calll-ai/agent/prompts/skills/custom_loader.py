@@ -14,8 +14,8 @@ SKILLS_REGISTRY: Dict[str, Skill] = {
     "whatsapp_summary": Skill(
         id="whatsapp_summary",
         name="تأكيد ومتابعة الواتساب بعد المكالمة",
-        description="إرسال ملخص الطلب ورابط التتبع المباشر وطلب تقييم الخدمة عبر الواتساب.",
-        prompt_instruction="إرسال الواتساب أثناء المكالمة (أداة send_whatsapp_message): إذا طلب العميل إرسال المنيو، أو لوكيشن، أو تفاصيل الطلب، أو أي معلومة على الواتساب، استدعِ أداة [send_whatsapp_message] فوراً مع نص الرسالة المطلوب لتصل لرقم هاتفه أثناء المكالمة.",
+        description="إرسال ملخص العملية ورابط المتابعة وتأكيد التفاصيل عبر الواتساب.",
+        prompt_instruction="إرسال الواتساب أثناء المكالمة (أداة send_whatsapp_message): إذا طلب العميل إرسال رابط، أو لوكيشن، أو تأكيد، أو تفاصيل الخدمة/الطلب، أو أي معلومة على الواتساب، استدعِ أداة [send_whatsapp_message] فوراً مع نص الرسالة المطلوب لتصل لرقم هاتفه أثناء المكالمة.",
         required_tools=["send_whatsapp_message"],
         tags=["whatsapp", "omnichannel"]
     ),

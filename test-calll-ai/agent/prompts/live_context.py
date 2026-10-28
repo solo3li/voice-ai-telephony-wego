@@ -14,16 +14,27 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
     blocks = []
 
     # Business Name / Identity
-    b_name = context_data.get("restaurant_name") or context_data.get("business_name") or context_data.get("اسم_النشاط")
+    b_name = (
+        context_data.get("business_name")
+        or context_data.get("company_name")
+        or context_data.get("organization_name")
+        or context_data.get("store_name")
+        or context_data.get("restaurant_name")
+        or context_data.get("اسم_النشاط")
+        or context_data.get("اسم_الشركة")
+    )
     if b_name:
         blocks.append(f"اسم المنشأة / النشاط: {b_name}")
 
-    # 1. Out of stock / Unavailable Items (CRITICAL PRIORITY)
+    # 1. Out of stock / Unavailable Services & Items (CRITICAL PRIORITY)
     oos_list = (
         context_data.get("out_of_stock")
+        or context_data.get("unavailable_services")
+        or context_data.get("unavailable_items")
         or context_data.get("unavailable_today")
         or context_data.get("النواقص")
         or context_data.get("غير_متوفر")
+        or context_data.get("خدمات_غير_متاحة")
     )
     if oos_list:
         if isinstance(oos_list, list):
@@ -32,9 +43,9 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
         else:
             oos_str = f"• {str(oos_list).strip()}"
         blocks.append(
-            f"⚠️ أصناف غير متوفرة اليوم نهائياً (Out of Stock):\n"
+            f"⚠️ خدمات وأصناف غير متوفرة حالياً (Unavailable / Out of Stock):\n"
             f"{oos_str}\n"
-            f"- تنبيه إلزامي صارم: إذا طلب العميل أي صنف من هذه القائمة، اعتذر له بلطف ولباقة فوراً وأخبره أنه غير متوفر اليوم واقترح عليه بديلاً متوفراً ومتاحاً."
+            f"- تنبيه إلزامي صارم: إذا طلب العميل أي خدمة أو صنف من هذه القائمة، اعتذر له بلطف ولباقة فوراً وأخبره أنه غير متوفر حالياً واقترح عليه بديلاً متوفراً ومتاحاً."
         )
 
     # 2. Branches & Working Hours
@@ -65,15 +76,23 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
         if branch_lines:
             blocks.append("🏢 الفروع والعملات ومواعيد العمل المباشرة:\n" + "\n".join(branch_lines))
 
-    # 3. Delivery Zones & Fees
-    delivery = context_data.get("delivery_zones") or context_data.get("delivery") or context_data.get("مناطق_التوصيل")
+    # 3. Delivery / Service Zones & Fees
+    delivery = (
+        context_data.get("service_zones")
+        or context_data.get("coverage_areas")
+        or context_data.get("delivery_zones")
+        or context_data.get("delivery")
+        or context_data.get("مناطق_الخدمة")
+        or context_data.get("مناطق_التغطية")
+        or context_data.get("مناطق_التوصيل")
+    )
     if delivery:
         delivery_lines = []
         if isinstance(delivery, list):
             for d in delivery:
                 if isinstance(d, dict):
-                    zone = d.get("zone") or d.get("area") or d.get("name") or d.get("المنطقة") or ""
-                    fee = d.get("fee") or d.get("cost") or d.get("رسوم_التوصيل") or ""
+                    zone = d.get("zone") or d.get("zone_name") or d.get("area") or d.get("name") or d.get("المنطقة") or ""
+                    fee = d.get("fee") or d.get("cost") or d.get("رسوم_التوصيل") or d.get("رسوم_الخدمة") or ""
                     cur = d.get("currency") or ""
                     fee_str = f"{fee} {cur}".strip() if fee else ""
                     min_order = d.get("min_order") or d.get("minimum") or d.get("الحد_الأدنى") or ""
@@ -81,7 +100,7 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                     branch_n = d.get("branch_name") or ""
                     details = []
                     if branch_n: details.append(f"تابع لـ: {branch_n}")
-                    if fee_str: details.append(f"رسوم التوصيل: {fee_str}")
+                    if fee_str: details.append(f"الرسوم: {fee_str}")
                     if min_order: details.append(f"حد أدنى: {min_order}")
                     if time_est: details.append(f"الوقت المتوقع: {time_est}")
                     delivery_lines.append(f"- منطقة {zone}: ({'، '.join(details)})" if details else f"- منطقة {zone}")
@@ -91,10 +110,17 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
             for k, v in delivery.items():
                 delivery_lines.append(f"- {k}: {v}")
         if delivery_lines:
-            blocks.append("🛵 مناطق ورسوم التوصيل المعتمدة:\n" + "\n".join(delivery_lines))
+            blocks.append("📍 مناطق التغطية والخدمة ورسوم الانتقال/التوصيل المعتمدة:\n" + "\n".join(delivery_lines))
 
     # 4. Offers & Specials
-    offers = context_data.get("offers") or context_data.get("deals") or context_data.get("عروض") or context_data.get("العروض")
+    offers = (
+        context_data.get("offers")
+        or context_data.get("promotions")
+        or context_data.get("deals")
+        or context_data.get("عروض")
+        or context_data.get("العروض")
+        or context_data.get("خصومات")
+    )
     if offers:
         offer_lines = []
         if isinstance(offers, list):
@@ -115,18 +141,29 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
         if offer_lines:
             blocks.append("🎁 العروض والخصومات النشطة حالياً:\n" + "\n".join(offer_lines))
 
-    # 5. Menu / Products
-    menu = context_data.get("menu") or context_data.get("menu_items") or context_data.get("منيو") or context_data.get("قائمة_الطعام")
+    # 5. Catalog / Services / Products / Menu
+    menu = (
+        context_data.get("catalog")
+        or context_data.get("services")
+        or context_data.get("products")
+        or context_data.get("items")
+        or context_data.get("menu")
+        or context_data.get("menu_items")
+        or context_data.get("قائمة_الخدمات")
+        or context_data.get("قائمة_المنتجات")
+        or context_data.get("منيو")
+        or context_data.get("قائمة_الطعام")
+    )
     if menu:
         menu_lines = []
         if isinstance(menu, list):
             for item in menu:
                 if isinstance(item, dict):
-                    i_name = item.get("name") or item.get("الصنف") or ""
+                    i_name = item.get("name") or item.get("الصنف") or item.get("الخدمة") or item.get("المنتج") or ""
                     i_price = item.get("price") or item.get("السعر") or ""
                     i_cur = item.get("currency") or item.get("currency_name") or item.get("العملة") or ""
                     i_cat = item.get("category") or item.get("القسم") or ""
-                    i_sizes = item.get("sizes") or item.get("الأحجام") or ""
+                    i_sizes = item.get("sizes") or item.get("الأحجام") or item.get("الباقات") or ""
                     i_desc = item.get("description") or item.get("الوصف") or ""
                     line_parts = [i_name]
                     if i_cat: line_parts.append(f"[{i_cat}]")
@@ -136,9 +173,9 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                     if i_sizes:
                         if isinstance(i_sizes, dict):
                             sizes_str = "، ".join([f"{k}: {v}" for k, v in i_sizes.items()])
-                            line_parts.append(f"(الأحجام: {sizes_str})")
+                            line_parts.append(f"(الخيارات/الأحجام: {sizes_str})")
                         else:
-                            line_parts.append(f"(الأحجام: {i_sizes})")
+                            line_parts.append(f"(الخيارات/الأحجام: {i_sizes})")
                     if i_desc: line_parts.append(f"- {i_desc}")
                     menu_lines.append(f"- {' '.join(line_parts)}")
                 else:
@@ -149,10 +186,10 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                 if isinstance(items, list):
                     for it in items:
                         if isinstance(it, dict):
-                            it_name = it.get("name") or it.get("الصنف") or ""
+                            it_name = it.get("name") or it.get("الصنف") or it.get("الخدمة") or it.get("المنتج") or ""
                             it_price = it.get("price") or it.get("السعر") or ""
                             it_cur = it.get("currency") or it.get("currency_name") or it.get("العملة") or ""
-                            it_sizes = it.get("sizes") or ""
+                            it_sizes = it.get("sizes") or it.get("الباقات") or ""
                             it_branch_prices = it.get("branch_prices") or {}
 
                             price_display = f"{it_price} {it_cur}".strip()
@@ -173,16 +210,19 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
                 else:
                     menu_lines.append(f"    - {str(items)}")
         if menu_lines:
-            blocks.append("📋 قائمة الطعام والأسعار المعتمدة (Menu):\n" + "\n".join(menu_lines))
+            blocks.append("📋 كتالوج المنتجات والخدمات والأسعار المعتمدة (Catalog / Services / Products):\n" + "\n".join(menu_lines))
 
     # 6. Any other remaining freeform keys
     standard_keys = {
-        "restaurant_name", "business_name", "اسم_النشاط",
-        "out_of_stock", "unavailable_today", "النواقص", "غير_متوفر",
+        "business_name", "company_name", "organization_name", "store_name", "restaurant_name",
+        "اسم_النشاط", "اسم_الشركة",
+        "out_of_stock", "unavailable_services", "unavailable_today", "النواقص", "غير_متوفر", "خدمات_غير_متاحة",
         "branches", "locations", "الفروع",
-        "delivery_zones", "delivery", "مناطق_التوصيل",
-        "offers", "deals", "عروض", "العروض",
-        "menu", "menu_items", "منيو", "قائمة_الطعام"
+        "service_zones", "coverage_areas", "delivery_zones", "delivery",
+        "مناطق_الخدمة", "مناطق_التغطية", "مناطق_التوصيل",
+        "offers", "promotions", "deals", "عروض", "العروض", "خصومات",
+        "catalog", "services", "products", "items", "menu", "menu_items",
+        "قائمة_الخدمات", "قائمة_المنتجات", "منيو", "قائمة_الطعام"
     }
     other_lines = []
     for k, v in context_data.items():
@@ -202,7 +242,7 @@ def format_live_context_for_prompt(context_data: Dict[str, Any]) -> str:
     body = "\n\n".join(blocks)
     return (
         f"\n\n==================== [بيانات النشاط اللحظية المحدثة والمنظمة (Ground Truth)] ====================\n"
-        f"المعلومات التالية هي الحقيقة الحالية المباشرة لنشاط العميل (فروع، أسعار، منيو، توصيل، نواقص).\n"
+        f"المعلومات التالية هي الحقيقة الحالية المباشرة لنشاط العميل (فروع، أسعار، خدمات ومنتجات، عروض، نواقص).\n"
         f"استخدم هذه البيانات فوراً للإجابة عن استفسارات المتصل بدقة وسرعة دون تخمين ودون الحاجة لأي أداة خارجية:\n\n"
         f"{body}\n"
         f"=================================================================================================\n"

@@ -242,7 +242,7 @@ async def entrypoint(ctx: JobContext):
         },
         {
             "name": "send_whatsapp_message",
-            "description": "إرسال رسالة نصية أو رابط المنيو أو تفاصيل الطلب أو أي معلومات يطلبها العميل على الواتساب أثناء المكالمة لرقم هاتفه تلقائياً."
+            "description": "أداة قنوات موحدة (Omnichannel) لإرسال رسالة نصية أو رابط أو تأكيد أو معلومات يطلبها العميل على الواتساب أثناء المكالمة لرقم هاتفه تلقائياً."
         }
     ]
     if call_queues:
@@ -419,7 +419,7 @@ async def entrypoint(ctx: JobContext):
     # Tool 4: Send WhatsApp Message to Caller
     @llm.function_tool(
         description=(
-            "إرسال رسالة نصية أو رابط المنيو أو تفاصيل الطلب أو أي معلومات يطلبها العميل على الواتساب أثناء المكالمة. "
+            "أداة قنوات متعددة موحدة (Omnichannel Tool) لإرسال أي رسالة نصية، رابط، تأكيد موعد/طلب، مستند، أو معلومات يطلبها العميل على الواتساب أثناء المكالمة. "
             "إذا لم يحدد العميل رقماً آخر صراحة، يتم الإرسال تلقائياً إلى رقم هاتفه المتصل منه. "
             "أخبر العميل فوراً بعد استدعاء الأداة بأن الرسالة أو الرابط وصله الآن على الواتساب."
         )
@@ -438,7 +438,7 @@ async def entrypoint(ctx: JobContext):
         if len(digits) < 7:
             return (
                 "لم يتوفر رقم هاتف محمول صالح للعميل لإرسال الواتساب إليه. "
-                "اطلب من العميل بلباقة أن يمليك رقم الواتساب أو رقم الجوال الخاص به لترسل له رابط المنيو فوراً."
+                "اطلب من العميل بلباقة أن يمليك رقم الواتساب أو رقم الجوال الخاص به لترسل له المعلومات فوراً."
             )
 
         if digits.startswith("01") and len(digits) == 11:
@@ -453,11 +453,6 @@ async def entrypoint(ctx: JobContext):
         clean_msg = str(message or "").strip()
         if not clean_msg:
             return "نص الرسالة فارغ، يرجى تحديد ما تريد إرساله."
-
-        # Ensure digital menu link is included if user requested menu
-        d_menu_url = (live_context.get("digital_menu_url") or "").strip() if live_context else ""
-        if d_menu_url and ("منيو" in clean_msg or "قائمة" in clean_msg or "menu" in clean_msg.lower()) and "http" not in clean_msg:
-            clean_msg += f"\nرابط قائمة الطعام الإلكترونية:\n{d_menu_url}"
 
         asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري إرسال رسالة واتساب إلى ({target_phone})..."))
         try:
@@ -663,16 +658,47 @@ async def entrypoint(ctx: JobContext):
                 turn_tracker["pending_reply"] = False
                 turn_tracker["assistant_spoke_in_turn"] = True
 
-                dialect = str(active_profile.get("dialect", "egyptian")).lower()
-                recovery_nudge = "معاك يا فندم، سامعك اتفضل."
-                if "saudi" in dialect or "gulf" in dialect:
+                lang = str(active_profile.get("language", "arabic")).lower().strip()
+                dialect = str(active_profile.get("dialect", "egyptian")).lower().strip()
+
+                if lang in ["english"] or dialect.startswith("english"):
+                    recovery_nudge = "I'm right here with you, I can hear you clearly. Please go ahead."
+                elif lang in ["french"] or dialect.startswith("french"):
+                    recovery_nudge = "Je suis là, je vous écoute très bien. Je vous en prie, continuez."
+                elif lang in ["spanish"] or dialect.startswith("spanish"):
+                    recovery_nudge = "Aquí estoy, le escucho claramente. Por favor continúe."
+                elif lang in ["german"] or dialect.startswith("german"):
+                    recovery_nudge = "Ich bin da und höre Sie gut. Bitte sprechen Sie weiter."
+                elif lang in ["turkish"] or dialect.startswith("turkish"):
+                    recovery_nudge = "Buradayım, sizi dinliyorum. Buyrun lütfen."
+                elif lang in ["russian"] or dialect.startswith("russian"):
+                    recovery_nudge = "Я здесь, я вас отлично слышу. Пожалуйста, говорите."
+                elif lang in ["italian"] or dialect.startswith("italian"):
+                    recovery_nudge = "Ci sono, la sento perfettamente. Prego, mi dica."
+                elif lang in ["urdu"] or dialect.startswith("urdu"):
+                    recovery_nudge = "جی میں سن رہا ہوں، فرمائیے۔"
+                elif lang in ["hindi"] or dialect.startswith("hindi"):
+                    recovery_nudge = "जी मैं सुन रहा हूँ, कृपया बताएं।"
+                elif lang in ["chinese"] or dialect.startswith("chinese"):
+                    recovery_nudge = "我在听，请问有什么可以帮您？"
+                elif "saudi" in dialect or "gulf" in dialect or "emirati" in dialect or "kuwaiti" in dialect:
                     recovery_nudge = "سمّ آمرني طال عمرك، أسمعك تفضل."
-                elif "levantine" in dialect:
+                elif "levantine" in dialect or "jordanian" in dialect:
                     recovery_nudge = "معك يا غالي، عم بسمعك تفضل."
+                elif "moroccan" in dialect or "algerian" in dialect or "tunisian" in dialect:
+                    recovery_nudge = "معاك، راني نسمع فيك مزيان تفضل."
+                elif "fusha" in dialect:
+                    recovery_nudge = "معك يا سيدي، أنا أسمعك جيداً تفضل."
+                else:
+                    recovery_nudge = "معاك يا فندم، سامعك اتفضل."
 
                 try:
+                    if lang in ["english", "french", "spanish", "german", "italian", "turkish", "russian"] or dialect.startswith(("english", "french", "spanish", "german", "italian", "turkish", "russian")):
+                        prompt_instr = f"Say calmly and politely to the caller: '{recovery_nudge}'"
+                    else:
+                        prompt_instr = f"قل للمتصل بنبرة هادئة ومؤدبة: '{recovery_nudge}'"
                     handle = session.generate_reply(
-                        instructions=f"قل للمتصل بنبرة هادئة ومؤدبة: '{recovery_nudge}'"
+                        instructions=prompt_instr
                     )
                     await handle
                 except Exception as ex:

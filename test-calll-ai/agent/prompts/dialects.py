@@ -158,7 +158,7 @@ DIALECT_NAMES_MAP = {
 
 
 def build_language_lock_instruction(language: str = "arabic", dialect: str = "egyptian") -> str:
-    """Build dynamic, context-aware language and dialect lock instructions."""
+    """Build dynamic, context-aware strict language and dialect lock instructions."""
     lang_key = (language or "arabic").lower().strip()
     dia_key = (dialect or "egyptian").lower().strip()
 
@@ -171,19 +171,50 @@ def build_language_lock_instruction(language: str = "arabic", dialect: str = "eg
     )
 
     if is_non_arabic:
+        non_arabic_refusals = {
+            "english": "I apologize, I can only assist in English for customer service. How may I help you today?",
+            "french": "Je vous présente mes excuses, je réponds uniquement en français pour le service client. Comment puis-je vous aider ?",
+            "spanish": "Disculpe, solo puedo atenderle en español para el servicio de atención al cliente. ¿En qué puedo ayudarle?",
+            "german": "Es tut mir leid, ich spreche ausschließlich Deutsch für den Kundenservice. Wie kann ich Ihnen helfen?",
+            "turkish": "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum. Size nasıl yardımcı olabilirim?",
+            "russian": "Прошу прощения, я могу помочь только на русском языке. Подскажите, чем я могу вам помочь?",
+            "italian": "Mi scusi, posso assisterla solo in italiano per l'assistenza clienti. Come posso aiutarla?",
+            "urdu": "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں۔ فرمائیے میں آپ کی کیا مدد کر سکتا ہوں؟",
+            "hindi": "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ?",
+            "chinese": "非常抱歉，我仅支持使用中文提供客户服务。请问有什么可以帮您？",
+        }
+        matched_lang = next((k for k in non_arabic_refusals if lang_key.startswith(k) or dia_key.startswith(k)), "english")
+        refusal_phrase = non_arabic_refusals.get(matched_lang, non_arabic_refusals["english"])
+
         return (
-            f"قفل اللغة واللهجة الصارم والذكي (Smart Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
+            f"قفل اللغة واللهجة الصارم (Strict Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
             f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} - {dialect_name}.\n"
             f"- Speak strictly and exclusively in {dialect_name} ({lang_name}) throughout the entire conversation.\n"
-            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق أي جملة أو عبارة بأي لغة أو لهجة أخرى غير لغة المنشأة المحددة أعلاه ({dialect_name}) مهما كان السبب!\n"
-            f"- حتى لو صدر من المتصل كلام بلغة أخرى (كالعربية أو الإسبانية أو غيرها)، أو حدث تشويش صوتي أو خطأ في التقاط الميكروفون: لا تقلد لغة المتصل أبداً ولا تكررها! بل استمر دائماً في الحديث والرد بلغة المنشأة المعتمدة حصراً: {dialect_name}."
+            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق أي جملة أو عبارة بأي لغة أو لهجة أخرى غير لغة المنشأة المعتمدة ({dialect_name}) مهما كان السبب!\n"
+            f"- إذا تحدث المتصل بأي لغة أجنبية أو غير مدعومة (مثل العربية، الفرنسية، الألمانية، الروسية، أو غيرها): يُحظر تماماً التبديل إلى لغته أو مجاراتها! بل ارفض بلباقة واقتصر حصراً على قول هذه العبارة بوضوح:\n"
+            f"  \"{refusal_phrase}\"\n"
+            f"- لا تقلد لغة المتصل أبداً ولا تكررها! واستمر دائماً في الحديث والرد بلغة المنشأة المعتمدة حصراً: {dialect_name}."
         )
     else:
+        if "saudi" in dia_key or "gulf" in dia_key or "emirati" in dia_key or "kuwaiti" in dia_key:
+            refusal_phrase = "المعذرة من حضرتك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
+        elif "levantine" in dia_key or "jordanian" in dia_key or "palestinian" in dia_key:
+            refusal_phrase = "المعذرة من حضرتك، أنا بحكي باللغة العربية بس لخدمة العملاء، تفضل كيف بقدر ساعدك؟"
+        elif "moroccan" in dia_key or "algerian" in dia_key or "tunisian" in dia_key:
+            refusal_phrase = "المعذرة منك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
+        elif "egyptian" in dia_key:
+            refusal_phrase = "المعذرة من حضرتك، أنا بتكلم باللغة العربية فقط لخدمة العملاء، اتفضل إزاي أقدر أساعدك؟"
+        else:
+            refusal_phrase = "المعذرة من حضرتك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
+
         return (
-            f"قفل اللغة واللهجة الصارم والذكي (Smart Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
+            f"قفل اللغة واللهجة الصارم (Strict Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
             f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} ({dialect_name}).\n"
             f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق جملة أو عبارة بأي لغة أجنبية أو لهجة أخرى غير لغة المنشأة المحددة أعلاه مهما كان السبب!\n"
-            f"- حتى لو صدر من المتصل كلام بلغة أجنبية، أو حدث تشويش صوتي أو خطأ في التقاط الكلمات من الميكروفون بدا كلغة أخرى: لا تقلد لغة المتصل أبداً ولا تكررها! بل استمر دائماً في الحديث والرد بـ {lang_name} ({dialect_name}) حصراً.\n"
-            f"- يُسمح فقط بنطق المصطلحات الفنية أو مسميات الخدمات والتقنية الشائعة بالإنجليزية داخل السياق الطبيعي عند الحاجة فقط (مثل: Single, Double, Suite, Wi-Fi, VIP, System)."
+            f"- إذا تحدث المتصل بأي لغة أجنبية (مثل الإنجليزية، الفرنسية، الألمانية، التركية، الروسية، أو غيرها) أو حدث تشويش صوتي بدا كلغة أجنبية: يُحظر تماماً التبديل إلى لغة المتصل أو مجاراتها! بل ارفض بلباقة واقتصر على قول هذه العبارة المحددة بلهجتك المعتمدة:\n"
+            f"  «{refusal_phrase}»\n"
+            f"  ثم استمر في الحوار باللغة العربية ({dialect_name}) حصراً وممنوع التحول لأي لغة أخرى.\n"
+            f"- يُحظر تماماً التحدث باللغة الإنجليزية أو خلطها بالحديث؛ ويُستثنى فقط وبشكل ضيق وحصري نطق الأسماء الرسمية للمنتجات أو العلامات التجارية المذكورة نصاً في الكتالوج المعتمد أو بيانات النظام (مثل: VIP, Wi-Fi) عندما ينطقها العميل."
         )
+
 

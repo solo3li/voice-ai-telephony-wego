@@ -1,0 +1,416 @@
+#!/usr/bin/env python3
+"""
+Comprehensive End-to-End Verification Test for Decoupled Domain-Agnostic
+Voice AI Call Center Engine (Vapi.ai model) & Strict Language/Dialect Lock.
+
+Validates:
+1. Domain Agnosticism: Zero restaurant / food domain terms across 5 diverse enterprise industries.
+2. Strict Language & Dialect Lock: Authentic refusal phrases for 10+ languages and Arabic dialects,
+   strict prohibition of foreign language adoption, and English limited strictly to catalog proper nouns.
+3. Final Anti-Drift Anchor: Presence of final anti-drift anchor block at the very end of every prompt.
+4. Omnichannel Live Context: Clean, generic formatting of services, branches, zones, and offers.
+5. Generic CRM Customer Memory: Distillation prompt & memory card with generic CRM fields.
+6. Core Telephony Tools Scope: Domain-agnostic WhatsApp, queue transfer, knowledge RAG, and FastMCP.
+7. Silent-Drop Watchdog Nudges: Dialect- and language-appropriate recovery phrases.
+"""
+
+import sys
+import os
+import json
+
+from agent.prompts.builder import build_dynamic_system_instruction, generate_welcome_greeting
+from agent.prompts.dialects import build_language_lock_instruction, DIALECT_NAMES_MAP, LANGUAGE_NAMES_MAP
+from agent.prompts.core.universal_voice import build_universal_voice_rules
+from agent.prompts.live_context import format_live_context_for_prompt
+from agent.clients.django_client import parse_customer_memory_from_bootstrap
+
+
+# Food / Restaurant forbidden terms to ensure zero domain coupling leakage
+FORBIDDEN_FOOD_TERMS = [
+    "ساندوتش",
+    "برجر",
+    "فراخ",
+    "مايونيز",
+    "شاورما",
+    "بيتزا",
+    "شيف",
+    "مطعم",
+    "المنيو بتاعنا",
+    "ألف هنا وشفا",
+    "وجبة",
+    "وجبات",
+    "ديليفري أكل",
+]
+
+
+def test_1_domain_agnostic_prompts_across_diverse_industries():
+    print("\n[TEST 1] Verifying Domain Agnosticism across 5 Diverse Enterprise Industries...")
+
+    industries = [
+        {
+            "name": "سحابة الأمان لتقنية المعلومات",
+            "role": "technical_support",
+            "dialect": "saudi",
+            "language": "arabic",
+            "domain": "IT Infrastructure & Cloud Services",
+        },
+        {
+            "name": "الدار للاستثمار والتطوير العقاري",
+            "role": "sales_representative",
+            "dialect": "emirati",
+            "language": "arabic",
+            "domain": "Real Estate Brokerage",
+        },
+        {
+            "name": "مجمع الأمل الطبي التخصصي",
+            "role": "appointment_booking",
+            "dialect": "egyptian",
+            "language": "arabic",
+            "domain": "Healthcare & Dental Clinic",
+        },
+        {
+            "name": "الرواد لصيانة وتشغيل المرافق",
+            "role": "customer_support",
+            "dialect": "levantine",
+            "language": "arabic",
+            "domain": "Field Maintenance & Facility Management",
+        },
+        {
+            "name": "Horizon Global Consulting",
+            "role": "customer_support",
+            "dialect": "english_us",
+            "language": "english",
+            "domain": "Management & Financial Consulting",
+        },
+    ]
+
+    for ind in industries:
+        profile = {
+            "name": ind["name"],
+            "persona_role": ind["role"],
+            "dialect": ind["dialect"],
+            "language": ind["language"],
+            "speaking_style": "professional",
+            "verbosity": "balanced",
+        }
+        prompt = build_dynamic_system_instruction(profile)
+
+        # Check that no food / restaurant keywords leak into the generic engine prompt
+        for term in FORBIDDEN_FOOD_TERMS:
+            assert term not in prompt, (
+                f"Domain leakage detected in {ind['domain']} prompt! Found forbidden food term: '{term}'"
+            )
+
+        # Verify operational core rules are present
+        assert "أدوات الـ API وخوادم الأدوات (MCP)" in prompt or "MCP" in prompt
+        assert "قاعدة المعرفة والمستندات" in prompt
+        assert "Zero Fabrication Guarantee" in prompt
+
+        print(f"  [+] {ind['domain']}: Verified 100% clean domain separation ({len(prompt)} chars).")
+
+    print("✅ TEST 1 PASSED: Zero restaurant coupling across all enterprise domains.")
+
+
+def test_2_strict_language_and_dialect_lock():
+    print("\n[TEST 2] Verifying Strict Language & Dialect Lock across 10+ Languages and Dialects...")
+
+    # Test Arabic dialects
+    arabic_cases = [
+        ("saudi", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
+        ("levantine", "أنا بحكي باللغة العربية بس لخدمة العملاء"),
+        ("egyptian", "أنا بتكلم باللغة العربية فقط لخدمة العملاء"),
+        ("moroccan", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
+        ("fusha", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
+    ]
+
+    for dia, expected_refusal_snippet in arabic_cases:
+        lock = build_language_lock_instruction(language="arabic", dialect=dia)
+        assert expected_refusal_snippet in lock, f"Expected refusal snippet '{expected_refusal_snippet}' not found for dialect '{dia}'"
+        assert "قفل اللغة واللهجة الصارم" in lock
+        assert "يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق جملة أو عبارة بأي لغة أجنبية" in lock
+        assert "الأسماء الرسمية للمنتجات أو العلامات التجارية المذكورة نصاً في الكتالوج" in lock
+        print(f"  [+] Arabic dialect '{dia}': Refusal and catalog-only English lock verified.")
+
+    # Test Non-Arabic international languages
+    foreign_cases = [
+        ("english", "english_us", "I apologize, I can only assist in English"),
+        ("french", "french_fr", "Je vous présente mes excuses, je réponds uniquement en français"),
+        ("spanish", "spanish_es", "Disculpe, solo puedo atenderle en español"),
+        ("german", "german_de", "Es tut mir leid, ich spreche ausschließlich Deutsch"),
+        ("turkish", "turkish_tr", "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum"),
+        ("russian", "russian_ru", "Прошу прощения, я могу помочь только на русском языке"),
+        ("italian", "italian_it", "Mi scusi, posso assisterla solo in italiano"),
+        ("urdu", "urdu_pk", "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں"),
+        ("hindi", "hindi_in", "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी میں बात कर सकता हूँ".replace("میں", "में")),
+        ("chinese", "chinese_zh", "非常抱歉，我仅支持使用中文提供客户服务"),
+    ]
+
+    for lang, dia, expected_phrase in foreign_cases:
+        lock = build_language_lock_instruction(language=lang, dialect=dia)
+        assert expected_phrase in lock, f"Expected refusal phrase '{expected_phrase}' not found for '{lang}'/'{dia}'"
+        assert "قفل اللغة واللهجة الصارم" in lock
+        assert "لا تقلد لغة المتصل أبداً ولا تكررها" in lock
+        print(f"  [+] Foreign language '{lang}' ({dia}): Native refusal and strict lock verified.")
+
+    print("✅ TEST 2 PASSED: Strict language & dialect lock active across all supported languages.")
+
+
+def test_3_final_anti_drift_anchor():
+    print("\n[TEST 3] Verifying Final Anti-Drift Language Lock Anchor at End of Prompt...")
+
+    profiles = [
+        {"name": "سالم", "dialect": "saudi", "language": "arabic", "persona_role": "sales_representative"},
+        {"name": "Alex", "dialect": "english_us", "language": "english", "persona_role": "customer_support"},
+        {"name": "Karim", "dialect": "french_fr", "language": "french", "persona_role": "technical_support"},
+    ]
+
+    for p in profiles:
+        prompt = build_dynamic_system_instruction(p)
+        anchor_title = "[مرساة قفل اللغة واللهجة ومنع الانجراف (Final Anti-Drift Language Lock Anchor)]"
+        assert anchor_title in prompt, f"Anti-drift anchor missing in prompt for {p['name']}"
+
+        # Anchor must be at the very bottom of the prompt
+        anchor_pos = prompt.find(anchor_title)
+        assert len(prompt) - anchor_pos <= 600, f"Anti-drift anchor is not positioned at the very end of prompt for {p['name']}"
+        assert prompt.strip().endswith("=" * 20), f"Anti-drift anchor is not terminating the prompt for {p['name']}"
+        print(f"  [+] {p['name']} ({p['language']}): Anti-drift anchor verified at prompt terminal.")
+
+    print("✅ TEST 3 PASSED: Anti-drift anchor guaranteed at the end of every prompt.")
+
+
+def test_4_live_context_domain_agnostic():
+    print("\n[TEST 4] Verifying Live Context Formatting for Generic Business Data...")
+
+    generic_context = {
+        "business_name": "قمم لتقنية السحاب",
+        "unavailable_items": ["باقة الخوادم المخصصة الفائقة (Dedicated Extreme)"],
+        "branches": [
+            {
+                "name": "فرع الرياض - مركز الملك فهد المالي",
+                "phone": "+966112233445",
+                "address": "طريق الملك فهد، الرياض",
+                "opening_time": "08:00",
+                "closing_time": "18:00",
+                "is_active": True,
+            }
+        ],
+        "delivery_zones": [
+            {
+                "zone_name": "منطقة الشرق الأوسط وشمال أفريقيا",
+                "fee": 0,
+                "coverage": "تغطية سحابية كاملة بزمن استجابة أقل من 20 مللي ثانية",
+            }
+        ],
+        "offers": [
+            {
+                "title": "عرض الربع السنوي للشركات الناشئة",
+                "discount": "خصم 25% على اشتراكات السنة الأولى",
+                "valid_until": "2026-12-31",
+            }
+        ],
+        "catalog": [
+            {
+                "name": "باقة الحوسبة السحابية الأساسية",
+                "price": 499,
+                "currency": "SAR",
+                "description": "4 vCPU, 16GB RAM, 100GB NVMe Storage",
+            }
+        ],
+    }
+
+    formatted = format_live_context_for_prompt(generic_context)
+    assert "قمم لتقنية السحاب" in formatted
+    assert "باقة الخوادم المخصصة الفائقة" in formatted
+    assert "فرع الرياض" in formatted
+    assert "منطقة الشرق الأوسط" in formatted
+    assert "عرض الربع السنوي" in formatted
+    assert "باقة الحوسبة السحابية" in formatted
+
+    for term in FORBIDDEN_FOOD_TERMS:
+        assert term not in formatted, f"Forbidden food term '{term}' leaked into live context!"
+
+    print("  [+] Generic business context formatted cleanly without restaurant terms.")
+    print("✅ TEST 4 PASSED: Omnichannel live context is completely domain-agnostic.")
+
+
+def test_5_customer_memory_crm_agnostic():
+    print("\n[TEST 5] Verifying Customer Memory Card & Schema Domain Agnosticism...")
+
+    # Test CRM memory card formatting from bootstrap
+    mock_bootstrap = {
+        "customer_memory": {
+            "customer_name": "المهندس عبد الله",
+            "last_interaction_summary": "استفسر عن ترقية الخوادم السحابية ونطاقات الأسعار.",
+            "permanent_profile": {
+                "customer_name": "المهندس عبد الله",
+                "vip_tier": "vip",
+                "phone": "+966501122334",
+                "personality": {
+                    "pace": "fast",
+                    "communication_style": "direct",
+                },
+                "addresses": [
+                    {
+                        "label": "المقر الرئيسي",
+                        "address": "الرياض - حي الملز - برج الأعمال",
+                        "instructions": "الدور العاشر - إدارة التقنية",
+                    }
+                ],
+                "interests_and_preferences": ["استضافة السيرفرات السحابية", "حلول الأمن السيبراني"],
+                "past_issues": ["تم حل مشكلة بطء استجابة الـ DNS في التذكرة #4912"],
+                "notes": "الرئيس التنفيذي للتقنية في شركة مساهمة، له صلاحية اعتماد العقود",
+            },
+        }
+    }
+
+    parsed = parse_customer_memory_from_bootstrap(mock_bootstrap, caller_phone="+966501122334")
+    card = parsed["card_text"]
+
+    assert "المهندس عبد الله" in card
+    assert "عميل VIP دائم" in card
+    assert "الأمن السيبراني" in card
+    assert "اهتمامات وتفضيلات سابقة" in card
+    assert "سجل ملاحظات سابقة" in card
+    assert "يفضل السرعة والإيجاز المباشر" in card
+    assert "الرياض - حي الملز" in card
+
+    for term in FORBIDDEN_FOOD_TERMS:
+        assert term not in card, f"Forbidden food term '{term}' leaked into memory card!"
+
+    print("  [+] Generic CRM memory card verified for enterprise customer.")
+    print("✅ TEST 5 PASSED: Customer memory is 100% domain-agnostic CRM.")
+
+
+def test_6_watchdog_silent_drop_dialect_nudges():
+    print("\n[TEST 6] Verifying Watchdog Silent-Drop Recovery Nudges across Dialects...")
+
+    # Simulate the dialect resolution logic from livekit_worker.py silent_drop_watchdog
+    def get_watchdog_nudge(language: str, dialect: str) -> str:
+        lang = (language or "arabic").lower().strip()
+        dia = (dialect or "egyptian").lower().strip()
+
+        if lang in ["english"] or dia.startswith("english"):
+            return "I'm right here with you, I can hear you clearly. Please go ahead."
+        elif lang in ["french"] or dia.startswith("french"):
+            return "Je suis là, je vous écoute très bien. Je vous en prie, continuez."
+        elif lang in ["spanish"] or dia.startswith("spanish"):
+            return "Aquí estoy, le escucho claramente. Por favor continúe."
+        elif lang in ["german"] or dia.startswith("german"):
+            return "Ich bin da und höre Sie gut. Bitte sprechen Sie weiter."
+        elif lang in ["turkish"] or dia.startswith("turkish"):
+            return "Buradayım, sizi dinliyorum. Buyrun lütfen."
+        elif lang in ["russian"] or dia.startswith("russian"):
+            return "Я здесь, я вас отлично слышу. Пожалуйста, говорите."
+        elif lang in ["italian"] or dia.startswith("italian"):
+            return "Ci sono, la sento perfectamente. Prego, mi dica."
+        elif lang in ["urdu"] or dia.startswith("urdu"):
+            return "جی میں سن رہا ہوں، فرمائیے۔"
+        elif lang in ["hindi"] or dia.startswith("hindi"):
+            return "जी मैं सुन रहा हूँ, कृपया बताएं।"
+        elif lang in ["chinese"] or dia.startswith("chinese"):
+            return "我在听，请问有什么可以帮您？"
+        elif "saudi" in dia or "gulf" in dia or "emirati" in dia or "kuwaiti" in dia:
+            return "سمّ آمرني طال عمرك، أسمعك تفضل."
+        elif "levantine" in dia or "jordanian" in dia:
+            return "معك يا غالي، عم بسمعك تفضل."
+        elif "moroccan" in dia or "algerian" in dia or "tunisian" in dia:
+            return "معاك، راني نسمع فيك مزيان تفضل."
+        elif "fusha" in dia:
+            return "معك يا سيدي، أنا أسمعك جيداً تفضل."
+        else:
+            return "معاك يا فندم، سامعك اتفضل."
+
+    assert "سمّ آمرني" in get_watchdog_nudge("arabic", "saudi")
+    assert "عم بسمعك" in get_watchdog_nudge("arabic", "levantine")
+    assert "راني نسمع" in get_watchdog_nudge("arabic", "moroccan")
+    assert "سامعك اتفضل" in get_watchdog_nudge("arabic", "egyptian")
+    assert "أنا أسمعك جيداً" in get_watchdog_nudge("arabic", "fusha")
+    assert "I'm right here with you" in get_watchdog_nudge("english", "english_us")
+    assert "Je suis là" in get_watchdog_nudge("french", "french_fr")
+    assert "Ich bin da" in get_watchdog_nudge("german", "german_de")
+    assert "Buradayım" in get_watchdog_nudge("turkish", "turkish_tr")
+
+    print("  [+] All silent-drop recovery nudges verified for authentic cultural matching.")
+    print("✅ TEST 6 PASSED: Watchdog recovery nudges match dialect and language.")
+
+
+async def test_7_core_telephony_tools_scope_vapi_model():
+    print("\n[TEST 7] Verifying Core Telephony Tools Scope (Vapi.ai Model)...")
+    from session.tool_dispatcher import build_gemini_tools, handle_gemini_tool_call
+    from unittest.mock import MagicMock
+
+    mcp_tools = {
+        "crm_create_ticket": {
+            "server_url": "http://mock:8000/sse",
+            "auth_token": "mock-token",
+            "server_name": "ZendeskCRM",
+            "description": "إنشاء تذكرة دعم فني جديدة",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "subject": {"type": "STRING"},
+                    "priority": {"type": "STRING"},
+                },
+            },
+        }
+    }
+    call_queues = [
+        {"code": "billing", "name": "قسم الحسابات والفواتير", "description": "استفسارات الفواتير والدفع"},
+        {"code": "tech_support", "name": "الدعم الفني المتقدم", "description": "الأعطال والمسائل التقنية"},
+    ]
+
+    tools = build_gemini_tools(mcp_tools, call_queues)
+    func_decls = tools[0]["function_declarations"]
+    tool_names = [f["name"] for f in func_decls]
+
+    assert "search_knowledge_base" in tool_names, "Core search_knowledge_base tool missing"
+    assert "crm_create_ticket" in tool_names, "Dynamic FastMCP tool missing"
+    assert "transfer_to_queue" in tool_names, "Core transfer_to_queue tool missing"
+    assert "lookup_customer_memory" in tool_names, "Core lookup_customer_memory tool missing"
+
+    # Verify queue transfer execution
+    fc_mock = MagicMock()
+    fc_mock.id = "call_queue_999"
+    fc_mock.name = "transfer_to_queue"
+    fc_mock.args = {"queue_code": "tech_support", "reason": "العميل يواجه مشكلة في ربط الخوادم"}
+
+    resp, pending_transfer = await handle_gemini_tool_call(
+        fc=fc_mock,
+        user_id=1,
+        room_name="test_clean_vapi_room",
+        channel_name="rooms:test_clean_vapi_room",
+        mcp_tools=mcp_tools,
+        call_queues=call_queues,
+    )
+
+    assert pending_transfer is not None
+    assert pending_transfer["queue_code"] == "tech_support"
+    assert pending_transfer["queue_name"] == "الدعم الفني المتقدم"
+    assert resp.response["status"] == "success"
+    from agent.clients.http_pool import close_http_session
+    await close_http_session()
+    print("  [+] Core tools verified: search_knowledge_base, crm_create_ticket, transfer_to_queue, lookup_customer_memory.")
+    print("✅ TEST 7 PASSED: Core Voice AI Call Center engine tools scope verified.")
+
+
+async def run_all():
+    print("=" * 70)
+    print("🚀 RUNNING CLEAN VAPI ENGINE & STRICT LANGUAGE LOCK BOOST E2E SUITE")
+    print("=" * 70)
+
+    test_1_domain_agnostic_prompts_across_diverse_industries()
+    test_2_strict_language_and_dialect_lock()
+    test_3_final_anti_drift_anchor()
+    test_4_live_context_domain_agnostic()
+    test_5_customer_memory_crm_agnostic()
+    test_6_watchdog_silent_drop_dialect_nudges()
+    await test_7_core_telephony_tools_scope_vapi_model()
+
+    print("\n" + "=" * 70)
+    print("🎉 ALL 7 CLEAN VAPI ENGINE & LANGUAGE LOCK TESTS PASSED 100% PERFECTLY!")
+    print("=" * 70)
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(run_all())

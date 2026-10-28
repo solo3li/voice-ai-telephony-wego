@@ -44,33 +44,31 @@ async def distill_and_update_memory(
             lines.append(f"{speaker_label}: {m.get('text', '')}")
         transcript_text = "\n".join(lines)
 
-        distillation_prompt = f"""أنت محلل ذكاء اصطناعي خبير في استخلاص ملفات وذاكرة العملاء لمساعد صوتي ذكي لخدمة العملاء والمطاعم.
+        distillation_prompt = f"""أنت محلل ذكاء اصطناعي خبير في استخلاص ملفات وذاكرة العملاء لأنظمة خدمة العملاء ومراكز الاتصال الذكية (Omnichannel Voice AI Call Center Engine).
 المطلوب منك تحليل نص هذه المكالمة الصوتية واستخراج نقطتين فقط بدقة وإيجاز:
 
-1. "summary": ملخص دقيق ومركز في سطرين فقط (لا يتعدى 50 كلمة) لما دار في المكالمة، المنتجات أو الأسئلة، وموقف العميل وحالة طلبه.
+1. "summary": ملخص دقيق ومركز في سطرين فقط (لا يتعدى 50 كلمة) لما دار في المكالمة، المنتجات أو الخدمات أو الأسئلة، وموقف العميل وحالة طلبه.
    - قاعدة إلزامية: يُمنع منعاً باتاً تسجيل أي عبارات مثل 'عطل في السيستم' أو 'مشكلة فنية' في الملخص! ركز فقط على احتياج العميل وما طلبه.
 
 2. "new_permanent_facts": أي حقائق وتفاصيل مستفادة من كلام العميل لتحديث ملفه الدائم:
    - "customer_name": اسم العميل إذا ذكره أو عُرف به.
    - "phone": رقم هاتف العميل إذا ذكره صراحة.
-   - "vip_tier": تصنيف العميل ("vip" للعملاء المهمين أو كثيري الطلب، "regular" للمتكرر، "new" للجديد).
+   - "vip_tier": تصنيف العميل ("vip" للعملاء المهمين، "regular" للمتكرر، "new" للجديد).
    - "personality": طبيعة وأسلوب المتصل:
        - "pace": ("fast" إذا كان مستعجلاً ويطلب الإنجاز السريع، "relaxed" إذا كان هادئاً، "detailed" إذا كان يسأل عن أدق التفاصيل).
-       - "communication_style": ("direct" إيجاز مباشر، أو "friendly" ودود ويحب الحديث).
+       - "communication_style": ("direct" إيجاز مباشر، أو "friendly" ودود، أو "formal" رسمي).
        - "price_sensitivity": ("bargain_seeker" يبحث عن عروض وخصومات، أو "quality_focused" مهتم بالجودة، أو "normal").
-   - "preferences":
-       - "favorite_items": قائمة الأصناف أو الوجبات التي يفضلها أو كرر طلبها.
-       - "dietary_restrictions": ملاحظات غذائية واشتراطات خاصة (مثل: "بدون مايونيز"، "بدون شطة"، "دايت"، "حساسية من الجلوتين").
-       - "payment_method": طريقة الدفع المفضلة (كاش عند الاستلام، بطاقة/فيزا عند الاستلام، دفع إلكتروني).
-   - "addresses": قائمة العناوين التي ذكرها العميل للتوصيل (إن ذكر أي عنوان)، كل عنوان ككائن:
-       - "label": تصنيف العنوان (مثل "المنزل"، "العمل"، "الفيلا"، أو المنطقة).
-       - "address": تفاصيل الشارع والمنطقة/المدينة.
-       - "landmarks": علامة مميزة (مسجد، صيدلية، مول).
-       - "apartment_details": تفاصيل الدور ورقم الشقة أو العمارة.
-       - "instructions": تعليمات الاستلام (مثل: الاتصال هاتفياً عند الوصول، عدم رن الجرس).
-   - "past_issues": أي شكوى أو مشكلة سابقة ذكرها العميل في المكالمة (مثال: تأخر الطلب سابقاً، صوص مفقود). (تنبيه حاسم: يُمنع منعاً باتاً تسجيل أي وعود قطعها المساعد!).
+   - "interests_and_preferences": قائمة المنتجات أو الخدمات أو الاهتمامات أو التفضيلات التي يفضلها أو يسأل عنها العميل.
+   - "payment_method": طريقة الدفع المفضلة (كاش، بطاقة/فيزا، دفع إلكتروني).
+   - "addresses": قائمة العناوين الجغرافية أو مقرات العمل/السكن التي ذكرها العميل (للشحن أو التوصيل أو الزيارات الميدانية)، كل عنوان ككائن:
+       - "label": تصنيف العنوان (مثل "المنزل"، "العمل"، "المقر"، أو اسم المنطقة).
+       - "address": تفاصيل الشارع والحي والمدينة.
+       - "landmarks": علامة مميزة (معلم معروف، مبنى، بنزينة، محطة).
+       - "apartment_details": تفاصيل الدور ورقم الشقة أو المكتب أو البوابة.
+       - "instructions": تعليمات الوصول أو التسليم (مثل: الاتصال هاتفياً عند الوصول).
+   - "past_issues": أي شكوى أو مشكلة سابقة ذكرها العميل في المكالمة (مثال: تأخر خدمة، استفسار لم يُرد عليه، عطل تقني سابق). (تنبيه حاسم: يُمنع منعاً باتاً تسجيل أي وعود قطعها المساعد!).
    - "sentiment": انطباع ورضا العميل العام ("positive", "neutral", "unhappy").
-   - "notes": أي ملاحظة شخصية أخرى هامة تفيد خدمة العميل.
+   - "notes": أي ملاحظة شخصية أو إجرائية أخرى هامة تفيد خدمة العميل.
 
 إذا لم يذكر العميل أي معلومة جديدة لحقل معين، لا تضعه أو اتركه فارغاً.
 
@@ -92,14 +90,11 @@ async def distill_and_update_memory(
       "communication_style": "direct",
       "price_sensitivity": "normal"
     }},
-    "preferences": {{
-      "favorite_items": ["..."],
-      "dietary_restrictions": ["..."],
-      "payment_method": "..."
-    }},
+    "interests_and_preferences": ["..."],
+    "payment_method": "...",
     "addresses": [
       {{
-        "label": "المنزل",
+        "label": "الرئيسي",
         "address": "...",
         "landmarks": "...",
         "apartment_details": "...",
@@ -162,45 +157,49 @@ async def distill_and_update_memory(
                 if curr_pers:
                     updated_profile["personality"] = curr_pers
 
-            # 3. Preferences (Favorite items, dietary restrictions, payment method)
-            new_prefs = new_facts.get("preferences")
-            curr_prefs = dict(updated_profile.get("preferences") or {}) if isinstance(updated_profile.get("preferences"), dict) else {}
-            if new_prefs and isinstance(new_prefs, dict):
-                # Favorite items
-                if new_prefs.get("favorite_items") and isinstance(new_prefs["favorite_items"], list):
-                    existing_items = list(curr_prefs.get("favorite_items") or [])
-                    for item in new_prefs["favorite_items"]:
+            # 3. Interests & Preferences (Generic CRM)
+            new_interests = new_facts.get("interests_and_preferences") or new_facts.get("interests")
+            curr_interests = list(updated_profile.get("interests_and_preferences") or [])
+            if new_interests:
+                if isinstance(new_interests, list):
+                    for item in new_interests:
                         item_str = str(item).strip()
-                        if item_str and item_str not in existing_items and item_str.lower() not in ["...", "none"]:
-                            existing_items.append(item_str)
-                    curr_prefs["favorite_items"] = existing_items[:8]
+                        if item_str and item_str not in curr_interests and item_str.lower() not in ["...", "none"]:
+                            curr_interests.append(item_str)
+                elif isinstance(new_interests, str) and new_interests.strip():
+                    item_str = new_interests.strip()
+                    if item_str not in curr_interests and item_str.lower() not in ["...", "none"]:
+                        curr_interests.append(item_str)
 
-                # Dietary restrictions (e.g. without spicy, without mayo)
-                if new_prefs.get("dietary_restrictions") and isinstance(new_prefs["dietary_restrictions"], list):
-                    existing_diet = list(curr_prefs.get("dietary_restrictions") or [])
-                    for diet in new_prefs["dietary_restrictions"]:
-                        d_str = str(diet).strip()
-                        if d_str and d_str not in existing_diet and d_str.lower() not in ["...", "none"]:
-                            existing_diet.append(d_str)
-                    curr_prefs["dietary_restrictions"] = existing_diet[:6]
+            # Payment method
+            pm = new_facts.get("payment_method")
+            if not pm and isinstance(new_facts.get("preferences"), dict):
+                pm = new_facts["preferences"].get("payment_method")
+            if pm and str(pm).strip().lower() not in ["null", "none", "..."]:
+                updated_profile["payment_method"] = str(pm).strip()
 
-                # Payment method
-                if new_prefs.get("payment_method"):
-                    pm = str(new_prefs["payment_method"]).strip()
-                    if pm and pm.lower() not in ["null", "none", "..."]:
-                        curr_prefs["payment_method"] = pm
-
-            # Backward compatibility with legacy preferences array
-            if isinstance(new_facts.get("preferences"), list):
-                existing_prefs = list(updated_profile.get("legacy_preferences") or [])
+            # Backward compatibility with legacy preferences dict/list
+            if isinstance(new_facts.get("preferences"), dict):
+                p_dict = new_facts["preferences"]
+                for legacy_key in ["interests_and_preferences", "favorite_items", "dietary_restrictions"]:
+                    if p_dict.get(legacy_key) and isinstance(p_dict[legacy_key], list):
+                        for it in p_dict[legacy_key]:
+                            it_s = str(it).strip()
+                            if it_s and it_s not in curr_interests and it_s.lower() not in ["...", "none"]:
+                                curr_interests.append(it_s)
+                if p_dict.get("payment_method") and not updated_profile.get("payment_method"):
+                    updated_profile["payment_method"] = str(p_dict["payment_method"]).strip()
+            elif isinstance(new_facts.get("preferences"), list):
                 for p in new_facts["preferences"]:
                     p_str = str(p).strip()
-                    if p_str and p_str not in existing_prefs:
-                        existing_prefs.append(p_str)
-                updated_profile["legacy_preferences"] = existing_prefs[:6]
+                    if p_str and p_str not in curr_interests:
+                        curr_interests.append(p_str)
 
-            if curr_prefs:
-                updated_profile["preferences"] = curr_prefs
+            if curr_interests:
+                updated_profile["interests_and_preferences"] = curr_interests[:8]
+                updated_profile["preferences"] = {"interests_and_preferences": curr_interests[:8]}
+                if updated_profile.get("payment_method"):
+                    updated_profile["preferences"]["payment_method"] = updated_profile["payment_method"]
 
             # 4. Multi-Address List Management
             existing_addresses = list(updated_profile.get("addresses") or [])
