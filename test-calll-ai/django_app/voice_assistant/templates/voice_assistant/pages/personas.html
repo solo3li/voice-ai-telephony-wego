@@ -5,23 +5,23 @@
 
 {% block content %}
 <!-- Header & Action Bar -->
-<div class="bg-white p-6 rounded-3xl border border-[#EAE3D9] shadow-sm flex flex-wrap justify-between items-center gap-4">
+<div class="bg-white p-6 rounded-3xl border border-[#eaedf0] shadow-sm flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#8C1633] flex items-center justify-center text-2xl text-white shadow-md shadow-[#680E23]/20">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#8C1633] flex items-center justify-center text-2xl text-white shadow-md shadow-[#1f93ff]/20">
           🎭
         </div>
         <div>
-          <h2 class="text-lg font-bold text-[#1C1917] flex items-center gap-2">
+          <h2 class="text-lg font-bold text-[#0f172a] flex items-center gap-2">
             <span>إدارة الشخصيات واللهجات وأصوات الذكاء الاصطناعي</span>
           </h2>
-          <p class="text-xs text-[#6E645D]">
+          <p class="text-xs text-[#64748b]">
             اختر من بين الشخصيات المتاحة لتفعيلها فوراً في المكالمات الحية، أو خصص النبرة واللهجة والصوت
           </p>
         </div>
       </div>
 
       <div class="flex items-center gap-3">
-        <button type="button" onclick="openNewProfileModal()" class="px-4 py-2.5 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#680E23]/20">
+        <button type="button" onclick="openNewProfileModal()" class="px-4 py-2.5 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#1f93ff]/20">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -33,37 +33,37 @@
     <!-- Available Personas Cards Grid -->
     <div>
       <div class="flex justify-between items-center mb-3">
-        <h3 class="text-xs font-bold text-[#680E23] flex items-center gap-1.5 uppercase tracking-wide">
+        <h3 class="text-xs font-bold text-[#1f93ff] flex items-center gap-1.5 uppercase tracking-wide">
           <span>🌟</span>
           <span>الشخصيات المتاحة للمحادثات (Available AI Personas)</span>
         </h3>
-        <span class="text-[11px] text-[#8C827A]">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
+        <span class="text-[11px] text-[#94a3b8]">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
       </div>
 
       <div id="personas-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="col-span-2 text-center py-10 text-[#8C827A] bg-white rounded-3xl border border-[#EAE3D9] text-xs">
+        <div class="col-span-2 text-center py-10 text-[#94a3b8] bg-white rounded-3xl border border-[#eaedf0] text-xs">
           جاري تحميل كروت الشخصيات...
         </div>
       </div>
     </div>
 
     <!-- Customization Studio & Profile Details Editor -->
-    <div id="profile-editor-card" class="bg-white rounded-3xl p-6 border border-[#EAE3D9] shadow-sm space-y-5 transition-all duration-300">
-      <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-[#EAE3D9]">
+    <div id="profile-editor-card" class="bg-white rounded-3xl p-6 border border-[#eaedf0] shadow-sm space-y-5 transition-all duration-300">
+      <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-[#eaedf0]">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-[#FAF0F2] text-[#680E23] flex items-center justify-center text-sm font-bold">
+          <div class="w-8 h-8 rounded-xl bg-[#eff8ff] text-[#1f93ff] flex items-center justify-center text-sm font-bold">
             ⚙️
           </div>
           <div>
-            <h3 class="text-sm font-bold text-[#1C1917]">استوديو تخصيص الشخصية المحددة</h3>
-            <p class="text-[11px] text-[#8C827A]">تعديل الخامة الصوتية من Google (30 خامة)، الدور، والتعليمات البرمجية</p>
+            <h3 class="text-sm font-bold text-[#0f172a]">استوديو تخصيص الشخصية المحددة</h3>
+            <p class="text-[11px] text-[#94a3b8]">تعديل الخامة الصوتية من Google (30 خامة)، الدور، والتعليمات البرمجية</p>
           </div>
         </div>
 
         <!-- Profile Selector Dropdown -->
         <div class="flex items-center gap-2">
-          <span class="text-xs text-[#6E645D]">الشخصية الحالية:</span>
-          <select id="profile-select" onchange="handleProfileSelect(this.value)" class="px-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#DDD5C7] text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]">
+          <span class="text-xs text-[#64748b]">الشخصية الحالية:</span>
+          <select id="profile-select" onchange="handleProfileSelect(this.value)" class="px-3 py-1.5 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] text-xs font-semibold text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]">
             <option value="">جاري تحميل البروفايلات...</option>
           </select>
         </div>
@@ -72,14 +72,14 @@
       <!-- Current Profile Summary / Editor Fields -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
         <!-- Gender, Language & Dialect -->
-        <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
-          <label class="block font-semibold text-[#443D39]">النوع واللغة واللهجة</label>
+        <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-3.5 space-y-2">
+          <label class="block font-semibold text-[#334155]">النوع واللغة واللهجة</label>
           <div class="grid grid-cols-2 gap-2">
-            <select id="field-gender" onchange="syncGenderVoiceOptions()" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917]">
+            <select id="field-gender" onchange="syncGenderVoiceOptions()" class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a]">
               <option value="female">أنثى (بنت)</option>
               <option value="male">ذكر (شاب)</option>
             </select>
-            <select id="field-language" onchange="handleLanguageChange('field')" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917]">
+            <select id="field-language" onchange="handleLanguageChange('field')" class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a]">
               <option value="arabic">العربية</option>
               <option value="english">English</option>
               <option value="french">Français</option>
@@ -94,40 +94,40 @@
             </select>
           </div>
           <div>
-            <select id="field-dialect" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917]">
+            <select id="field-dialect" class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a]">
             </select>
           </div>
         </div>
 
         <!-- Google Voice Selector -->
-        <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
+        <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-3.5 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="font-semibold text-[#443D39]">صوت Google الرسمي</label>
-            <span id="voice-tag-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">طبيعي وهادئ</span>
+            <label class="font-semibold text-[#334155]">صوت Google الرسمي</label>
+            <span id="voice-tag-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">طبيعي وهادئ</span>
           </div>
-          <select id="field-voice" onchange="updateVoiceTag()" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] font-mono text-xs">
+          <select id="field-voice" onchange="updateVoiceTag()" class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] font-mono text-xs">
           </select>
         </div>
 
         <!-- Persona Role -->
-        <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
+        <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-3.5 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="block font-semibold text-[#443D39]">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
+            <label class="block font-semibold text-[#334155]">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
             <div class="flex items-center gap-1.5">
-              <button type="button" onclick="openCustomRolesModal()" class="text-[10px] px-2 py-0.5 rounded-full bg-white hover:bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] transition font-bold flex items-center gap-1">
+              <button type="button" onclick="openCustomRolesModal()" class="text-[10px] px-2 py-0.5 rounded-full bg-white hover:bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff] transition font-bold flex items-center gap-1">
                 <span>📚</span> مكتبة أدوار المؤسسة (<span id="custom-roles-count">0</span>)
               </button>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">20 تخصص جاهز</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">20 تخصص جاهز</span>
             </div>
           </div>
           <div class="space-y-1.5">
-            <select id="field-role-preset" onchange="handleRolePresetSelect(this.value, 'field')" class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs font-semibold focus:outline-none focus:border-[#680E23]">
+            <select id="field-role-preset" onchange="handleRolePresetSelect(this.value, 'field')" class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs font-semibold focus:outline-none focus:border-[#1f93ff]">
               <option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك المخصصة --</option>
             </select>
-            <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+            <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
             <div class="flex justify-between items-center pt-1">
-              <span id="role-selection-status" class="text-[10px] text-[#8C827A]">يمكنك التعديل على النص بحرية تامة</span>
-              <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-[10px] text-[#680E23] hover:underline font-bold flex items-center gap-1">
+              <span id="role-selection-status" class="text-[10px] text-[#94a3b8]">يمكنك التعديل على النص بحرية تامة</span>
+              <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-[10px] text-[#1f93ff] hover:underline font-bold flex items-center gap-1">
                 <span>💾</span> حفظ النص الحالي كدور مخصص في مكتبتي
               </button>
             </div>
@@ -135,21 +135,21 @@
         </div>
 
         <!-- Speaking Style & Pacing -->
-        <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
+        <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-3.5 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="block font-semibold text-[#443D39]">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">نبرة حرة</span>
+            <label class="block font-semibold text-[#334155]">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">نبرة حرة</span>
           </div>
-          <textarea id="field-style" rows="2" placeholder="اكتب أسلوب الإلقاء والنبرة بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+          <textarea id="field-style" rows="2" placeholder="اكتب أسلوب الإلقاء والنبرة بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
         </div>
 
         <!-- Verbosity & Conciseness Level -->
-        <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-3.5 space-y-2">
+        <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-3.5 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="block font-semibold text-[#443D39]">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">التحكم في الرغي</span>
+            <label class="block font-semibold text-[#334155]">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]">التحكم في الرغي</span>
           </div>
-          <select id="field-verbosity" class="w-full px-2.5 py-2 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">
+          <select id="field-verbosity" class="w-full px-2.5 py-2 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]">
             <option value="concise">⚡ مختصر ومباشر (ردود سريعة في 1-2 جملة، بدون حشو أو أسئلة زائدة)</option>
             <option value="balanced" selected>⚖️ متوازن وطبيعي (2-3 جمل طبيعية تجمع بين اللباقة والسرعة)</option>
             <option value="detailed">📖 مفصل واستشاري (شرح وافٍ مع ذكر الخيارات والتفاصيل والبدائل)</option>
@@ -158,55 +158,55 @@
       </div>
 
       <!-- Welcome Message & Proactive Greeting Control -->
-      <div class="bg-[#FAF7F2] border border-[#EAE3D9] rounded-2xl p-4 space-y-3">
+      <div class="bg-[#f8fafc] border border-[#eaedf0] rounded-2xl p-4 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <span class="text-base">👋</span>
             <div>
-              <label for="field-welcome-enabled" class="font-bold text-[#443D39] text-xs cursor-pointer">رسالة الترحيب الافتتاحية للمساعد</label>
-              <p class="text-[11px] text-[#8C827A]">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
+              <label for="field-welcome-enabled" class="font-bold text-[#334155] text-xs cursor-pointer">رسالة الترحيب الافتتاحية للمساعد</label>
+              <p class="text-[11px] text-[#94a3b8]">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="field-welcome-enabled" onchange="toggleWelcomeInput('active')" class="sr-only peer" checked>
-            <div class="w-11 h-6 bg-[#DDD5C7] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#680E23]"></div>
-            <span id="welcome-toggle-status" class="ms-2 text-xs font-semibold text-[#680E23]">مفعلة</span>
+            <div class="w-11 h-6 bg-[#e2e8f0] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1f93ff]"></div>
+            <span id="welcome-toggle-status" class="ms-2 text-xs font-semibold text-[#1f93ff]">مفعلة</span>
           </label>
         </div>
         <div id="welcome-message-input-wrapper">
-          <textarea id="field-welcome" rows="2" placeholder="اكتب رسالة الترحيب المخصصة هنا (مثال: أهلاً بحضرتك يا فندم في متجرنا، معاك سارة، أقدر أساعدك في إيه النهاردة؟)..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
-          <p class="text-[10px] text-[#8C827A] mt-1">إذا تركتها فارغة مع التفعيل، سينطق المساعد تحية ذكية افتراضية مناسبة للهجة المحددة.</p>
+          <textarea id="field-welcome" rows="2" placeholder="اكتب رسالة الترحيب المخصصة هنا (مثال: أهلاً بحضرتك يا فندم في متجرنا، معاك سارة، أقدر أساعدك في إيه النهاردة؟)..." class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
+          <p class="text-[10px] text-[#94a3b8] mt-1">إذا تركتها فارغة مع التفعيل، سينطق المساعد تحية ذكية افتراضية مناسبة للهجة المحددة.</p>
         </div>
       </div>
 
       <!-- Custom Instructions -->
       <div class="space-y-2 text-xs">
-        <label class="block font-semibold text-[#443D39]">تعليمات وتوجيهات خاصة إضافية للشخصية (Custom Prompt Instructions - اختياري):</label>
-        <textarea id="field-custom" rows="2" placeholder="مثال: ناديني دائماً بـ 'يا باشا'، وركز على تشجيعي لتجربة المنتجات الجديدة..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]"></textarea>
+        <label class="block font-semibold text-[#334155]">تعليمات وتوجيهات خاصة إضافية للشخصية (Custom Prompt Instructions - اختياري):</label>
+        <textarea id="field-custom" rows="2" placeholder="مثال: ناديني دائماً بـ 'يا باشا'، وركز على تشجيعي لتجربة المنتجات الجديدة..." class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]"></textarea>
       </div>
 
       <!-- Off-Topic Response -->
       <div class="space-y-2 text-xs">
-        <label class="block font-semibold text-[#443D39]">
+        <label class="block font-semibold text-[#334155]">
           رسالة الرد خارج النطاق
-          <span class="font-normal text-[#6E645D]">(اختياري — ماذا يقول المساعد لو سُئل عن شيء خارج عمله أو تخصصه؟)</span>
+          <span class="font-normal text-[#64748b]">(اختياري — ماذا يقول المساعد لو سُئل عن شيء خارج عمله أو تخصصه؟)</span>
         </label>
         <textarea id="field-off-topic" rows="2"
           placeholder='مثال: "بعتذر جداً يا فندم، أنا بساعدك بس في طلبات المتجر، تحب تطلب حاجة؟"'
-          class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]"></textarea>
+          class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]"></textarea>
         <p class="text-[#8A7F79] text-[11px]">💡 لو تركتها فارغة، سيعتذر المساعد باختصار ثم يعيد توجيه العميل لنطاق الخدمة تلقائياً.</p>
       </div>
 
-      <div class="flex flex-wrap justify-between items-center gap-3 pt-3 border-t border-[#EAE3D9]">
-        <div id="profile-status-msg" class="text-xs text-[#6E645D]"></div>
+      <div class="flex flex-wrap justify-between items-center gap-3 pt-3 border-t border-[#eaedf0]">
+        <div id="profile-status-msg" class="text-xs text-[#64748b]"></div>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="saveActiveProfileChanges()" id="btn-save-profile" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+          <button type="button" onclick="saveActiveProfileChanges()" id="btn-save-profile" class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <span>حفظ وتطبيق على المكالمات</span>
           </button>
-          <button type="button" onclick="deleteCurrentProfile()" id="btn-delete-profile" class="px-3.5 py-2 rounded-xl bg-[#F5EFE6] hover:bg-rose-50 hover:text-rose-700 text-[#6E645D] text-xs font-semibold border border-[#DDD5C7] transition">
+          <button type="button" onclick="deleteCurrentProfile()" id="btn-delete-profile" class="px-3.5 py-2 rounded-xl bg-[#f1f5f9] hover:bg-rose-50 hover:text-rose-700 text-[#64748b] text-xs font-semibold border border-[#e2e8f0] transition">
             <span>حذف البروفايل</span>
           </button>
         </div>
@@ -216,13 +216,13 @@
 
 {% block modals %}
 <!-- Modal: New Profile -->
-<div id="profile-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
-    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
-      <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+<div id="profile-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
+      <h3 class="text-base font-bold text-[#0f172a] flex items-center gap-2">
         <span>✨</span> إنشاء بروفايل شخصية جديد
       </h3>
-      <button type="button" onclick="closeNewProfileModal()" class="text-[#6E645D] hover:text-[#2D2825]">
+      <button type="button" onclick="closeNewProfileModal()" class="text-[#64748b] hover:text-[#1e293b]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -231,21 +231,21 @@
 
     <form id="new-profile-form" onsubmit="createNewProfile(event)" class="space-y-3">
       <div>
-        <label class="block font-semibold text-[#443D39] mb-1">اسم البروفايل (مثل: فهد - مبيعات سعودي)</label>
-        <input type="text" id="new-prof-name" required placeholder="فهد - مبيعات سعودي" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:ring-[#680E23]" />
+        <label class="block font-semibold text-[#334155] mb-1">اسم البروفايل (مثل: فهد - مبيعات سعودي)</label>
+        <input type="text" id="new-prof-name" required placeholder="فهد - مبيعات سعودي" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
       </div>
 
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">النوع</label>
-          <select id="new-prof-gender" onchange="syncNewProfileVoices()" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917]">
+          <label class="block font-semibold text-[#334155] mb-1">النوع</label>
+          <select id="new-prof-gender" onchange="syncNewProfileVoices()" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a]">
             <option value="female">أنثى (بنت)</option>
             <option value="male">ذكر (شاب)</option>
           </select>
         </div>
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">اللغة</label>
-          <select id="new-prof-language" onchange="handleLanguageChange('new')" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917]">
+          <label class="block font-semibold text-[#334155] mb-1">اللغة</label>
+          <select id="new-prof-language" onchange="handleLanguageChange('new')" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a]">
             <option value="arabic">العربية</option>
             <option value="english">English</option>
             <option value="french">Français</option>
@@ -260,38 +260,38 @@
           </select>
         </div>
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">اللهجة</label>
-          <select id="new-prof-dialect" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917]">
+          <label class="block font-semibold text-[#334155] mb-1">اللهجة</label>
+          <select id="new-prof-dialect" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a]">
           </select>
         </div>
       </div>
 
       <div>
-        <label class="block font-semibold text-[#443D39] mb-1">صوت Google المفضل</label>
-        <select id="new-prof-voice" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] font-mono">
+        <label class="block font-semibold text-[#334155] mb-1">صوت Google المفضل</label>
+        <select id="new-prof-voice" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono">
         </select>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <div class="flex justify-between items-center mb-1">
-            <label class="block font-semibold text-[#443D39]">الدور والشخصية</label>
-            <span class="text-[10px] text-[#680E23] font-semibold">20 دور + أدوارك</span>
+            <label class="block font-semibold text-[#334155]">الدور والشخصية</label>
+            <span class="text-[10px] text-[#1f93ff] font-semibold">20 دور + أدوارك</span>
           </div>
-          <select id="new-prof-role-preset" onchange="handleRolePresetSelect(this.value, 'new')" class="w-full px-2.5 py-1.5 mb-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs font-semibold focus:outline-none focus:border-[#680E23]">
+          <select id="new-prof-role-preset" onchange="handleRolePresetSelect(this.value, 'new')" class="w-full px-2.5 py-1.5 mb-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs font-semibold focus:outline-none focus:border-[#1f93ff]">
             <option value="">-- اختر دوراً جاهزاً أو اكتب بالأسفل --</option>
           </select>
-          <textarea id="new-prof-role" rows="2" placeholder="اكتب الدور بحرية..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">خدمة عملاء ومبيعات المتجر</textarea>
+          <textarea id="new-prof-role" rows="2" placeholder="اكتب الدور بحرية..." class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]">خدمة عملاء ومبيعات المتجر</textarea>
         </div>
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
-          <textarea id="new-prof-style" rows="2" placeholder="اكتب النبرة بحرية..." class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">ودود ولطيف ومرح</textarea>
+          <label class="block font-semibold text-[#334155] mb-1">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
+          <textarea id="new-prof-style" rows="2" placeholder="اكتب النبرة بحرية..." class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]">ودود ولطيف ومرح</textarea>
         </div>
       </div>
 
       <div>
-        <label class="block font-semibold text-[#443D39] mb-1">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
-        <select id="new-prof-verbosity" class="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]">
+        <label class="block font-semibold text-[#334155] mb-1">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
+        <select id="new-prof-verbosity" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]">
           <option value="concise">⚡ مختصر ومباشر (ردود سريعة في 1-2 جملة، بدون حشو)</option>
           <option value="balanced" selected>⚖️ متوازن وطبيعي (2-3 جمل، توازن بين اللباقة والسرعة)</option>
           <option value="detailed">📖 مفصل واستشاري (شرح وافٍ وتفاصيل)</option>
@@ -299,85 +299,85 @@
       </div>
 
       <!-- Welcome Message & Proactive Greeting in Modal -->
-      <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl p-3 space-y-2">
+      <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3 space-y-2">
         <div class="flex items-center justify-between">
-          <label for="new-prof-welcome-enabled" class="font-semibold text-[#443D39] text-xs cursor-pointer flex items-center gap-1.5">
+          <label for="new-prof-welcome-enabled" class="font-semibold text-[#334155] text-xs cursor-pointer flex items-center gap-1.5">
             <span>👋</span> تفعيل رسالة الترحيب الافتتاحية
           </label>
-          <input type="checkbox" id="new-prof-welcome-enabled" onchange="toggleWelcomeInput('new')" class="w-4 h-4 text-[#680E23] rounded accent-[#680E23] cursor-pointer" checked>
+          <input type="checkbox" id="new-prof-welcome-enabled" onchange="toggleWelcomeInput('new')" class="w-4 h-4 text-[#1f93ff] rounded accent-[#1f93ff] cursor-pointer" checked>
         </div>
-        <textarea id="new-prof-welcome" rows="2" placeholder="رسالة الترحيب الافتتاحية المخصصة (اختياري)..." class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+        <textarea id="new-prof-welcome" rows="2" placeholder="رسالة الترحيب الافتتاحية المخصصة (اختياري)..." class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
       </div>
 
       <!-- Off-Topic Response in Modal -->
-      <div class="bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl p-3 space-y-2">
-        <label for="new-prof-off-topic" class="font-semibold text-[#443D39] text-xs flex items-center gap-1.5">
+      <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3 space-y-2">
+        <label for="new-prof-off-topic" class="font-semibold text-[#334155] text-xs flex items-center gap-1.5">
           <span>🛡️</span> رسالة الرد خارج النطاق (اختياري)
         </label>
-        <textarea id="new-prof-off-topic" rows="2" placeholder='مثال: "بعتذر لحضرتك، أنا مخصص فقط لخدمات المتجر، أقدر أساعدك في إيه بخصوص طلباتك؟"' class="w-full px-2.5 py-1.5 bg-white border border-[#DDD5C7] rounded-lg text-[#1C1917] text-xs focus:outline-none focus:border-[#680E23]"></textarea>
-        <p class="text-[10px] text-[#8C827A]">الرسالة التي ينطقها المساعد إذا سأله العميل عن موضوع خارج اختصاصه أو عمله.</p>
+        <textarea id="new-prof-off-topic" rows="2" placeholder='مثال: "بعتذر لحضرتك، أنا مخصص فقط لخدمات المتجر، أقدر أساعدك في إيه بخصوص طلباتك؟"' class="w-full px-2.5 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
+        <p class="text-[10px] text-[#94a3b8]">الرسالة التي ينطقها المساعد إذا سأله العميل عن موضوع خارج اختصاصه أو عمله.</p>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-[#EAE3D9]">
-        <button type="button" onclick="closeNewProfileModal()" class="px-4 py-2 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] transition">إلغاء</button>
-        <button type="submit" id="btn-create-prof" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold transition">حفظ البروفايل</button>
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#eaedf0]">
+        <button type="button" onclick="closeNewProfileModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] transition">إلغاء</button>
+        <button type="submit" id="btn-create-prof" class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold transition">حفظ البروفايل</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- Modal: Custom Roles Library -->
-<div id="custom-roles-modal" class="fixed inset-0 z-50 bg-[#FAF7F2]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#EAE3D9] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
-    <div class="flex justify-between items-center pb-3 border-b border-[#EAE3D9]">
+<div id="custom-roles-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
       <div class="flex items-center gap-2">
         <span class="text-xl">📚</span>
         <div>
-          <h3 class="text-sm font-bold text-[#1C1917]">مكتبة أدوار الذكاء الاصطناعي المخصصة للمؤسسة</h3>
-          <p class="text-[10px] text-[#8C827A]">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
+          <h3 class="text-sm font-bold text-[#0f172a]">مكتبة أدوار الذكاء الاصطناعي المخصصة للمؤسسة</h3>
+          <p class="text-[10px] text-[#94a3b8]">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
         </div>
       </div>
-      <button type="button" onclick="closeCustomRolesModal()" class="text-[#6E645D] hover:text-[#2D2825] text-lg font-bold">&times;</button>
+      <button type="button" onclick="closeCustomRolesModal()" class="text-[#64748b] hover:text-[#1e293b] text-lg font-bold">&times;</button>
     </div>
 
     <div class="overflow-y-auto space-y-4 flex-1 pr-1">
       <!-- Saved Roles List -->
       <div>
-        <h4 class="font-bold text-[#1C1917] mb-2 flex items-center justify-between">
+        <h4 class="font-bold text-[#0f172a] mb-2 flex items-center justify-between">
           <span>الأدوار المخصصة المحفوظة (<span id="modal-roles-count">0</span>)</span>
         </h4>
         <div id="modal-custom-roles-list" class="space-y-2">
-          <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+          <div class="text-center py-6 text-[#94a3b8] bg-[#f8fafc] rounded-2xl border border-[#eaedf0]">
             لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
           </div>
         </div>
       </div>
 
       <!-- Add / Edit Custom Role Form -->
-      <div class="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EAE3D9] space-y-3">
-        <h4 class="font-bold text-[#680E23] flex items-center gap-1.5">
+      <div class="bg-[#f8fafc] p-4 rounded-2xl border border-[#eaedf0] space-y-3">
+        <h4 class="font-bold text-[#1f93ff] flex items-center gap-1.5">
           <span>➕</span> إضافة دور مخصص جديد للمكتبة
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           <div>
-            <label class="block font-semibold text-[#443D39] mb-1">اسم الدور *</label>
-            <input type="text" id="cr-modal-name" placeholder="مثال: منسق حجوزات شاليهات الساحل" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+            <label class="block font-semibold text-[#334155] mb-1">اسم الدور *</label>
+            <input type="text" id="cr-modal-name" placeholder="مثال: منسق حجوزات شاليهات الساحل" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:border-[#1f93ff]" />
           </div>
           <div>
-            <label class="block font-semibold text-[#443D39] mb-1">القطاع أو التصنيف</label>
-            <input type="text" id="cr-modal-industry" placeholder="مثال: سياحة وضيافة، عيادات..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+            <label class="block font-semibold text-[#334155] mb-1">القطاع أو التصنيف</label>
+            <input type="text" id="cr-modal-industry" placeholder="مثال: سياحة وضيافة، عيادات..." class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:border-[#1f93ff]" />
           </div>
         </div>
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">وصف مختصر (للإشارة)</label>
-          <input type="text" id="cr-modal-desc" placeholder="مثال: الرد على استفسارات الأسعار والمساحات وتأكيد الحجز المبدئي" class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]" />
+          <label class="block font-semibold text-[#334155] mb-1">وصف مختصر (للإشارة)</label>
+          <input type="text" id="cr-modal-desc" placeholder="مثال: الرد على استفسارات الأسعار والمساحات وتأكيد الحجز المبدئي" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:border-[#1f93ff]" />
         </div>
         <div>
-          <label class="block font-semibold text-[#443D39] mb-1">نص التوجيه والبرومبت المخصص للدور *</label>
-          <textarea id="cr-modal-prompt" rows="3" placeholder="دورك هو... ترحب بالعملاء بأسلوب... تشرح لهم... وتسجل بياناتهم..." class="w-full px-3 py-2 bg-white border border-[#DDD5C7] rounded-xl text-xs focus:outline-none focus:border-[#680E23]"></textarea>
+          <label class="block font-semibold text-[#334155] mb-1">نص التوجيه والبرومبت المخصص للدور *</label>
+          <textarea id="cr-modal-prompt" rows="3" placeholder="دورك هو... ترحب بالعملاء بأسلوب... تشرح لهم... وتسجل بياناتهم..." class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
         </div>
         <div class="flex justify-end">
-          <button type="button" onclick="submitNewCustomRoleFromModal()" id="btn-save-custom-role" class="px-4 py-2 bg-[#680E23] hover:bg-[#7E152F] text-white rounded-xl font-bold transition flex items-center gap-1.5">
+          <button type="button" onclick="submitNewCustomRoleFromModal()" id="btn-save-custom-role" class="px-4 py-2 bg-[#1f93ff] hover:bg-[#1570ef] text-white rounded-xl font-bold transition flex items-center gap-1.5">
             <span>💾</span> حفظ الدور في المكتبة
           </button>
         </div>

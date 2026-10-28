@@ -10,36 +10,59 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-  <!-- Google Fonts: Tajawal (Arabic) & Inter (English) -->
+  <!-- Google Fonts: Cairo (Arabic), Inter (English) & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script>
     (function(){var w=console.warn;console.warn=function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].indexOf('cdn.tailwindcss.com')!==-1)return;w.apply(console,arguments);};})();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            chatwoot: {
+              50: '#eff8ff',
+              100: '#dbeafe',
+              200: '#b2ddff',
+              500: '#1f93ff',
+              600: '#1570ef',
+              700: '#175cd3',
+              800: '#1849a9',
+              900: '#194185',
+            }
+          }
+        }
+      }
+    }
+  </script>
   
   <!-- Centrifuge JS Client (WebSockets / App Events) -->
   <script src="https://unpkg.com/centrifuge@5.0.1/dist/centrifuge.js"></script>
 
   <style>
     :root {
-      --bg-canvas: #FAF7F2;
-      --bg-surface: #F5EFE6;
-      --bg-card: #FFFFFF;
-      --burgundy-primary: #680E23;
-      --burgundy-dark: #4A0817;
-      --burgundy-accent: #841832;
-      --gold-accent: #C5A880;
-      --gold-border: #E8DAC6;
-      --border-color: #EAE3D9;
-      --text-dark: #1C1917;
+      --bg-canvas: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --brand-primary: #1f93ff;
+      --brand-hover: #1570ef;
+      --brand-light: #eff8ff;
+      --border-color: #eaedf0;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
     }
 
     html[dir="rtl"] body {
-      font-family: 'Tajawal', sans-serif;
+      font-family: 'Cairo', sans-serif;
     }
     html[dir="ltr"] body {
       font-family: 'Inter', sans-serif;
@@ -62,26 +85,26 @@
       padding-right: 0;
     }
 
-    /* Custom Luxury Scrollbar */
+    /* Clean Minimalist Scrollbar (Chatwoot Style) */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #FAF7F2;
+      background: #f8fafc;
     }
     ::-webkit-scrollbar-thumb {
-      background: #D5C7B5;
+      background: #cbd5e1;
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #680E23;
+      background: #1f93ff;
     }
 
-    /* Independent Sidebar Custom Scrollbar (Thin Luxury Gold) */
+    /* Independent Sidebar Custom Scrollbar */
     .custom-sidebar-scroll {
       scrollbar-width: thin;
-      scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+      scrollbar-color: rgba(203, 213, 225, 0.6) transparent;
     }
     .custom-sidebar-scroll::-webkit-scrollbar {
       width: 4px;
@@ -90,23 +113,23 @@
       background: transparent;
     }
     .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-      background: rgba(212, 175, 55, 0.25);
+      background: rgba(203, 213, 225, 0.6);
       border-radius: 9999px;
     }
     .custom-sidebar-scroll:hover::-webkit-scrollbar-thumb {
-      background: rgba(212, 175, 55, 0.55);
+      background: #1f93ff;
     }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-[#FAF7F2] text-[#1C1917] min-h-screen flex flex-col md:flex-row antialiased">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased selection:bg-[#1f93ff] selection:text-white">
 
   <!-- ==================== Shared Sidebar ==================== -->
   {% include "voice_assistant/components/sidebar.html" %}
 
   <!-- ==================== Main App Workspace ==================== -->
-  <div id="main-wrapper" class="flex-1 flex flex-col min-w-0 min-h-screen">
+  <div id="main-wrapper" class="flex-1 flex flex-col min-w-0 min-h-screen bg-slate-50">
     
     <!-- Shared Header -->
     {% include "voice_assistant/components/header.html" %}

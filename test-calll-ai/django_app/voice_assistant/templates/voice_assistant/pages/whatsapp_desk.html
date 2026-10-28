@@ -7,13 +7,13 @@
 <style>
   .chat-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #D5C7B5 transparent;
+    scrollbar-color: #cbd5e1 transparent;
   }
   .chat-scroll::-webkit-scrollbar {
     width: 5px;
   }
   .chat-scroll::-webkit-scrollbar-thumb {
-    background-color: #D5C7B5;
+    background-color: #cbd5e1;
     border-radius: 9999px;
   }
   @keyframes ringPulse {
@@ -30,19 +30,19 @@
 <div class="space-y-4">
 
   <!-- ==================== Header & Desk Status ==================== -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#EAE3D9] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(104,14,35,0.06)]">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)]">
     <div class="flex items-center gap-3.5">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#841832] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
         🎧
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-lg font-bold text-[#1C1917]">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
+          <h1 class="text-lg font-bold text-[#0f172a]">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
             رنين جماعي & استلام فوري
           </span>
         </div>
-        <p class="text-xs text-[#6E645D] mt-0.5">
+        <p class="text-xs text-[#64748b] mt-0.5">
           شاشة العمل الموحدة لموظفي الدعم لاستقبال وتوزيع محادثات الشكاوى والتحويل من الذكاء الاصطناعي
         </p>
       </div>
@@ -66,7 +66,7 @@
         type="button" 
         id="btn-sound-toggle"
         onclick="toggleSoundMute()"
-        class="p-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#443D39] border border-[#DDD5C7] text-xs transition shadow-xs flex items-center gap-1.5"
+        class="p-2 rounded-xl bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e2e8f0] text-xs transition shadow-xs flex items-center gap-1.5"
         title="كتم/تفعيل صوت الرنين"
       >
         <span id="sound-icon">🔔</span>
@@ -79,13 +79,13 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
 
     <!-- Panel 1: Incoming Broadcast Ringing Queue (Right Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs">
-      <div class="p-3.5 px-4 border-b border-[#EAE3D9] bg-[#FAF7F2]/90 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs">
+      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-[#f8fafc]/90 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <span class="text-base">🛎️</span>
           <div>
-            <h3 class="font-bold text-xs text-[#1C1917]">طابور الرنين العام</h3>
-            <p class="text-[10px] text-[#8C827A]">ترن لدى الجميع (الأسبقية للاستلام)</p>
+            <h3 class="font-bold text-xs text-[#0f172a]">طابور الرنين العام</h3>
+            <p class="text-[10px] text-[#94a3b8]">ترن لدى الجميع (الأسبقية للاستلام)</p>
           </div>
         </div>
         <span id="broadcast-queue-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 font-mono">
@@ -94,8 +94,8 @@
       </div>
 
       <!-- Queue Cards Container -->
-      <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-[#FAF7F2]/20">
-        <div class="p-8 text-center text-[#8C827A] text-xs space-y-2">
+      <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-[#f8fafc]/20">
+        <div class="p-8 text-center text-[#94a3b8] text-xs space-y-2">
           <div class="text-2xl">☕</div>
           <p class="font-medium">لا توجد محادثات معلقة في الطابور حالياً.</p>
           <p class="text-[10px] text-[#A8A199]">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
@@ -104,38 +104,38 @@
     </div>
 
     <!-- Panel 2: My Active Claimed Chats (Middle Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs">
-      <div class="p-3.5 px-4 border-b border-[#EAE3D9] bg-[#FAF7F2]/90 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs">
+      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-[#f8fafc]/90 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <span class="text-base">👤</span>
           <div>
-            <h3 class="font-bold text-xs text-[#1C1917]">محادثاتي المستلمة</h3>
-            <p class="text-[10px] text-[#8C827A]">محادثات قيد الدعم المباشر</p>
+            <h3 class="font-bold text-xs text-[#0f172a]">محادثاتي المستلمة</h3>
+            <p class="text-[10px] text-[#94a3b8]">محادثات قيد الدعم المباشر</p>
           </div>
         </div>
-        <span id="my-chats-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#680E23]/10 text-[#680E23] border border-[#680E23]/20 font-mono">
+        <span id="my-chats-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#1f93ff]/10 text-[#1f93ff] border border-[#1f93ff]/20 font-mono">
           0
         </span>
       </div>
 
       <!-- Active Claimed Chats List -->
-      <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-[#EAE3D9] chat-scroll">
-        <div class="p-8 text-center text-[#8C827A] text-xs">
+      <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-[#eaedf0] chat-scroll">
+        <div class="p-8 text-center text-[#94a3b8] text-xs">
           لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
         </div>
       </div>
     </div>
 
     <!-- Panel 3: Live Chat Thread & Cockpit (Left Main Panel, 6 cols) -->
-    <div class="lg:col-span-6 flex flex-col bg-white border border-[#EAE3D9] rounded-3xl overflow-hidden shadow-xs relative">
+    <div class="lg:col-span-6 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs relative">
 
       <!-- Empty State (No chat active) -->
       <div id="desk-empty-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-        <div class="w-16 h-16 rounded-3xl bg-rose-50 text-[#680E23] border border-rose-100 flex items-center justify-center text-3xl shadow-sm">
+        <div class="w-16 h-16 rounded-3xl bg-rose-50 text-[#1f93ff] border border-rose-100 flex items-center justify-center text-3xl shadow-sm">
           💬
         </div>
-        <h3 class="text-base font-bold text-[#1C1917]">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
-        <p class="text-xs text-[#6E645D] max-w-sm leading-relaxed">
+        <h3 class="text-base font-bold text-[#0f172a]">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
+        <p class="text-xs text-[#64748b] max-w-sm leading-relaxed">
           أو اضغط «استلام المحادثة» من طابور الرنين العام على اليمين لسحب طلب العميل والرد عليه مباشرة.
         </p>
       </div>
@@ -144,15 +144,15 @@
       <div id="desk-active-view" class="hidden flex-1 flex-col min-h-0">
         
         <!-- Header -->
-        <div class="p-3.5 px-5 border-b border-[#EAE3D9] bg-[#FAF7F2]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-[#f8fafc]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div class="flex items-center gap-3">
-            <div id="desk-chat-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#680E23] to-[#841832] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+            <div id="desk-chat-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
               U
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h3 id="desk-chat-name" class="font-bold text-sm text-[#1C1917]">-</h3>
-                <span id="desk-chat-phone" class="font-mono text-xs text-[#6E645D] bg-white px-2 py-0.5 rounded-lg border border-[#DDD5C7] dir-ltr">-</span>
+                <h3 id="desk-chat-name" class="font-bold text-sm text-[#0f172a]">-</h3>
+                <span id="desk-chat-phone" class="font-mono text-xs text-[#64748b] bg-white px-2 py-0.5 rounded-lg border border-[#e2e8f0] dir-ltr">-</span>
               </div>
               <span class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
@@ -183,11 +183,11 @@
         </div>
 
         <!-- AI Handoff Brief Banner & 5-Minute Countdown -->
-        <div id="desk-brief-banner" class="px-5 py-3 bg-gradient-to-r from-amber-50 to-rose-50/50 border-b border-amber-200 text-xs text-[#443D39] shrink-0">
+        <div id="desk-brief-banner" class="px-5 py-3 bg-gradient-to-r from-amber-50 to-rose-50/50 border-b border-amber-200 text-xs text-[#334155] shrink-0">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white">⚠️ شكوى / تصعيد</span>
-              <span class="font-bold text-[#841832]" id="desk-brief-reason">سبب التصعيد: -</span>
+              <span class="font-bold text-[#1570ef]" id="desk-brief-reason">سبب التصعيد: -</span>
             </div>
             <!-- 5-Minute Countdown Badge -->
             <div class="flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-white shadow-xs" id="sla-timer-container">
@@ -195,18 +195,18 @@
               <span id="sla-countdown-text">05:00</span>
             </div>
           </div>
-          <p id="desk-brief-summary" class="text-[11px] text-[#443D39] mt-1.5 bg-white/80 p-2.5 rounded-xl border border-amber-200 leading-relaxed font-sans shadow-2xs">
+          <p id="desk-brief-summary" class="text-[11px] text-[#334155] mt-1.5 bg-white/80 p-2.5 rounded-xl border border-amber-200 leading-relaxed font-sans shadow-2xs">
             -
           </p>
         </div>
 
         <!-- Messages Stream -->
-        <div id="desk-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 chat-scroll bg-[#FAF7F2]/20 min-h-0">
-          <div class="p-8 text-center text-[#8C827A] text-xs">جارٍ جلب المحادثة...</div>
+        <div id="desk-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 chat-scroll bg-[#f8fafc]/20 min-h-0">
+          <div class="p-8 text-center text-[#94a3b8] text-xs">جارٍ جلب المحادثة...</div>
         </div>
 
         <!-- Quick Reply Composer -->
-        <div class="p-3.5 px-5 border-t border-[#EAE3D9] bg-white shrink-0">
+        <div class="p-3.5 px-5 border-t border-[#eaedf0] bg-white shrink-0">
           <form id="desk-reply-form" onsubmit="sendDeskReply(event)" class="space-y-2">
             <div class="flex items-center gap-2">
               <input 
@@ -215,12 +215,12 @@
                 placeholder="اكتب رداً مباشراً على العميل على الواتساب..." 
                 required
                 autocomplete="off"
-                class="flex-1 py-2.5 px-4 rounded-2xl bg-[#FAF7F2] border border-[#DDD5C7] text-xs text-[#1C1917] focus:outline-none focus:border-[#680E23] focus:bg-white transition"
+                class="flex-1 py-2.5 px-4 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] text-xs text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:bg-white transition"
               >
               <button 
                 type="submit" 
                 id="btn-desk-send"
-                class="py-2.5 px-5 rounded-2xl bg-[#680E23] hover:bg-[#841832] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#680E23]/20 shrink-0"
+                class="py-2.5 px-5 rounded-2xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20 shrink-0"
               >
                 <span>إرسال</span>
                 <span>📤</span>
@@ -389,7 +389,7 @@
     const container = document.getElementById('broadcast-queue-list');
     if (!queue || queue.length === 0) {
       container.innerHTML = `
-        <div class="p-8 text-center text-[#8C827A] text-xs space-y-2">
+        <div class="p-8 text-center text-[#94a3b8] text-xs space-y-2">
           <div class="text-2xl">☕</div>
           <p class="font-medium">لا توجد محادثات معلقة في الطابور حالياً.</p>
           <p class="text-[10px] text-[#A8A199]">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
@@ -411,8 +411,8 @@
             <div class="flex items-center gap-2 min-w-0">
               <span class="text-base shrink-0">${isUrgent ? '🚨' : '🔔'}</span>
               <div class="min-w-0">
-                <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(name)}</h4>
-                <p class="text-[10px] text-[#6E645D] font-mono dir-ltr text-right truncate">${escapeHtml(phone)}</p>
+                <h4 class="font-bold text-xs text-[#0f172a] truncate">${escapeHtml(name)}</h4>
+                <p class="text-[10px] text-[#64748b] font-mono dir-ltr text-right truncate">${escapeHtml(phone)}</p>
               </div>
             </div>
             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isUrgent ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'} shrink-0">
@@ -420,15 +420,15 @@
             </span>
           </div>
 
-          <div class="text-[11px] text-[#443D39] bg-[#FAF7F2] p-2 rounded-xl border border-[#EAE3D9] leading-tight space-y-1">
-            <p class="font-bold text-[#841832] truncate">📌 ${escapeHtml(reason)}</p>
-            <p class="text-[#6E645D] text-[10px] line-clamp-2">${escapeHtml(summary)}</p>
+          <div class="text-[11px] text-[#334155] bg-[#f8fafc] p-2 rounded-xl border border-[#eaedf0] leading-tight space-y-1">
+            <p class="font-bold text-[#1570ef] truncate">📌 ${escapeHtml(reason)}</p>
+            <p class="text-[#64748b] text-[10px] line-clamp-2">${escapeHtml(summary)}</p>
           </div>
 
           <button 
             type="button" 
             onclick="claimChat('${escapeHtml(c.phone_number)}')"
-            class="w-full py-2 px-3 rounded-xl bg-[#680E23] hover:bg-[#841832] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+            class="w-full py-2 px-3 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
           >
             <span>⚡ استلام المحادثة</span>
           </button>
@@ -441,7 +441,7 @@
     const container = document.getElementById('my-claimed-chats-list');
     if (!chats || chats.length === 0) {
       container.innerHTML = `
-        <div class="p-8 text-center text-[#8C827A] text-xs">
+        <div class="p-8 text-center text-[#94a3b8] text-xs">
           لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
         </div>
       `;
@@ -458,18 +458,18 @@
       return `
         <div 
           onclick="selectClaimedChat('${escapeHtml(c.phone_number)}')" 
-          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-rose-50/70 border-r-4 border-r-[#680E23]' : 'hover:bg-[#FAF7F2]'}"
+          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-rose-50/70 border-r-4 border-r-[#1f93ff]' : 'hover:bg-[#f8fafc]'}"
         >
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${isSelected ? 'from-[#680E23] to-[#841832] text-white' : 'from-[#EAE3D9] to-[#D5C7B5] text-[#443D39]'} font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${isSelected ? 'from-[#1f93ff] to-[#1570ef] text-white' : 'from-[#eaedf0] to-[#cbd5e1] text-[#334155]'} font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
             ${escapeHtml(initial)}
           </div>
           <div class="flex-1 min-w-0 space-y-0.5">
             <div class="flex items-center justify-between gap-1">
-              <h4 class="font-bold text-xs text-[#1C1917] truncate">${escapeHtml(name)}</h4>
-              <span class="text-[9px] text-[#8C827A] font-mono">${escapeHtml(lastMsg.created_at_time || '')}</span>
+              <h4 class="font-bold text-xs text-[#0f172a] truncate">${escapeHtml(name)}</h4>
+              <span class="text-[9px] text-[#94a3b8] font-mono">${escapeHtml(lastMsg.created_at_time || '')}</span>
             </div>
-            <p class="text-[10px] text-[#6E645D] font-mono dir-ltr text-right">${escapeHtml(phone)}</p>
-            <p class="text-[11px] text-[#443D39] truncate">${escapeHtml(lastMsg.text || 'محادثة نشطة')}</p>
+            <p class="text-[10px] text-[#64748b] font-mono dir-ltr text-right">${escapeHtml(phone)}</p>
+            <p class="text-[11px] text-[#334155] truncate">${escapeHtml(lastMsg.text || 'محادثة نشطة')}</p>
           </div>
         </div>
       `;
@@ -584,7 +584,7 @@
   function renderMessagesStream(messages, scrollToBottom = false) {
     const stream = document.getElementById('desk-messages-stream');
     if (!messages || messages.length === 0) {
-      stream.innerHTML = `<div class="p-8 text-center text-[#8C827A] text-xs">لا توجد رسائل سابقة بعد.</div>`;
+      stream.innerHTML = `<div class="p-8 text-center text-[#94a3b8] text-xs">لا توجد رسائل سابقة بعد.</div>`;
       return;
     }
 
@@ -596,9 +596,9 @@
       if (isCustomer) {
         return `
           <div class="flex justify-start">
-            <div class="max-w-[78%] bg-white border border-[#DDD5C7] rounded-2xl rounded-tr-xs p-3 shadow-2xs space-y-1">
-              <span class="text-[9px] font-bold text-[#8C827A]">👤 العميل</span>
-              <p class="text-xs text-[#1C1917] leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
+            <div class="max-w-[78%] bg-white border border-[#e2e8f0] rounded-2xl rounded-tr-xs p-3 shadow-2xs space-y-1">
+              <span class="text-[9px] font-bold text-[#94a3b8]">👤 العميل</span>
+              <p class="text-xs text-[#0f172a] leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
               <div class="text-[9px] text-[#A8A199] text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
             </div>
           </div>
@@ -606,10 +606,10 @@
       } else {
         return `
           <div class="flex justify-end">
-            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#680E23] to-[#841832] text-white' : 'bg-emerald-50 border border-emerald-200 text-[#1C1917]'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
+            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white' : 'bg-emerald-50 border border-emerald-200 text-[#0f172a]'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
               <span class="text-[9px] font-bold ${isHuman ? 'text-rose-200' : 'text-emerald-700'}">${isHuman ? '👨‍💻 أنت (الموظف البشري)' : '🤖 الذكاء الاصطناعي'}</span>
               <p class="text-xs leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
-              <div class="text-[9px] ${isHuman ? 'text-rose-200' : 'text-[#8C827A]'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+              <div class="text-[9px] ${isHuman ? 'text-rose-200' : 'text-[#94a3b8]'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
             </div>
           </div>
         `;
