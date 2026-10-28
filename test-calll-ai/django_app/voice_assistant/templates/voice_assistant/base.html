@@ -119,6 +119,15 @@
     .custom-sidebar-scroll:hover::-webkit-scrollbar-thumb {
       background: #1f93ff;
     }
+
+    /* Clean Hide Scrollbar for Horizontal Top Tabs Bar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 
   {% block extra_head %}{% endblock %}
