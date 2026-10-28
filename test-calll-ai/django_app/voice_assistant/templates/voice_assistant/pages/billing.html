@@ -5,50 +5,53 @@
 
 {% block content %}
 <!-- Billing Header Bar -->
-<div class="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-[#eaedf0] shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
   <div>
-    <h3 class="text-lg font-bold text-[#1f93ff] flex items-center gap-2">
-       <span data-i18n="billing_title">حساب الاستخدام والرصيد</span>
+    <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+      <span data-i18n="billing_title">حساب الاستخدام والرصيد</span>
     </h3>
-    <p class="text-xs text-[#64748b] mt-1" data-i18n="billing_subtitle">نظام رصيد مسبق الدفع (OpenRouter Style) مع خصم تكلفة الدقائق بالتقريب لأعلى دقيقة مرتفع</p>
+    <p class="text-xs text-slate-500 mt-1" data-i18n="billing_subtitle">نظام رصيد مسبق الدفع مع احتساب تكلفة الدقائق بالتقريب لأعلى دقيقة</p>
   </div>
   <div class="flex items-center gap-2">
-    <button type="button" onclick="loadWalletData()" class="px-3.5 py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#1f93ff] border border-[#e2e8f0] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
-      <span>🔄</span> <span>تحديث الرصيد</span>
+    <button type="button" onclick="loadWalletData()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <span>تحديث الرصيد</span>
     </button>
-    <button type="button" onclick="openTopupModal()" class="px-5 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-2 shadow-md hover:shadow-lg">
-       <span data-i18n="billing_btn_topup">شحن الرصيد الآن</span>
+    <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+      <span data-i18n="billing_btn_topup">شحن الرصيد</span>
     </button>
   </div>
 </div>
 
 <!-- Top Hero: Available Balance Hero Card -->
-<div class="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white via-[#f8fafc] to-[#f1f5f9] border-2 border-[#1f93ff]/50 shadow-md space-y-4 relative overflow-hidden">
+<div class="p-5 sm:p-6 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
   <div class="flex flex-wrap justify-between items-start gap-4">
     <div>
-      <span class="text-xs font-semibold text-[#94a3b8] uppercase tracking-wider block" data-i18n="billing_balance_title">الرصيد المتاح حالياً (Available Balance)</span>
-      <div class="flex items-baseline gap-2 mt-2">
-        <span id="billing-wallet-balance" class="text-4xl sm:text-5xl font-extrabold font-mono text-[#1f93ff]">--.--</span>
-        <span id="billing-wallet-currency" class="px-2.5 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] font-bold text-xs border border-[#b2ddff]">USD ($)</span>
+      <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block" data-i18n="billing_balance_title">الرصيد المتاح حالياً</span>
+      <div class="flex items-baseline gap-2 mt-1.5">
+        <span id="billing-wallet-balance" class="text-3xl sm:text-4xl font-semibold font-mono text-slate-900">--.--</span>
+        <span id="billing-wallet-currency" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium text-xs border border-slate-200/60">USD ($)</span>
       </div>
     </div>
-    <div class="text-end flex flex-col sm:items-end gap-2.5">
-      <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> جاهز للاتصال
+    <div class="text-end flex flex-col sm:items-end gap-2">
+      <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> جاهز للاتصال
       </span>
-      <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm hover:shadow-md">
-         <span>شحن المحفظة</span>
+      <button type="button" onclick="openTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs">
+        <span>شحن المحفظة</span>
       </button>
     </div>
   </div>
 
   <div class="pt-3 border-t border-[#eaedf0] flex flex-wrap items-center justify-between gap-3 text-xs">
     <div class="flex items-center gap-2">
-      <span class="text-[#64748b]">التسعيرة الحالية للدقيقة:</span>
-      <span id="billing-rate-pill" class="px-2.5 py-0.5 rounded-md bg-[#1f93ff] text-white font-mono font-bold text-xs">$0.0500</span>
-      <span class="text-[11px] text-[#94a3b8]">(تقريب لأعلى دقيقة مرتفع)</span>
+      <span class="text-slate-500">التسعيرة الحالية للدقيقة:</span>
+      <span id="billing-rate-pill" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-mono font-medium text-xs border border-slate-200/60">$0.0500</span>
+      <span class="text-[11px] text-slate-400">(تقريب لأعلى دقيقة مرتفع)</span>
     </div>
-    <button type="button" onclick="openTopupModal()" class="text-[#1f93ff] hover:text-[#0f172a] font-bold text-xs underline flex items-center gap-1">
+    <button type="button" onclick="openTopupModal()" class="text-[#1f93ff] hover:text-[#1570ef] font-medium text-xs">
       <span>+ إضافة رصيد للمحفظة</span>
     </button>
   </div>
@@ -56,48 +59,54 @@
 
 <!-- Secondary Metrics Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-  <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm flex items-center justify-between">
+  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs flex items-center justify-between">
     <div>
-      <span class="text-xs text-[#94a3b8]" data-i18n="billing_deposited">إجمالي المبالغ المشحونة</span>
-      <p id="billing-stat-deposited" class="text-xl font-bold font-mono text-[#0f172a] mt-1">$0.00</p>
+      <span class="text-xs text-slate-500" data-i18n="billing_deposited">إجمالي المبالغ المشحونة</span>
+      <p id="billing-stat-deposited" class="text-lg font-semibold font-mono text-slate-900 mt-1">$0.00</p>
     </div>
-    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-lg">
-      📥
+    <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
     </div>
   </div>
 
-  <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm flex items-center justify-between">
+  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs flex items-center justify-between">
     <div>
-      <span class="text-xs text-[#94a3b8]" data-i18n="billing_spent">إجمالي المستهلك بالمكالمات</span>
-      <p id="billing-stat-spent" class="text-xl font-bold font-mono text-[#1f93ff] mt-1">$0.00</p>
+      <span class="text-xs text-slate-500" data-i18n="billing_spent">إجمالي المستهلك بالمكالمات</span>
+      <p id="billing-stat-spent" class="text-lg font-semibold font-mono text-slate-900 mt-1">$0.00</p>
     </div>
-    <div class="w-10 h-10 rounded-xl bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] flex items-center justify-center text-lg">
-      📤
+    <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
     </div>
   </div>
 
-  <div class="p-4 rounded-2xl bg-white border border-[#eaedf0] shadow-sm flex items-center justify-between">
+  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs flex items-center justify-between">
     <div>
-      <span class="text-xs text-[#94a3b8]">إجمالي الدقائق المحتسبة</span>
-      <p id="billing-stat-minutes" class="text-xl font-bold font-mono text-[#0f172a] mt-1">0 دقيقة</p>
+      <span class="text-xs text-slate-500">إجمالي الدقائق المحتسبة</span>
+      <p id="billing-stat-minutes" class="text-lg font-semibold font-mono text-slate-900 mt-1">0 دقيقة</p>
     </div>
-    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-[#1f93ff] flex items-center justify-center text-lg">
-      ⏱️
+    <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
     </div>
   </div>
 </div>
 
 <!-- Transactions Ledger Table -->
-<div class="p-6 rounded-3xl bg-white border border-[#eaedf0] shadow-sm space-y-4">
+<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
   <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
     <div>
-      <h4 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
-        <span>📑</span> <span data-i18n="billing_ledger_title">سجل الحركات المالية (Financial Ledger)</span>
+      <h4 class="font-semibold text-slate-900 text-sm flex items-center gap-2">
+        <span data-i18n="billing_ledger_title">سجل الحركات المالية</span>
       </h4>
-      <p class="text-xs text-[#94a3b8] mt-0.5">توثيق كامل لكل عملية شحن، خصم مكالمة، وتحديث رصيد لحظي</p>
+      <p class="text-xs text-slate-500 mt-0.5">توثيق كامل لكل عملية شحن وخصم مكالمة وتحديث رصيد لحظي</p>
     </div>
     <div class="flex items-center gap-2">
-      <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-xs text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-xs text-slate-700 focus:outline-none focus:border-[#1f93ff]">
         <option value="all">جميع الحركات</option>
         <option value="call_deduction">خصم مكالمات صوتية</option>
         <option value="topup">شحن رصيد</option>
@@ -110,19 +119,19 @@
   <div class="overflow-x-auto">
     <table class="w-full text-xs text-start">
       <thead>
-        <tr class="border-b border-[#eaedf0] bg-[#f8fafc] text-[#64748b]">
-          <th class="py-3 px-4 text-start font-bold">التاريخ والوقت</th>
-          <th class="py-3 px-4 text-start font-bold">نوع الحركة</th>
-          <th class="py-3 px-4 text-start font-bold">المبلغ</th>
-          <th class="py-3 px-4 text-start font-bold">الرصيد بعد الحركة</th>
-          <th class="py-3 px-4 text-start font-bold">الدقائق / الثواني</th>
-          <th class="py-3 px-4 text-start font-bold">السعر المطبق</th>
-          <th class="py-3 px-4 text-start font-bold">البيان والتفاصيل</th>
+        <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
+          <th class="py-2.5 px-3.5 text-start font-medium">التاريخ والوقت</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">نوع الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">المبلغ</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">الرصيد بعد الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">الدقائق / الثواني</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">السعر المطبق</th>
+          <th class="py-2.5 px-3.5 text-start font-medium">البيان والتفاصيل</th>
         </tr>
       </thead>
       <tbody id="billing-transactions-tbody" class="divide-y divide-[#eaedf0]">
         <tr>
-          <td colspan="7" class="py-8 text-center text-[#94a3b8]">
+          <td colspan="7" class="py-8 text-center text-slate-400">
             جاري تحميل سجل الحركات المالية...
           </td>
         </tr>
@@ -133,53 +142,51 @@
 {% endblock %}
 
 {% block modals %}
-<!-- Top-Up Modal (OpenRouter Style) -->
-<div id="topup-modal" class="fixed inset-0 z-50 bg-[#0f172a]/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border-2 border-[#1f93ff]/50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
-    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
-      <h3 class="text-base font-bold text-[#1f93ff] flex items-center gap-2">
-         <span>شحن رصيد المحفظة (Instant Top-Up)</span>
+<!-- Top-Up Modal -->
+<div id="topup-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-md w-full p-5 shadow-md space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
+      <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        <span>شحن رصيد المحفظة</span>
       </h3>
-      <button type="button" onclick="closeTopupModal()" class="text-[#64748b] hover:text-[#0f172a] text-lg font-bold">✕</button>
+      <button type="button" onclick="closeTopupModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
     </div>
 
-    <p class="text-[#334155] text-xs leading-relaxed">
+    <p class="text-slate-600 text-xs leading-relaxed">
       أدخل المبلغ المطلوب شحنه أو اختر من المبالغ السريعة. يتم إيداع الرصيد فوراً في محفظتك المسبقة الدفع.
     </p>
 
     <!-- Fast Preset Amount Buttons -->
     <div>
-      <label class="block font-semibold text-[#334155] mb-1.5">مبالغ شحن سريعة:</label>
+      <label class="block font-medium text-slate-700 mb-1.5">مبالغ شحن سريعة:</label>
       <div class="grid grid-cols-4 gap-2">
-        <button type="button" onclick="setTopupAmount(10)" class="py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#1f93ff] font-mono font-bold text-xs transition">10 $</button>
-        <button type="button" onclick="setTopupAmount(25)" class="py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#1f93ff] font-mono font-bold text-xs transition">25 $</button>
-        <button type="button" onclick="setTopupAmount(50)" class="py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#1f93ff] font-mono font-bold text-xs transition">50 $</button>
-        <button type="button" onclick="setTopupAmount(100)" class="py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#1f93ff] font-mono font-bold text-xs transition">100 $</button>
+        <button type="button" onclick="setTopupAmount(10)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">10 $</button>
+        <button type="button" onclick="setTopupAmount(25)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">25 $</button>
+        <button type="button" onclick="setTopupAmount(50)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">50 $</button>
+        <button type="button" onclick="setTopupAmount(100)" class="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] text-slate-700 font-mono font-medium text-xs transition">100 $</button>
       </div>
     </div>
 
     <!-- Custom Amount Input -->
     <div>
-      <label class="block font-semibold text-[#334155] mb-1">المبلغ المطلوب شحنه *</label>
-      <div class="relative">
-        <input 
-          type="number" 
-          id="topup-amount-input" 
-          step="1" 
-          min="1" 
-          value="25" 
-          required 
-          class="w-full px-3 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono font-bold text-base focus:outline-none focus:border-[#1f93ff]" 
-        />
-      </div>
+      <label class="block font-medium text-slate-700 mb-1">المبلغ المطلوب شحنه ($) *</label>
+      <input 
+        type="number" 
+        id="topup-amount-input" 
+        step="1" 
+        min="1" 
+        value="25" 
+        required 
+        class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 font-mono font-semibold text-sm focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff]" 
+      />
     </div>
 
-    <div id="topup-modal-alert" class="hidden p-2.5 rounded-xl text-xs"></div>
+    <div id="topup-modal-alert" class="hidden p-2.5 rounded-lg text-xs"></div>
 
     <div class="flex justify-end gap-2 pt-3 border-t border-[#eaedf0]">
-      <button type="button" onclick="closeTopupModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] transition">إلغاء</button>
-      <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-5 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-bold transition flex items-center gap-1.5 shadow">
-        <span>تأكيد الشحن الفوري</span>
+      <button type="button" onclick="closeTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 transition font-medium">إلغاء</button>
+      <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
+        <span>تأكيد الشحن</span>
       </button>
     </div>
   </div>

@@ -133,12 +133,12 @@ function showToast(message, type = 'info') {
 
   const toast = document.createElement('div');
   const bgClass = type === 'success' 
-    ? 'bg-emerald-800 text-white' 
+    ? 'bg-slate-900 text-white border border-emerald-500/30' 
     : type === 'error' 
-    ? 'bg-rose-800 text-white' 
-    : 'bg-[#680E23] text-white';
+    ? 'bg-slate-900 text-white border border-rose-500/30' 
+    : 'bg-slate-900 text-white border border-slate-700';
 
-  toast.className = `p-3.5 rounded-2xl shadow-xl border border-white/20 text-xs font-semibold flex items-center gap-2 pointer-events-auto transition-all duration-300 transform translate-y-4 opacity-0 ${bgClass}`;
+  toast.className = `p-3 rounded-lg shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-auto transition-all duration-300 transform translate-y-4 opacity-0 ${bgClass}`;
   toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span> <span>${escapeHtml(message)}</span>`;
 
   toastContainer.appendChild(toast);

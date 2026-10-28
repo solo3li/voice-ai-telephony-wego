@@ -41,7 +41,7 @@ function renderDocuments(docs) {
   if (!docs || docs.length === 0) {
     docsTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center py-6 text-[#8C827A]">
+        <td colspan="5" class="text-center py-6 text-slate-400">
           لا توجد مستندات مرفوعة بعد. ارفع أول ملف لبدء الإجابة منه!
         </td>
       </tr>
@@ -52,29 +52,29 @@ function renderDocuments(docs) {
   docsTbody.innerHTML = docs.map(d => {
     let statusBadge = '';
     if (d.status === 'pending') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse">⏳ قيد الفهرسة</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">قيد الفهرسة</span>`;
     } else if (d.status === 'failed') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800 border border-rose-200" title="${escapeHtml(d.error_message || '')}">❌ فشل</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(d.error_message || '')}">فشل</span>`;
     } else {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">✅ جاهز</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">جاهز</span>`;
     }
 
     return `
-    <tr class="hover:bg-[#F5EFE6]/60 transition">
-      <td class="py-3 px-3 font-medium text-[#1C1917] font-bold flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#6E645D] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <tr class="hover:bg-slate-50/70 transition">
+      <td class="py-3 px-3 font-medium text-slate-900 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         ${escapeHtml(d.title)}
       </td>
-      <td class="py-3 px-3 text-[#6E645D] uppercase">${escapeHtml(d.file_type)}</td>
+      <td class="py-3 px-3 text-slate-600 uppercase">${escapeHtml(d.file_type)}</td>
       <td class="py-3 px-3">
         <div class="flex items-center gap-2">
-          <span class="text-[#680E23] font-semibold">${d.chunks_count} مقطع</span>
+          <span class="text-slate-900 font-medium">${d.chunks_count} مقطع</span>
           ${statusBadge}
         </div>
       </td>
-      <td class="py-3 px-3 text-[#6E645D] font-mono text-[11px]">${escapeHtml(d.created_at)}</td>
+      <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">${escapeHtml(d.created_at)}</td>
       <td class="py-3 px-3 text-center">
         <button onclick="deleteDocument(${d.id})" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition" title="حذف المستند">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +104,7 @@ async function uploadDocument(e) {
   `;
 
   if (uploadStatus) {
-    uploadStatus.className = 'mt-4 p-3 rounded-xl text-xs bg-[#FAF0F2] border border-[#EAE3D9] text-[#680E23] flex items-center gap-2';
+    uploadStatus.className = 'mt-4 p-3 rounded-lg text-xs bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2';
     uploadStatus.innerHTML = 'جاري استخراج النصوص وتوليد التضمينات الدلالية عبر Gemini...';
     uploadStatus.classList.remove('hidden');
   }

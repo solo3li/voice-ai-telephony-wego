@@ -9,15 +9,15 @@ let currentPbxTrunks = [];
 function switchTelephonySubtab(sub) {
   document.querySelectorAll('.telephony-subtab-panel').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.subtab-btn').forEach(btn => {
-    btn.classList.remove('bg-[#680E23]', 'text-white', 'shadow-sm');
-    btn.classList.add('text-[#6E645D]');
+    btn.classList.remove('bg-[#eff8ff]', 'text-[#1f93ff]', 'border', 'border-[#b2ddff]/70', 'font-semibold', 'shadow-2xs', 'text-white', 'shadow-sm');
+    btn.classList.add('text-slate-600', 'hover:text-slate-900', 'font-medium');
   });
   const target = document.getElementById('subtab-content-' + sub);
   if (target) target.classList.remove('hidden');
   const activeBtn = document.getElementById('subtab-btn-' + sub);
   if (activeBtn) {
-    activeBtn.classList.add('bg-[#680E23]', 'text-white', 'shadow-sm');
-    activeBtn.classList.remove('text-[#6E645D]');
+    activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900', 'font-medium');
+    activeBtn.classList.add('bg-[#eff8ff]', 'text-[#1f93ff]', 'border', 'border-[#b2ddff]/70', 'font-semibold', 'shadow-2xs');
   }
   if (sub === 'dids') {
     loadDids();
@@ -38,21 +38,21 @@ async function loadOutboundTrunk() {
     if (data.has_trunk && data.trunk) {
       currentOutboundTrunk = data.trunk;
       if (badge) {
-        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9]";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
         badge.innerHTML = "متصل وجاهز للاتصال";
       }
 
       if (details) {
         details.innerHTML = `
           <div class="space-y-1.5 pt-1">
-            <div class="flex justify-between items-center"><span class="text-[#6E645D]">الاسم:</span> <span class="font-bold text-[#1C1917]">${escapeHtml(data.trunk.name)}</span></div>
-            <div class="flex justify-between items-center"><span class="text-[#6E645D]">الخادم:</span> <span class="font-mono text-[#680E23] text-[11px]">${escapeHtml(data.trunk.sip_host)}:${data.trunk.sip_port}</span></div>
-            <div class="flex justify-between items-center"><span class="text-[#6E645D]">البروتوكول:</span> <span class="text-[#680E23] font-semibold">${data.trunk.transport}</span></div>
-            <div class="flex justify-between items-center"><span class="text-[#6E645D]">Caller ID:</span> <span class="font-mono text-[#680E23] font-semibold">${escapeHtml(data.trunk.caller_id || 'افتراضي')}</span></div>
-            <div class="flex justify-between items-center"><span class="text-[#6E645D]">معرف LiveKit:</span> <span class="font-mono text-[10px] text-[#680E23]">${data.trunk.livekit_outbound_trunk_id}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">الاسم:</span> <span class="font-bold text-slate-900">${escapeHtml(data.trunk.name)}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">الخادم:</span> <span class="font-mono text-slate-700 text-[11px]">${escapeHtml(data.trunk.sip_host)}:${data.trunk.sip_port}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">البروتوكول:</span> <span class="text-slate-700 font-medium">${data.trunk.transport}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">Caller ID:</span> <span class="font-mono text-slate-700 font-medium">${escapeHtml(data.trunk.caller_id || 'افتراضي')}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">معرف LiveKit:</span> <span class="font-mono text-[10px] text-slate-500">${data.trunk.livekit_outbound_trunk_id}</span></div>
           </div>
-          <div class="pt-2 border-t border-[#EAE3D9] flex justify-end">
-            <button type="button" onclick="handleDeleteOutboundTrunk(${data.trunk.id})" class="text-[11px] text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1 transition">
+          <div class="pt-2 border-t border-slate-200 flex justify-end">
+            <button type="button" onclick="handleDeleteOutboundTrunk(${data.trunk.id})" class="text-[11px] text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 transition">
               <span>حذف الجذع</span>
             </button>
           </div>
@@ -80,7 +80,7 @@ async function loadOutboundTrunk() {
       }
       if (details) {
         details.innerHTML = `
-          <div class="text-[#8C827A] text-center py-4">
+          <div class="text-slate-500 text-center py-4 text-xs">
             لم يتم حفظ أي جذع SIP خارجي بعد. أدخل بيانات حساب Telnyx أو Twilio أو المزود الخاص بك لحفظه.
           </div>
         `;
@@ -130,7 +130,7 @@ async function handleSaveOutboundTrunk(e) {
     const data = await res.json();
     if (data.status === 'success') {
       if (msg) {
-        msg.className = "p-2.5 rounded-xl text-xs font-semibold bg-[#FAF0F2] border border-[#EAE3D9] text-[#680E23]";
+        msg.className = "p-2.5 rounded-lg text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-800";
         msg.innerText = data.message;
       }
       showToast('تم حفظ وتفعيل الجذع الخارجي بنجاح!', 'success');
@@ -289,7 +289,7 @@ async function handleTriggerAICall(e) {
       if (succEl) {
         succEl.innerHTML = `
           <div><strong>✅ ${escapeHtml(data.message)}</strong></div>
-          <div class="mt-1 text-[11px] text-[#680E23] font-bold">الرقم: <span class="font-mono">${escapeHtml(data.destination_phone)}</span> | المسار: <span>${escapeHtml(data.gateway_used || 'الافتراضي')}</span> | الغرفة: <span class="font-mono">${escapeHtml(data.room_name)}</span></div>
+          <div class="mt-1 text-[11px] text-slate-700 font-medium">الرقم: <span class="font-mono">${escapeHtml(data.destination_phone)}</span> | المسار: <span>${escapeHtml(data.gateway_used || 'الافتراضي')}</span> | الغرفة: <span class="font-mono">${escapeHtml(data.room_name)}</span></div>
         `;
         succEl.classList.remove('hidden');
       }
@@ -328,13 +328,13 @@ async function loadPbxTrunks() {
 
     if (currentPbxTrunks.length === 0) {
       grid.innerHTML = `
-        <div class="col-span-full bg-white border-2 border-dashed border-[#EAE3D9] rounded-3xl p-8 text-center space-y-3">
+        <div class="col-span-full bg-white border-2 border-dashed border-slate-200 rounded-xl p-8 text-center space-y-3">
           <div class="text-3xl">🏢</div>
-          <div class="text-[#443D39] font-semibold text-sm">لا يوجد سنترال محلي مربوط حالياً</div>
-          <p class="text-[#8C827A] text-xs max-w-md mx-auto">
+          <div class="text-slate-900 font-semibold text-sm">لا يوجد سنترال محلي مربوط حالياً</div>
+          <p class="text-slate-500 text-xs max-w-md mx-auto">
             اضغط على زر "ربط سنترال Issabel / Asterisk جديد" لإنشاء جذع SIP والحصول على كود PEER Details الجاهز للصق في السنترال.
           </p>
-          <button type="button" onclick="openNewPbxModal()" class="px-4 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white font-semibold text-xs inline-flex items-center gap-1.5 shadow-md shadow-[#680E23]/20">
+          <button type="button" onclick="openNewPbxModal()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white font-medium text-xs inline-flex items-center gap-1.5 shadow-2xs">
             <span>➕ ربط أول سنترال</span>
           </button>
         </div>
@@ -345,12 +345,12 @@ async function loadPbxTrunks() {
     grid.innerHTML = currentPbxTrunks.map(t => {
       const isIp = t.auth_mode === 'ip';
       const authBadge = isIp
-        ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9]">IP: ${escapeHtml(t.pbx_ip || 'غير محدد')}</span>`
-        : `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF0F2]/80 text-[#680E23] border border-[#EAE3D9]">User: ${escapeHtml(t.auth_username || 'غير محدد')}</span>`;
+        ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200">IP: ${escapeHtml(t.pbx_ip || 'غير محدد')}</span>`
+        : `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200">User: ${escapeHtml(t.auth_username || 'غير محدد')}</span>`;
 
       const destBadge = t.destination_type === 'ai'
-        ? `<div class="flex items-center gap-1.5 text-xs text-[#680E23] font-semibold"><span>🤖</span> <span>المساعد الذكي (Smart IVR)</span> ${t.target_profile_name ? `<span class="text-[10px] text-[#6E645D] font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
-        : `<div class="flex items-center gap-1.5 text-xs text-[#680E23] font-semibold"><span>👥</span> <span>طابور: ${escapeHtml(t.target_queue_name || 'غير محدد')} [${escapeHtml(t.target_queue_code || '')}]</span></div>`;
+        ? `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><span>🤖</span> <span>المساعد الذكي (Smart IVR)</span> ${t.target_profile_name ? `<span class="text-[10px] text-slate-500 font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
+        : `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><span>👥</span> <span>طابور: ${escapeHtml(t.target_queue_name || 'غير محدد')} [${escapeHtml(t.target_queue_code || '')}]</span></div>`;
 
       let numDisplay = '';
       if (Array.isArray(t.inbound_numbers)) {
@@ -359,19 +359,19 @@ async function loadPbxTrunks() {
         numDisplay = t.inbound_numbers.trim();
       }
       const numbersBadge = numDisplay
-        ? `<span class="font-mono text-[#443D39]">${escapeHtml(numDisplay)}</span>`
-        : `<span class="text-[#8C827A]">جميع المكالمات الواردة</span>`;
+        ? `<span class="font-mono text-slate-700">${escapeHtml(numDisplay)}</span>`
+        : `<span class="text-slate-400">جميع المكالمات الواردة</span>`;
 
       const bidiBadge = t.enable_outbound
-        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9]" title="صادر ووارد">🔄 ${t.is_default_outbound ? 'ثنائي (افتراضي)' : 'ثنائي الاتجاه'}</span>`
-        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">وارد فقط</span>`;
+        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-100" title="صادر ووارد">🔄 ${t.is_default_outbound ? 'ثنائي (افتراضي)' : 'ثنائي الاتجاه'}</span>`
+        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">وارد فقط</span>`;
 
       return `
-        <div class="bg-white border border-[#EAE3D9] hover:border-[#680E23]/40 transition rounded-2xl p-4 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md">
+        <div class="bg-white border border-slate-200 hover:border-slate-300 transition rounded-xl p-4 flex flex-col justify-between space-y-4 shadow-2xs">
           <div class="space-y-2.5">
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="font-bold text-[#1C1917] text-sm flex items-center gap-1.5">
+                <h3 class="font-semibold text-slate-900 text-sm flex items-center gap-1.5">
                   <span>🏢</span>
                   <span>${escapeHtml(t.name)}</span>
                 </h3>
@@ -380,26 +380,26 @@ async function loadPbxTrunks() {
                   ${bidiBadge}
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-medium ${t.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
                 ${t.is_active ? '🟢 متصل' : '⚪ معطل'}
               </span>
             </div>
 
-            <div class="pt-2 border-t border-[#EAE3D9] space-y-1.5 text-xs">
+            <div class="pt-2 border-t border-slate-200 space-y-1.5 text-xs">
               <div class="flex justify-between items-center text-[11px]">
-                <span class="text-[#6E645D]">الوجهة:</span>
+                <span class="text-slate-500">الوجهة:</span>
                 ${destBadge}
               </div>
               <div class="flex justify-between items-center text-[11px]">
-                <span class="text-[#6E645D]">الأرقام / DIDs:</span>
+                <span class="text-slate-500">الأرقام / DIDs:</span>
                 ${numbersBadge}
               </div>
-              <div class="flex justify-between items-center text-[10px] font-mono text-[#8C827A]">
+              <div class="flex justify-between items-center text-[10px] font-mono text-slate-400">
                 <span>LiveKit Trunk:</span>
                 <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_trunk_id || '')}">${escapeHtml(t.livekit_trunk_id ? t.livekit_trunk_id.substring(0, 15) + '...' : 'غير مزامن')}</span>
               </div>
               ${t.enable_outbound && t.livekit_outbound_trunk_id ? `
-              <div class="flex justify-between items-center text-[10px] font-mono text-[#680E23]/80">
+              <div class="flex justify-between items-center text-[10px] font-mono text-slate-500">
                 <span>LK Outbound:</span>
                 <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_outbound_trunk_id)}">${escapeHtml(t.livekit_outbound_trunk_id.substring(0, 15) + '...')}</span>
               </div>
@@ -407,11 +407,11 @@ async function loadPbxTrunks() {
             </div>
           </div>
 
-          <div class="pt-2 border-t border-[#EAE3D9] flex items-center justify-between gap-2">
+          <div class="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
             <button 
               type="button" 
               onclick="showIssabelConfigModal(${t.id})" 
-              class="px-3 py-1.5 rounded-xl bg-[#FAF0F2] hover:bg-[#F5E0E4] text-[#680E23] border border-[#EAE3D9] text-[11px] font-bold transition flex items-center gap-1 shadow-sm"
+              class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[11px] font-medium transition flex items-center gap-1 shadow-2xs"
               title="عرض كود الإعداد للسنترال"
             >
               <span>📋 كود Issabel</span>
@@ -419,7 +419,7 @@ async function loadPbxTrunks() {
             <button 
               type="button" 
               onclick="handleDeletePbxTrunk(${t.id}, '${escapeHtml(t.name)}')" 
-              class="p-1.5 rounded-xl hover:bg-rose-50 text-[#8C827A] hover:text-rose-600 transition"
+              class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
               title="حذف الربط"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -721,7 +721,7 @@ async function loadDids() {
     if (currentDids.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center py-6 text-[#8C827A] text-xs">
+          <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
             لا توجد أرقام DID مسجلة بعد. اضغط "إضافة رقم DID جديد" لربط أول رقم.
           </td>
         </tr>
@@ -730,32 +730,32 @@ async function loadDids() {
     }
 
     tbody.innerHTML = currentDids.map(did => `
-      <tr class="hover:bg-[#F5EFE6]/60 transition">
+      <tr class="hover:bg-slate-50/70 transition">
         <td class="py-3 px-3">
-          <span class="font-mono font-bold text-[#680E23] bg-[#FAF0F2] border border-[#EAE3D9] px-2.5 py-1 rounded-lg text-sm shadow-sm">
+          <span class="font-mono font-medium text-slate-900 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-sm shadow-2xs">
             ${escapeHtml(did.phone_number || did.did_number)}
           </span>
         </td>
-        <td class="py-3 px-3 text-[#443D39] font-semibold">${escapeHtml(did.label || did.description || '—')}</td>
+        <td class="py-3 px-3 text-slate-700 font-medium">${escapeHtml(did.label || did.description || '—')}</td>
         <td class="py-3 px-3">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] font-semibold text-[11px]">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 font-medium text-[11px]">
             <span>🤖</span>
             <span>${escapeHtml(did.target_profile_name || did.agent_profile_name || 'الافتراضي')}</span>
           </span>
         </td>
         <td class="py-3 px-3 text-center">
           ${did.is_active 
-            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">نشط وموجه</span>'
-            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">معطل</span>'
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">نشط وموجه</span>'
+            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">معطل</span>'
           }
         </td>
-        <td class="py-3 px-3 text-[#8C827A] font-mono text-[11px]">${escapeHtml(did.created_at || '—')}</td>
+        <td class="py-3 px-3 text-slate-400 font-mono text-[11px]">${escapeHtml(did.created_at || '—')}</td>
         <td class="py-3 px-3 text-center">
           <div class="flex items-center justify-center gap-1.5">
             <button 
               type="button" 
               onclick="editDid(${did.id})"
-              class="px-2.5 py-1 rounded-lg bg-[#FAF0F2] hover:bg-[#FAF0F2]/80 text-[#680E23] border border-[#E8CCD2] text-[11px] font-bold transition shadow-sm"
+              class="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium transition shadow-2xs"
               title="تعديل الرقم"
             >
               <span>✏️ تعديل</span>
@@ -763,7 +763,7 @@ async function loadDids() {
             <button 
               type="button" 
               onclick="deleteDid(${did.id}, '${escapeHtml(did.phone_number || did.did_number)}')"
-              class="p-1 rounded-lg hover:bg-rose-100 hover:text-rose-700 text-[#8C827A] transition"
+              class="p-1 rounded-lg hover:bg-rose-100 hover:text-rose-700 text-slate-400 transition"
               title="حذف الرقم"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

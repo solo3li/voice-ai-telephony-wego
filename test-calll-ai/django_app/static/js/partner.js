@@ -43,13 +43,12 @@ async function checkPartnerStatusOnLoad() {
     } else {
       const banner = document.getElementById('partner-status-banner');
       if (banner) {
-        banner.className = 'p-4 rounded-2xl text-xs font-semibold bg-[#FAF0F2] text-[#680E23] border border-[#EAE3D9] flex items-center justify-between gap-3';
+        banner.className = 'p-4 rounded-xl text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200 flex items-center justify-between gap-3 shadow-2xs';
         banner.innerHTML = `
           <div class="flex items-center gap-2">
-            <span>💼</span>
             <span>لم تقم بالتقديم لبرنامج الشركاء والموزعين بعد. انضم الآن للحصول على خصومات تسعير الجملة ومفاتيح الربط البرمجي.</span>
           </div>
-          <button type="button" onclick="openPartnerApplyModal(null)" class="px-4 py-1.5 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition shadow-sm">
+          <button type="button" onclick="openPartnerApplyModal(null)" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs">
             تقديم طلب شراكة
           </button>
         `;
@@ -109,28 +108,28 @@ async function loadPartnerDashboard() {
     const cTbody = document.getElementById('partner-clients-tbody');
     if (cTbody) {
       if (clients.length === 0) {
-        cTbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-[#8C827A]">لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.</td></tr>`;
+        cTbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.</td></tr>`;
       } else {
         cTbody.innerHTML = clients.map(c => `
-          <tr class="hover:bg-[#FAF7F2]/60 transition">
-            <td class="py-3 px-4 font-mono font-bold text-[#680E23]">${c.client_id}</td>
-            <td class="py-3 px-4 font-semibold text-[#1C1917]">${escapeHtml(c.name)} <span class="text-[10px] text-[#8C827A] block font-mono">${escapeHtml(c.email || '')}</span></td>
-            <td class="py-3 px-4 font-mono text-[#443D39]">${escapeHtml(c.external_reference || '-')}</td>
-            <td class="py-3 px-4 text-[#8C827A]">${escapeHtml(c.created_at || '')}</td>
-            <td class="py-3 px-4 font-mono font-bold text-[#1C1917]">${c.total_minutes} د</td>
-            <td class="py-3 px-4 font-mono font-bold text-emerald-700">$${c.total_spent ? c.total_spent.toFixed(2) : '0.00'}</td>
-            <td class="py-3 px-4 text-[#443D39]">
+          <tr class="hover:bg-slate-50/60 transition">
+            <td class="py-3 px-4 font-mono font-medium text-[#1f93ff]">${c.client_id}</td>
+            <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.name)} <span class="text-[10px] text-slate-400 block font-mono">${escapeHtml(c.email || '')}</span></td>
+            <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(c.external_reference || '-')}</td>
+            <td class="py-3 px-4 text-slate-400">${escapeHtml(c.created_at || '')}</td>
+            <td class="py-3 px-4 font-mono font-medium text-slate-900">${c.total_minutes} د</td>
+            <td class="py-3 px-4 font-mono font-medium text-emerald-700">$${c.total_spent ? c.total_spent.toFixed(2) : '0.00'}</td>
+            <td class="py-3 px-4 text-slate-700">
               ${c.spending_cap ? '$' + c.spending_cap : 'بلا سقف'} 
               ${c.minute_cap ? '(' + c.minute_cap + 'د)' : ''}
             </td>
             <td class="py-3 px-4">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium ${c.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
                 ${c.is_active ? 'مفعل' : 'موقوف'}
               </span>
             </td>
             <td class="py-3 px-4">
-              <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active})" class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] text-xs font-semibold transition">
-                ⚙️ تعديل السقف
+              <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition">
+                تعديل السقف
               </button>
             </td>
           </tr>
@@ -142,17 +141,17 @@ async function loadPartnerDashboard() {
     const callsTbody = document.getElementById('partner-calls-tbody');
     if (callsTbody) {
       if (calls.length === 0) {
-        callsTbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-[#8C827A]">لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.</td></tr>`;
+        callsTbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.</td></tr>`;
       } else {
         callsTbody.innerHTML = calls.map(cl => `
-          <tr class="hover:bg-[#FAF7F2]/60 transition">
-            <td class="py-3 px-4 text-[#8C827A]">${escapeHtml(cl.started_at || '')}</td>
-            <td class="py-3 px-4 font-bold text-[#1C1917]">${escapeHtml(cl.client_name)} <span class="text-[10px] text-[#680E23] block font-mono">ID: ${cl.client_id}</span></td>
-            <td class="py-3 px-4 font-mono text-[#443D39]">${escapeHtml(cl.caller_phone || '-')}</td>
-            <td class="py-3 px-4 font-mono text-[#443D39]">${cl.duration_seconds} ث</td>
-            <td class="py-3 px-4 font-mono font-bold text-[#1C1917]">${cl.billed_minutes} د</td>
-            <td class="py-3 px-4 font-mono font-bold text-emerald-700">$${cl.cost ? cl.cost.toFixed(2) : '0.00'}</td>
-            <td class="py-3 px-4 text-xs text-[#443D39] max-w-xs truncate" title="${escapeHtml(cl.summary || '')}">${escapeHtml(cl.summary || 'لا يوجد ملخص')}</td>
+          <tr class="hover:bg-slate-50/60 transition">
+            <td class="py-3 px-4 text-slate-400">${escapeHtml(cl.started_at || '')}</td>
+            <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(cl.client_name)} <span class="text-[10px] text-slate-500 block font-mono">ID: ${cl.client_id}</span></td>
+            <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(cl.caller_phone || '-')}</td>
+            <td class="py-3 px-4 font-mono text-slate-700">${cl.duration_seconds} ث</td>
+            <td class="py-3 px-4 font-mono font-medium text-slate-900">${cl.billed_minutes} د</td>
+            <td class="py-3 px-4 font-mono font-medium text-emerald-700">$${cl.cost ? cl.cost.toFixed(2) : '0.00'}</td>
+            <td class="py-3 px-4 text-xs text-slate-700 max-w-xs truncate" title="${escapeHtml(cl.summary || '')}">${escapeHtml(cl.summary || 'لا يوجد ملخص')}</td>
           </tr>
         `).join('');
       }

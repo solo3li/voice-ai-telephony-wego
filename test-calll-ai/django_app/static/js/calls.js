@@ -24,7 +24,7 @@ async function loadCallsList() {
   if (tbody && (!cachedCalls || cachedCalls.length === 0)) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="py-8 text-center text-[#8C827A]">
+        <td colspan="8" class="py-8 text-center text-slate-400">
           <span class="inline-block animate-spin mr-2">🔄</span> جاري تحميل سجل المكالمات...
         </td>
       </tr>
@@ -71,7 +71,7 @@ function renderCallsTable(calls) {
   if (!calls || calls.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="py-8 text-center text-[#8C827A]">
+        <td colspan="8" class="py-8 text-center text-slate-400">
           لا توجد مكالمات تطابق معايير البحث والتصفية المحددة.
         </td>
       </tr>
@@ -83,15 +83,15 @@ function renderCallsTable(calls) {
     let dirBadge = '';
     if (c.is_internal_test || c.direction === 'internal_test') {
       const extLabel = c.caller_extension ? ` (${c.caller_extension})` : '';
-      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">🧪 اختبار داخلي${extLabel}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">اختبار داخلي${extLabel}</span>`;
     } else if (c.direction === 'internal_employee') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">📞 داخلية (موظفين)</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">داخلية (موظفين)</span>`;
     } else if (c.direction === 'inbound') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300">📥 واردة</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200">واردة</span>`;
     } else if (c.direction === 'outbound_ai') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">🤖 صادرة AI</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">صادرة AI</span>`;
     } else {
-      dirBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">👤 صادرة موظف</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">صادرة موظف</span>`;
     }
 
     const party = c.destination_phone || c.caller_phone || 'Web Dashboard';
@@ -101,31 +101,31 @@ function renderCallsTable(calls) {
     const durFormatted = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 
     return `
-      <tr class="hover:bg-[#F5EFE6]/50 transition">
-        <td class="py-3 px-4 text-[#6E645D] font-mono text-[11px] whitespace-nowrap">${c.started_at}</td>
+      <tr class="hover:bg-slate-50/60 transition">
+        <td class="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">${c.started_at}</td>
         <td class="py-3 px-4">
           ${dirBadge}
-          ${isTransferred ? '<span class="mt-1 block px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 w-fit">🔄 محولة لموظف</span>' : ''}
+          ${isTransferred ? '<span class="mt-1 block px-2 py-0.5 rounded-md text-[9px] font-medium bg-purple-50 text-purple-700 border border-purple-200 w-fit">محولة لموظف</span>' : ''}
         </td>
-        <td class="py-3 px-4 font-mono font-bold text-[#1C1917]">${escapeHtml(party)}</td>
-        <td class="py-3 px-4 text-[#443D39] max-w-[130px] truncate" title="${escapeHtml(c.room_name)}">${escapeHtml(c.room_name)}</td>
-        <td class="py-3 px-4 font-mono text-[#6E645D]">${durFormatted}</td>
+        <td class="py-3 px-4 font-mono font-medium text-slate-900">${escapeHtml(party)}</td>
+        <td class="py-3 px-4 text-slate-700 max-w-[130px] truncate" title="${escapeHtml(c.room_name)}">${escapeHtml(c.room_name)}</td>
+        <td class="py-3 px-4 font-mono text-slate-500">${durFormatted}</td>
         <td class="py-3 px-4">
-          <span class="px-2 py-0.5 rounded-md font-mono font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] text-[11px]">${c.billed_minutes || 0} دقيقة</span>
+          <span class="px-2 py-0.5 rounded-md font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200 text-[11px]">${c.billed_minutes || 0} دقيقة</span>
         </td>
-        <td class="py-3 px-4 font-mono font-bold text-emerald-700">$${(c.cost || 0).toFixed(2)}</td>
+        <td class="py-3 px-4 font-mono font-medium text-emerald-700">$${(c.cost || 0).toFixed(2)}</td>
         <td class="py-3 px-4 whitespace-nowrap">
-          <button type="button" onclick="openCallDetailModal(${c.id})" class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#DDD5C7] text-[#680E23] text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm">
-            <span>👁️ التفاصيل</span>
+          <button type="button" onclick="openCallDetailModal(${c.id})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs">
+            <span>التفاصيل</span>
           </button>
           ${c.recording_url ? `
-            <a href="${c.recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-sm" title="استماع لتسجيل الـ AI">
-              <span>🤖</span> <span>AI</span>
+            <a href="${c.recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs" title="استماع لتسجيل الـ AI">
+              <span>AI</span>
             </a>
           ` : ''}
           ${c.transferred_recording_url ? `
-            <a href="${c.transferred_recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-sm" title="استماع لتسجيل الموظف البشري">
-              <span>👤</span> <span>موظف</span>
+            <a href="${c.transferred_recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-md bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs" title="استماع لتسجيل الموظف البشري">
+              <span>موظف</span>
             </a>
           ` : ''}
         </td>
@@ -147,11 +147,11 @@ function setCallsTypeFilter(type) {
     else if (type === 'internal') dirSel.value = 'internal';
   }
   document.querySelectorAll('.call-type-btn').forEach(b => {
-    b.className = 'call-type-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition';
+    b.className = 'call-type-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition';
   });
   const activeBtn = document.getElementById('btn-type-' + type);
   if (activeBtn) {
-    activeBtn.className = 'call-type-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#680E23] text-white shadow-sm transition';
+    activeBtn.className = 'call-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] transition';
   }
   loadCallsList();
 }
@@ -159,11 +159,11 @@ function setCallsTypeFilter(type) {
 function setCallsDatePreset(preset) {
   currentCallsDatePreset = preset;
   document.querySelectorAll('.preset-date-btn').forEach(b => {
-    b.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] hover:bg-[#F5EFE6] transition';
+    b.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition';
   });
   const activeBtn = document.getElementById('btn-preset-' + preset);
   if (activeBtn) {
-    activeBtn.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#680E23] text-white transition';
+    activeBtn.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] transition';
   }
   loadCallsList();
 }

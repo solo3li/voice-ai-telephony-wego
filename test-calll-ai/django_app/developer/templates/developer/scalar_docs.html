@@ -23,15 +23,15 @@
         extend: {
           colors: {
             brand: {
-              canvas: '#FAF7F2',
-              primary: '#680E23',
-              primaryHover: '#520B1C',
-              gold: '#D4AF37',
-              goldHover: '#B8972E',
-              dark: '#1C1917',
-              muted: '#78716C',
+              canvas: '#f8fafc',
+              primary: '#1f93ff',
+              primaryHover: '#1570ef',
+              gold: '#0284c7',
+              goldHover: '#0369a1',
+              dark: '#0f172a',
+              muted: '#64748b',
               surface: '#FFFFFF',
-              border: '#E7E5E4'
+              border: '#eaedf0'
             }
           },
           fontFamily: {
@@ -45,49 +45,49 @@
 
   <style>
     body {
-      background-color: #FAF7F2;
-      color: #1C1917;
+      background-color: #f8fafc;
+      color: #0f172a;
       font-family: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif{% endif %};
       margin: 0;
       padding: 0;
     }
 
-    /* Scalar API Reference Custom Theme (Burgundy & Warm Off-White) */
+    /* Scalar API Reference Custom Theme (Minimalist Slate & Sky) */
     :root, .scalar-api-reference, .light-mode {
       --scalar-font: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', sans-serif{% endif %} !important;
       --scalar-font-code: 'Inter', monospace !important;
       
       /* Brand Color Palette */
-      --scalar-color-1: #1C1917 !important;
-      --scalar-color-2: #78716C !important;
-      --scalar-color-3: #A8A29E !important;
-      --scalar-color-accent: #680E23 !important;
+      --scalar-color-1: #0f172a !important;
+      --scalar-color-2: #64748b !important;
+      --scalar-color-3: #94a3b8 !important;
+      --scalar-color-accent: #1f93ff !important;
       
       /* Backgrounds */
-      --scalar-background-1: #FAF7F2 !important;
+      --scalar-background-1: #f8fafc !important;
       --scalar-background-2: #FFFFFF !important;
-      --scalar-background-3: #F5EFEB !important;
-      --scalar-background-accent: #680E23 !important;
+      --scalar-background-3: #f1f5f9 !important;
+      --scalar-background-accent: #1f93ff !important;
       
       /* Borders & Dividers */
-      --scalar-border-color: #E7E5E4 !important;
+      --scalar-border-color: #eaedf0 !important;
       
       /* Buttons */
-      --scalar-button-1: #680E23 !important;
-      --scalar-button-1-hover: #520B1C !important;
+      --scalar-button-1: #1f93ff !important;
+      --scalar-button-1-hover: #1570ef !important;
       --scalar-button-1-color: #FFFFFF !important;
 
       /* Sidebar & Badges */
-      --scalar-sidebar-background-1: #FAF7F2 !important;
-      --scalar-sidebar-item-hover-background: #F5EFEB !important;
+      --scalar-sidebar-background-1: #f8fafc !important;
+      --scalar-sidebar-item-hover-background: #f1f5f9 !important;
       --scalar-sidebar-item-active-background: #FFFFFF !important;
-      --scalar-sidebar-color-1: #1C1917 !important;
-      --scalar-sidebar-color-2: #78716C !important;
-      --scalar-sidebar-border-color: #E7E5E4 !important;
+      --scalar-sidebar-color-1: #0f172a !important;
+      --scalar-sidebar-color-2: #64748b !important;
+      --scalar-sidebar-border-color: #eaedf0 !important;
       
       /* Code and Pre */
-      --scalar-code-background: #181514 !important;
-      --scalar-code-color: #FEE2E2 !important;
+      --scalar-code-background: #0f172a !important;
+      --scalar-code-color: #f8fafc !important;
     }
 
     /* Clean Sidebar: Hide Models, Generate MCP, and Powered by Scalar */

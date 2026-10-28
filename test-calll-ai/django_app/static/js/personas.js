@@ -44,7 +44,7 @@ function toggleWelcomeInput(target) {
     const isChecked = fieldWelcomeEnabled ? fieldWelcomeEnabled.checked : true;
     if (welcomeToggleStatus) {
       welcomeToggleStatus.innerText = isChecked ? 'مفعلة' : 'معطلة';
-      welcomeToggleStatus.className = isChecked ? 'ms-2 text-xs font-semibold text-[#680E23]' : 'ms-2 text-xs font-semibold text-[#8C827A]';
+      welcomeToggleStatus.className = isChecked ? 'ms-2 text-xs font-medium text-[#1f93ff]' : 'ms-2 text-xs font-medium text-slate-400';
     }
     if (fieldWelcome) {
       fieldWelcome.disabled = !isChecked;
@@ -182,8 +182,8 @@ function renderProfileCards() {
 
   if (!userProfiles || userProfiles.length === 0) {
     container.innerHTML = `
-      <div class="col-span-2 text-center py-10 bg-white rounded-3xl border border-[#EAE3D9] text-[#8C827A] text-xs">
-        لا توجد شخصيات مسجلة حالياً. اضغط على "+ إنشاء شخصية جديدة" للبدء.
+      <div class="col-span-2 text-center py-10 bg-white rounded-xl border border-[#eaedf0] text-slate-400 text-xs">
+        لا توجد شخصيات مسجلة حالياً. اضغط على "إنشاء شخصية جديدة" للبدء.
       </div>
     `;
     return;
@@ -192,23 +192,22 @@ function renderProfileCards() {
   container.innerHTML = userProfiles.map(p => {
     const isActive = Boolean(p.is_active);
     const isFemale = p.gender === 'female';
-    const avatarBg = isActive ? 'from-[#680E23] to-[#8C1633]' : 'from-[#78716C] to-[#57534E]';
     const avatarEmoji = isFemale ? '👩🏻‍💼' : '👨🏻‍💼';
 
     return `
-      <div class="bg-white rounded-3xl p-5 border ${isActive ? 'border-2 border-[#D4AF37] shadow-lg shadow-[#680E23]/10 ring-2 ring-[#680E23]/10' : 'border border-[#EAE3D9] shadow-sm hover:border-[#C5A880]'} transition-all duration-300 flex flex-col justify-between gap-4">
+      <div class="bg-white rounded-xl p-5 border ${isActive ? 'border-[#1f93ff] ring-1 ring-[#1f93ff]/20 shadow-2xs' : 'border-[#eaedf0] shadow-2xs hover:border-slate-300'} transition-all duration-300 flex flex-col justify-between gap-4">
         <!-- Card Header -->
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${avatarBg} text-2xl flex items-center justify-center text-white shadow shrink-0">
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 text-xl flex items-center justify-center border border-slate-200/60 shrink-0">
               ${avatarEmoji}
             </div>
             <div>
-              <h4 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+              <h4 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
                 <span>${escapeHtml(p.name)}</span>
-                ${isActive ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">معتمد للمكالمات الحية ⭐</span>' : ''}
+                ${isActive ? '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">معتمد للمكالمات الحية</span>' : ''}
               </h4>
-              <p class="text-xs text-[#6E645D] mt-0.5 font-medium">
+              <p class="text-xs text-slate-500 mt-0.5 font-normal">
                 ${escapeHtml(p.role_display || p.role || p.persona_role)} &bull; ${escapeHtml(p.dialect_display || p.dialect)}
               </p>
             </div>
@@ -216,48 +215,48 @@ function renderProfileCards() {
         </div>
 
         <!-- Card Voice Timber & Details -->
-        <div class="bg-[#FAF7F2] p-3 rounded-2xl border border-[#EAE3D9] text-xs space-y-1.5">
+        <div class="bg-slate-50/60 p-3 rounded-lg border border-[#eaedf0] text-xs space-y-1.5">
           <div class="flex justify-between items-center">
-            <span class="text-[#8C827A]">صوت Google:</span>
-            <span class="font-mono font-bold text-[#680E23] bg-white px-2 py-0.5 rounded-md border border-[#E8CCD2] text-[11px]">${escapeHtml(p.voice || p.voice_name)}</span>
+            <span class="text-slate-500">صوت Google:</span>
+            <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">${escapeHtml(p.voice || p.voice_name)}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-[#8C827A]">الأسلوب:</span>
-            <span class="text-[#2D2825] font-medium">${escapeHtml(p.style_display || p.style || p.speaking_style)}</span>
+            <span class="text-slate-500">الأسلوب:</span>
+            <span class="text-slate-800 font-medium">${escapeHtml(p.style_display || p.style || p.speaking_style)}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-[#8C827A]">الترحيب الافتتاحي:</span>
-            <span class="text-[11px] font-semibold ${p.is_welcome_message_enabled !== false ? 'text-[#680E23]' : 'text-[#8C827A]'}">
-              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `💬 "${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : '✨ ترحيب تلقائي ذكي') : '🤫 انتظار المتصل أولاً'}
+            <span class="text-slate-500">الترحيب الافتتاحي:</span>
+            <span class="text-[11px] font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#1f93ff]' : 'text-slate-400'}">
+              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `💬 "${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : 'ترحيب تلقائي ذكي') : 'انتظار المتصل أولاً'}
             </span>
           </div>
           ${p.off_topic_response ? `
             <div class="flex justify-between items-center">
-              <span class="text-[#8C827A]">الرد خارج النطاق:</span>
-              <span class="text-[11px] font-medium text-[#680E23] truncate max-w-[200px]" title="${escapeHtml(p.off_topic_response)}">
-                🛡️ "${escapeHtml(p.off_topic_response)}"
+              <span class="text-slate-500">الرد خارج النطاق:</span>
+              <span class="text-[11px] font-medium text-slate-700 truncate max-w-[200px]" title="${escapeHtml(p.off_topic_response)}">
+                "${escapeHtml(p.off_topic_response)}"
               </span>
             </div>
           ` : ''}
           ${p.custom_instructions ? `
-            <div class="pt-1.5 border-t border-[#EAE3D9] text-[11px] text-[#6E645D] italic line-clamp-2">
+            <div class="pt-1.5 border-t border-[#eaedf0] text-[11px] text-slate-500 italic line-clamp-2">
               "${escapeHtml(p.custom_instructions)}"
             </div>
           ` : ''}
         </div>
 
         <!-- Card Actions -->
-        <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#EAE3D9]">
-          <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-xl bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] text-xs font-semibold transition flex items-center gap-1">
-            <span>⚙️ تعديل التفاصيل</span>
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#eaedf0]">
+          <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition flex items-center gap-1">
+            <span>تعديل التفاصيل</span>
           </button>
           ${isActive ? `
-            <span class="text-xs text-emerald-700 font-bold flex items-center gap-1">
+            <span class="text-xs text-emerald-700 font-medium flex items-center gap-1">
               <span>✓</span> مفعل حالياً
             </span>
           ` : `
-            <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition shadow-sm flex items-center gap-1">
-              <span>🚀</span> تفعيل للمكالمات
+            <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition shadow-2xs flex items-center gap-1">
+              <span>تفعيل للمكالمات</span>
             </button>
           `}
         </div>
@@ -399,7 +398,7 @@ function populateProfileForm(p) {
 
   if (profileStatusMsg) {
     profileStatusMsg.innerText = `البروفايل المطبق: "${p.name}" (${p.voice_name || p.voice} / ${p.dialect_display || p.dialect})`;
-    profileStatusMsg.className = 'text-xs text-[#680E23] font-semibold';
+    profileStatusMsg.className = 'text-xs text-slate-700 font-semibold';
   }
 }
 
@@ -411,8 +410,8 @@ function selectAndScrollToProfile(profileId) {
   const editor = document.getElementById('profile-editor-card');
   if (editor) {
     editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    editor.classList.add('ring-2', 'ring-[#680E23]');
-    setTimeout(() => editor.classList.remove('ring-2', 'ring-[#680E23]'), 1500);
+    editor.classList.add('ring-2', 'ring-[#1f93ff]');
+    setTimeout(() => editor.classList.remove('ring-2', 'ring-[#1f93ff]'), 1500);
   }
 }
 
@@ -623,7 +622,7 @@ function renderModalCustomRolesList() {
 
   if (!tenantCustomRoles || tenantCustomRoles.length === 0) {
     container.innerHTML = `
-      <div class="text-center py-6 text-[#8C827A] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D9]">
+      <div class="text-center py-6 text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
         لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!
       </div>
     `;
@@ -631,25 +630,25 @@ function renderModalCustomRolesList() {
   }
 
   container.innerHTML = tenantCustomRoles.map(cr => `
-    <div class="bg-white p-3.5 rounded-2xl border border-[#EAE3D9] shadow-sm space-y-2">
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2">
       <div class="flex items-start justify-between gap-2">
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-[#1C1917] text-xs">${escapeHtml(cr.name)}</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2] font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
+            <span class="font-bold text-slate-900 text-xs">${escapeHtml(cr.name)}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-50 text-sky-700 border border-sky-100 font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
           </div>
-          ${cr.description ? `<p class="text-[11px] text-[#6E645D] mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
+          ${cr.description ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-[11px] font-bold transition">
+          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-[11px] font-medium transition">
             استخدام
           </button>
-          <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-xl bg-[#F5EFE6] hover:bg-rose-50 text-rose-700 text-[11px] font-bold transition">
+          <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-[11px] font-medium transition">
             حذف
           </button>
         </div>
       </div>
-      <div class="bg-[#FAF7F2] p-2 rounded-xl text-[10px] text-[#443D39] line-clamp-2 italic border border-[#EAE3D9]">
+      <div class="bg-slate-50 p-2 rounded-lg text-[10px] text-slate-600 line-clamp-2 italic border border-slate-100">
         "${escapeHtml(cr.role_prompt)}"
       </div>
     </div>

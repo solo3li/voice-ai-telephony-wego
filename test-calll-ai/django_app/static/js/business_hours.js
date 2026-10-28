@@ -42,7 +42,7 @@ function populateScheduleForm(sched) {
     masterSwitch.checked = Boolean(sched.is_enabled);
     if (masterLabel) {
       masterLabel.innerText = sched.is_enabled ? 'مفعل' : 'معطل';
-      masterLabel.className = sched.is_enabled ? 'text-xs font-bold text-[#680E23]' : 'text-xs font-bold text-[#443D39]';
+      masterLabel.className = sched.is_enabled ? 'text-xs font-semibold text-[#1f93ff]' : 'text-xs font-medium text-slate-500';
     }
   }
 
@@ -127,24 +127,24 @@ function renderDaysTable(config) {
     const endVal = dayData.end_time || '17:00';
 
     return `
-      <tr class="hover:bg-[#FAF7F2]/60 transition py-2" id="row-day-${d.key}">
-        <td class="py-2.5 font-bold text-[#1C1917]">${d.label}</td>
+      <tr class="hover:bg-slate-50/60 transition py-2" id="row-day-${d.key}">
+        <td class="py-2.5 font-semibold text-slate-900">${d.label}</td>
         <td class="py-2.5 text-center">
           <label class="inline-flex items-center cursor-pointer gap-2">
-            <input type="checkbox" id="check-workday-${d.key}" onchange="toggleDayWorkday('${d.key}')" ${isWorkday ? 'checked' : ''} class="w-4 h-4 text-[#680E23] rounded accent-[#680E23] cursor-pointer">
-            <span class="text-xs ${isWorkday ? 'text-[#1C1917] font-semibold' : 'text-[#8C827A]'}" id="label-workday-${d.key}">
+            <input type="checkbox" id="check-workday-${d.key}" onchange="toggleDayWorkday('${d.key}')" ${isWorkday ? 'checked' : ''} class="w-4 h-4 text-[#1f93ff] rounded accent-[#1f93ff] cursor-pointer">
+            <span class="text-xs ${isWorkday ? 'text-slate-900 font-medium' : 'text-slate-400'}" id="label-workday-${d.key}">
               ${isWorkday ? 'يوم عمل' : 'عطلة'}
             </span>
           </label>
         </td>
         <td class="py-2.5 text-center">
-          <input type="time" id="start-time-${d.key}" value="${startVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-[#DDD5C7] rounded-lg text-xs text-[#1C1917] font-mono focus:outline-none focus:border-[#680E23] disabled:opacity-40 disabled:bg-gray-100">
+          <input type="time" id="start-time-${d.key}" value="${startVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#1f93ff] disabled:opacity-40 disabled:bg-slate-50">
         </td>
         <td class="py-2.5 text-center">
-          <input type="time" id="end-time-${d.key}" value="${endVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-[#DDD5C7] rounded-lg text-xs text-[#1C1917] font-mono focus:outline-none focus:border-[#680E23] disabled:opacity-40 disabled:bg-gray-100">
+          <input type="time" id="end-time-${d.key}" value="${endVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#1f93ff] disabled:opacity-40 disabled:bg-slate-50">
         </td>
         <td class="py-2.5 text-center">
-          <span id="badge-day-${d.key}" class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+          <span id="badge-day-${d.key}" class="px-2 py-0.5 rounded-md text-[10px] font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
             ${isWorkday ? 'دوام رسمي' : 'عطلة رسمية'}
           </span>
         </td>
@@ -164,7 +164,7 @@ function toggleDayWorkday(dayKey) {
 
   if (label) {
     label.innerText = isWorkday ? 'يوم عمل' : 'عطلة';
-    label.className = isWorkday ? 'text-xs text-[#1C1917] font-semibold' : 'text-xs text-[#8C827A]';
+    label.className = isWorkday ? 'text-xs text-slate-900 font-medium' : 'text-xs text-slate-400';
   }
 
   if (startInput) startInput.disabled = !isWorkday;
@@ -172,7 +172,7 @@ function toggleDayWorkday(dayKey) {
 
   if (badge) {
     badge.innerText = isWorkday ? 'دوام رسمي' : 'عطلة رسمية';
-    badge.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`;
+    badge.className = `px-2 py-0.5 rounded-md text-[10px] font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`;
   }
 }
 
@@ -183,7 +183,7 @@ function toggleScheduleActive() {
 
   if (masterLabel) {
     masterLabel.innerText = isChecked ? 'مفعل' : 'معطل';
-    masterLabel.className = isChecked ? 'text-xs font-bold text-[#680E23]' : 'text-xs font-bold text-[#443D39]';
+    masterLabel.className = isChecked ? 'text-xs font-semibold text-[#1f93ff]' : 'text-xs font-medium text-slate-500';
   }
 
   if (currentSchedule) {

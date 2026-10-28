@@ -5,38 +5,34 @@
 
 {% block content %}
 <!-- Telephony Subtabs Navigation Bar -->
-<div class="bg-white p-4 rounded-3xl border border-[#eaedf0] shadow-sm flex flex-wrap items-center justify-between gap-3">
-  <div class="flex items-center gap-2 p-1.5 bg-[#f1f5f9] border border-[#E8E0D5] rounded-2xl text-xs font-bold">
-    <button type="button" onclick="switchTelephonySubtab('outbound')" id="subtab-btn-outbound" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 bg-[#1f93ff] text-white shadow-sm">
-      <span>🌐</span>
+<div class="bg-white p-3 rounded-xl border border-[#eaedf0] shadow-2xs flex flex-wrap items-center justify-between gap-3">
+  <div class="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-200/80 rounded-lg text-xs">
+    <button type="button" onclick="switchTelephonySubtab('outbound')" id="subtab-btn-outbound" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-semibold shadow-2xs">
       <span>المكالمات الصادرة والجذع الخارجي (SIP Trunk)</span>
     </button>
-    <button type="button" onclick="switchTelephonySubtab('pbx')" id="subtab-btn-pbx" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-[#64748b] hover:text-[#0f172a]">
-      <span>🏢</span>
+    <button type="button" onclick="switchTelephonySubtab('pbx')" id="subtab-btn-pbx" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium">
       <span>سنترالات Issabel و Asterisk</span>
     </button>
-    <button type="button" onclick="switchTelephonySubtab('dids')" id="subtab-btn-dids" class="subtab-btn px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-[#64748b] hover:text-[#0f172a]">
-      <span>📱</span>
+    <button type="button" onclick="switchTelephonySubtab('dids')" id="subtab-btn-dids" class="subtab-btn px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium">
       <span>أرقام DID المخصصة والمستأجرين</span>
     </button>
   </div>
   
-  <div class="text-xs text-[#94a3b8] flex items-center gap-2">
-    <span>📞 إدارة بوابات الاتصال الصادر والربط مع السنترالات المحلية</span>
+  <div class="text-xs text-slate-400 flex items-center gap-2">
+    <span>إدارة بوابات الاتصال الصادر والربط مع السنترالات المحلية</span>
   </div>
 </div>
 
 <!-- Subtab 1: Outbound SIP Trunk & Auto-Dialer -->
 <div id="subtab-content-outbound" class="telephony-subtab-panel space-y-6">
-  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)] border border-[#eaedf0] rounded-3xl p-6 shadow-xl space-y-6">
+  <section class="bg-white border border-[#eaedf0] rounded-xl p-6 shadow-2xs space-y-6">
     <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
       <div>
-        <h2 class="text-lg font-bold text-[#0f172a] flex items-center gap-2">
-          <span class="text-[#1f93ff] text-xl">🌐</span>
-          المكالمات الصادرة والجذع الخارجي (Generic Outbound SIP Trunk &amp; AI Auto-Dialer)
+        <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+          <span>المكالمات الصادرة والجذع الخارجي (Generic Outbound SIP Trunk &amp; AI Auto-Dialer)</span>
         </h2>
-        <p class="text-xs text-[#64748b] mt-1">
-          اربط أي مزود اتصالات سحابي خارجي مثل <span class="text-[#1f93ff] font-semibold">Telnyx</span> أو <span class="text-[#1f93ff] font-semibold">Twilio</span> لتمكين الذكاء الاصطناعي والموظفين من الاتصال بأرقام الهواتف المحمولة والأرضية مباشرة مع التصحيح التلقائي للأرقام المحلية والدولية.
+        <p class="text-xs text-slate-500 mt-1">
+          اربط أي مزود اتصالات سحابي خارجي مثل <span class="text-[#1f93ff] font-medium">Telnyx</span> أو <span class="text-[#1f93ff] font-medium">Twilio</span> لتمكين الذكاء الاصطناعي والموظفين من الاتصال بأرقام الهواتف المحمولة والأرضية مباشرة مع التصحيح التلقائي للأرقام المحلية والدولية.
         </p>
       </div>
 
@@ -44,9 +40,8 @@
         <button 
           type="button" 
           onclick="openNewAICallModal()" 
-          class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#1f93ff]/20"
+          class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
         >
-          <span>🤖</span>
           <span>اتصال جديد عبر الـ AI</span>
         </button>
       </div>
@@ -55,62 +50,62 @@
     <!-- Outbound Trunk Current Status & Configuration Form -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Status Card -->
-      <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 space-y-3">
+      <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-[#1e293b] text-xs flex items-center gap-1.5">
-            <span>📡</span> حالة الجذع في LiveKit
+          <span class="font-medium text-slate-800 text-xs flex items-center gap-1.5">
+            حالة الجذع في LiveKit
           </span>
-          <span id="outbound-trunk-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+          <span id="outbound-trunk-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
             غير مهيأ
           </span>
         </div>
-        <div id="outbound-trunk-details" class="space-y-2 text-xs text-[#334155]">
-          <div class="text-[#94a3b8] text-center py-4">لم يتم ضبط مزود خارجي بعد. أدخل بيانات المزود في النموذج لحفظه.</div>
+        <div id="outbound-trunk-details" class="space-y-2 text-xs text-slate-700">
+          <div class="text-slate-400 text-center py-4">لم يتم ضبط مزود خارجي بعد. أدخل بيانات المزود في النموذج لحفظه.</div>
         </div>
       </div>
 
       <!-- Trunk Settings Form -->
-      <div class="lg:col-span-2 bg-[#f1f5f9]/30 border border-[#e2e8f0]/40 rounded-2xl p-4">
+      <div class="lg:col-span-2 bg-white border border-[#eaedf0] rounded-lg p-4">
         <form id="outbound-trunk-form" onsubmit="handleSaveOutboundTrunk(event)" class="space-y-4 text-xs">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">اسم الجذع / المزود</label>
-              <input type="text" id="outbound-name" placeholder="مثال: حساب Telnyx الأساسي" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
+              <label class="block text-slate-700 font-medium mb-1">اسم الجذع / المزود</label>
+              <input type="text" id="outbound-name" placeholder="مثال: حساب Telnyx الأساسي" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">خادم الـ SIP (Host / Termination URI) *</label>
-              <input type="text" id="outbound-host" required placeholder="مثال: sip.telnyx.com أو mytrunk.pstn.twilio.com" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono text-[11px] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
+              <label class="block text-slate-700 font-medium mb-1">خادم الـ SIP (Host / Termination URI) *</label>
+              <input type="text" id="outbound-host" required placeholder="مثال: sip.telnyx.com أو mytrunk.pstn.twilio.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">اسم مستخدم المصادقة (SIP Username)</label>
-              <input type="text" id="outbound-username" placeholder="اختياري حسب إعداد المزود" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
+              <label class="block text-slate-700 font-medium mb-1">اسم مستخدم المصادقة (SIP Username)</label>
+              <input type="text" id="outbound-username" placeholder="اختياري حسب إعداد المزود" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">كلمة المرور (SIP Password)</label>
-              <input type="password" id="outbound-password" placeholder="••••••••" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
+              <label class="block text-slate-700 font-medium mb-1">كلمة المرور (SIP Password)</label>
+              <input type="password" id="outbound-password" placeholder="••••••••" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
             </div>
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">الرقم المعتمد كمتصل (Caller ID Number)</label>
-              <input type="text" id="outbound-caller-id" placeholder="مثال: +12055550199 أو 01012345678" class="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
-              <span class="text-[10px] text-[#94a3b8]">الرقم الذي يظهر للمتلقي (يقبل الصيغ المصرية والدولية ويصحح تلقائياً)</span>
+              <label class="block text-slate-700 font-medium mb-1">الرقم المعتمد كمتصل (Caller ID Number)</label>
+              <input type="text" id="outbound-caller-id" placeholder="مثال: +12055550199 أو 01012345678" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
+              <span class="text-[10px] text-slate-400">الرقم الذي يظهر للمتلقي (يقبل الصيغ المصرية والدولية ويصحح تلقائياً)</span>
             </div>
             <div>
-              <label class="block text-[#334155] font-semibold mb-1">بروتوكول النقل (Transport) والمنفذ</label>
+              <label class="block text-slate-700 font-medium mb-1">بروتوكول النقل (Transport) والمنفذ</label>
               <div class="flex gap-2">
-                <select id="outbound-transport" class="w-1/2 px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]">
+                <select id="outbound-transport" class="w-1/2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
                   <option value="UDP">UDP (الافتراضي)</option>
                   <option value="TCP">TCP</option>
                   <option value="TLS">TLS (مشفر)</option>
                 </select>
-                <input type="number" id="outbound-port" value="5060" class="w-1/2 px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
+                <input type="number" id="outbound-port" value="5060" class="w-1/2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
               </div>
             </div>
           </div>
 
-          <div id="outbound-trunk-msg" class="hidden p-2.5 rounded-xl text-xs font-semibold"></div>
+          <div id="outbound-trunk-msg" class="hidden p-2.5 rounded-lg text-xs font-medium"></div>
 
           <div class="flex justify-end gap-3 pt-2">
-            <button type="submit" id="btn-save-outbound" class="px-5 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#1f93ff]/20">
+            <button type="submit" id="btn-save-outbound" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold shadow-2xs transition flex items-center gap-1.5">
               <span>حفظ وتفعيل الجذع الخارجي</span>
             </button>
           </div>
@@ -122,16 +117,15 @@
 
 <!-- Subtab 2: PBX Trunks Grid -->
 <div id="subtab-content-pbx" class="telephony-subtab-panel space-y-6 hidden">
-  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)] border border-[#eaedf0] rounded-3xl p-6 shadow-xl space-y-6">
+  <section class="bg-white border border-[#eaedf0] rounded-xl p-6 shadow-2xs space-y-6">
     <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
       <div>
-        <h2 class="text-lg font-bold text-[#0f172a] flex items-center gap-2">
-          <span class="text-[#1f93ff] text-xl">🏢</span>
+        <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
           <span>ربط السنترالات المحلية والأنظمة الخارجية (Inbound PBX Trunks - Issabel / Asterisk)</span>
-          <span id="pbx-trunks-count" class="text-xs px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#1f93ff] border border-[#eaedf0] font-mono">0</span>
+          <span id="pbx-trunks-count" class="text-xs px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-mono font-medium">0</span>
         </h2>
-        <p class="text-xs text-[#64748b] mt-1">
-          اربط سنترال شركتك الحالي (<span class="text-[#1f93ff] font-semibold">Issabel, Asterisk, FreePBX, Grandstream</span>) دون المساس بهواتف الموظفين الفعلية. استقبل المكالمات وحوّلها للمساعد الذكي كـ <span class="text-[#1f93ff] font-semibold">Smart IVR</span> مع الذاكرة الثنائية (Distilled Memory)، أو لطوابير الانتظار، مع إمكانية التحويل العكسي (<span class="text-[#1f93ff] font-mono">SIP REFER</span>).
+        <p class="text-xs text-slate-500 mt-1">
+          اربط سنترال شركتك الحالي (<span class="text-[#1f93ff] font-medium">Issabel, Asterisk, FreePBX, Grandstream</span>) دون المساس بهواتف الموظفين الفعلية. استقبل المكالمات وحوّلها للمساعد الذكي كـ <span class="text-[#1f93ff] font-medium">Smart IVR</span> مع الذاكرة الثنائية (Distilled Memory)، أو لطوابير الانتظار، مع إمكانية التحويل العكسي (<span class="text-[#1f93ff] font-mono">SIP REFER</span>).
         </p>
       </div>
 
@@ -139,9 +133,8 @@
         <button 
           type="button" 
           onclick="openNewPbxModal()" 
-          class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#1f93ff]/20"
+          class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
         >
-          <span>➕</span>
           <span>ربط سنترال Issabel / Asterisk جديد</span>
         </button>
       </div>
@@ -149,7 +142,7 @@
 
     <!-- Trunks Grid / Cards -->
     <div id="pbx-trunks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="col-span-full py-8 text-center text-[#94a3b8] text-xs">
+      <div class="col-span-full py-8 text-center text-slate-400 text-xs">
         جاري تحميل السنترالات المربوطة...
       </div>
     </div>
@@ -158,14 +151,13 @@
 
 <!-- Subtab 3: Tenant DIDs Management -->
 <div id="subtab-content-dids" class="telephony-subtab-panel space-y-6 hidden">
-  <section class="bg-white shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)] border border-[#eaedf0] rounded-3xl p-6 shadow-xl space-y-6">
+  <section class="bg-white border border-[#eaedf0] rounded-xl p-6 shadow-2xs space-y-6">
     <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
       <div>
-        <h2 class="text-lg font-bold text-[#0f172a] flex items-center gap-2">
-          <span class="text-[#1f93ff] text-xl">📱</span>
+        <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
           <span>توجيه أرقام DID المخصصة (Tenant Inbound DIDs)</span>
         </h2>
-        <p class="text-xs text-[#64748b] mt-1">
+        <p class="text-xs text-slate-500 mt-1">
           اربط أرقام الهواتف الواردة (DIDs) بمساعد الذكاء الاصطناعي المناسب لشركتك. عند ورود أي مكالمة SIP إلى هذا الرقم، يتعرف النظام تلقائياً على المستأجر (Tenant) ويحاسب الرصيد بالدقيقة ويطلق الوكيل الذكي المحدد.
         </p>
       </div>
@@ -174,9 +166,8 @@
         <button 
           type="button" 
           onclick="openNewDidModal()" 
-          class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 shadow-[#1f93ff]/20"
+          class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
         >
-          <span>➕</span>
           <span>إضافة رقم DID جديد</span>
         </button>
       </div>
@@ -186,18 +177,18 @@
     <div class="mt-4 overflow-x-auto">
       <table class="w-full text-right text-xs">
         <thead>
-          <tr class="text-[#64748b] border-b border-[#eaedf0]">
-            <th class="py-2.5 px-3">رقم الهاتف (DID)</th>
-            <th class="py-2.5 px-3">الوصف</th>
-            <th class="py-2.5 px-3">المساعد الصوتي المسند</th>
-            <th class="py-2.5 px-3 text-center">الحالة</th>
-            <th class="py-2.5 px-3">تاريخ الإضافة</th>
-            <th class="py-2.5 px-3 text-center">إجراءات</th>
+          <tr class="text-slate-500 bg-slate-50/75 border-b border-[#eaedf0]">
+            <th class="py-2.5 px-3 font-medium">رقم الهاتف (DID)</th>
+            <th class="py-2.5 px-3 font-medium">الوصف</th>
+            <th class="py-2.5 px-3 font-medium">المساعد الصوتي المسند</th>
+            <th class="py-2.5 px-3 font-medium text-center">الحالة</th>
+            <th class="py-2.5 px-3 font-medium">تاريخ الإضافة</th>
+            <th class="py-2.5 px-3 font-medium text-center">إجراءات</th>
           </tr>
         </thead>
         <tbody id="dids-tbody" class="divide-y divide-[#eaedf0]">
           <tr>
-            <td colspan="6" class="text-center py-6 text-[#94a3b8]">جاري تحميل أرقام DID...</td>
+            <td colspan="6" class="text-center py-6 text-slate-400">جاري تحميل أرقام DID...</td>
           </tr>
         </tbody>
       </table>
@@ -208,56 +199,55 @@
 
 {% block modals %}
 <!-- Modal: AI Outbound Call -->
-<div id="ai-call-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+<div id="ai-call-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-lg w-full p-6 shadow-lg space-y-4 text-xs">
     <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
-      <h3 class="text-base font-bold text-[#0f172a] flex items-center gap-2">
-        <span>🤖</span>
+      <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
         <span>بدء مكالمة صادرة عبر الذكاء الاصطناعي (Gemini Live)</span>
       </h3>
-      <button type="button" onclick="closeAICallModal()" class="text-[#64748b] hover:text-[#1e293b] text-lg">&times;</button>
+      <button type="button" onclick="closeAICallModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="ai-call-form" onsubmit="handleTriggerAICall(event)" class="space-y-4">
       <div>
-        <label class="block text-[#334155] font-semibold mb-1">رقم هاتف العميل المستهدف *</label>
-        <input type="text" id="ai-call-phone" required placeholder="مثال: 01012345678 أو +2010... أو تحويلة داخلية 101" class="w-full px-3 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono text-sm focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]" />
-        <p class="text-[10px] text-[#94a3b8] mt-1">يقبل الأرقام المصرية العادية (01x)، الدولية (+20...)، أو أرقام التحويلات الداخلية للسنترال (مثل 101 و 200).</p>
+        <label class="block text-slate-700 font-medium mb-1">رقم هاتف العميل المستهدف *</label>
+        <input type="text" id="ai-call-phone" required placeholder="مثال: 01012345678 أو +2010... أو تحويلة داخلية 101" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-sm focus:outline-none focus:border-[#1f93ff]" />
+        <p class="text-[10px] text-slate-400 mt-1">يقبل الأرقام المصرية العادية (01x)، الدولية (+20...)، أو أرقام التحويلات الداخلية للسنترال (مثل 101 و 200).</p>
       </div>
 
       <div>
-        <label class="block text-[#334155] font-semibold mb-1">مسار الاتصال الصادر (Outbound Gateway)</label>
-        <select id="ai-call-gateway" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]">
+        <label class="block text-slate-700 font-medium mb-1">مسار الاتصال الصادر (Outbound Gateway)</label>
+        <select id="ai-call-gateway" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
           <option value="auto:">المسار الافتراضي للنظام (تلقائي)</option>
         </select>
-        <p class="text-[10px] text-[#94a3b8] mt-1">يمكنك الاختيار بين خط الاتصال السحابي أو أحد سنترالات الشركة المربوطة (PBX).</p>
+        <p class="text-[10px] text-slate-400 mt-1">يمكنك الاختيار بين خط الاتصال السحابي أو أحد سنترالات الشركة المربوطة (PBX).</p>
       </div>
 
       <div>
-        <label class="block text-[#334155] font-semibold mb-1">البروفايل الصوتي للـ AI</label>
-        <select id="ai-call-profile" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]">
+        <label class="block text-slate-700 font-medium mb-1">البروفايل الصوتي للـ AI</label>
+        <select id="ai-call-profile" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
           <option value="">البروفايل النشط حالياً في النظام</option>
         </select>
       </div>
 
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label class="block text-[#334155] font-semibold">هدف وتعليمات المكالمة للمساعد</label>
+          <label class="block text-slate-700 font-medium">هدف وتعليمات المكالمة للمساعد</label>
           <div class="flex gap-1">
-            <button type="button" onclick="applyGoalTemplate('confirm_order')" class="px-2 py-0.5 rounded bg-[#f1f5f9] hover:bg-[#eaedf0] text-[10px] text-[#1f93ff]">تأكيد طلب</button>
-            <button type="button" onclick="applyGoalTemplate('survey')" class="px-2 py-0.5 rounded bg-[#f1f5f9] hover:bg-[#eaedf0] text-[10px] text-[#1f93ff]">استبيان رضا</button>
-            <button type="button" onclick="applyGoalTemplate('reminder')" class="px-2 py-0.5 rounded bg-[#f1f5f9] hover:bg-[#eaedf0] text-[10px] text-[#1f93ff]">تذكير بموعد</button>
+            <button type="button" onclick="applyGoalTemplate('confirm_order')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-700 font-medium">تأكيد طلب</button>
+            <button type="button" onclick="applyGoalTemplate('survey')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-700 font-medium">استبيان رضا</button>
+            <button type="button" onclick="applyGoalTemplate('reminder')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-700 font-medium">تذكير بموعد</button>
           </div>
         </div>
-        <textarea id="ai-call-goal" rows="3" placeholder="مثال: الاتصال بالعميل لتأكيد تفاصيل الأوردر رقم 1005، وسؤاله عن موعد التسليم وعنوان الشحن المناسب له." class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:ring-[#1f93ff]"></textarea>
+        <textarea id="ai-call-goal" rows="3" placeholder="مثال: الاتصال بالعميل لتأكيد تفاصيل الأوردر رقم 1005، وسؤاله عن موعد التسليم وعنوان الشحن المناسب له." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]"></textarea>
       </div>
 
-      <div id="ai-call-error" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700"></div>
-      <div id="ai-call-success" class="hidden p-2.5 rounded-xl bg-[#eff8ff] border border-[#eaedf0] text-[#1f93ff]"></div>
+      <div id="ai-call-error" class="hidden p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700"></div>
+      <div id="ai-call-success" class="hidden p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700"></div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-[#eaedf0]">
-        <button type="button" onclick="closeAICallModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] font-semibold">إلغاء</button>
-        <button type="submit" id="btn-submit-ai-call" class="px-5 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20">
+        <button type="button" onclick="closeAICallModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs">إلغاء</button>
+        <button type="submit" id="btn-submit-ai-call" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold flex items-center gap-1.5 shadow-2xs text-xs">
           <span>بدء الاتصال الآن</span>
         </button>
       </div>
@@ -266,120 +256,119 @@
 </div>
 
 <!-- Modal: New Inbound PBX Trunk -->
-<div id="new-pbx-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs">
+<div id="new-pbx-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-xl w-full p-6 shadow-lg space-y-4 text-xs">
     <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
-      <h3 class="text-base font-bold text-[#0f172a] flex items-center gap-2">
-        <span>🏢</span>
+      <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
         <span>ربط سنترال محلي خارجي جديد (Issabel / Asterisk Trunk)</span>
       </h3>
-      <button type="button" onclick="closeNewPbxModal()" class="text-[#64748b] hover:text-[#1e293b] text-lg">&times;</button>
+      <button type="button" onclick="closeNewPbxModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="new-pbx-form" onsubmit="handleSavePbxTrunk(event)" class="space-y-4">
       <div>
-        <label class="block text-[#334155] font-semibold mb-1">اسم السنترال / الفرع *</label>
-        <input type="text" id="pbx-name" required placeholder="مثال: سنترال المقر الرئيسي (Issabel PBX)" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]" />
+        <label class="block text-slate-700 font-medium mb-1">اسم السنترال / الفرع *</label>
+        <input type="text" id="pbx-name" required placeholder="مثال: سنترال المقر الرئيسي (Issabel PBX)" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label class="block text-[#334155] font-semibold mb-1">طريقة المصادقة والتحقق *</label>
-          <select id="pbx-auth-mode" onchange="onPbxAuthModeChange()" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
+          <label class="block text-slate-700 font-medium mb-1">طريقة المصادقة والتحقق *</label>
+          <select id="pbx-auth-mode" onchange="onPbxAuthModeChange()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
             <option value="ip">1. القائمة البيضاء لـ IP (IP Whitelisting - موصى به)</option>
             <option value="credentials">2. اسم مستخدم وكلمة مرور (SIP Digest Credentials)</option>
           </select>
         </div>
         <div>
-          <label class="block text-[#334155] font-semibold mb-1">وجهة المكالمات الواردة *</label>
-          <select id="pbx-destination-type" onchange="onPbxDestinationChange()" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
-            <option value="ai">🤖 توجيه للمساعد الصوتي الذكي (Smart IVR)</option>
-            <option value="queue">👥 توجيه لطابور انتظار (Call Queue)</option>
+          <label class="block text-slate-700 font-medium mb-1">وجهة المكالمات الواردة *</label>
+          <select id="pbx-destination-type" onchange="onPbxDestinationChange()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
+            <option value="ai">توجيه للمساعد الصوتي الذكي (Smart IVR)</option>
+            <option value="queue">توجيه لطابور انتظار (Call Queue)</option>
           </select>
         </div>
       </div>
 
       <!-- Auth Mode Group: IP -->
       <div id="pbx-ip-group">
-        <label class="block text-[#334155] font-semibold mb-1">عنوان IP العام للسنترال (Public Static IP / FQDN) *</label>
-        <input type="text" id="pbx-ip" placeholder="مثال: 197.38.45.12 أو pbx.company.com" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
-        <p class="text-[10px] text-[#94a3b8] mt-1">سيتم قبول المكالمات الـ SIP الواردة من هذا العنوان حصراً في LiveKit دون الحاجة لتسجيل Register.</p>
+        <label class="block text-slate-700 font-medium mb-1">عنوان IP العام للسنترال (Public Static IP / FQDN) *</label>
+        <input type="text" id="pbx-ip" placeholder="مثال: 197.38.45.12 أو pbx.company.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
+        <p class="text-[10px] text-slate-400 mt-1">سيتم قبول المكالمات الـ SIP الواردة من هذا العنوان حصراً في LiveKit دون الحاجة لتسجيل Register.</p>
       </div>
 
       <!-- Auth Mode Group: Credentials -->
       <div id="pbx-creds-group" class="grid grid-cols-1 md:grid-cols-2 gap-3 hidden">
         <div>
-          <label class="block text-[#334155] font-semibold mb-1">اسم المستخدم (SIP Username) *</label>
-          <input type="text" id="pbx-auth-username" placeholder="مثال: issabel_main_trunk" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono focus:outline-none focus:border-[#1f93ff]" />
+          <label class="block text-slate-700 font-medium mb-1">اسم المستخدم (SIP Username) *</label>
+          <input type="text" id="pbx-auth-username" placeholder="مثال: issabel_main_trunk" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
         </div>
         <div>
-          <label class="block text-[#334155] font-semibold mb-1">كلمة المرور (SIP Secret) *</label>
-          <input type="password" id="pbx-auth-password" placeholder="••••••••••••" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono focus:outline-none focus:border-[#1f93ff]" />
+          <label class="block text-slate-700 font-medium mb-1">كلمة المرور (SIP Secret) *</label>
+          <input type="password" id="pbx-auth-password" placeholder="••••••••••••" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-[#1f93ff]" />
         </div>
       </div>
 
       <!-- Destination Group: AI Profile -->
       <div id="pbx-ai-group">
-        <label class="block text-[#334155] font-semibold mb-1">البروفايل الصوتي للـ AI (اختياري)</label>
-        <select id="pbx-target-profile" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
+        <label class="block text-slate-700 font-medium mb-1">البروفايل الصوتي للـ AI (اختياري)</label>
+        <select id="pbx-target-profile" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
           <option value="">البروفايل النشط حالياً في النظام</option>
         </select>
-        <p class="text-[10px] text-[#94a3b8] mt-1">سيتعرف المساعد على رقم المتصل، يسترجع تاريخه من الذاكرة الثنائية، ويستطيع تحويل المكالمة داخلياً لأي موظف عبر SIP REFER.</p>
+        <p class="text-[10px] text-slate-400 mt-1">سيتعرف المساعد على رقم المتصل، يسترجع تاريخه من الذاكرة الثنائية، ويستطيع تحويل المكالمة داخلياً لأي موظف عبر SIP REFER.</p>
       </div>
 
       <!-- Destination Group: Queue -->
       <div id="pbx-queue-group" class="hidden">
-        <label class="block text-[#334155] font-semibold mb-1">طابور الانتظار المستهدف *</label>
-        <select id="pbx-target-queue" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
+        <label class="block text-slate-700 font-medium mb-1">طابور الانتظار المستهدف *</label>
+        <select id="pbx-target-queue" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
           <option value="">اختر طابور الانتظار...</option>
         </select>
-        <p class="text-[10px] text-[#94a3b8] mt-1">ستدخل المكالمة في الطابور المحدد، مع تشغيل نغمة الانتظار ورنين هواتف الموظفين بالتناوب.</p>
+        <p class="text-[10px] text-slate-400 mt-1">ستدخل المكالمة في الطابور المحدد، مع تشغيل نغمة الانتظار ورنين هواتف الموظفين بالتناوب.</p>
       </div>
 
       <div>
-        <label class="block text-[#334155] font-semibold mb-1">تصفية أرقام الهواتف أو DIDs المستهدفة (اختياري)</label>
-        <input type="text" id="pbx-inbound-numbers" placeholder="مثال: 888, 100, +2010... (مفصولة بفواصل، اتركه فارغاً لقبول الكل)" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
+        <label class="block text-slate-700 font-medium mb-1">تصفية أرقام الهواتف أو DIDs المستهدفة (اختياري)</label>
+        <input type="text" id="pbx-inbound-numbers" placeholder="مثال: 888, 100, +2010... (مفصولة بفواصل، اتركه فارغاً لقبول الكل)" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-[11px] focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <!-- Outbound PBX Settings -->
-      <div class="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl space-y-3">
+      <div class="p-3.5 bg-slate-50/60 border border-[#eaedf0] rounded-lg space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <label for="pbx-enable-outbound" class="font-semibold text-[#1e293b] cursor-pointer flex items-center gap-1.5 text-xs">
-              <span>🔄 تفعيل الاتصال ثنائي الاتجاه (الصادر والوارد)</span>
+            <label for="pbx-enable-outbound" class="font-medium text-slate-800 cursor-pointer flex items-center gap-1.5 text-xs">
+              <span>تفعيل الاتصال ثنائي الاتجاه (الصادر والوارد)</span>
             </label>
-            <p class="text-[10px] text-[#64748b] mt-0.5">يتيح للـ AI إجراء مكالمات صادرة وطلب تحويلات الموظفين عبر هذا السنترال.</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">يتيح للـ AI إجراء مكالمات صادرة وطلب تحويلات الموظفين عبر هذا السنترال.</p>
           </div>
-          <input type="checkbox" id="pbx-enable-outbound" checked class="w-4 h-4 rounded text-[#1f93ff] bg-[#f1f5f9] border-[#e2e8f0] focus:ring-0 cursor-pointer" onchange="togglePbxOutboundOptions()" />
+          <input type="checkbox" id="pbx-enable-outbound" checked class="w-4 h-4 rounded text-[#1f93ff] bg-white border-slate-300 focus:ring-0 cursor-pointer" onchange="togglePbxOutboundOptions()" />
         </div>
 
-        <div id="pbx-outbound-options" class="grid grid-cols-2 gap-3 pt-2.5 border-t border-[#e2e8f0]/40">
+        <div id="pbx-outbound-options" class="grid grid-cols-2 gap-3 pt-2.5 border-t border-[#eaedf0]">
           <div>
-            <label class="block text-[#334155] font-semibold mb-1 text-[11px]">منفذ SIP السنترال (Port)</label>
-            <input type="number" id="pbx-outbound-port" value="5060" class="w-full px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
+            <label class="block text-slate-700 font-medium mb-1 text-[11px]">منفذ SIP السنترال (Port)</label>
+            <input type="number" id="pbx-outbound-port" value="5060" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
           </div>
           <div>
-            <label class="block text-[#334155] font-semibold mb-1 text-[11px]">بروتوكول النقل (Transport)</label>
-            <select id="pbx-outbound-transport" class="w-full px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] text-xs focus:outline-none focus:border-[#1f93ff]">
+            <label class="block text-slate-700 font-medium mb-1 text-[11px]">بروتوكول النقل (Transport)</label>
+            <select id="pbx-outbound-transport" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]">
               <option value="UDP" selected>UDP (شائع وقياسي)</option>
               <option value="TCP">TCP</option>
               <option value="TLS">TLS</option>
             </select>
           </div>
           <div class="col-span-2 flex items-center gap-2 pt-1">
-            <input type="checkbox" id="pbx-is-default-outbound" class="w-4 h-4 rounded text-[#1f93ff] bg-[#f1f5f9] border-[#e2e8f0] focus:ring-0 cursor-pointer" />
-            <label for="pbx-is-default-outbound" class="text-[#334155] text-[11px] cursor-pointer">تعيين هذا السنترال كجذع افتراضي لكافة المكالمات الصادرة في النظام</label>
+            <input type="checkbox" id="pbx-is-default-outbound" class="w-4 h-4 rounded text-[#1f93ff] bg-white border-slate-300 focus:ring-0 cursor-pointer" />
+            <label for="pbx-is-default-outbound" class="text-slate-700 text-[11px] cursor-pointer">تعيين هذا السنترال كجذع افتراضي لكافة المكالمات الصادرة في النظام</label>
           </div>
         </div>
       </div>
 
-      <div id="pbx-modal-error" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700"></div>
-      <div id="pbx-modal-success" class="hidden p-2.5 rounded-xl bg-[#eff8ff] border border-[#eaedf0] text-[#1f93ff]"></div>
+      <div id="pbx-modal-error" class="hidden p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700"></div>
+      <div id="pbx-modal-success" class="hidden p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700"></div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-[#eaedf0]">
-        <button type="button" onclick="closeNewPbxModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] font-semibold">إلغاء</button>
-        <button type="submit" id="btn-submit-pbx" class="px-5 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20">
-          <span>💾 إنشاء وتفعيل في LiveKit</span>
+        <button type="button" onclick="closeNewPbxModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs">إلغاء</button>
+        <button type="submit" id="btn-submit-pbx" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold flex items-center gap-1.5 shadow-2xs text-xs">
+          <span>حفظ وتفعيل في LiveKit</span>
         </button>
       </div>
     </form>
@@ -387,60 +376,58 @@
 </div>
 
 <!-- Modal: Issabel / Asterisk PEER Details Config -->
-<div id="issabel-code-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+<div id="issabel-code-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-2xl w-full p-6 shadow-lg space-y-4 text-xs max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
       <div>
-        <h3 class="text-base font-bold text-[#0f172a] flex items-center gap-2">
-          
+        <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
           <span id="issabel-modal-title">كود إعداد سنترال Issabel / Asterisk</span>
         </h3>
-        <p class="text-[11px] text-[#64748b] mt-0.5">انسخ الإعدادات التالية وضعها في لوحة تحكم السنترال (PBX -&gt; Trunks -&gt; Add SIP Trunk)</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">انسخ الإعدادات التالية وضعها في لوحة تحكم السنترال (PBX -&gt; Trunks -&gt; Add SIP Trunk)</p>
       </div>
-      <button type="button" onclick="closeIssabelModal()" class="text-[#64748b] hover:text-[#1e293b] text-lg">&times;</button>
+      <button type="button" onclick="closeIssabelModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <div class="space-y-4">
       <!-- PEER Details Block -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-center">
-          <span class="font-bold text-[#1f93ff]">إعدادات الطرفية (PEER Details):</span>
-          <button type="button" onclick="copyIssabelSnippet('issabel-peer-content', this)" class="px-3 py-1 rounded-lg bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#1f93ff] border border-[#e2e8f0] text-[11px] font-semibold flex items-center gap-1 transition">
+          <span class="font-medium text-slate-800">إعدادات الطرفية (PEER Details):</span>
+          <button type="button" onclick="copyIssabelSnippet('issabel-peer-content', this)" class="px-3 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-medium flex items-center gap-1 transition shadow-2xs">
             <span>نسخ الكود</span>
           </button>
         </div>
-        <pre class="bg-[#f8fafc] p-3 rounded-2xl border border-[#eaedf0] font-mono text-[11px] text-[#1f93ff] overflow-x-auto select-all leading-relaxed" id="issabel-peer-content"></pre>
+        <pre class="bg-slate-900 p-3.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-100 overflow-x-auto select-all leading-relaxed" id="issabel-peer-content"></pre>
       </div>
 
       <!-- USER Details (Incoming to PBX / Outbound from AI) Block -->
       <div id="issabel-user-box" class="space-y-1.5">
         <div class="flex justify-between items-center">
-          <span class="font-bold text-[#1f93ff]">إعدادات استقبال مكالمات الـ AI في السنترال (USER Details / Incoming Settings):</span>
-          <button type="button" onclick="copyIssabelSnippet('issabel-user-content', this)" class="px-3 py-1 rounded-lg bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#1f93ff] border border-[#e2e8f0] text-[11px] font-semibold flex items-center gap-1 transition">
+          <span class="font-medium text-slate-800">إعدادات استقبال مكالمات الـ AI في السنترال (USER Details / Incoming Settings):</span>
+          <button type="button" onclick="copyIssabelSnippet('issabel-user-content', this)" class="px-3 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-medium flex items-center gap-1 transition shadow-2xs">
             <span>نسخ الكود</span>
           </button>
         </div>
-        <pre class="bg-[#f8fafc] p-3 rounded-2xl border border-[#eaedf0] font-mono text-[11px] text-[#1f93ff] overflow-x-auto select-all leading-relaxed" id="issabel-user-content"></pre>
+        <pre class="bg-slate-900 p-3.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-100 overflow-x-auto select-all leading-relaxed" id="issabel-user-content"></pre>
       </div>
 
       <!-- Register String Block (shown if creds) -->
       <div id="issabel-register-box" class="space-y-1.5 hidden">
         <div class="flex justify-between items-center">
-          <span class="font-bold text-[#1f93ff]">سلسلة التسجيل (Register String):</span>
-          <button type="button" onclick="copyIssabelSnippet('issabel-register-content', this)" class="px-3 py-1 rounded-lg bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#1f93ff] border border-[#e2e8f0] text-[11px] font-semibold flex items-center gap-1 transition">
+          <span class="font-medium text-slate-800">سلسلة التسجيل (Register String):</span>
+          <button type="button" onclick="copyIssabelSnippet('issabel-register-content', this)" class="px-3 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-medium flex items-center gap-1 transition shadow-2xs">
             <span>نسخ</span>
           </button>
         </div>
-        <pre class="bg-[#f8fafc] p-2.5 rounded-2xl border border-[#eaedf0] font-mono text-[11px] text-[#1f93ff] overflow-x-auto select-all" id="issabel-register-content"></pre>
+        <pre class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-100 overflow-x-auto select-all" id="issabel-register-content"></pre>
       </div>
 
       <!-- Fast Guide -->
-      <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-3.5 space-y-2 text-[#334155]">
-        <div class="font-bold text-[#1e293b] flex items-center gap-1.5">
-          <span>💡</span>
+      <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2 text-slate-700">
+        <div class="font-medium text-slate-900 flex items-center gap-1.5">
           <span>طريقة توجيه المكالمات في سنترال Issabel:</span>
         </div>
-        <ol class="list-decimal list-inside space-y-1 text-[11px] text-[#334155] pr-1">
+        <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-600 pr-1">
           <li>افتح <strong class="text-[#1f93ff]">PBX -&gt; Outbound Routes</strong> وأنشئ مساراً جديداً برقم مختصر (Dial Pattern: مثلاً <span class="font-mono text-[#1f93ff]">888</span> أو رقم الـ IVR).</li>
           <li>اختر الـ Trunk الذي أنشأته أعلاه في قائمة <strong class="text-[#1f93ff]">Trunk Sequence</strong>.</li>
           <li>الآن عند قيام أي موظف بطلب <span class="font-mono text-[#1f93ff]">888</span> أو توجيه خط وارد إليه، ستنتقل المكالمة فوراً لـ LiveKit والمساعد الذكي!</li>
@@ -450,52 +437,52 @@
     </div>
 
     <div class="flex justify-end pt-2 border-t border-[#eaedf0]">
-      <button type="button" onclick="closeIssabelModal()" class="px-5 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#1e293b] font-semibold">إغلاق</button>
+      <button type="button" onclick="closeIssabelModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs">إغلاق</button>
     </div>
   </div>
 </div>
 
 <!-- Modal: New / Edit Tenant DID -->
-<div id="new-did-modal" class="fixed inset-0 z-50 bg-[#f8fafc]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+<div id="new-did-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-md w-full p-6 shadow-lg space-y-4 text-xs">
     <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
-      <h3 class="text-base font-bold text-[#0f172a] flex items-center gap-2">
-        <span>📱</span> إضافة / تعديل رقم DID
+      <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        <span>إضافة / تعديل رقم DID</span>
       </h3>
-      <button type="button" onclick="closeNewDidModal()" class="text-[#64748b] hover:text-[#1e293b] text-lg">&times;</button>
+      <button type="button" onclick="closeNewDidModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="new-did-form" onsubmit="handleSaveDid(event)" class="space-y-3.5">
       <input type="hidden" id="did-id" />
       <div>
-        <label class="block font-semibold text-[#334155] mb-1">رقم الهاتف (DID Number) *</label>
-        <input type="text" id="did-number" required placeholder="مثال: +201012345678 أو 01012345678" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] font-mono font-bold focus:outline-none focus:border-[#1f93ff]" />
-        <p class="text-[10px] text-[#94a3b8] mt-0.5">الرقم المطلوب من المتصلين للوصول لشركتك عبر الـ SIP.</p>
+        <label class="block font-medium text-slate-700 mb-1">رقم الهاتف (DID Number) *</label>
+        <input type="text" id="did-number" required placeholder="مثال: +201012345678 أو 01012345678" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono font-medium focus:outline-none focus:border-[#1f93ff]" />
+        <p class="text-[10px] text-slate-400 mt-0.5">الرقم المطلوب من المتصلين للوصول لشركتك عبر الـ SIP.</p>
       </div>
 
       <div>
-        <label class="block font-semibold text-[#334155] mb-1">الوصف أو اسم الفرع</label>
-        <input type="text" id="did-description" placeholder="مثال: الخط الساخن الرئيسي أو فرع القاهرة" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]" />
+        <label class="block font-medium text-slate-700 mb-1">الوصف أو اسم الفرع</label>
+        <input type="text" id="did-description" placeholder="مثال: الخط الساخن الرئيسي أو فرع القاهرة" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <div>
-        <label class="block font-semibold text-[#334155] mb-1">المساعد الصوتي المسند (Agent Profile)</label>
-        <select id="did-agent-profile" class="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-[#0f172a] focus:outline-none focus:border-[#1f93ff]">
+        <label class="block font-medium text-slate-700 mb-1">المساعد الصوتي المسند (Agent Profile)</label>
+        <select id="did-agent-profile" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]">
           <option value="">المساعد الافتراضي النشط</option>
         </select>
-        <p class="text-[10px] text-[#94a3b8] mt-0.5">المساعد الذي سيرد على المكالمات الواردة لهذا الرقم تحديداً.</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">المساعد الذي سيرد على المكالمات الواردة لهذا الرقم تحديداً.</p>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
-        <input type="checkbox" id="did-is-active" checked class="rounded border-[#e2e8f0] text-[#1f93ff] focus:ring-[#1f93ff]" />
-        <label for="did-is-active" class="font-semibold text-[#334155]">تفعيل استقبال المكالمات على هذا الرقم</label>
+        <input type="checkbox" id="did-is-active" checked class="rounded border-slate-300 text-[#1f93ff] focus:ring-[#1f93ff]" />
+        <label for="did-is-active" class="font-medium text-slate-700">تفعيل استقبال المكالمات على هذا الرقم</label>
       </div>
 
-      <div id="did-error-msg" class="hidden p-2 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs"></div>
+      <div id="did-error-msg" class="hidden p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs"></div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-[#eaedf0]">
-        <button type="button" onclick="closeNewDidModal()" class="px-4 py-2 rounded-xl bg-[#f1f5f9] hover:bg-[#eaedf0] text-[#334155] transition">إلغاء</button>
-        <button type="submit" id="btn-submit-did" class="px-4 py-2 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20">
+        <button type="button" onclick="closeNewDidModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition text-xs font-medium">إلغاء</button>
+        <button type="submit" id="btn-submit-did" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold transition flex items-center gap-1.5 shadow-2xs text-xs">
           <span>حفظ الرقم</span>
         </button>
       </div>

@@ -78,7 +78,7 @@ function renderTransactionsTable(txs, sym = '$') {
   if (!txs || txs.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-8 text-center text-[#8C827A]">
+        <td colspan="7" class="py-8 text-center text-slate-400">
           لا توجد حركات مالية مسجلة حتى الآن.
         </td>
       </tr>
@@ -89,35 +89,35 @@ function renderTransactionsTable(txs, sym = '$') {
   tbody.innerHTML = txs.map(t => {
     const isPositive = t.amount >= 0;
     const amountBadge = isPositive 
-      ? `<span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${t.amount_formatted}</span>`
-      : `<span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">${t.amount_formatted}</span>`;
+      ? `<span class="px-2.5 py-0.5 rounded-md text-xs font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${t.amount_formatted}</span>`
+      : `<span class="px-2.5 py-0.5 rounded-md text-xs font-mono font-medium bg-rose-50 text-rose-700 border border-rose-200">${t.amount_formatted}</span>`;
 
     let typeBadge = '';
     if (t.transaction_type === 'topup') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">⚡ شحن رصيد</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">شحن رصيد</span>`;
     } else if (t.transaction_type === 'call_deduction') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">📞 خصم مكالمة</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">خصم مكالمة</span>`;
     } else {
-      typeBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF7F2] text-[#6E645D] border border-[#DDD5C7]">${escapeHtml(t.transaction_type_display)}</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(t.transaction_type_display)}</span>`;
     }
 
     const minsDisplay = t.billed_minutes > 0
-      ? `<span class="font-mono font-bold text-[#680E23]">${t.billed_minutes} د</span> <span class="text-[10px] text-[#8C827A]">(${t.actual_seconds} ث)</span>`
-      : `<span class="text-[#8C827A]">-</span>`;
+      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} د</span> <span class="text-[10px] text-slate-400">(${t.actual_seconds} ث)</span>`
+      : `<span class="text-slate-400">-</span>`;
 
     const rateDisplay = t.rate_applied > 0
-      ? `<span class="font-mono">${sym}${t.rate_applied.toFixed(4)}</span>`
-      : `<span class="text-[#8C827A]">-</span>`;
+      ? `<span class="font-mono text-slate-700">${sym}${t.rate_applied.toFixed(4)}</span>`
+      : `<span class="text-slate-400">-</span>`;
 
     return `
-      <tr class="hover:bg-[#F5EFE6]/50 transition">
-        <td class="py-3 px-4 text-[#6E645D] font-mono text-[11px]">${t.created_at}</td>
+      <tr class="hover:bg-slate-50/60 transition">
+        <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">${t.created_at}</td>
         <td class="py-3 px-4">${typeBadge}</td>
         <td class="py-3 px-4">${amountBadge}</td>
-        <td class="py-3 px-4 font-mono font-semibold text-[#1C1917]">${t.balance_after_formatted}</td>
+        <td class="py-3 px-4 font-mono font-medium text-slate-900">${t.balance_after_formatted}</td>
         <td class="py-3 px-4">${minsDisplay}</td>
         <td class="py-3 px-4">${rateDisplay}</td>
-        <td class="py-3 px-4 text-[#443D39] max-w-xs truncate" title="${escapeHtml(t.description || '')}">${escapeHtml(t.description || '-')}</td>
+        <td class="py-3 px-4 text-slate-700 max-w-xs truncate" title="${escapeHtml(t.description || '')}">${escapeHtml(t.description || '-')}</td>
       </tr>
     `;
   }).join('');

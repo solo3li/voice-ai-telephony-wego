@@ -135,14 +135,14 @@ function getStatusBadgeHtml(status) {
     case 'completed':
       return '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✅ مكتملة بنجاح</span>';
     default:
-      return '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]">📝 مسودة (جاهزة للإطلاق)</span>';
+      return '<span class="px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">مسودة (جاهزة للإطلاق)</span>';
   }
 }
 
 function resetCampaignDetailsUI() {
   const tbody = document.getElementById('camp-contacts-tbody');
   if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-[#8C827A]">اختر حملة أو أنشئ حملة جديدة لرفع وعرض قائمة العملاء.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">اختر حملة أو أنشئ حملة جديدة لرفع وعرض قائمة العملاء.</td></tr>';
   }
   const progressBar = document.getElementById('camp-progress-bar');
   if (progressBar) progressBar.style.width = '0%';
@@ -224,8 +224,8 @@ function renderCampaignHeaderAndStats(camp) {
       chBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300';
       chBadge.innerText = '⚡ هجينة (اتصال + واتساب)';
     } else {
-      chBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FAF0F2] text-[#680E23] border border-[#E8CCD2]';
-      chBadge.innerText = '📞 مكالمات فقط';
+      chBadge.className = 'px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200';
+      chBadge.innerText = 'مكالمات فقط';
     }
   }
 
@@ -316,7 +316,7 @@ function renderCampaignContactsTable(contacts) {
   if (!tbody) return;
 
   if (!contacts || contacts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-[#8C827A]">لا توجد نتائج مطابقة لفلتر البحث.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">لا توجد نتائج مطابقة لفلتر البحث.</td></tr>';
     return;
   }
 
@@ -344,7 +344,7 @@ function renderCampaignContactsTable(contacts) {
     }
 
     // 3. AI Lead Score Badge
-    let aiBadge = '<span class="text-[#8C827A] text-[10px]">لم يتحدد</span>';
+    let aiBadge = '<span class="text-slate-400 text-[10px]">لم يتحدد</span>';
     if (c.interest_level === 'hot') {
       aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-sm flex items-center gap-1 w-fit"><span>🔥</span><span>مهتم جداً</span></span>';
     } else if (c.interest_level === 'warm') {
@@ -354,10 +354,10 @@ function renderCampaignContactsTable(contacts) {
     }
 
     // 4. Attributes Preview
-    let attrsHtml = '<span class="text-[#8C827A] text-[10px]">-</span>';
+    let attrsHtml = '<span class="text-slate-400 text-[10px]">-</span>';
     if (c.attributes && typeof c.attributes === 'object' && Object.keys(c.attributes).length > 0) {
       attrsHtml = Object.entries(c.attributes).slice(0, 3).map(([k, v]) => `
-        <span class="inline-block px-1.5 py-0.5 text-[9px] rounded bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] mr-1 mb-1">
+        <span class="inline-block px-1.5 py-0.5 text-[9px] rounded bg-slate-100 border border-slate-200 text-slate-700 mr-1 mb-1">
           <strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(v))}
         </span>
       `).join('');
@@ -366,28 +366,28 @@ function renderCampaignContactsTable(contacts) {
     // 5. Summary / Message Preview
     let summaryHtml = '';
     if (c.call_summary) {
-      summaryHtml = `<div class="truncate text-[#1C1917]" title="${escapeHtml(c.call_summary)}"><strong>📞</strong> ${escapeHtml(c.call_summary)}</div>`;
+      summaryHtml = `<div class="truncate text-slate-900" title="${escapeHtml(c.call_summary)}"><strong>📞</strong> ${escapeHtml(c.call_summary)}</div>`;
     }
     if (c.whatsapp_message_text) {
       summaryHtml += `<div class="truncate text-teal-800 text-[11px] mt-0.5" title="${escapeHtml(c.whatsapp_message_text)}"><strong>💬</strong> ${escapeHtml(c.whatsapp_message_text)}</div>`;
     }
     if (!summaryHtml) {
-      summaryHtml = '<span class="text-[#8C827A] italic">لا يوجد ملخص أو رسالة بعد</span>';
+      summaryHtml = '<span class="text-slate-400 italic">لا يوجد ملخص أو رسالة بعد</span>';
     }
 
     return `
-      <tr class="hover:bg-[#FAF7F2]/50 transition">
-        <td class="py-3 px-4 font-bold text-[#1C1917] whitespace-nowrap">
+      <tr class="hover:bg-slate-50/60 transition">
+        <td class="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-full bg-[#FAF0F2] text-[#680E23] flex items-center justify-center text-[10px] font-bold">👤</span>
+            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-medium border border-slate-200/60">👤</span>
             <span>${escapeHtml(c.customer_name)}</span>
           </div>
         </td>
-        <td class="py-3 px-3 font-mono text-[#2D2825] text-xs whitespace-nowrap dir-ltr text-start">${escapeHtml(c.phone_number)}</td>
+        <td class="py-3 px-3 font-mono text-slate-700 text-xs whitespace-nowrap dir-ltr text-start">${escapeHtml(c.phone_number)}</td>
         <td class="py-3 px-3 whitespace-nowrap">${callBadge}</td>
         <td class="py-3 px-3 whitespace-nowrap">${waBadge}</td>
         <td class="py-3 px-3 whitespace-nowrap">${aiBadge}</td>
-        <td class="py-3 px-4 text-[#443D39] max-w-[260px]">
+        <td class="py-3 px-4 text-slate-700 max-w-[260px]">
           ${summaryHtml}
         </td>
         <td class="py-3 px-3 max-w-[160px]">
@@ -395,14 +395,14 @@ function renderCampaignContactsTable(contacts) {
         </td>
         <td class="py-3 px-3 text-center whitespace-nowrap">
           <div class="flex items-center justify-center gap-1.5">
-            <button type="button" onclick="dialSingleContact(${c.id})" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-semibold transition" title="إجراء مكالمة هاتفية فورية">
-              📞 اتصال
+            <button type="button" onclick="dialSingleContact(${c.id})" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-medium transition" title="إجراء مكالمة هاتفية فورية">
+              اتصال
             </button>
-            <button type="button" onclick="sendSingleContactWhatsApp(${c.id})" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-semibold transition" title="إرسال رسالة واتساب مخصصة فورية">
-              💬 واتساب
+            <button type="button" onclick="sendSingleContactWhatsApp(${c.id})" class="px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-medium transition" title="إرسال رسالة واتساب مخصصة فورية">
+              واتساب
             </button>
-            <button type="button" onclick="openContactDetailsModal(${c.id})" class="px-2 py-1 rounded-lg bg-[#FAF0F2] hover:bg-[#F3DCE1] text-[#680E23] border border-[#E8CCD2] text-[11px] font-semibold transition" title="عرض التفاصيل الكاملة">
-              🔍
+            <button type="button" onclick="openContactDetailsModal(${c.id})" class="px-2 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-medium transition" title="عرض التفاصيل الكاملة">
+              تفاصيل
             </button>
           </div>
         </td>
@@ -419,9 +419,9 @@ function onCampaignChannelChanged(channel) {
     const card = document.getElementById(`card-channel-${ch}`);
     if (card) {
       if (ch === channel) {
-        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-[#680E23] bg-[#FAF0F2] cursor-pointer transition text-center shadow-sm';
+        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-xl border border-[#1f93ff] bg-[#eff8ff] cursor-pointer transition text-center shadow-2xs';
       } else {
-        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-2xl border border-[#DDD5C7] bg-[#FAF7F2] hover:border-[#680E23]/40 cursor-pointer transition text-center';
+        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition text-center';
       }
     }
   });
@@ -793,9 +793,9 @@ function filterCampaignContacts(status) {
 
   document.querySelectorAll('.camp-filter-btn').forEach(btn => {
     if (btn.getAttribute('data-filter') === status) {
-      btn.className = 'camp-filter-btn px-3 py-1 rounded-xl bg-[#680E23] text-white font-semibold transition';
+      btn.className = 'camp-filter-btn px-3 py-1 rounded-lg bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] font-medium transition';
     } else {
-      btn.className = 'camp-filter-btn px-3 py-1 rounded-xl bg-[#F5EFE6] text-[#6E645D] hover:bg-[#EAE3D9] font-semibold transition';
+      btn.className = 'camp-filter-btn px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition';
     }
   });
 
@@ -866,7 +866,7 @@ function openContactDetailsModal(contactId) {
         <div><strong>📌 الإجراء المطلوب:</strong> ${escapeHtml(ext.action_required || '-')}</div>
       `;
     } else {
-      insightsEl.innerHTML = '<span class="text-[#8C827A] italic">لا توجد استخلاصات ذكية بعد.</span>';
+      insightsEl.innerHTML = '<span class="text-slate-400 italic">لا توجد استخلاصات ذكية بعد.</span>';
     }
   }
 
@@ -877,15 +877,15 @@ function openContactDetailsModal(contactId) {
       attrsEl.innerHTML = `
         <table class="w-full text-start text-[11px]">
           ${Object.entries(attrs).map(([k, v]) => `
-            <tr class="border-b border-[#EAE3D9]/60">
-              <td class="font-bold py-1 text-[#680E23] w-1/3">${escapeHtml(k)}</td>
-              <td class="py-1 text-[#2D2825]">${escapeHtml(String(v))}</td>
+            <tr class="border-b border-slate-100">
+              <td class="font-medium py-1 text-slate-900 w-1/3">${escapeHtml(k)}</td>
+              <td class="py-1 text-slate-700">${escapeHtml(String(v))}</td>
             </tr>
           `).join('')}
         </table>
       `;
     } else {
-      attrsEl.innerHTML = '<span class="text-[#8C827A] italic">لا توجد حقول إضافية.</span>';
+      attrsEl.innerHTML = '<span class="text-slate-400 italic">لا توجد حقول إضافية.</span>';
     }
   }
 
@@ -961,12 +961,12 @@ async function loadDncList() {
         tbodyEl.innerHTML = entries.map(e => `
           <tr class="hover:bg-rose-50/30 transition">
             <td class="py-2.5 px-3 font-mono font-bold text-rose-900">${escapeHtml(e.phone_number)}</td>
-            <td class="py-2.5 px-3 text-[#1C1917] font-medium">${escapeHtml(e.customer_name || '-')}</td>
-            <td class="py-2.5 px-3 text-[#6E645D]">${escapeHtml(e.reason || '-')}</td>
-            <td class="py-2.5 px-3 text-[#8C827A] font-mono text-[11px]">${escapeHtml(e.created_at || '-')}</td>
+            <td class="py-2.5 px-3 text-slate-900 font-medium">${escapeHtml(e.customer_name || '-')}</td>
+            <td class="py-2.5 px-3 text-slate-500">${escapeHtml(e.reason || '-')}</td>
+            <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${escapeHtml(e.created_at || '-')}</td>
             <td class="py-2.5 px-3 text-center">
-              <button type="button" onclick="deleteDncNumber(${e.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition text-[11px]">
-                فك الحظر 🗑️
+              <button type="button" onclick="deleteDncNumber(${e.id})" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium border border-rose-200 transition text-[11px]">
+                فك الحظر
               </button>
             </td>
           </tr>

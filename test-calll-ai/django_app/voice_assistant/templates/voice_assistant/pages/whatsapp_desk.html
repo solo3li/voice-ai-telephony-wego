@@ -30,19 +30,19 @@
 <div class="space-y-4">
 
   <!-- ==================== Header & Desk Status ==================== -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)]">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-xl p-5 shadow-2xs">
     <div class="flex items-center gap-3.5">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+      <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xl border border-slate-200/60 shrink-0">
         🎧
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-lg font-bold text-[#0f172a]">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
+          <h1 class="text-base font-semibold text-slate-900">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
+          <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
             رنين جماعي & استلام فوري
           </span>
         </div>
-        <p class="text-xs text-[#64748b] mt-0.5">
+        <p class="text-xs text-slate-500 mt-0.5">
           شاشة العمل الموحدة لموظفي الدعم لاستقبال وتوزيع محادثات الشكاوى والتحويل من الذكاء الاصطناعي
         </p>
       </div>
@@ -55,7 +55,7 @@
         type="button" 
         id="btn-agent-presence"
         onclick="toggleAgentPresence()"
-        class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
       >
         <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
         <span id="presence-text">حالتي: متصل ومستعد للاستلام</span>
@@ -66,11 +66,11 @@
         type="button" 
         id="btn-sound-toggle"
         onclick="toggleSoundMute()"
-        class="p-2 rounded-xl bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e2e8f0] text-xs transition shadow-xs flex items-center gap-1.5"
+        class="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs flex items-center gap-1.5"
         title="كتم/تفعيل صوت الرنين"
       >
         <span id="sound-icon">🔔</span>
-        <span class="hidden sm:inline text-[11px] font-semibold" id="sound-text">الصوت مفعل</span>
+        <span class="hidden sm:inline text-[11px] font-medium" id="sound-text">الصوت مفعل</span>
       </button>
     </div>
   </div>
@@ -79,63 +79,63 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
 
     <!-- Panel 1: Incoming Broadcast Ringing Queue (Right Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs">
-      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-[#f8fafc]/90 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs">
+      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-slate-50/50 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <span class="text-base">🛎️</span>
           <div>
-            <h3 class="font-bold text-xs text-[#0f172a]">طابور الرنين العام</h3>
-            <p class="text-[10px] text-[#94a3b8]">ترن لدى الجميع (الأسبقية للاستلام)</p>
+            <h3 class="font-medium text-xs text-slate-900">طابور الرنين العام</h3>
+            <p class="text-[10px] text-slate-400">ترن لدى الجميع (الأسبقية للاستلام)</p>
           </div>
         </div>
-        <span id="broadcast-queue-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 font-mono">
+        <span id="broadcast-queue-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 font-mono">
           0
         </span>
       </div>
 
       <!-- Queue Cards Container -->
-      <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-[#f8fafc]/20">
-        <div class="p-8 text-center text-[#94a3b8] text-xs space-y-2">
+      <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-slate-50/30">
+        <div class="p-8 text-center text-slate-400 text-xs space-y-2">
           <div class="text-2xl">☕</div>
-          <p class="font-medium">لا توجد محادثات معلقة في الطابور حالياً.</p>
-          <p class="text-[10px] text-[#A8A199]">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
+          <p class="font-medium text-slate-600">لا توجد محادثات معلقة في الطابور حالياً.</p>
+          <p class="text-[10px] text-slate-400">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
         </div>
       </div>
     </div>
 
     <!-- Panel 2: My Active Claimed Chats (Middle Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs">
-      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-[#f8fafc]/90 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs">
+      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-slate-50/50 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <span class="text-base">👤</span>
           <div>
-            <h3 class="font-bold text-xs text-[#0f172a]">محادثاتي المستلمة</h3>
-            <p class="text-[10px] text-[#94a3b8]">محادثات قيد الدعم المباشر</p>
+            <h3 class="font-medium text-xs text-slate-900">محادثاتي المستلمة</h3>
+            <p class="text-[10px] text-slate-400">محادثات قيد الدعم المباشر</p>
           </div>
         </div>
-        <span id="my-chats-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#1f93ff]/10 text-[#1f93ff] border border-[#1f93ff]/20 font-mono">
+        <span id="my-chats-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-mono">
           0
         </span>
       </div>
 
       <!-- Active Claimed Chats List -->
       <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-[#eaedf0] chat-scroll">
-        <div class="p-8 text-center text-[#94a3b8] text-xs">
+        <div class="p-8 text-center text-slate-400 text-xs">
           لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
         </div>
       </div>
     </div>
 
     <!-- Panel 3: Live Chat Thread & Cockpit (Left Main Panel, 6 cols) -->
-    <div class="lg:col-span-6 flex flex-col bg-white border border-[#eaedf0] rounded-3xl overflow-hidden shadow-xs relative">
+    <div class="lg:col-span-6 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs relative">
 
       <!-- Empty State (No chat active) -->
       <div id="desk-empty-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-        <div class="w-16 h-16 rounded-3xl bg-rose-50 text-[#1f93ff] border border-rose-100 flex items-center justify-center text-3xl shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-600 border border-slate-200/60 flex items-center justify-center text-2xl shadow-2xs">
           💬
         </div>
-        <h3 class="text-base font-bold text-[#0f172a]">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
-        <p class="text-xs text-[#64748b] max-w-sm leading-relaxed">
+        <h3 class="text-sm font-semibold text-slate-900">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
+        <p class="text-xs text-slate-500 max-w-sm leading-relaxed">
           أو اضغط «استلام المحادثة» من طابور الرنين العام على اليمين لسحب طلب العميل والرد عليه مباشرة.
         </p>
       </div>
@@ -144,17 +144,17 @@
       <div id="desk-active-view" class="hidden flex-1 flex-col min-h-0">
         
         <!-- Header -->
-        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-[#f8fafc]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div class="flex items-center gap-3">
-            <div id="desk-chat-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+            <div id="desk-chat-avatar" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-xs border border-slate-200/60 shrink-0">
               U
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h3 id="desk-chat-name" class="font-bold text-sm text-[#0f172a]">-</h3>
-                <span id="desk-chat-phone" class="font-mono text-xs text-[#64748b] bg-white px-2 py-0.5 rounded-lg border border-[#e2e8f0] dir-ltr">-</span>
+                <h3 id="desk-chat-name" class="font-semibold text-sm text-slate-900">-</h3>
+                <span id="desk-chat-phone" class="font-mono text-xs text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 dir-ltr">-</span>
               </div>
-              <span class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+              <span class="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                 قيد الدعم البشري المباشر
               </span>
@@ -166,43 +166,43 @@
             <button 
               type="button" 
               onclick="releaseActiveChat()" 
-              class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-medium transition flex items-center gap-1 shadow-2xs"
               title="إعادة المحادثة للطابور العام لترن عند الزملاء"
             >
-              <span>🔄 إعادة للطابور</span>
+              <span>إعادة للطابور</span>
             </button>
             <button 
               type="button" 
               onclick="resolveActiveChat()" 
-              class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+              class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
               title="إنهاء التذكرة واستئناف الرد الآلي للذكاء الاصطناعي"
             >
-              <span>✅ حل المشكلة واستئناف الـ AI</span>
+              <span>حل المشكلة واستئناف الـ AI</span>
             </button>
           </div>
         </div>
 
         <!-- AI Handoff Brief Banner & 5-Minute Countdown -->
-        <div id="desk-brief-banner" class="px-5 py-3 bg-gradient-to-r from-amber-50 to-rose-50/50 border-b border-amber-200 text-xs text-[#334155] shrink-0">
+        <div id="desk-brief-banner" class="px-5 py-3 bg-amber-50/80 border-b border-amber-200 text-xs text-slate-700 shrink-0">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white">⚠️ شكوى / تصعيد</span>
-              <span class="font-bold text-[#1570ef]" id="desk-brief-reason">سبب التصعيد: -</span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">شكوى / تصعيد</span>
+              <span class="font-medium text-slate-900" id="desk-brief-reason">سبب التصعيد: -</span>
             </div>
             <!-- 5-Minute Countdown Badge -->
-            <div class="flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-white shadow-xs" id="sla-timer-container">
-              <span>⏱️ مهلة الرد:</span>
+            <div class="flex items-center gap-1.5 font-mono text-[11px] font-medium px-2.5 py-0.5 rounded-md border bg-white shadow-2xs" id="sla-timer-container">
+              <span>مهلة الرد:</span>
               <span id="sla-countdown-text">05:00</span>
             </div>
           </div>
-          <p id="desk-brief-summary" class="text-[11px] text-[#334155] mt-1.5 bg-white/80 p-2.5 rounded-xl border border-amber-200 leading-relaxed font-sans shadow-2xs">
+          <p id="desk-brief-summary" class="text-[11px] text-slate-700 mt-1.5 bg-white p-2.5 rounded-lg border border-amber-200 leading-relaxed font-sans shadow-2xs">
             -
           </p>
         </div>
 
         <!-- Messages Stream -->
-        <div id="desk-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 chat-scroll bg-[#f8fafc]/20 min-h-0">
-          <div class="p-8 text-center text-[#94a3b8] text-xs">جارٍ جلب المحادثة...</div>
+        <div id="desk-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 chat-scroll bg-slate-50/30 min-h-0">
+          <div class="p-8 text-center text-slate-400 text-xs">جارٍ جلب المحادثة...</div>
         </div>
 
         <!-- Quick Reply Composer -->
@@ -215,15 +215,14 @@
                 placeholder="اكتب رداً مباشراً على العميل على الواتساب..." 
                 required
                 autocomplete="off"
-                class="flex-1 py-2.5 px-4 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] text-xs text-[#0f172a] focus:outline-none focus:border-[#1f93ff] focus:bg-white transition"
+                class="flex-1 py-2 px-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#1f93ff] focus:bg-white transition"
               >
               <button 
                 type="submit" 
                 id="btn-desk-send"
-                class="py-2.5 px-5 rounded-2xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20 shrink-0"
+                class="py-2 px-4 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
               >
                 <span>إرسال</span>
-                <span>📤</span>
               </button>
             </div>
           </form>

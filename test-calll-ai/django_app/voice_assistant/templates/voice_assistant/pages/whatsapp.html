@@ -23,19 +23,19 @@
 <div class="space-y-4">
 
   <!-- ==================== Header & Global Controls ==================== -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-3xl p-5 shadow-[0_4px_25px_-3px_rgba(31,147,255,0.04)]">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-xl p-5 shadow-2xs">
     <div class="flex items-center gap-3.5">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+      <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl border border-emerald-100 shrink-0">
         💬
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-lg font-bold text-[#0f172a]">محادثات الواتساب والموظف الذكي 24/7</h1>
-          <span id="gateway-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+          <h1 class="text-base font-semibold text-slate-900">محادثات الواتساب والموظف الذكي 24/7</h1>
+          <span id="gateway-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
             جارٍ التحقق من البوابة...
           </span>
         </div>
-        <p class="text-xs text-[#64748b] mt-0.5">
+        <p class="text-xs text-slate-500 mt-0.5">
           صندوق محادثات الواتساب الموحد (Omnichannel Inbox): استعراض كامل لمحادثات العملاء، مراقبة ردود الذكاء الاصطناعي، والرد البشري المباشر.
         </p>
       </div>
@@ -47,7 +47,7 @@
         type="button" 
         onclick="syncRealWhatsappChats()" 
         id="btn-sync-whatsapp"
-        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-700/20"
+        class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
         title="مزامنة كافة محادثات ورسائل هاتفك الحقيقية المسجلة في واتساب"
       >
         <span id="sync-icon">🔄</span>
@@ -58,15 +58,15 @@
         type="button" 
         onclick="openQrModal()" 
         id="btn-open-qr"
-        class="px-3.5 py-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#1e293b] border border-[#e2e8f0] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+        class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs"
       >
-        <span>📱 ربط واتساب (QR Code)</span>
+        <span>ربط واتساب (QR Code)</span>
       </button>
 
       <button 
         type="button" 
         onclick="loadConversationsList()" 
-        class="p-2 rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#0f172a] border border-[#e2e8f0] text-xs transition shadow-sm"
+        class="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs"
         title="تحديث المحادثات"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,7 +77,7 @@
       <button 
         type="button" 
         onclick="openTestModal()" 
-        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#1f93ff] to-[#0f172a] hover:from-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20"
+        class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
       >
         <span>تجربة إرسال</span>
       </button>
@@ -85,62 +85,62 @@
   </div>
 
   <!-- ==================== Main Omnichannel Chat Workspace ==================== -->
-  <div class="bg-white border border-[#eaedf0] rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[660px] h-[78vh] max-h-[850px]">
+  <div class="bg-white border border-[#eaedf0] rounded-xl shadow-2xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[660px] h-[78vh] max-h-[850px]">
 
     <!-- ==================== Right Side: Conversations Sidebar (4 cols) ==================== -->
-    <div class="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-[#eaedf0] flex flex-col bg-[#f8fafc]/60 min-h-0">
+    <div class="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-[#eaedf0] flex flex-col bg-slate-50/50 min-h-0">
       
       <!-- Search & Filters Toolbar -->
       <div class="p-3.5 border-b border-[#eaedf0] bg-white space-y-2.5">
         <div class="relative">
-          <span class="absolute inset-y-0 right-3 flex items-center text-[#94a3b8] text-xs">🔍</span>
+          <span class="absolute inset-y-0 right-3 flex items-center text-slate-400 text-xs">🔍</span>
           <input 
             type="text" 
             id="search-conversations"
             placeholder="بحث بالاسم أو رقم الهاتف..." 
             oninput="filterConversations(this.value)"
-            class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl pr-8 pl-3 py-2 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none transition"
+            class="w-full bg-slate-50 border border-slate-200 rounded-lg pr-8 pl-3 py-1.5 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
           />
         </div>
 
-        <div class="flex items-center gap-1 text-[11px] font-semibold">
+        <div class="flex items-center gap-1 text-[11px] font-medium">
           <button 
             type="button" 
             onclick="setConvFilter('all', this)" 
-            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg bg-[#1f93ff] text-white transition text-center shadow-xs"
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 transition text-center shadow-2xs"
           >
             الكل
           </button>
           <button 
             type="button" 
             onclick="setConvFilter('ai_active', this)" 
-            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#64748b] hover:bg-[#eaedf0] transition text-center"
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-md text-slate-600 hover:bg-slate-100 transition text-center"
           >
-            🤖 AI نشط
+            AI نشط
           </button>
           <button 
             type="button" 
             onclick="setConvFilter('manual', this)" 
-            class="conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#64748b] hover:bg-[#eaedf0] transition text-center"
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-md text-slate-600 hover:bg-slate-100 transition text-center"
           >
-            👤 يدوي
+            يدوي
           </button>
         </div>
       </div>
 
       <!-- Conversations Scrollable List -->
       <div id="conversations-list" class="flex-1 overflow-y-auto chat-scroll divide-y divide-[#eaedf0]/70 min-h-0">
-        <div class="p-8 text-center text-[#64748b] text-xs">
+        <div class="p-8 text-center text-slate-500 text-xs">
           <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto mb-2"></div>
           جارٍ تحميل المحادثات...
         </div>
       </div>
 
       <!-- Footer Info -->
-      <div class="p-2.5 border-t border-[#eaedf0] bg-white text-[11px] text-[#64748b] flex items-center justify-between px-4">
-        <span>المحادثات النشطة: <strong id="conversations-count" class="text-[#1f93ff]">0</strong></span>
+      <div class="p-2.5 border-t border-[#eaedf0] bg-white text-[11px] text-slate-500 flex items-center justify-between px-4">
+        <span>المحادثات النشطة: <strong id="conversations-count" class="text-slate-900 font-medium">0</strong></span>
         <span class="flex items-center gap-1 text-emerald-700">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           تحديث تلقائي
         </span>
       </div>
@@ -164,21 +164,21 @@
       <div id="chat-active-view" class="hidden flex-1 flex-col min-h-0">
         
         <!-- Chat Active Header -->
-        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-[#f8fafc]/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div class="flex items-center gap-3">
-            <div id="chat-active-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1f93ff] to-[#A3203E] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+            <div id="chat-active-avatar" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-xs border border-slate-200/60 shrink-0">
               U
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h3 id="chat-active-name" class="font-bold text-sm text-[#0f172a]">-</h3>
-                <span id="chat-active-phone" class="font-mono text-xs text-[#64748b] bg-white px-2 py-0.5 rounded-lg border border-[#e2e8f0] dir-ltr">-</span>
-                <button type="button" onclick="openEditContactModal()" class="text-[11px] bg-[#eaedf0]/70 hover:bg-[#eaedf0] text-[#1f93ff] px-2 py-0.5 rounded-lg border border-[#e2e8f0] font-semibold flex items-center gap-1 transition" title="تعديل اسم أو رقم العميل">
-                  <span>✏️</span> تعديل
+                <h3 id="chat-active-name" class="font-semibold text-sm text-slate-900">-</h3>
+                <span id="chat-active-phone" class="font-mono text-xs text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 dir-ltr">-</span>
+                <button type="button" onclick="openEditContactModal()" class="text-[11px] bg-white hover:bg-slate-50 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 font-medium flex items-center gap-1 transition" title="تعديل اسم أو رقم العميل">
+                  <span>تعديل</span>
                 </button>
               </div>
               <div class="flex items-center gap-2 mt-0.5 text-[11px]">
-                <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-full bg-rose-50 text-[#1f93ff] border border-rose-200 font-semibold cursor-pointer" onclick="toggleCallSummary()">
+                <span id="chat-call-history-badge" class="hidden px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-medium cursor-pointer" onclick="toggleCallSummary()">
                   مكالمات سابقة مسجلة (اضغط للعرض)
                 </span>
                 <span id="chat-active-status" class="text-emerald-700 font-medium">محادثة نشطة</span>
@@ -192,7 +192,7 @@
               type="button" 
               id="btn-toggle-ai"
               onclick="toggleCurrentAiAutoReply()"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-2xs bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
               title="تفعيل أو إيقاف الرد الآلي للذكاء الاصطناعي لهذا العميل"
             >
               <span id="ai-toggle-icon">🤖</span>
@@ -202,7 +202,7 @@
             <button 
               type="button" 
               onclick="loadActiveMessages(true)" 
-              class="p-2 rounded-xl bg-white hover:bg-[#f8fafc] text-[#0f172a] border border-[#e2e8f0] text-xs transition shadow-sm"
+              class="p-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs transition shadow-2xs"
               title="تحديث الرسائل"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,43 +213,43 @@
         </div>
 
         <!-- Call Summary Dropdown Accordion (if customer has call memory) -->
-        <div id="chat-call-summary-banner" class="hidden px-5 py-2.5 bg-rose-50/90 border-b border-rose-200 text-xs text-[#334155] shrink-0">
+        <div id="chat-call-summary-banner" class="hidden px-5 py-2.5 bg-slate-50 border-b border-slate-200 text-xs text-slate-700 shrink-0">
           <div class="flex items-start justify-between gap-2">
             <div>
-              <span class="font-bold text-[#1f93ff]">🎙️ سياق المكالمات الهاتفية السابقة:</span>
-              <p id="chat-call-summary-text" class="text-[11px] text-[#1e293b] mt-1 leading-relaxed">-</p>
+              <span class="font-medium text-slate-900">سياق المكالمات الهاتفية السابقة:</span>
+              <p id="chat-call-summary-text" class="text-[11px] text-slate-600 mt-1 leading-relaxed">-</p>
             </div>
-            <button type="button" onclick="toggleCallSummary()" class="text-rose-700 hover:text-rose-900 font-bold">&times;</button>
+            <button type="button" onclick="toggleCallSummary()" class="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
           </div>
         </div>
 
         <!-- AI Handoff Brief Banner (if escalated to human support) -->
-        <div id="chat-escalation-banner" class="hidden px-5 py-3 bg-amber-50/95 border-b border-amber-300 text-xs text-[#334155] shrink-0">
+        <div id="chat-escalation-banner" class="hidden px-5 py-3 bg-amber-50/80 border-b border-amber-200 text-xs text-slate-700 shrink-0">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white animate-pulse">⚠️ محول للدعم البشري</span>
-              <span class="font-bold text-[#1570ef]" id="escalation-reason-text">سبب التصعيد: -</span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">محول للدعم البشري</span>
+              <span class="font-medium text-slate-900" id="escalation-reason-text">سبب التصعيد: -</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-[11px] font-mono text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-lg border border-amber-300" id="escalation-sla-timer">⏱️ مهلة الرد: 120 ثانية</span>
+              <span class="text-[11px] font-mono text-amber-800 bg-amber-100/70 px-2.5 py-0.5 rounded-md border border-amber-200" id="escalation-sla-timer">مهلة الرد: 120 ثانية</span>
               <button 
                 type="button" 
                 onclick="resolveCurrentConversation()"
-                class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1 shadow-2xs"
                 title="حل المشكلة وإعادة تفعيل الرد الآلي للذكاء الاصطناعي"
               >
-                <span>✅ حل المشكلة واستئناف الـ AI</span>
+                <span>حل المشكلة واستئناف الـ AI</span>
               </button>
             </div>
           </div>
-          <p id="escalation-summary-text" class="text-[11px] text-[#334155] mt-1.5 bg-white/70 p-2 rounded-lg border border-amber-200 leading-relaxed font-sans">
+          <p id="escalation-summary-text" class="text-[11px] text-slate-700 mt-1.5 bg-white p-2 rounded-lg border border-amber-200 leading-relaxed font-sans">
             -
           </p>
         </div>
 
         <!-- Chat Messages Stream -->
-        <div id="chat-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 chat-scroll bg-[#f8fafc]/30 min-h-0">
-          <div class="p-8 text-center text-[#64748b] text-xs">جارٍ جلب المحادثة...</div>
+        <div id="chat-messages-stream" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 chat-scroll bg-slate-50/30 min-h-0">
+          <div class="p-8 text-center text-slate-400 text-xs">جارٍ جلب المحادثة...</div>
         </div>
 
         <!-- Chat Input Composer -->
@@ -262,12 +262,12 @@
                 placeholder="اكتب رداً يدوياً على العميل عبر الواتساب..." 
                 required
                 autocomplete="off"
-                class="flex-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none transition shadow-inner"
+                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
               />
               <button 
                 type="submit" 
                 id="btn-send-reply" 
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#1EBE5D] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#25D366]/20 shrink-0"
+                class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
               >
                 <span>إرسال</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -275,8 +275,8 @@
                 </svg>
               </button>
             </div>
-            <div class="flex items-center justify-between text-[10px] text-[#64748b] px-1">
-              <span>💡 يتم الإرسال فوراً لرقم العميل عبر بوابة Evolution API المربوطة.</span>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 px-1">
+              <span>يتم الإرسال فوراً لرقم العميل عبر بوابة Evolution API المربوطة.</span>
               <span id="reply-status-text" class="text-emerald-700 font-medium"></span>
             </div>
           </form>
@@ -293,23 +293,22 @@
 
 {% block modals %}
 <!-- ==================== QR Code Connection Modal ==================== -->
-<div id="qr-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-md w-full border border-[#eaedf0] shadow-2xl p-6 space-y-4 text-right">
+<div id="qr-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-md w-full border border-[#eaedf0] shadow-lg p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-xl">📱</span>
         <div>
-          <h3 class="font-bold text-sm text-[#0f172a]">ربط رقم الواتساب (QR Code)</h3>
-          <p class="text-[11px] text-[#64748b]">امسح الكود لربط رقمك الشخصي أو رقم العمل</p>
+          <h3 class="font-semibold text-sm text-slate-900">ربط رقم الواتساب (QR Code)</h3>
+          <p class="text-[11px] text-slate-500">امسح الكود لربط رقمك الشخصي أو رقم العمل</p>
         </div>
       </div>
-      <button type="button" onclick="closeQrModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+      <button type="button" onclick="closeQrModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <!-- QR Container -->
-    <div id="qr-modal-container" class="flex flex-col items-center justify-center p-6 bg-[#f8fafc] rounded-2xl border border-dashed border-[#e2e8f0] min-h-[280px] text-center space-y-3">
-      <div class="w-10 h-10 rounded-full border-3 border-[#1f93ff] border-t-transparent animate-spin mx-auto"></div>
-      <p class="text-xs text-[#64748b]">جارٍ فحص حالة الاتصال بالسيرفر...</p>
+    <div id="qr-modal-container" class="flex flex-col items-center justify-center p-6 bg-slate-50/50 rounded-lg border border-dashed border-slate-200 min-h-[280px] text-center space-y-3">
+      <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto"></div>
+      <p class="text-xs text-slate-500">جارٍ فحص حالة الاتصال بالسيرفر...</p>
     </div>
 
     <!-- Actions -->
@@ -318,7 +317,7 @@
         type="button" 
         onclick="fetchQrCode(true)" 
         id="btn-generate-qr"
-        class="flex-1 py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20"
+        class="flex-1 py-2 px-4 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs"
       >
         <span>توليد كود QR للربط</span>
       </button>
@@ -327,7 +326,7 @@
         type="button" 
         onclick="disconnectWhatsApp()" 
         id="btn-disconnect-whatsapp"
-        class="hidden py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition items-center justify-center gap-1.5"
+        class="hidden py-2 px-4 rounded-lg bg-white hover:bg-rose-50 text-rose-700 border border-slate-200 text-xs font-medium transition items-center justify-center gap-1.5"
       >
         <span>قطع الاتصال</span>
       </button>
@@ -336,50 +335,50 @@
 </div>
 
 <!-- ==================== Edit Contact Modal ==================== -->
-<div id="modal-edit-contact" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-sm w-full border border-[#eaedf0] shadow-2xl p-6 space-y-4 text-right">
+<div id="modal-edit-contact" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-sm w-full border border-[#eaedf0] shadow-lg p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
-      <h3 class="font-bold text-sm text-[#0f172a] flex items-center gap-2">
-        <span>✏️</span> تعديل بيانات العميل
+      <h3 class="font-semibold text-sm text-slate-900 flex items-center gap-2">
+        <span>تعديل بيانات العميل</span>
       </h3>
-      <button type="button" onclick="closeEditContactModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+      <button type="button" onclick="closeEditContactModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="edit-contact-form" onsubmit="submitSaveContact(event)" class="space-y-3 text-xs">
       <div>
-        <label class="block font-bold text-[#334155] mb-1">اسم العميل / النشاط:</label>
+        <label class="block font-medium text-slate-700 mb-1">اسم العميل / النشاط:</label>
         <input 
           type="text" 
           id="edit-contact-name" 
           placeholder="مثال: أحمد السيد / شركة النور" 
           required 
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-bold text-[#334155] mb-1">رقم هاتف العميل (الصريح):</label>
+        <label class="block font-medium text-slate-700 mb-1">رقم هاتف العميل (الصريح):</label>
         <input 
           type="text" 
           id="edit-contact-phone" 
           placeholder="مثال: 01019431866 أو 201019431866+" 
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#0f172a] font-mono dir-ltr text-left focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono dir-ltr text-left focus:border-[#1f93ff] focus:outline-none"
         />
-        <p class="text-[10px] text-[#94a3b8] mt-1">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
+        <p class="text-[10px] text-slate-400 mt-1">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#eaedf0]">
         <button 
           type="button" 
           onclick="closeEditContactModal()" 
-          class="px-4 py-2 rounded-xl border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
+          class="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition text-xs font-medium"
         >
           إلغاء
         </button>
         <button 
           type="submit" 
           id="btn-save-contact"
-          class="px-5 py-2 rounded-xl bg-[#1f93ff] text-white font-bold hover:bg-[#1570ef] transition shadow-xs"
+          class="px-4 py-2 rounded-lg bg-[#1f93ff] text-white font-semibold hover:bg-[#1570ef] transition shadow-2xs text-xs"
         >
           حفظ التعديلات
         </button>
@@ -389,62 +388,62 @@
 </div>
 
 <!-- ==================== Test Modal: Send Simulator ==================== -->
-<div id="test-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-md w-full border border-[#eaedf0] shadow-2xl p-6 space-y-4 text-right">
+<div id="test-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-md w-full border border-[#eaedf0] shadow-lg p-6 space-y-4 text-right">
     <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
-      <h3 class="font-bold text-sm text-[#0f172a] flex items-center gap-2">
-         تجربة محرك الواتساب و LangGraph
+      <h3 class="font-semibold text-sm text-slate-900">
+        تجربة محرك الواتساب و LangGraph
       </h3>
-      <button type="button" onclick="closeTestModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+      <button type="button" onclick="closeTestModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
     </div>
 
     <form id="test-form" onsubmit="submitTestWhatsApp(event)" class="space-y-3 text-xs">
       <div>
-        <label class="block font-bold text-[#334155] mb-1">رقم هاتف العميل (مع كود الدولة):</label>
+        <label class="block font-medium text-slate-700 mb-1">رقم هاتف العميل (مع كود الدولة):</label>
         <input 
           type="text" 
           id="test-phone" 
           placeholder="مثال: 201012345678 أو 966501234567" 
           required 
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#0f172a] font-mono focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-bold text-[#334155] mb-1">اسم العميل (اختياري):</label>
+        <label class="block font-medium text-slate-700 mb-1">اسم العميل (اختياري):</label>
         <input 
           type="text" 
           id="test-customer-name" 
           placeholder="مثال: أحمد السيد" 
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         />
       </div>
 
       <div>
-        <label class="block font-bold text-[#334155] mb-1">نوع الاختبار:</label>
+        <label class="block font-medium text-slate-700 mb-1">نوع الاختبار:</label>
         <select 
           id="test-type" 
           onchange="toggleTestType(this.value)"
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         >
-          <option value="langgraph_followup">🧠 تشغيل LangGraph تلقائياً (محاكاة متابعة ما بعد المكالمة)</option>
-          <option value="direct_message">💬 إرسال رسالة مباشرة مخصصة</option>
+          <option value="langgraph_followup">تشغيل LangGraph تلقائياً (محاكاة متابعة ما بعد المكالمة)</option>
+          <option value="direct_message">إرسال رسالة مباشرة مخصصة</option>
         </select>
       </div>
 
       <div id="test-custom-msg-group" class="hidden">
-        <label class="block font-bold text-[#334155] mb-1">نص الرسالة المخصصة:</label>
+        <label class="block font-medium text-slate-700 mb-1">نص الرسالة المخصصة:</label>
         <textarea 
           id="test-message-text" 
           rows="3" 
           placeholder="اكتب نص الرسالة التجريبية هنا..."
-          class="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3 text-xs text-[#0f172a] focus:ring-2 focus:ring-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
         ></textarea>
       </div>
 
-      <div class="pt-2 flex items-center justify-end gap-2">
-        <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition">إلغاء</button>
-        <button type="submit" id="btn-submit-test" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#1f93ff] to-[#0f172a] hover:from-[#1570ef] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#1f93ff]/20">
+      <div class="pt-2 flex items-center justify-end gap-2 border-t border-[#eaedf0]">
+        <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition">إلغاء</button>
+        <button type="submit" id="btn-submit-test" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
           <span>إرسال التجربة</span>
         </button>
       </div>

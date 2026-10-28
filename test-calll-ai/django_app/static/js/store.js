@@ -42,11 +42,11 @@ function renderMcpServersGrid(servers) {
 
   if (servers.length === 0) {
     mcpServersGrid.innerHTML = `
-      <div class="col-span-full text-center py-10 px-4 bg-[#FAF7F2] rounded-3xl border-2 border-dashed border-[#DDD5C7] space-y-3">
+      <div class="col-span-full text-center py-10 px-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 space-y-3">
         <span class="text-3xl block">⚡</span>
-        <h4 class="text-sm font-bold text-[#1C1917]">لا توجد خوادم MCP مربوطة حالياً</h4>
-        <p class="text-xs text-[#6E645D]">يمكنك ربط خادم أدوات خارجي عبر بروتوكول FastMCP SSE لتمكين المساعد الصوتي من استدعاء دواله أثناء المكالمات.</p>
-        <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-xl bg-[#680E23] hover:bg-[#7E152F] text-white text-xs font-bold transition inline-flex items-center gap-1.5 shadow-md">
+        <h4 class="text-sm font-bold text-slate-900">لا توجد خوادم MCP مربوطة حالياً</h4>
+        <p class="text-xs text-slate-500">يمكنك ربط خادم أدوات خارجي عبر بروتوكول FastMCP SSE لتمكين المساعد الصوتي من استدعاء دواله أثناء المكالمات.</p>
+        <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition inline-flex items-center gap-1.5 shadow-2xs">
           <span>+</span> <span>ربط خادم MCP جديد</span>
         </button>
       </div>
@@ -54,49 +54,49 @@ function renderMcpServersGrid(servers) {
   } else {
     mcpServersGrid.innerHTML = servers.map(s => {
       const toolsCount = (s.cached_tools || []).length;
-      const statusDotClass = s.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-[#C5A880]';
+      const statusDotClass = s.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400';
       const badgeClass = s.is_active 
-        ? 'bg-[#FAF0F2] border border-[#E8CCD2] text-[#680E23]' 
-        : 'bg-[#F5EFE6] border border-[#DDD5C7] text-[#8C827A]';
+        ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
+        : 'bg-slate-100 border border-slate-200 text-slate-600';
       const badgeText = s.is_active ? 'مفعل للمكالمات' : 'معطل';
       const toggleBtnText = s.is_active ? 'تعطيل' : 'تفعيل';
       const toggleBtnClass = s.is_active
-        ? 'bg-[#F5EFE6] hover:bg-[#EAE3D9] text-[#443D39] border border-[#DDD5C7]'
-        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
+        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium';
 
       return `
-        <div class="p-5 rounded-3xl bg-white border ${s.is_active ? 'border-[#D4AF37]/50 shadow-md' : 'border-[#EAE3D9] opacity-85'} hover:border-[#680E23]/40 transition-all duration-300 flex flex-col justify-between space-y-4">
+        <div class="p-4 rounded-xl bg-white border ${s.is_active ? 'border-sky-300 shadow-2xs' : 'border-slate-200 opacity-85'} hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
           <div class="space-y-3">
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-2.5 h-2.5 rounded-full ${statusDotClass} shrink-0"></span>
-                <h4 class="font-bold text-xs text-[#1C1917] truncate" title="${s.name}">${s.name}</h4>
+                <h4 class="font-bold text-xs text-slate-900 truncate" title="${s.name}">${s.name}</h4>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${badgeClass}">${badgeText}</span>
             </div>
 
-            <div class="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D9] font-mono text-[11px] text-[#680E23] truncate" title="${s.server_url}">
-              <span class="text-[#8C827A] select-none text-[10px]">SSE: </span>${s.server_url}
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-mono text-[11px] text-slate-700 truncate" title="${s.server_url}">
+              <span class="text-slate-400 select-none text-[10px]">SSE: </span>${s.server_url}
             </div>
 
-            <div class="flex items-center justify-between text-[11px] text-[#8C827A] pt-1">
-              <span>الدوال المكتشفة: <strong class="text-[#1C1917] font-mono">${toolsCount}</strong></span>
+            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+              <span>الدوال المكتشفة: <strong class="text-slate-900 font-mono">${toolsCount}</strong></span>
               <span>${s.last_synced_at ? `مزامنة: ${s.last_synced_at}` : 'لم تتم المزامنة'}</span>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-[#EAE3D9] flex items-center justify-between gap-1.5 text-xs">
-            <button type="button" onclick="toggleMcpActive(${s.id})" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition ${toggleBtnClass}">
+          <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-1.5 text-xs">
+            <button type="button" onclick="toggleMcpActive(${s.id})" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${toggleBtnClass}">
               ${toggleBtnText}
             </button>
             <div class="flex items-center gap-1">
-              <button type="button" onclick="syncMcpServer(${s.id})" class="p-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#680E23] border border-[#DDD5C7] transition" title="فحص وتحديث الأدوات">
+              <button type="button" onclick="syncMcpServer(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="فحص وتحديث الأدوات">
                 🔄
               </button>
-              <button type="button" onclick="openMcpModal(${s.id})" class="p-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#443D39] border border-[#DDD5C7] transition" title="تعديل الإعدادات">
+              <button type="button" onclick="openMcpModal(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="تعديل الإعدادات">
                 ✏️
               </button>
-              <button type="button" onclick="deleteMcpServer(${s.id})" class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="حذف الخادم">
+              <button type="button" onclick="deleteMcpServer(${s.id})" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="حذف الخادم">
                 🗑️
               </button>
             </div>
@@ -109,27 +109,27 @@ function renderMcpServersGrid(servers) {
   if (!mcpToolsContainer) return;
   if (allActiveTools.length === 0) {
     mcpToolsContainer.innerHTML = `
-      <div class="col-span-full text-center py-6 text-[#8C827A] text-xs bg-[#FAF7F2]/50 rounded-2xl border border-dashed border-[#DDD5C7]">
+      <div class="col-span-full text-center py-6 text-slate-500 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
         لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.
       </div>
     `;
   } else {
     mcpToolsContainer.innerHTML = allActiveTools.map(t => {
       const paramsList = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
-      const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-[#FAF0F2] border border-[#E8CCD2] text-[#680E23] font-mono text-[10px] font-semibold">${p}</span>`).join(' ');
+      const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px] font-medium">${p}</span>`).join(' ');
       return `
-        <div class="p-4 rounded-2xl bg-white border border-[#EAE3D9] hover:border-[#D4AF37] transition shadow-sm space-y-2">
+        <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition shadow-2xs space-y-2">
           <div class="flex items-center justify-between gap-2">
-            <span class="font-mono font-bold text-[#680E23] text-xs flex items-center gap-1.5 truncate">
+            <span class="font-mono font-semibold text-slate-900 text-xs flex items-center gap-1.5 truncate">
               <span class="text-[10px]">⚡</span>
               ${escapeHtml(t.name)}
             </span>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF0F2] border border-[#EAE3D9] text-[#680E23] font-semibold shrink-0" title="${escapeHtml(t.server_url)}">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-medium shrink-0" title="${escapeHtml(t.server_url)}">
               ${escapeHtml(t.server_name)}
             </span>
           </div>
-          <p class="text-[#443D39] text-[11px] leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || 'بدون وصف')}</p>
-          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-[10px] text-[#8C827A]">المعاملات:</span> ${badges}</div>` : ''}
+          <p class="text-slate-600 text-[11px] leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || 'بدون وصف')}</p>
+          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-[10px] text-slate-400">المعاملات:</span> ${badges}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -232,7 +232,7 @@ async function testMcpConnectionFromModal() {
   if (btn) btn.disabled = true;
   if (btnText) btnText.innerText = 'جاري الفحص واكتشاف الأدوات...';
   if (connAlert) {
-    connAlert.className = 'mt-2.5 p-3 rounded-2xl text-xs bg-[#FAF7F2] border border-[#DDD5C7] text-[#443D39] flex items-center gap-2';
+    connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2';
     connAlert.innerHTML = '<span>🔄 جاري محاولة الاتصال بنقطة نهاية SSE ومصافحة بروتوكول MCP...</span>';
     connAlert.classList.remove('hidden');
   }
@@ -255,7 +255,7 @@ async function testMcpConnectionFromModal() {
 
     if (data.ok) {
       if (connAlert) {
-        connAlert.className = 'mt-2.5 p-3 rounded-2xl text-xs bg-emerald-50 border border-emerald-300 text-emerald-800 space-y-1';
+        connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1';
         connAlert.innerHTML = `
           <div class="font-bold flex items-center gap-1.5">
             <span>✅</span> <span>تم الاتصال بالخادم بنجاح!</span>
@@ -267,7 +267,7 @@ async function testMcpConnectionFromModal() {
       }
       if (latencyBadge) {
         latencyBadge.innerText = `${data.latency_ms} ms`;
-        latencyBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+        latencyBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
         latencyBadge.classList.remove('hidden');
       }
 
@@ -275,7 +275,7 @@ async function testMcpConnectionFromModal() {
       populatePlaygroundTools(currentModalDiscoveredTools);
     } else {
       if (connAlert) {
-        connAlert.className = 'mt-2.5 p-3 rounded-2xl text-xs bg-rose-50 border border-rose-200 text-rose-800 space-y-1';
+        connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-800 space-y-1';
         connAlert.innerHTML = `
           <div class="font-bold flex items-center gap-1.5">
             <span>❌</span> <span>تعذر الاتصال بخادم MCP:</span>
@@ -283,7 +283,7 @@ async function testMcpConnectionFromModal() {
           <div class="text-[11px] text-rose-700">
             ${escapeHtml(data.error_message || 'فشل الاتصال بالخادم.')}
           </div>
-          <div class="text-[10px] text-[#6E645D] pt-0.5">
+          <div class="text-[10px] text-slate-500 pt-0.5">
             ملاحظة: يمكنك حفظ الخادم رغم ذلك كـ (معطل) إذا كان قيد الإعداد.
           </div>
         `;
@@ -337,7 +337,7 @@ async function testMcpToolFromModal() {
   if (resContainer) resContainer.classList.remove('hidden');
   if (execBadge) {
     execBadge.innerText = '⏳ جاري الاستدعاء...';
-    execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-[#FAF7F2] text-[#443D39] border border-[#DDD5C7]';
+    execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200';
   }
   if (resultOutput) resultOutput.innerText = 'جاري انتظار استجابة الخادم...';
 
@@ -486,7 +486,7 @@ async function saveMcpSettings(e) {
 
 async function syncMcpServer(serverId = null) {
   if (mcpSyncAlert) {
-    mcpSyncAlert.className = 'mt-3 p-3.5 rounded-2xl text-xs bg-[#F5EFE6] border border-[#DDD5C7] text-[#443D39] flex items-center gap-2';
+    mcpSyncAlert.className = 'mt-3 p-3.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2';
     mcpSyncAlert.innerHTML = `<span>🔄 جاري فحص الاتصال وتحديث دوال الخادم...</span>`;
     mcpSyncAlert.classList.remove('hidden');
   }

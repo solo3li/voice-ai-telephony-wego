@@ -61,52 +61,52 @@
     <nav id="top-tabs-container" class="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
       
       <!-- 1. Voice Room -->
-      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>غرفة المساعد الصوتي</span>
       </a>
 
       <!-- 2. CDR Calls -->
-      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>سجل المكالمات (CDR)</span>
       </a>
 
       <!-- 3. RAG Knowledge Base -->
-      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>قاعدة المعرفة RAG</span>
       </a>
 
       <!-- 4. Personas & Voices -->
-      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>الشخصيات واللهجات</span>
       </a>
 
       <!-- 5. Customers & CRM Memory -->
-      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>ذاكرة وسجل العملاء</span>
       </a>
 
       <!-- 6. MCP Tools Store -->
-      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>متجر وأدوات MCP</span>
       </a>
 
       <!-- 7. Campaigns & CRM -->
-      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>حملات الاتصال والعملاء</span>
       </a>
 
       <!-- 8. Call Center & Queues -->
-      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>مركز الاتصالات والطوابير</span>
       </a>
 
       <!-- 9. Telephony & PBX -->
-      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>الربط الهاتفي والسنترال</span>
       </a>
 
       <!-- 10. Business Hours -->
-      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#eff8ff] text-[#1f93ff] font-bold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-medium{% endif %}">
+      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span>مواعيد العمل والخطة البديلة</span>
       </a>
 
