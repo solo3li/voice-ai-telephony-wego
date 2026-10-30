@@ -798,6 +798,12 @@
         loader.style.display = 'none';
       }, 350);
     }
+    const frame = document.getElementById('chatwoot-frame');
+    if (frame && frame.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
+      } catch(e) {}
+    }
   }
 
   function switchChatSubTab(tab) {

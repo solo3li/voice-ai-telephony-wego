@@ -3308,9 +3308,10 @@
         <div class="bg-white rounded-xl border border-[#eaedf0] overflow-hidden shadow-2xs relative" style="height: calc(100vh - 220px); min-height: 620px;">
           <iframe 
             id="room-chatwoot-frame"
-            src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2' }}"
+            src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2?theme=light&color_scheme=light' }}"
             class="w-full h-full border-0 block"
             allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
+            onload="onRoomChatLoaded()"
           ></iframe>
         </div>
       </div>
@@ -3541,6 +3542,15 @@
         }
       }
     });
+
+    function onRoomChatLoaded() {
+      const roomFrame = document.getElementById('room-chatwoot-frame');
+      if (roomFrame && roomFrame.contentWindow) {
+        try {
+          roomFrame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
+        } catch(e) {}
+      }
+    }
 
     function updateHeaderTitle() {
       const titleEl = document.querySelector('#current-section-title span');

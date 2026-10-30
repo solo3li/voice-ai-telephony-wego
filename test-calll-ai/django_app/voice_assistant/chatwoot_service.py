@@ -86,10 +86,12 @@ def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
 
         encoded_email = urllib.parse.quote(email)
         redirect_target = f"/app/accounts/{account_id}"
+        query_params = ["theme=light", "color_scheme=light"]
         if norm_locale:
-            redirect_target += f"?locale={norm_locale}"
+            query_params.append(f"locale={norm_locale}")
+        redirect_target += "?" + "&".join(query_params)
 
-        sso_url = f"{CHATWOOT_BASE_URL}/app/login?email={encoded_email}&sso_auth_token={token}&redirect_url={urllib.parse.quote(redirect_target)}"
+        sso_url = f"{CHATWOOT_BASE_URL}/app/login?email={encoded_email}&sso_auth_token={token}&redirect_url={urllib.parse.quote(redirect_target)}&theme=light&color_scheme=light"
         logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id}) [locale: {norm_locale}]")
         return sso_url
     except Exception as e:
