@@ -97,6 +97,26 @@ async function loadPartnerDashboard() {
     if (keyInp) keyInp.value = partner.api_key || '';
     if (whInp) whInp.value = partner.webhook_url || '';
 
+    // White-label embed snippets
+    const partnerKey = partner.api_key || '';
+    const pChatSnippet = document.getElementById('partner-embed-chat-snippet');
+    const pVoiceSnippet = document.getElementById('partner-embed-voice-snippet');
+    const pChatPreview = document.getElementById('partner-embed-chat-preview-btn');
+    const pVoicePreview = document.getElementById('partner-embed-voice-preview-btn');
+
+    if (pChatSnippet) {
+      pChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat/?token=${partnerKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"></iframe>`;
+    }
+    if (pVoiceSnippet) {
+      pVoiceSnippet.innerText = `<iframe src="${window.location.origin}/embed/voice/?token=${partnerKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;"></iframe>`;
+    }
+    if (pChatPreview) {
+      pChatPreview.href = `/embed/chat/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+    }
+    if (pVoicePreview) {
+      pVoicePreview.href = `/embed/voice/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+    }
+
     // 3. Shared MCP Servers dropdown
     const mcpSelect = document.getElementById('partner-shared-mcp-select');
     if (mcpSelect) {
@@ -402,6 +422,22 @@ async function submitPartnerApply(event) {
 document.addEventListener('DOMContentLoaded', () => {
   loadPartnerDashboard();
 });
+
+function copyPartnerEmbedChatSnippet() {
+  const el = document.getElementById('partner-embed-chat-snippet');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_embed_chat_copied', 'تم نسخ كود تضمين الشات بنجاح') : 'تم نسخ كود تضمين الشات بنجاح', 'success');
+  }
+}
+
+function copyPartnerEmbedVoiceSnippet() {
+  const el = document.getElementById('partner-embed-voice-snippet');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_embed_voice_copied', 'تم نسخ كود تضمين المساعد الصوتي بنجاح') : 'تم نسخ كود تضمين المساعد الصوتي بنجاح', 'success');
+  }
+}
 
 // Re-render partner dashboard on language toggle
 window.addEventListener('appLanguageChanged', () => {

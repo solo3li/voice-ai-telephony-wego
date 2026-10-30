@@ -1,0 +1,216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'en' %}ltr{% else %}rtl{% endif %}" class="w-full h-full m-0 p-0">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title|default:"المساعد الصوتي وقمرة الاتصال" }}</title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+    }
+    .orb-pulse {
+      box-shadow: 0 0 0 0 rgba(31, 147, 255, 0.4);
+      animation: orb-pulse-anim 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes orb-pulse-anim {
+      to {
+        box-shadow: 0 0 0 24px rgba(31, 147, 255, 0);
+      }
+    }
+    .orb-talking {
+      animation: orb-talk 1s infinite alternate ease-in-out;
+    }
+    @keyframes orb-talk {
+      0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(31, 147, 255, 0.6)); }
+      100% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(31, 147, 255, 0.9)); }
+    }
+  </style>
+</head>
+<body class="w-full h-full bg-[#fafbfc] text-slate-800 flex items-center justify-center p-3 select-none">
+
+  <!-- Main Container -->
+  <div class="w-full max-w-sm bg-white rounded-2xl border border-[#eaedf0] shadow-sm p-5 flex flex-col justify-between" style="min-height: 520px;">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-[#1f93ff] text-white flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-xs font-semibold text-slate-900 leading-tight">قمرة الاتصال الصوتي</h2>
+          <span class="text-[10px] text-slate-400">Enterprise Voice AI</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="call-status-badge" class="text-[10px] font-medium text-emerald-700">جاهز</span>
+      </div>
+    </div>
+
+    <!-- Center: Voice AI Orb & Live Duration -->
+    <div class="flex flex-col items-center justify-center py-4 space-y-3">
+      <div id="voice-orb" class="w-20 h-20 rounded-full bg-gradient-to-tr from-[#1f93ff] to-[#60a5fa] text-white flex items-center justify-center shadow-md orb-pulse cursor-pointer transition-transform" onclick="toggleCall()">
+        <svg id="orb-icon" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </div>
+
+      <div class="text-center">
+        <p id="call-timer" class="font-mono text-sm font-semibold text-slate-700">00:00</p>
+        <p id="call-subtitle" class="text-[11px] text-slate-400 mt-0.5">انقر لبدء محادثة ذكية فورية مع المساعد</p>
+      </div>
+    </div>
+
+    <!-- Mode Selector & Dialpad -->
+    <div class="space-y-3">
+      <!-- Phone input box -->
+      <div class="relative">
+        <input 
+          type="text" 
+          id="phone-number-input" 
+          placeholder="أدخل رقم هاتف للاتصال به..." 
+          class="w-full bg-slate-50 border border-[#eaedf0] rounded-xl px-3.5 py-2 text-xs font-mono text-center text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#1f93ff] transition"
+        />
+        <button type="button" onclick="clearPhoneInput()" class="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+          ✕
+        </button>
+      </div>
+
+      <!-- Compact Dialpad Grid -->
+      <div class="grid grid-cols-3 gap-1.5 text-center">
+        <button type="button" onclick="pressDigit('1')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">1</button>
+        <button type="button" onclick="pressDigit('2')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">2</button>
+        <button type="button" onclick="pressDigit('3')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">3</button>
+        <button type="button" onclick="pressDigit('4')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">4</button>
+        <button type="button" onclick="pressDigit('5')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">5</button>
+        <button type="button" onclick="pressDigit('6')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">6</button>
+        <button type="button" onclick="pressDigit('7')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">7</button>
+        <button type="button" onclick="pressDigit('8')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">8</button>
+        <button type="button" onclick="pressDigit('9')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">9</button>
+        <button type="button" onclick="pressDigit('*')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">*</button>
+        <button type="button" onclick="pressDigit('0')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">0</button>
+        <button type="button" onclick="pressDigit('#')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">#</button>
+      </div>
+
+      <!-- Action Button -->
+      <button 
+        type="button" 
+        id="btn-call-action" 
+        onclick="toggleCall()"
+        class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <span id="btn-call-text">بدء المكالمة الآن</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    let isCalling = false;
+    let callSeconds = 0;
+    let timerInterval = null;
+
+    function pressDigit(d) {
+      const input = document.getElementById('phone-number-input');
+      if (input) input.value += d;
+    }
+
+    function clearPhoneInput() {
+      const input = document.getElementById('phone-number-input');
+      if (input) input.value = '';
+    }
+
+    function toggleCall() {
+      if (!isCalling) {
+        startCall();
+      } else {
+        endCall();
+      }
+    }
+
+    async function startCall() {
+      isCalling = true;
+      const phone = document.getElementById('phone-number-input').value.trim();
+      const orb = document.getElementById('voice-orb');
+      const badge = document.getElementById('call-status-badge');
+      const btn = document.getElementById('btn-call-action');
+      const btnText = document.getElementById('btn-call-text');
+      const subtitle = document.getElementById('call-subtitle');
+
+      badge.textContent = 'جاري الاتصال...';
+      badge.className = 'text-[10px] font-medium text-amber-700';
+      badge.parentElement.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200';
+
+      orb.classList.remove('orb-pulse');
+      orb.classList.add('orb-talking');
+
+      btn.className = 'w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition';
+      btnText.textContent = 'إنهاء المكالمة';
+      subtitle.textContent = phone ? ('متصل بالرقم ' + phone) : 'مكالمة صوتية مباشرة مع المساعد الذكي';
+
+      // Start Timer
+      callSeconds = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const secs = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('call-timer').textContent = `${mins}:${secs}`;
+      }, 1000);
+
+      // Trigger call API if phone number is provided
+      if (phone) {
+        try {
+          await fetch('/api/v1/calls/dial/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone_number: phone, call_goal: 'مكالمة من قمرة الويب المضمنة' })
+          });
+        } catch(e) {
+          console.debug('Outbound trigger:', e);
+        }
+      }
+    }
+
+    function endCall() {
+      isCalling = false;
+      clearInterval(timerInterval);
+      
+      const orb = document.getElementById('voice-orb');
+      const badge = document.getElementById('call-status-badge');
+      const btn = document.getElementById('btn-call-action');
+      const btnText = document.getElementById('btn-call-text');
+      const subtitle = document.getElementById('call-subtitle');
+
+      badge.textContent = 'جاهز';
+      badge.className = 'text-[10px] font-medium text-emerald-700';
+      badge.parentElement.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200';
+
+      orb.classList.remove('orb-talking');
+      orb.classList.add('orb-pulse');
+
+      btn.className = 'w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition';
+      btnText.textContent = 'بدء المكالمة الآن';
+      subtitle.textContent = 'تم إنهاء المكالمة بنجاح';
+      document.getElementById('call-timer').textContent = '00:00';
+    }
+  </script>
+</body>
+</html>

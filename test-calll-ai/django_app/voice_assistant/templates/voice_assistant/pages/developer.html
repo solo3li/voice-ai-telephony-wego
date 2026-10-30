@@ -97,6 +97,121 @@
   </div>
 </div>
 
+<!-- Smart Hybrid Integration Card (Scenario 3: Zero-Code Embeds & Automation APIs) -->
+<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-5">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1f93ff] to-[#60a5fa] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+        ⚡
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_hybrid_title">السيناريو الهجين الذكي (Smart Hybrid Integration)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_hybrid_desc">أسهل وأسرع طريقة لدمج منصة المحادثات والمساعد الصوتي في موقعك أو نظامك بدون كتابة واجهات معقدة</p>
+      </div>
+    </div>
+    <span class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-blue-50 text-[#1f93ff] border border-blue-200">
+      Zero-Code Iframe + Automation APIs
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    
+    <!-- Left Column: Zero-Code Iframe Embeds -->
+    <div class="space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">1</span>
+        <h5 class="font-semibold text-xs text-slate-800" data-i18n="dev_embed_col_title">قوالب التضمين المباشر (Zero-Code Iframes)</h5>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_embed_col_desc">
+        انسخ كود الـ Iframe وضعه مباشرة في صفحة العميل أو لوحة التحكم الخارجية لتظهر المنصة بكامل وظائفها بشكل مدمج وآمن.
+      </p>
+
+      <!-- Chat Iframe Box -->
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">💬</span>
+            <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_chat_title">صندوق المحادثات الشامل المضمن (Chatwoot Inbox)</span>
+          </div>
+          <a id="dev-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+            <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+          </a>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
+          <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <!-- Voice Assistant Iframe Box -->
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">🎙️</span>
+            <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_voice_title">قمرة الاتصال والمساعد الصوتي (Voice Webphone)</span>
+          </div>
+          <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+            <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+          </a>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;"&gt;&lt;/iframe&gt;</pre>
+          <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Lightweight Automation APIs -->
+    <div class="space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-full bg-blue-100 text-[#1f93ff] flex items-center justify-center text-xs font-bold">2</span>
+        <h5 class="font-semibold text-xs text-slate-800" data-i18n="dev_api_col_title">واجهات الأتمتة الخفيفة (Lightweight Automation APIs)</h5>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_api_col_desc">
+        استدعاء برمجي بسيط وسريع لإرسال الرسائل الفورية أو بدء المكالمات الآلية من نظامك الخلفي.
+      </p>
+
+      <!-- Chat Send API Box -->
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">POST</span>
+            <span class="font-medium text-xs text-slate-900">/api/v1/chat/send/</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">JSON</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-curl-chat-send-sample">curl -X POST "https://localhost/api/v1/chat/send/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'</pre>
+          <button type="button" onclick="copyDevCurlChatSendSample()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <!-- Outbound Call Dial API Box -->
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-800 font-bold">POST</span>
+            <span class="font-medium text-xs text-slate-900">/api/v1/calls/dial/</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">JSON</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-curl-dial-sample-2">curl -X POST "https://localhost/api/v1/calls/dial/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'</pre>
+          <button type="button" onclick="copyDevCurlDialSample2()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
 <!-- Structured Live Context Card -->
 <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">

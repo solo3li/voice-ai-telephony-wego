@@ -33,6 +33,33 @@ async function loadDeveloperKeys() {
       if (curlCtxSample) {
         curlCtxSample.innerText = `curl -X PUT "${window.location.origin}/api/v1/context/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"restaurant_name": "مطعم البرجر الذهبي", "out_of_stock": ["برجر دبل بيف"], "branches": [{"name": "المعادي", "status": "مفتوح", "hours": "12 م - 2 ص"}]}'`;
       }
+
+      // Scenario 3: Smart Hybrid Embeds & Automation APIs
+      const embedChatSnippet = document.getElementById('dev-embed-chat-snippet');
+      const embedVoiceSnippet = document.getElementById('dev-embed-voice-snippet');
+      const curlChatSend = document.getElementById('dev-curl-chat-send-sample');
+      const curlDial2 = document.getElementById('dev-curl-dial-sample-2');
+      const previewChat = document.getElementById('dev-embed-chat-preview-btn');
+      const previewVoice = document.getElementById('dev-embed-voice-preview-btn');
+
+      if (embedChatSnippet) {
+        embedChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat/?token=${currentDeveloperKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"></iframe>`;
+      }
+      if (embedVoiceSnippet) {
+        embedVoiceSnippet.innerText = `<iframe src="${window.location.origin}/embed/voice/?token=${currentDeveloperKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;"></iframe>`;
+      }
+      if (curlChatSend) {
+        curlChatSend.innerText = `curl -X POST "${window.location.origin}/api/v1/chat/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'`;
+      }
+      if (curlDial2) {
+        curlDial2.innerText = `curl -X POST "${window.location.origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
+      }
+      if (previewChat) {
+        previewChat.href = `/embed/chat/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
+      if (previewVoice) {
+        previewVoice.href = `/embed/voice/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
     }
   } catch (e) {
     console.error('Error loading developer keys:', e);
@@ -326,6 +353,38 @@ function copyDevCurlSample() {
   if (sample) {
     navigator.clipboard.writeText(sample.innerText);
     showToast('تم نسخ مثال cURL إلى الحافظة!', 'success');
+  }
+}
+
+function copyEmbedChatSnippet() {
+  const el = document.getElementById('dev-embed-chat-snippet');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_embed_chat_copied', 'تم نسخ كود تضمين الشات بنجاح') : 'تم نسخ كود تضمين الشات بنجاح', 'success');
+  }
+}
+
+function copyEmbedVoiceSnippet() {
+  const el = document.getElementById('dev-embed-voice-snippet');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_embed_voice_copied', 'تم نسخ كود تضمين المساعد الصوتي بنجاح') : 'تم نسخ كود تضمين المساعد الصوتي بنجاح', 'success');
+  }
+}
+
+function copyDevCurlChatSendSample() {
+  const el = document.getElementById('dev-curl-chat-send-sample');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_curl_chat_copied', 'تم نسخ كود إرسال الرسالة بنجاح') : 'تم نسخ كود إرسال الرسالة بنجاح', 'success');
+  }
+}
+
+function copyDevCurlDialSample2() {
+  const el = document.getElementById('dev-curl-dial-sample-2');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText);
+    showToast(window.t ? window.t('dev_curl_dial_copied', 'تم نسخ كود المكالمة بنجاح') : 'تم نسخ كود المكالمة بنجاح', 'success');
   }
 }
 

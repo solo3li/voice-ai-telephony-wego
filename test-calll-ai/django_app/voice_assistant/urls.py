@@ -105,6 +105,13 @@ urlpatterns = [
     path('api/chat/channels/create/', views.api_chat_channels_create, name='chat_channels_create'),
     path('whatsapp/', views.whatsapp_page_view, name='whatsapp_page'),
     path('desk/whatsapp/', views.whatsapp_desk_page_view, name='whatsapp_desk_page'),
+
+    # Embedded widgets & Smart Hybrid messaging (Scenario 3)
+    path('embed/chat/', views.embed_chat_view, name='embed_chat'),
+    path('embed/voice/', views.embed_voice_view, name='embed_voice'),
+    path('embed/dialer/', views.embed_voice_view, name='embed_dialer'),
+    path('api/chat/send/', views.api_chat_send_message, name='api_chat_send_message'),
+    path('api/chat/messages/send/', views.api_chat_send_message, name='api_chat_messages_send'),
 ]
 
 

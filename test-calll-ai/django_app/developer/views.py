@@ -3713,6 +3713,67 @@ def api_user_whatsapp_send(request):
 
 @extend_schema(
     methods=['POST'],
+    operation_id="send_user_chat_message",
+    summary="إرسال رسالة نصية فورية عبر القنوات المتعددة (WhatsApp/SMS)",
+    tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]
+)
+@api_view(['POST'])
+@authentication_classes([])
+@parser_classes([JSONParser, FormParser])
+@user_api_key_required
+def api_user_chat_send(request):
+    """POST /api/v1/chat/send/ or /api/v1/chat/messages/send/"""
+    data = request.data if hasattr(request, 'data') and request.data else {}
+    if not data and request.body:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            pass
+
+    to_phone = str(data.get("to") or data.get("phone") or data.get("phone_number") or "").strip()
+    text = str(data.get("message") or data.get("text") or "").strip()
+    channel = str(data.get("channel") or "whatsapp").strip().lower()
+
+    if not to_phone:
+        return JsonResponse({"status": "error", "message": "Recipient number ('to') is required"}, status=400)
+    if not text:
+        return JsonResponse({"status": "error", "message": "Message text ('message') is required"}, status=400)
+
+    instance_name = f"user_{request.user.id}"
+    send_res = send_whatsapp_message(to_phone, text, instance_name)
+    if send_res.get("status") in ("not_connected", "error") or not send_res.get("ok"):
+        fallback_res = send_whatsapp_message(to_phone, text, "whatsapp_main")
+        if fallback_res.get("status") == "success" or fallback_res.get("ok"):
+            send_res = fallback_res
+
+    mem = CustomerMemory.objects.filter(user=request.user, phone_number=to_phone).first()
+    c_name = mem.customer_name if mem else ""
+
+    msg = OmnichannelMessage.objects.create(
+        user=request.user,
+        phone_number=to_phone,
+        customer_name=c_name,
+        channel=channel,
+        direction='outbound_human',
+        message_text=text,
+        metadata={"evolution_response": send_res}
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "message": "تم إرسال الرسالة بنجاح",
+        "data": {
+            "message_id": msg.id,
+            "recipient": to_phone,
+            "channel": channel,
+            "text": text,
+            "dispatch_status": send_res.get("status", "sent")
+        }
+    })
+
+
+@extend_schema(
+    methods=['POST'],
     operation_id="trigger_user_whatsapp_followup",
     summary="إطلاق متابعة آلية بعد المكالمة (Followup)",
     tags=["15. قنوات التواصل والواتساب (WhatsApp Omnichannel)"]

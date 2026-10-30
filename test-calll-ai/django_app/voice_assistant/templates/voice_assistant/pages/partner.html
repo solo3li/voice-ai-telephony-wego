@@ -119,6 +119,54 @@
   </div>
 </div>
 
+<!-- White-Label Zero-Code Iframe Embeds Card for Partners -->
+<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-5">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-[#1f93ff] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+        🌐
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="partner_embed_title">تضمين وايت ليبل بدون كود (White-Label Iframe Embeds)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="partner_embed_desc">قم بتضمين منصة الشات أو المساعد الصوتي مباشرة داخل بوابات عملائك باسم علامتك التجارية</p>
+      </div>
+    </div>
+    <span class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+      White-Label Embedded Suite
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Partner Chat Iframe -->
+    <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_chat_title">💬 كود تضمين الشات المباشر لعملائك:</span>
+        <a id="partner-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+        </a>
+      </div>
+      <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+        <pre id="partner-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;PARTNER_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
+        <button type="button" onclick="copyPartnerEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+      </div>
+    </div>
+
+    <!-- Partner Voice Iframe -->
+    <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_voice_title">🎙️ كود تضمين المساعد الصوتي وقمرة الاتصال:</span>
+        <a id="partner-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+        </a>
+      </div>
+      <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+        <pre id="partner-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;PARTNER_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;"&gt;&lt;/iframe&gt;</pre>
+        <button type="button" onclick="copyPartnerEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Sub-Clients Management Table -->
 <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
   <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">

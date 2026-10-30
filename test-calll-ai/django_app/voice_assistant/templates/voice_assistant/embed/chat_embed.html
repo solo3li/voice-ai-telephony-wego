@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'en' %}ltr{% else %}rtl{% endif %}" class="w-full h-full m-0 p-0 overflow-hidden">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title|default:"منصة المحادثات المضمنة" }}</title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: 'Cairo', 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="w-full h-full relative bg-white text-slate-800 antialiased overflow-hidden select-none">
+
+  <!-- White-Label Seamless Embed Loader -->
+  <div id="embed-chat-loader" class="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center gap-3.5 z-50 transition-opacity duration-300">
+    <div class="w-9 h-9 border-[3px] border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
+    <div class="text-center">
+      <p class="text-xs font-semibold text-slate-800">جاري تحميل منصة المحادثات...</p>
+      <p class="text-[11px] text-slate-400 mt-0.5">اتصال مباشر آمن بالذكاء الاصطناعي</p>
+    </div>
+  </div>
+
+  <!-- Fullscreen Chatwoot Iframe -->
+  <iframe 
+    id="embed-chatwoot-frame"
+    src="{{ chatwoot_url }}"
+    class="w-full h-full border-0 block m-0 p-0"
+    allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
+    onload="onEmbedFrameLoaded()"
+  ></iframe>
+
+  <script>
+    let embedDismissed = false;
+
+    function dismissEmbedLoader() {
+      if (embedDismissed) return;
+      embedDismissed = true;
+      const loader = document.getElementById('embed-chat-loader');
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => { loader.style.display = 'none'; }, 350);
+      }
+      const frame = document.getElementById('embed-chatwoot-frame');
+      if (frame && frame.contentWindow) {
+        try {
+          frame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
+        } catch(e) {}
+      }
+    }
+
+    function onEmbedFrameLoaded() {
+      // Safety fallback timer if SSO postMessage is delayed
+      setTimeout(() => {
+        dismissEmbedLoader();
+      }, 2800);
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'chatwoot:ready') {
+        dismissEmbedLoader();
+      }
+    });
+  </script>
+</body>
+</html>
