@@ -8,13 +8,13 @@
 <section class="space-y-4">
   <div class="flex flex-wrap justify-between items-center gap-4 pb-1">
     <div>
-      <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
         <span data-i18n="rag_title">مستندات قاعدة المعرفة (RAG Knowledge Base)</span>
       </h2>
-      <p class="text-xs text-slate-500 mt-1" data-i18n="rag_subtitle">
+      <p class="text-xs text-slate-500 font-light mt-1" data-i18n="rag_subtitle">
         ارفع ملفاتك (PDF, DOCX, TXT) ليتم تضمينها وفهرستها دلالياً في PostgreSQL باستخدام Gemini text-embedding-004.
       </p>
     </div>
@@ -23,7 +23,7 @@
     <form id="upload-form" onsubmit="uploadDocument(event)" class="flex items-center gap-2">
       {% csrf_token %}
       <label class="cursor-pointer px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition flex items-center gap-2 shadow-2xs">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
         <span id="upload-file-label" data-i18n="rag_btn_choose">اختر ملفاً (PDF/DOCX/TXT)</span>
@@ -33,7 +33,7 @@
         type="submit" 
         id="btn-upload" 
         disabled
-        class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
+        class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
       >
         <span data-i18n="rag_btn_upload">رفع ومعالجة</span>
       </button>
@@ -48,11 +48,11 @@
     <table class="w-full text-right text-xs">
       <thead>
         <tr class="text-slate-500 bg-slate-50/75 border-b border-slate-100">
-          <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_name">اسم المستند</th>
-          <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_type">النوع</th>
-          <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_chunks">المقاطع الدلالية (Chunks)</th>
-          <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_date">تاريخ الفهرسة</th>
-          <th class="py-2.5 px-3 font-medium text-center" data-i18n="rag_th_actions">إجراءات</th>
+          <th class="py-2.5 px-3 font-semibold text-start" data-i18n="rag_th_name">اسم المستند</th>
+          <th class="py-2.5 px-3 font-semibold text-start" data-i18n="rag_th_type">النوع</th>
+          <th class="py-2.5 px-3 font-semibold text-start" data-i18n="rag_th_chunks">المقاطع الدلالية (Chunks)</th>
+          <th class="py-2.5 px-3 font-semibold text-start" data-i18n="rag_th_date">تاريخ الفهرسة</th>
+          <th class="py-2.5 px-3 font-semibold text-center" data-i18n="rag_th_actions">إجراءات</th>
         </tr>
       </thead>
       <tbody id="docs-tbody" class="divide-y divide-slate-100">

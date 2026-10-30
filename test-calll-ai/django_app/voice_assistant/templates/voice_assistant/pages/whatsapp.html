@@ -16,6 +16,9 @@
     background-color: #cbd5e1;
     border-radius: 9999px;
   }
+  .chat-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #7c3aed;
+  }
 </style>
 {% endblock %}
 
@@ -32,12 +35,12 @@
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-base font-semibold text-slate-900" data-i18n="whatsapp_page_title">محادثات الواتساب والموظف الذكي 24/7</h1>
+          <h1 class="text-base font-bold text-slate-900" data-i18n="whatsapp_page_title">محادثات الواتساب والموظف الذكي 24/7</h1>
           <span id="gateway-status-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200" data-i18n="whatsapp_gateway_checking">
             جارٍ التحقق من البوابة...
           </span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5" data-i18n="whatsapp_page_desc">
+        <p class="text-xs text-slate-500 mt-0.5 font-light" data-i18n="whatsapp_page_desc">
           صندوق محادثات الواتساب الموحد (Omnichannel Inbox): استعراض كامل لمحادثات العملاء، مراقبة ردود الذكاء الاصطناعي، والرد البشري المباشر.
         </p>
       </div>
@@ -77,7 +80,7 @@
         title="تحديث المحادثات"
         data-i18n-title="whatsapp_refresh_chats"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
       </button>
@@ -85,7 +88,7 @@
       <button 
         type="button" 
         onclick="openTestModal()" 
-        class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
+        class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
       >
         <span data-i18n="whatsapp_test_send">تجربة إرسال</span>
       </button>
@@ -112,7 +115,7 @@
             placeholder="بحث بالاسم أو رقم الهاتف..." 
             data-i18n-placeholder="whatsapp_search_placeholder"
             oninput="filterConversations(this.value)"
-            class="w-full bg-slate-50 border border-slate-200 rounded-lg pr-8 pl-3 py-1.5 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
+            class="w-full bg-slate-50 border border-slate-200 rounded-lg pr-8 pl-3 py-1.5 text-xs text-slate-900 focus:border-[#7c3aed] focus:outline-none transition"
           />
         </div>
 
@@ -120,7 +123,7 @@
           <button 
             type="button" 
             onclick="setConvFilter('all', this)" 
-            class="conv-filter-btn flex-1 py-1 px-2 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 transition text-center shadow-2xs"
+            class="conv-filter-btn flex-1 py-1 px-2 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 transition text-center shadow-2xs"
             data-i18n="whatsapp_filter_all"
           >
             الكل
@@ -147,7 +150,7 @@
       <!-- Conversations Scrollable List -->
       <div id="conversations-list" class="flex-1 overflow-y-auto chat-scroll divide-y divide-slate-100 min-h-0">
         <div class="p-8 text-center text-slate-500 text-xs">
-          <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 rounded-full border-2 border-[#7c3aed] border-t-transparent animate-spin mx-auto mb-2"></div>
           <span data-i18n="whatsapp_loading_convs">جارٍ تحميل المحادثات...</span>
         </div>
       </div>
@@ -229,7 +232,7 @@
               title="تحديث الرسائل"
               data-i18n-title="whatsapp_refresh_messages"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -290,12 +293,12 @@
                 data-i18n-placeholder="whatsapp_reply_placeholder"
                 required
                 autocomplete="off"
-                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:border-[#1f93ff] focus:outline-none transition"
+                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:border-[#7c3aed] focus:outline-none transition"
               />
               <button 
                 type="submit" 
                 id="btn-send-reply" 
-                class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
+                class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
               >
                 <span data-i18n="whatsapp_btn_send">إرسال</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -337,7 +340,7 @@
 
     <!-- QR Container -->
     <div id="qr-modal-container" class="flex flex-col items-center justify-center p-6 bg-slate-50/50 rounded-lg border border-dashed border-slate-200 min-h-[280px] text-center space-y-3">
-      <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto"></div>
+      <div class="w-8 h-8 rounded-full border-2 border-[#7c3aed] border-t-transparent animate-spin mx-auto"></div>
       <p class="text-xs text-slate-500" data-i18n="whatsapp_qr_checking">جارٍ فحص حالة الاتصال بالسيرفر...</p>
     </div>
 
@@ -347,7 +350,7 @@
         type="button" 
         onclick="fetchQrCode(true)" 
         id="btn-generate-qr"
-        class="flex-1 py-2 px-4 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs"
+        class="flex-1 py-2 px-4 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs"
       >
         <span data-i18n="whatsapp_qr_btn_generate">توليد كود QR للربط</span>
       </button>
@@ -385,7 +388,7 @@
           placeholder="مثال: أحمد السيد / شركة النور" 
           data-i18n-placeholder="whatsapp_placeholder_name"
           required 
-          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#7c3aed] focus:outline-none"
         />
       </div>
 
@@ -396,7 +399,7 @@
           id="edit-contact-phone" 
           placeholder="مثال: 01019431866 أو 201019431866+" 
           data-i18n-placeholder="whatsapp_placeholder_phone"
-          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono dir-ltr text-left focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono dir-ltr text-left focus:border-[#7c3aed] focus:outline-none"
         />
         <p class="text-xs text-slate-400 mt-1" data-i18n="whatsapp_phone_hint">يُستخدم لتحديد رقم الهاتف الفعلي للعميل وعرضه في بطاقة المحادثة.</p>
       </div>
@@ -413,7 +416,7 @@
         <button 
           type="submit" 
           id="btn-save-contact"
-          class="px-4 py-2 rounded-lg bg-[#1f93ff] text-white font-semibold hover:bg-[#1570ef] transition shadow-2xs text-xs"
+          class="px-4 py-2 rounded-lg bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] transition shadow-2xs text-xs"
         >
           <span data-i18n="whatsapp_btn_save_changes">حفظ التعديلات</span>
         </button>
@@ -443,7 +446,7 @@
           placeholder="مثال: 201012345678 أو 966501234567" 
           data-i18n-placeholder="whatsapp_test_phone_placeholder"
           required 
-          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono focus:border-[#7c3aed] focus:outline-none"
         />
       </div>
 
@@ -454,7 +457,7 @@
           id="test-customer-name" 
           placeholder="مثال: أحمد السيد" 
           data-i18n-placeholder="whatsapp_placeholder_name"
-          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#7c3aed] focus:outline-none"
         />
       </div>
 
@@ -463,7 +466,7 @@
         <select 
           id="test-type" 
           onchange="toggleTestType(this.value)"
-          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-[#7c3aed] focus:outline-none"
         >
           <option value="langgraph_followup" data-i18n="whatsapp_test_opt_langgraph">تشغيل LangGraph تلقائياً (محاكاة متابعة ما بعد المكالمة)</option>
           <option value="direct_message" data-i18n="whatsapp_test_opt_direct">إرسال رسالة مباشرة مخصصة</option>
@@ -477,13 +480,13 @@
           rows="3" 
           placeholder="اكتب نص الرسالة التجريبية هنا..."
           data-i18n-placeholder="whatsapp_test_msg_placeholder"
-          class="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:border-[#1f93ff] focus:outline-none"
+          class="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:border-[#7c3aed] focus:outline-none"
         ></textarea>
       </div>
 
       <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
         <button type="button" onclick="closeTestModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition" data-i18n="btn_cancel">إلغاء</button>
-        <button type="submit" id="btn-submit-test" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+        <button type="submit" id="btn-submit-test" class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
           <span data-i18n="whatsapp_test_btn_send">إرسال التجربة</span>
         </button>
       </div>
@@ -521,7 +524,7 @@
     if (showSpinner && conversationsData.length === 0) {
       listEl.innerHTML = `
         <div class="p-8 text-center text-[#64748b] text-xs">
-          <div class="w-8 h-8 rounded-full border-2 border-[#1f93ff] border-t-transparent animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 rounded-full border-2 border-[#7c3aed] border-t-transparent animate-spin mx-auto mb-2"></div>
           جارٍ تحميل المحادثات...
         </div>
       `;
@@ -609,11 +612,11 @@
         : `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">${window.t('whatsapp_badge_manual', 'يدوي')}</span>`;
 
       const callBadge = c.has_call_history 
-        ? `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-[#1f93ff] border border-blue-200">${window.t('whatsapp_badge_call', 'مكالمة')}</span>` 
+        ? `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-violet-50 text-[#7c3aed] border border-violet-200">${window.t('whatsapp_badge_call', 'مكالمة')}</span>` 
         : '';
 
       const activeClasses = isActive 
-        ? 'bg-white border-r-4 border-r-[#1f93ff] shadow-xs' 
+        ? 'bg-white border-r-4 border-r-[#7c3aed] shadow-xs' 
         : 'hover:bg-white/80';
 
       return `
@@ -621,7 +624,7 @@
           onclick="selectConversation('${escapeHtml(c.phone_number)}')" 
           class="p-3.5 cursor-pointer transition flex items-start gap-3 ${activeClasses}"
         >
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr ${isActive ? 'from-[#1f93ff] to-[#1570ef] text-white' : 'from-slate-100 to-slate-200 text-slate-700'} font-semibold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr ${isActive ? 'from-[#7c3aed] to-[#6d28d9] text-white' : 'from-slate-100 to-slate-200 text-slate-700'} font-semibold flex items-center justify-center text-xs shrink-0 shadow-2xs">
             ${escapeHtml(initial)}
           </div>
           <div class="flex-1 min-w-0 space-y-1">
@@ -656,7 +659,7 @@
     document.querySelectorAll('.conv-filter-btn').forEach(b => {
       b.className = 'conv-filter-btn flex-1 py-1 px-2 rounded-lg text-[#64748b] hover:bg-slate-100 transition text-center';
     });
-    btn.className = 'conv-filter-btn flex-1 py-1 px-2 rounded-lg bg-[#1f93ff] text-white transition text-center shadow-xs';
+    btn.className = 'conv-filter-btn flex-1 py-1 px-2 rounded-lg bg-[#7c3aed] text-white transition text-center shadow-xs';
     renderConversationsList(conversationsData);
   }
 
@@ -825,13 +828,13 @@
         // Outbound Bubble (AI or Human Agent - Aligned Left in RTL)
         const badgeTag = isAi 
           ? `<span class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">${window.t('whatsapp_bubble_ai', 'الموظف الذكي')}</span>`
-          : `<span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">${window.t('whatsapp_bubble_human', 'موظف بشري')}</span>`;
+          : `<span class="text-xs font-semibold px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">${window.t('whatsapp_bubble_human', 'موظف بشري')}</span>`;
 
         const bubbleBg = isAi 
-          ? 'bg-gradient-to-br from-[#eff8ff] to-[#f8fafc] border border-[#b2ddff]' 
+          ? 'bg-gradient-to-br from-[#f5f3ff] to-[#f8fafc] border border-[#ddd6fe]' 
           : 'bg-gradient-to-br from-[#F0F4FA] to-[#f8fafc] border border-slate-200';
 
-        const avatarBg = isAi ? 'bg-[#1f93ff] text-white' : 'bg-blue-600 text-white';
+        const avatarBg = isAi ? 'bg-[#7c3aed] text-white' : 'bg-[#7c3aed] text-white';
 
         return `
           <div class="flex items-start gap-2.5 justify-end">

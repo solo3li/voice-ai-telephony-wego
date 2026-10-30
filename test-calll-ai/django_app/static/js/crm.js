@@ -178,7 +178,7 @@ async function loadCustomerMemory(phone) {
           waHtml += `<p class="text-slate-800 leading-relaxed bg-slate-50/60 p-2.5 rounded-lg border border-slate-200/80 shadow-2xs">${escapeHtml(wm.conversation_summary)}</p>`;
         }
         if (wm.last_received_message) {
-          waHtml += `<div class="text-xs bg-sky-50/80 p-2 rounded-lg border border-sky-100 text-sky-900"><span class="font-medium">${lastInLabel}</span> ${escapeHtml(wm.last_received_message)}</div>`;
+          waHtml += `<div class="text-xs bg-violet-50/80 p-2 rounded-lg border border-violet-100 text-violet-900"><span class="font-medium">${lastInLabel}</span> ${escapeHtml(wm.last_received_message)}</div>`;
         }
         if (wm.last_sent_message) {
           waHtml += `<div class="text-xs bg-emerald-50/80 p-2 rounded-lg border border-emerald-100 text-emerald-900"><span class="font-medium">${lastOutLabel}</span> ${escapeHtml(wm.last_sent_message)}</div>`;

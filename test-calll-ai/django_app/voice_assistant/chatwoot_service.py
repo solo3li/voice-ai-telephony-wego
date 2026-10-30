@@ -954,7 +954,7 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
                 "channel": {
                     "type": "web_widget",
                     "website_url": data.get('website_url', 'https://example.com'),
-                    "widget_color": data.get('widget_color', '#1f93ff'),
+                    "widget_color": data.get('widget_color', '#7c3aed'),
                     "welcome_title": data.get('welcome_title', 'مرحباً بك!'),
                     "welcome_tagline": data.get('welcome_tagline', 'كيف يمكننا مساعدتك اليوم؟')
                 }

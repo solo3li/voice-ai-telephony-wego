@@ -155,7 +155,7 @@ function showToast(message, type = 'info') {
     ? '<svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
     : type === 'error'
     ? '<svg class="w-4 h-4 text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-    : '<svg class="w-4 h-4 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    : '<svg class="w-4 h-4 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
   toast.innerHTML = `${iconSvg} <span>${escapeHtml(message)}</span>`;
 
   toastContainer.appendChild(toast);
@@ -2992,7 +2992,7 @@ function applyCommonLanguage(lang) {
   // Update live status badges
   const livekitBadge = document.getElementById('livekit-status');
   if (livekitBadge) {
-    livekitBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span> ' + window.t('livekit_connected', 'LiveKit: متصل');
+    livekitBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> ' + window.t('livekit_connected', 'LiveKit: متصل');
   }
   updateCentrifugoStatusBadge();
 

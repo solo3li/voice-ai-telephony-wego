@@ -101,10 +101,10 @@ async function loadEmployees() {
             <button 
               type="button" 
               onclick="dialTargetFromDashboard('${escapeHtml(emp.extension)}', '${escapeHtml(emp.display_name)}')"
-              class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
+              class="px-2.5 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
               title="اتصال مباشر بالموظف عبر WebRTC"
             >
-              <svg class="w-3 h-3 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-3 h-3 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
               </svg>
               <span>${dialLabel}</span>
@@ -201,7 +201,7 @@ async function loadQueues() {
               <span>${escapeHtml(q.name)}</span>
             </div>
             <div class="text-xs text-slate-500 font-normal mt-0.5 max-w-xs leading-snug line-clamp-2" title="${escapeHtml(q.description || 'لا يوجد وصف')}">
-              ${q.description ? `<span class="text-sky-700 font-medium">اختصاص المساعد:</span> ${escapeHtml(q.description)}` : `<span class="text-slate-400 italic">لم يُحدد وصف لاختصاص الطابور للـ AI</span>`}
+              ${q.description ? `<span class="text-violet-700 font-medium">اختصاص المساعد:</span> ${escapeHtml(q.description)}` : `<span class="text-slate-400 italic">لم يُحدد وصف لاختصاص الطابور للـ AI</span>`}
             </div>
           </td>
           <td class="py-3 px-3 text-slate-700 font-mono text-xs">${strategyLabel}</td>
@@ -214,10 +214,10 @@ async function loadQueues() {
               <button 
                 type="button" 
                 onclick="dialTargetFromDashboard('${escapeHtml(q.code)}', '${escapeHtml(q.name)}')"
-                class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
+                class="px-2.5 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
                 title="اتصال وتجربة الطابور عبر WebRTC"
               >
-                <svg class="w-3 h-3 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-3 h-3 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
                 <span>اتصال</span>
@@ -310,7 +310,7 @@ function openNewQueueModal() {
   if (currentEmployees && currentEmployees.length > 0) {
     membersListEl.innerHTML = currentEmployees.map(emp => `
       <label class="flex items-center gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-white cursor-pointer transition">
-        <input type="checkbox" name="member_employee_ids" value="${emp.id}" class="rounded border-slate-300 text-[#1f93ff] focus:ring-[#1f93ff]">
+        <input type="checkbox" name="member_employee_ids" value="${emp.id}" class="rounded border-slate-300 text-[#7c3aed] focus:ring-[#7c3aed]">
         <span class="text-slate-800 font-medium">${escapeHtml(emp.display_name)}</span>
         <span class="font-mono text-slate-600 font-medium text-xs mr-1">[تحويلة: ${escapeHtml(emp.extension || '')}]</span>
         <span class="text-slate-500 text-xs">(${escapeHtml(emp.department || '')})</span>
@@ -710,7 +710,7 @@ async function loadEmployeeCallLogs() {
 
     const typeBadges = {
       'inbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">واردة</span>',
-      'outbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">صادرة</span>',
+      'outbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">صادرة</span>',
       'missed': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">فائتة</span>',
       'transfer': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">محولة</span>'
     };

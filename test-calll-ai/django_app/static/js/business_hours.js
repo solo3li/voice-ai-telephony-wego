@@ -42,7 +42,7 @@ function populateScheduleForm(sched) {
     masterSwitch.checked = Boolean(sched.is_enabled);
     if (masterLabel) {
       masterLabel.innerText = sched.is_enabled ? 'مفعل' : 'معطل';
-      masterLabel.className = sched.is_enabled ? 'text-xs font-semibold text-[#1f93ff]' : 'text-xs font-medium text-slate-500';
+      masterLabel.className = sched.is_enabled ? 'text-xs font-semibold text-[#7c3aed]' : 'text-xs font-medium text-slate-500';
     }
   }
 
@@ -131,17 +131,17 @@ function renderDaysTable(config) {
         <td class="py-2.5 font-semibold text-slate-900">${d.label}</td>
         <td class="py-2.5 text-center">
           <label class="inline-flex items-center cursor-pointer gap-2">
-            <input type="checkbox" id="check-workday-${d.key}" onchange="toggleDayWorkday('${d.key}')" ${isWorkday ? 'checked' : ''} class="w-4 h-4 text-[#1f93ff] rounded accent-[#1f93ff] cursor-pointer">
+            <input type="checkbox" id="check-workday-${d.key}" onchange="toggleDayWorkday('${d.key}')" ${isWorkday ? 'checked' : ''} class="w-4 h-4 text-[#7c3aed] rounded accent-[#7c3aed] cursor-pointer">
             <span class="text-xs ${isWorkday ? 'text-slate-900 font-medium' : 'text-slate-400'}" id="label-workday-${d.key}">
               ${isWorkday ? 'يوم عمل' : 'عطلة'}
             </span>
           </label>
         </td>
         <td class="py-2.5 text-center">
-          <input type="time" id="start-time-${d.key}" value="${startVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#1f93ff] disabled:opacity-40 disabled:bg-slate-50">
+          <input type="time" id="start-time-${d.key}" value="${startVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#7c3aed] disabled:opacity-40 disabled:bg-slate-50">
         </td>
         <td class="py-2.5 text-center">
-          <input type="time" id="end-time-${d.key}" value="${endVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#1f93ff] disabled:opacity-40 disabled:bg-slate-50">
+          <input type="time" id="end-time-${d.key}" value="${endVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#7c3aed] disabled:opacity-40 disabled:bg-slate-50">
         </td>
         <td class="py-2.5 text-center">
           <span id="badge-day-${d.key}" class="px-2 py-0.5 rounded-md text-xs font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
@@ -183,7 +183,7 @@ function toggleScheduleActive() {
 
   if (masterLabel) {
     masterLabel.innerText = isChecked ? 'مفعل' : 'معطل';
-    masterLabel.className = isChecked ? 'text-xs font-semibold text-[#1f93ff]' : 'text-xs font-medium text-slate-500';
+    masterLabel.className = isChecked ? 'text-xs font-semibold text-[#7c3aed]' : 'text-xs font-medium text-slate-500';
   }
 
   if (currentSchedule) {

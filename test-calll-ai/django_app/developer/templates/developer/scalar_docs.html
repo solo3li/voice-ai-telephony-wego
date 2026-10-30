@@ -11,7 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script>
     (function(){var w=console.warn;console.warn=function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].indexOf('cdn.tailwindcss.com')!==-1)return;w.apply(console,arguments);};})();
   </script>
@@ -24,10 +24,10 @@
           colors: {
             brand: {
               canvas: '#f8fafc',
-              primary: '#1f93ff',
-              primaryHover: '#1570ef',
-              gold: '#0284c7',
-              goldHover: '#0369a1',
+              primary: '#7c3aed',
+              primaryHover: '#6d28d9',
+              gold: '#5b21b6',
+              goldHover: '#4c1d95',
               dark: '#0f172a',
               muted: '#64748b',
               surface: '#FFFFFF',
@@ -35,7 +35,8 @@
             }
           },
           fontFamily: {
-            tajawal: ['Tajawal', 'sans-serif'],
+            sans: ['"IBM Plex Sans Arabic"', 'Inter', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
             inter: ['Inter', 'sans-serif']
           }
         }
@@ -47,34 +48,51 @@
     body {
       background-color: #f8fafc;
       color: #0f172a;
-      font-family: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif{% endif %};
+      font-family: {% if is_ar %}'IBM Plex Sans Arabic', sans-serif{% else %}'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif{% endif %};
       margin: 0;
       padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Scalar API Reference Custom Theme (Minimalist Slate & Sky) */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #7c3aed;
+    }
+
+    /* Scalar API Reference Custom Theme (Linear AI Violet) */
     :root, .scalar-api-reference, .light-mode {
-      --scalar-font: {% if is_ar %}'Tajawal', sans-serif{% else %}'Inter', sans-serif{% endif %} !important;
-      --scalar-font-code: 'Inter', monospace !important;
+      --scalar-font: {% if is_ar %}'IBM Plex Sans Arabic', sans-serif{% else %}'Inter', sans-serif{% endif %} !important;
+      --scalar-font-code: 'JetBrains Mono', monospace !important;
       
       /* Brand Color Palette */
       --scalar-color-1: #0f172a !important;
       --scalar-color-2: #64748b !important;
       --scalar-color-3: #94a3b8 !important;
-      --scalar-color-accent: #1f93ff !important;
+      --scalar-color-accent: #7c3aed !important;
       
       /* Backgrounds */
       --scalar-background-1: #f8fafc !important;
       --scalar-background-2: #FFFFFF !important;
       --scalar-background-3: #f1f5f9 !important;
-      --scalar-background-accent: #1f93ff !important;
+      --scalar-background-accent: #7c3aed !important;
       
       /* Borders & Dividers */
       --scalar-border-color: #eaedf0 !important;
       
       /* Buttons */
-      --scalar-button-1: #1f93ff !important;
-      --scalar-button-1-hover: #1570ef !important;
+      --scalar-button-1: #7c3aed !important;
+      --scalar-button-1-hover: #6d28d9 !important;
       --scalar-button-1-color: #FFFFFF !important;
 
       /* Sidebar & Badges */
@@ -116,7 +134,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-brand-canvas text-brand-dark">
+<body class="min-h-screen flex flex-col bg-brand-canvas text-brand-dark selection:bg-[#7c3aed] selection:text-white">
 
   <!-- Top Sticky Navigation Bar -->
   <header class="top-nav sticky top-0 z-50 px-4 lg:px-8 py-3.5 shadow-sm">

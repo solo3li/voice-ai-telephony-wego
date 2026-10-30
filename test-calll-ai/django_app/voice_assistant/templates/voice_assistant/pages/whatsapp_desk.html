@@ -16,6 +16,9 @@
     background-color: #cbd5e1;
     border-radius: 9999px;
   }
+  .chat-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #7c3aed;
+  }
   @keyframes ringPulse {
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.03); opacity: 0.9; }
@@ -40,12 +43,12 @@
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-base font-semibold text-slate-900" data-i18n="desk_page_title">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
+          <h1 class="text-base font-bold text-slate-900" data-i18n="desk_page_title">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
           <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="desk_badge_ring">
             رنين جماعي & استلام فوري
           </span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5" data-i18n="desk_page_desc">
+        <p class="text-xs text-slate-500 mt-0.5 font-light" data-i18n="desk_page_desc">
           شاشة العمل الموحدة لموظفي الدعم لاستقبال وتوزيع محادثات الشكاوى والتحويل من الذكاء الاصطناعي
         </p>
       </div>
@@ -131,7 +134,7 @@
             <p class="text-xs text-slate-400" data-i18n="desk_my_chats_subtitle">محادثات قيد الدعم المباشر</p>
           </div>
         </div>
-        <span id="my-chats-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-mono">
+        <span id="my-chats-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-mono">
           0
         </span>
       </div>
@@ -238,12 +241,12 @@
                 data-i18n-placeholder="desk_reply_placeholder"
                 required
                 autocomplete="off"
-                class="flex-1 py-2 px-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#1f93ff] focus:bg-white transition"
+                class="flex-1 py-2 px-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#7c3aed] focus:bg-white transition"
               >
               <button 
                 type="submit" 
                 id="btn-desk-send"
-                class="py-2 px-4 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
+                class="py-2 px-4 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0"
               >
                 <span data-i18n="whatsapp_btn_send">إرسال</span>
               </button>
@@ -447,14 +450,14 @@
           </div>
 
           <div class="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-tight space-y-1">
-            <p class="font-medium text-[#1f93ff] truncate">${escapeHtml(reason)}</p>
+            <p class="font-medium text-[#7c3aed] truncate">${escapeHtml(reason)}</p>
             <p class="text-slate-500 text-xs line-clamp-2">${escapeHtml(summary)}</p>
           </div>
 
           <button 
             type="button" 
             onclick="claimChat('${escapeHtml(c.phone_number)}')"
-            class="w-full py-1.5 px-3 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs"
+            class="w-full py-1.5 px-3 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs"
           >
             <span>${window.t('desk_btn_claim', 'استلام المحادثة')}</span>
           </button>
@@ -484,9 +487,9 @@
       return `
         <div 
           onclick="selectClaimedChat('${escapeHtml(c.phone_number)}')" 
-          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-slate-50 border-r-4 border-r-[#1f93ff]' : 'hover:bg-slate-50/60'}"
+          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-slate-50 border-r-4 border-r-[#7c3aed]' : 'hover:bg-slate-50/60'}"
         >
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-tr ${isSelected ? 'from-[#1f93ff] to-[#1570ef] text-white' : 'from-slate-100 to-slate-200 text-slate-700'} font-semibold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-tr ${isSelected ? 'from-[#7c3aed] to-[#6d28d9] text-white' : 'from-slate-100 to-slate-200 text-slate-700'} font-semibold flex items-center justify-center text-xs shrink-0 shadow-2xs">
             ${escapeHtml(initial)}
           </div>
           <div class="flex-1 min-w-0 space-y-0.5">
@@ -632,10 +635,10 @@
       } else {
         return `
           <div class="flex justify-end">
-            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white' : 'bg-emerald-50 border border-emerald-200 text-slate-900'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
-              <span class="text-xs font-semibold ${isHuman ? 'text-blue-100' : 'text-emerald-700'}">${isHuman ? window.t('desk_bubble_agent', 'أنت (الموظف)') : window.t('desk_bubble_ai', 'الذكاء الاصطناعي')}</span>
+            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#7c3aed] to-[#6d28d9] text-white' : 'bg-emerald-50 border border-emerald-200 text-slate-900'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
+              <span class="text-xs font-semibold ${isHuman ? 'text-violet-100' : 'text-emerald-700'}">${isHuman ? window.t('desk_bubble_agent', 'أنت (الموظف)') : window.t('desk_bubble_ai', 'الذكاء الاصطناعي')}</span>
               <p class="text-xs leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
-              <div class="text-xs ${isHuman ? 'text-blue-100' : 'text-slate-400'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+              <div class="text-xs ${isHuman ? 'text-violet-100' : 'text-slate-400'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
             </div>
           </div>
         `;

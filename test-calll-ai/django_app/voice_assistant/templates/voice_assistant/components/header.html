@@ -7,19 +7,19 @@
     <div class="flex items-center gap-2.5">
       <h2 id="current-section-title" class="text-sm font-bold text-slate-900 flex items-center gap-2">
         <!-- Lucide Sparkles Line Icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7c3aed] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
         </svg>
         <span data-i18n="header_system_title">{{ page_title|default:"منظومة الذكاء الاصطناعي الهاتفي" }}</span>
       </h2>
       <span class="text-slate-300">|</span>
-      <span class="text-xs text-slate-400 font-mono hidden sm:inline" data-i18n="app_subtitle">Enterprise Voice AI</span>
+      <span class="text-xs text-slate-400 font-mono font-light hidden sm:inline" data-i18n="app_subtitle">Enterprise Voice AI</span>
     </div>
 
     <!-- Live Service Status Badges & Quick Controls -->
     <div class="flex flex-wrap items-center gap-2 text-xs">
       <span id="livekit-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-xs shadow-2xs">
-        <span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span> <span data-i18n="livekit_connected">LiveKit: متصل</span>
+        <span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> <span data-i18n="livekit_connected">LiveKit: متصل</span>
       </span>
       <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-xs shadow-2xs">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span data-i18n="centrifugo_connected">Centrifugo: متصل</span>
@@ -27,13 +27,13 @@
 
       <!-- Header Wallet Balance Pill -->
       <a href="{% url 'voice_assistant:billing_page' %}" id="header-wallet-badge" class="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#1f93ff] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#7c3aed] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
         </svg>
         <span class="text-slate-500 font-normal text-xs" data-i18n="header_balance">الرصيد:</span>
-        <span id="header-balance-val" class="font-mono text-xs font-bold text-[#1f93ff]">--.--</span>
+        <span id="header-balance-val" class="font-mono text-xs font-bold text-[#7c3aed]">--.--</span>
         <span id="header-balance-curr" class="text-xs text-slate-500">USD</span>
-        <span class="w-4 h-4 rounded-full bg-[#1f93ff] text-white flex items-center justify-center group-hover:scale-105 transition shrink-0" title="شحن الرصيد" data-i18n-title="topup_balance">
+        <span class="w-4 h-4 rounded-full bg-[#7c3aed] text-white flex items-center justify-center group-hover:scale-105 transition shrink-0" title="شحن الرصيد" data-i18n-title="topup_balance">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14"/><path d="M12 5v14"/>
           </svg>
@@ -55,7 +55,7 @@
   <div class="relative px-3 py-1.5 bg-[#f8fafc]/95 border-t border-slate-100 flex items-center">
     
     <!-- Left Smooth Scroll Arrow -->
-    <button type="button" onclick="scrollTopTabs('left')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليسار" data-i18n-title="scroll_left">
+    <button type="button" onclick="scrollTopTabs('left')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#7c3aed] hover:border-[#7c3aed]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليسار" data-i18n-title="scroll_left">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
@@ -65,59 +65,59 @@
     <nav id="top-tabs-container" class="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
       
       <!-- 1. Voice Room -->
-      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:room' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_voice">غرفة المساعد الصوتي</span>
       </a>
 
       <!-- 2. CDR Calls -->
-      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:calls_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_calls">سجل المكالمات (CDR)</span>
       </a>
 
       <!-- 3. RAG Knowledge Base -->
-      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:rag_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_rag">قاعدة المعرفة RAG</span>
       </a>
 
       <!-- 4. Personas & Voices -->
-      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:personas_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_personas">الشخصيات واللهجات</span>
       </a>
 
       <!-- 5. Customers & CRM Memory -->
-      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:crm_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_crm">ذاكرة وسجل العملاء</span>
       </a>
 
       <!-- 6. MCP Tools Store -->
-      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:store_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_store">متجر وأدوات MCP</span>
       </a>
 
       <!-- 7. Campaigns & CRM -->
-      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:campaigns_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_campaigns">حملات الاتصال والعملاء</span>
       </a>
 
       <!-- 8. Call Center & Queues -->
-      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:callcenter_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_callcenter">مركز الاتصالات والطوابير</span>
       </a>
 
       <!-- 9. Telephony & PBX -->
-      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:telephony_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_telephony">الربط الهاتفي والسنترال</span>
       </a>
 
       <!-- 10. Business Hours -->
-      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#eff8ff] text-[#1f93ff] font-semibold border-[#b2ddff]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% url 'voice_assistant:business_hours_page' %}" class="top-nav-btn shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <span data-i18n="nav_hours">مواعيد العمل والخطة البديلة</span>
       </a>
 
     </nav>
 
     <!-- Right Smooth Scroll Arrow -->
-    <button type="button" onclick="scrollTopTabs('right')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليمين" data-i18n-title="scroll_right">
+    <button type="button" onclick="scrollTopTabs('right')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#7c3aed] hover:border-[#7c3aed]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليمين" data-i18n-title="scroll_right">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="9 18 15 12 9 6"/>
       </svg>

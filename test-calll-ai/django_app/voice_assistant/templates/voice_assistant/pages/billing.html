@@ -7,10 +7,10 @@
 <!-- Billing Header Bar -->
 <div class="flex flex-wrap items-center justify-between gap-4 pb-1">
   <div>
-    <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
       <span data-i18n="billing_title">حساب الاستخدام والرصيد</span>
     </h3>
-    <p class="text-xs text-slate-500 mt-1" data-i18n="billing_subtitle">نظام رصيد مسبق الدفع مع احتساب تكلفة الدقائق بالتقريب لأعلى دقيقة</p>
+    <p class="text-xs text-slate-500 font-light mt-1" data-i18n="billing_subtitle">نظام رصيد مسبق الدفع مع احتساب تكلفة الدقائق بالتقريب لأعلى دقيقة</p>
   </div>
   <div class="flex items-center gap-2">
     <button type="button" onclick="loadWalletData()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
@@ -19,7 +19,7 @@
       </svg>
       <span data-i18n="billing_refresh_btn">تحديث الرصيد</span>
     </button>
-    <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+    <button type="button" onclick="openTopupModal()" class="px-4 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
       <span data-i18n="billing_btn_topup">شحن الرصيد</span>
     </button>
   </div>
@@ -31,7 +31,7 @@
     <div>
       <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block" data-i18n="billing_balance_title">الرصيد المتاح حالياً</span>
       <div class="flex items-baseline gap-2 mt-1.5">
-        <span id="billing-wallet-balance" class="text-3xl sm:text-4xl font-semibold font-mono text-slate-900">--.--</span>
+        <span id="billing-wallet-balance" class="text-3xl sm:text-4xl font-bold font-mono text-slate-900">--.--</span>
         <span id="billing-wallet-currency" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium text-xs border border-slate-200/60">USD ($)</span>
       </div>
     </div>
@@ -39,7 +39,7 @@
       <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span data-i18n="billing_ready_for_calls">جاهز للاتصال</span>
       </span>
-      <button type="button" onclick="openTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs">
+      <button type="button" onclick="openTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition shadow-2xs">
         <span data-i18n="billing_btn_topup">شحن المحفظة</span>
       </button>
     </div>
@@ -51,7 +51,7 @@
       <span id="billing-rate-pill" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-mono font-medium text-xs border border-slate-200/60">$0.0500</span>
       <span class="text-xs text-slate-400" data-i18n="billing_rate_rounding">(تقريب لأعلى دقيقة مرتفع)</span>
     </div>
-    <button type="button" onclick="openTopupModal()" class="text-[#1f93ff] hover:text-[#1570ef] font-medium text-xs inline-flex items-center gap-1">
+    <button type="button" onclick="openTopupModal()" class="text-[#7c3aed] hover:text-[#6d28d9] font-medium text-xs inline-flex items-center gap-1">
       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -109,7 +109,7 @@
       <p class="text-xs text-slate-500 mt-0.5" data-i18n="billing_ledger_desc">توثيق كامل لكل عملية شحن وخصم مكالمة وتحديث رصيد لحظي</p>
     </div>
     <div class="flex items-center gap-2">
-      <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-[#7c3aed]">
         <option value="all" data-i18n="billing_filter_all">جميع الحركات</option>
         <option value="call_deduction" data-i18n="billing_filter_deduction">خصم مكالمات صوتية</option>
         <option value="topup" data-i18n="billing_filter_topup">شحن رصيد</option>
@@ -123,13 +123,13 @@
     <table class="w-full text-xs text-start">
       <thead>
         <tr class="border-b border-slate-200/80 bg-slate-50/70 text-slate-500">
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_date">التاريخ والوقت</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_type">نوع الحركة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_amount">المبلغ</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_balance_after">الرصيد بعد الحركة</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_duration">الدقائق / الثواني</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_rate">السعر المطبق</th>
-          <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="billing_th_details">البيان والتفاصيل</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_date">التاريخ والوقت</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_type">نوع الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_amount">المبلغ</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_balance_after">الرصيد بعد الحركة</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_duration">الدقائق / الثواني</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_rate">السعر المطبق</th>
+          <th class="py-2.5 px-3.5 text-start font-semibold" data-i18n="billing_th_details">البيان والتفاصيل</th>
         </tr>
       </thead>
       <tbody id="billing-transactions-tbody" class="divide-y divide-slate-200/80">
@@ -184,7 +184,7 @@
         min="1" 
         value="25" 
         required 
-        class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 font-mono font-semibold text-sm focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff]" 
+        class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 font-mono font-semibold text-sm focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed]" 
       />
     </div>
 
@@ -192,7 +192,7 @@
 
     <div class="flex justify-end gap-2 pt-3 border-t border-slate-200/80">
       <button type="button" onclick="closeTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
-      <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
+      <button type="button" onclick="submitTopup()" id="btn-submit-topup" class="px-4 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-semibold transition shadow-2xs">
         <span data-i18n="billing_topup_confirm">تأكيد الشحن</span>
       </button>
     </div>

@@ -51,7 +51,7 @@ function renderMcpServersGrid(servers) {
         </svg>
         <h4 class="text-sm font-bold text-slate-900">${noServersTitle}</h4>
         <p class="text-xs text-slate-500">${noServersDesc}</p>
-        <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition inline-flex items-center gap-1.5 shadow-2xs">
+        <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition inline-flex items-center gap-1.5 shadow-2xs">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -84,7 +84,7 @@ function renderMcpServersGrid(servers) {
         : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium';
 
       return `
-        <div class="p-4 rounded-xl bg-white border ${s.is_active ? 'border-sky-300 shadow-2xs' : 'border-slate-200 opacity-85'} hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
+        <div class="p-4 rounded-xl bg-white border ${s.is_active ? 'border-violet-300 shadow-2xs' : 'border-slate-200 opacity-85'} hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
           <div class="space-y-3">
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
@@ -149,7 +149,7 @@ function renderMcpServersGrid(servers) {
         <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition shadow-2xs space-y-2">
           <div class="flex items-center justify-between gap-2">
             <span class="font-mono font-semibold text-slate-900 text-xs flex items-center gap-1.5 truncate">
-              <svg class="w-3.5 h-3.5 text-[#1f93ff] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-3.5 h-3.5 text-[#7c3aed] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               ${escapeHtml(t.name)}
@@ -457,7 +457,7 @@ function openMcpModal(serverId = null) {
       }
     }
   } else {
-    if (modalTitle) modalTitle.innerHTML = '<svg class="w-4 h-4 text-[#1f93ff] inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> ربط خادم FastMCP خارجي جديد';
+    if (modalTitle) modalTitle.innerHTML = '<svg class="w-4 h-4 text-[#7c3aed] inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> ربط خادم FastMCP خارجي جديد';
     if (idInput) idInput.value = '';
     if (nameInput) nameInput.value = 'خادم FastMCP إضافي';
     if (urlInput) urlInput.value = 'http://';

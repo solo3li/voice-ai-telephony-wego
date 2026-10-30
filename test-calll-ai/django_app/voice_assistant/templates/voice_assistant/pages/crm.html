@@ -8,10 +8,10 @@
 <section class="space-y-4">
   <div class="flex flex-wrap justify-between items-center gap-4 pb-1">
     <div>
-      <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+      <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
         <span data-i18n="crm_title">ذاكرة العميل الذكية (Two-Tier Distilled Memory)</span>
       </h2>
-      <p class="text-xs text-slate-500 mt-0.5" data-i18n="crm_subtitle">
+      <p class="text-xs text-slate-500 font-light mt-0.5" data-i18n="crm_subtitle">
         تجمع بين الذاكرة الدائمة والذاكرة اللحظية معزولة ومخصصة لكل رقم عميل يتصل بالنظام.
       </p>
     </div>
@@ -51,7 +51,7 @@
       <select 
         id="crm-customer-select" 
         onchange="onCustomerSelectChange(this.value)"
-        class="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-none focus:border-[#1f93ff] font-mono"
+        class="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-none focus:border-[#7c3aed] font-mono"
       >
         <option value="+201000000000" data-i18n="crm_default_session">+201000000000 (جلسة المتصفح الافتراضية)</option>
       </select>
@@ -62,14 +62,14 @@
           placeholder="بحث برقم الهاتف أو الاسم..." 
           data-i18n-placeholder="crm_search_placeholder"
           oninput="debounceCustomerSearch(this.value)"
-          class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]"
+          class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed]"
         />
       </div>
     </div>
 
     <div class="flex items-center gap-2">
       <span class="text-xs text-slate-500 font-medium" data-i18n="crm_active_badge">العميل المعروض:</span>
-      <span id="crm-active-customer-badge" class="font-mono text-xs font-semibold text-[#1f93ff] bg-[#eff8ff] px-2 py-0.5 rounded-md border border-[#b2ddff]/60">+201000000000</span>
+      <span id="crm-active-customer-badge" class="font-mono text-xs font-semibold text-[#7c3aed] bg-[#f5f3ff] px-2 py-0.5 rounded-md border border-[#ddd6fe]/60">+201000000000</span>
     </div>
   </div>
 
@@ -79,7 +79,7 @@
     <div class="bg-white border border-slate-200/80 rounded-xl p-4 space-y-3 shadow-2xs">
       <div class="flex justify-between items-center pb-2 border-b border-slate-100">
         <h3 class="font-semibold text-slate-900" data-i18n="crm_card_permanent_title">الملف والبيانات الدائمة</h3>
-        <span class="text-xs px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/60 font-medium" data-i18n="crm_card_permanent_tag">تراكمية</span>
+        <span class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/60 font-medium" data-i18n="crm_card_permanent_tag">تراكمية</span>
       </div>
 
       <div id="memory-permanent-content" class="space-y-2 text-slate-700">

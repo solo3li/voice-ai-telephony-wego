@@ -9,7 +9,7 @@ let currentPbxTrunks = [];
 function switchTelephonySubtab(sub) {
   document.querySelectorAll('.telephony-subtab-panel').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.subtab-btn').forEach(btn => {
-    btn.classList.remove('bg-[#eff8ff]', 'text-[#1f93ff]', 'border', 'border-[#b2ddff]/70', 'font-semibold', 'shadow-2xs', 'text-white', 'shadow-sm');
+    btn.classList.remove('bg-[#f5f3ff]', 'text-[#7c3aed]', 'border', 'border-[#ddd6fe]/70', 'font-semibold', 'shadow-2xs', 'text-white', 'shadow-sm');
     btn.classList.add('text-slate-600', 'hover:text-slate-900', 'font-medium');
   });
   const target = document.getElementById('subtab-content-' + sub);
@@ -17,7 +17,7 @@ function switchTelephonySubtab(sub) {
   const activeBtn = document.getElementById('subtab-btn-' + sub);
   if (activeBtn) {
     activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900', 'font-medium');
-    activeBtn.classList.add('bg-[#eff8ff]', 'text-[#1f93ff]', 'border', 'border-[#b2ddff]/70', 'font-semibold', 'shadow-2xs');
+    activeBtn.classList.add('bg-[#f5f3ff]', 'text-[#7c3aed]', 'border', 'border-[#ddd6fe]/70', 'font-semibold', 'shadow-2xs');
   }
   if (sub === 'dids') {
     loadDids();
@@ -335,7 +335,7 @@ async function loadPbxTrunks() {
           <p class="text-slate-500 text-xs max-w-md mx-auto">
             اضغط على زر "ربط سنترال Issabel / Asterisk جديد" لإنشاء جذع SIP والحصول على كود PEER Details الجاهز للصق في السنترال.
           </p>
-          <button type="button" onclick="openNewPbxModal()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white font-medium text-xs inline-flex items-center gap-1.5 shadow-2xs">
+          <button type="button" onclick="openNewPbxModal()" class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium text-xs inline-flex items-center gap-1.5 shadow-2xs">
             <span>${window.t ? window.t("tel_pbx_btn_new", "ربط أول سنترال") : "ربط أول سنترال"}</span>
           </button>
         </div>
@@ -350,8 +350,8 @@ async function loadPbxTrunks() {
         : `<span class="px-2 py-0.5 rounded-md text-xs font-mono bg-slate-100 text-slate-700 border border-slate-200">User: ${escapeHtml(t.auth_username || 'غير محدد')}</span>`;
 
       const destBadge = t.destination_type === 'ai'
-        ? `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><svg class="w-4 h-4 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> <span>${window.t ? window.t("tel_dest_smart_ivr", "المساعد الذكي (Smart IVR)") : "المساعد الذكي (Smart IVR)"}</span> ${t.target_profile_name ? `<span class="text-xs text-slate-500 font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
-        : `<div class="flex items-center gap-1.5 text-xs text-sky-700 font-medium"><svg class="w-4 h-4 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> <span>طابور: ${escapeHtml(t.target_queue_name || 'غير محدد')} [${escapeHtml(t.target_queue_code || '')}]</span></div>`;
+        ? `<div class="flex items-center gap-1.5 text-xs text-violet-700 font-medium"><svg class="w-4 h-4 text-violet-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> <span>${window.t ? window.t("tel_dest_smart_ivr", "المساعد الذكي (Smart IVR)") : "المساعد الذكي (Smart IVR)"}</span> ${t.target_profile_name ? `<span class="text-xs text-slate-500 font-normal">(${escapeHtml(t.target_profile_name)})</span>` : ''}</div>`
+        : `<div class="flex items-center gap-1.5 text-xs text-violet-700 font-medium"><svg class="w-4 h-4 text-violet-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> <span>طابور: ${escapeHtml(t.target_queue_name || 'غير محدد')} [${escapeHtml(t.target_queue_code || '')}]</span></div>`;
 
       let numDisplay = '';
       if (Array.isArray(t.inbound_numbers)) {
@@ -364,7 +364,7 @@ async function loadPbxTrunks() {
         : `<span class="text-slate-400">${window.t ? window.t("tel_all_inbound_calls", "جميع المكالمات الواردة") : "جميع المكالمات الواردة"}</span>`;
 
       const bidiBadge = t.enable_outbound
-        ? `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100" title="صادر ووارد">${t.is_default_outbound ? 'ثنائي (افتراضي)' : 'ثنائي الاتجاه'}</span>`
+        ? `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100" title="صادر ووارد">${t.is_default_outbound ? 'ثنائي (افتراضي)' : 'ثنائي الاتجاه'}</span>`
         : `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">وارد فقط</span>`;
 
       return `
@@ -411,7 +411,7 @@ async function loadPbxTrunks() {
             <button 
               type="button" 
               onclick="showIssabelConfigModal(${t.id})" 
-              class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-medium transition flex items-center gap-1 shadow-2xs"
+              class="px-3 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-xs font-medium transition flex items-center gap-1 shadow-2xs"
               title="عرض كود الإعداد للسنترال"
             >
               <span>كود Issabel</span>
@@ -738,8 +738,8 @@ async function loadDids() {
         </td>
         <td class="py-3 px-3 text-slate-700 font-medium">${escapeHtml(did.label || did.description || '—')}</td>
         <td class="py-3 px-3">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 font-medium text-xs">
-            <svg class="w-3.5 h-3.5 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 text-violet-700 border border-violet-100 font-medium text-xs">
+            <svg class="w-3.5 h-3.5 text-violet-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <span>${escapeHtml(did.target_profile_name || did.agent_profile_name || 'الافتراضي')}</span>

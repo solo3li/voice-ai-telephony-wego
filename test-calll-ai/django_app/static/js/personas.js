@@ -44,7 +44,7 @@ function toggleWelcomeInput(target) {
     const isChecked = fieldWelcomeEnabled ? fieldWelcomeEnabled.checked : true;
     if (welcomeToggleStatus) {
       welcomeToggleStatus.innerText = isChecked ? 'مفعلة' : 'معطلة';
-      welcomeToggleStatus.className = isChecked ? 'ms-2 text-xs font-medium text-[#1f93ff]' : 'ms-2 text-xs font-medium text-slate-400';
+      welcomeToggleStatus.className = isChecked ? 'ms-2 text-xs font-medium text-[#7c3aed]' : 'ms-2 text-xs font-medium text-slate-400';
     }
     if (fieldWelcome) {
       fieldWelcome.disabled = !isChecked;
@@ -199,7 +199,7 @@ function renderProfileCards() {
     `;
 
     return `
-      <div class="bg-white rounded-xl p-5 border ${isActive ? 'border-[#1f93ff] ring-1 ring-[#1f93ff]/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'} transition-all duration-300 flex flex-col justify-between gap-4">
+      <div class="bg-white rounded-xl p-5 border ${isActive ? 'border-[#7c3aed] ring-1 ring-[#7c3aed]/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'} transition-all duration-300 flex flex-col justify-between gap-4">
         <!-- Card Header -->
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
@@ -230,7 +230,7 @@ function renderProfileCards() {
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-500">${window.t ? window.t("personas_greeting_lbl", "الترحيب الافتتاحي:") : "الترحيب الافتتاحي:"}</span>
-            <span class="text-xs font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#1f93ff]' : 'text-slate-400'}">
+            <span class="text-xs font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#7c3aed]' : 'text-slate-400'}">
               ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `"${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : (window.t ? window.t('personas_auto_greeting', 'ترحيب تلقائي ذكي') : 'ترحيب تلقائي ذكي')) : (window.t ? window.t('personas_wait_caller', 'انتظار المتصل أولاً') : 'انتظار المتصل أولاً')}
             </span>
           </div>
@@ -260,7 +260,7 @@ function renderProfileCards() {
               <span>مفعل حالياً</span>
             </span>
           ` : `
-            <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition shadow-2xs flex items-center gap-1">
+            <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition shadow-2xs flex items-center gap-1">
               <span>${window.t ? window.t("personas_btn_activate", "تفعيل للمكالمات") : "تفعيل للمكالمات"}</span>
             </button>
           `}
@@ -415,8 +415,8 @@ function selectAndScrollToProfile(profileId) {
   const editor = document.getElementById('profile-editor-card');
   if (editor) {
     editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    editor.classList.add('ring-2', 'ring-[#1f93ff]');
-    setTimeout(() => editor.classList.remove('ring-2', 'ring-[#1f93ff]'), 1500);
+    editor.classList.add('ring-2', 'ring-[#7c3aed]');
+    setTimeout(() => editor.classList.remove('ring-2', 'ring-[#7c3aed]'), 1500);
   }
 }
 
@@ -640,12 +640,12 @@ function renderModalCustomRolesList() {
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-900 text-xs">${escapeHtml(cr.name)}</span>
-            <span class="px-2 py-0.5 rounded-full text-xs bg-sky-50 text-sky-700 border border-sky-100 font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
+            <span class="px-2 py-0.5 rounded-full text-xs bg-violet-50 text-violet-700 border border-violet-100 font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
           </div>
           ${cr.description ? `<p class="text-xs text-slate-500 mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition">
+          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition">
             استخدام
           </button>
           <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-xs font-medium transition">

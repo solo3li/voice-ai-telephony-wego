@@ -7,10 +7,10 @@
 <!-- Calls Header Bar -->
 <div class="flex flex-wrap items-center justify-between gap-4 pb-1">
   <div>
-    <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
       <span data-i18n="calls_title">سجل كافة المكالمات (CDR)</span>
     </h3>
-    <p class="text-xs text-slate-500 mt-0.5" data-i18n="calls_subtitle">عرض شامل لكافة المكالمات الواردة والصادرة مع فلاتر ذكية وإحصائيات الاستهلاك المالي ومشغل التسجيلات</p>
+    <p class="text-xs text-slate-500 font-light mt-0.5" data-i18n="calls_subtitle">عرض شامل لكافة المكالمات الواردة والصادرة مع فلاتر ذكية وإحصائيات الاستهلاك المالي ومشغل التسجيلات</p>
   </div>
   <div class="flex items-center gap-2">
     <button type="button" onclick="loadCallsList()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
@@ -26,19 +26,19 @@
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
   <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_total">إجمالي المكالمات</span>
-    <p id="calls-stat-total" class="text-xl font-semibold font-mono text-slate-900 mt-1">0</p>
+    <p id="calls-stat-total" class="text-xl font-bold font-mono text-slate-900 mt-1">0</p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_minutes">الدقائق المحتسبة</span>
-    <p id="calls-stat-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_mins_short">د</span></p>
+    <p id="calls-stat-minutes" class="text-xl font-bold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_mins_short">د</span></p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_cost">التكلفة الإجمالية</span>
-    <p id="calls-stat-cost" class="text-xl font-semibold font-mono text-emerald-700 mt-1">$0.00</p>
+    <p id="calls-stat-cost" class="text-xl font-bold font-mono text-emerald-700 mt-1">$0.00</p>
   </div>
   <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_seconds">إجمالي الثواني الصوتية</span>
-    <p id="calls-stat-seconds" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_secs_short">ث</span></p>
+    <p id="calls-stat-seconds" class="text-xl font-bold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_secs_short">ث</span></p>
   </div>
 </div>
 
@@ -48,7 +48,7 @@
     <h4 class="font-semibold text-slate-900 text-xs flex items-center gap-1.5">
       <span data-i18n="calls_filters_title">فلاتر البحث والتصفية المتقدمة (CDR Filters)</span>
     </h4>
-    <button type="button" onclick="resetCallsFilter()" class="text-xs text-[#1f93ff] hover:text-[#1570ef] font-medium flex items-center gap-1">
+    <button type="button" onclick="resetCallsFilter()" class="text-xs text-[#7c3aed] hover:text-[#6d28d9] font-medium flex items-center gap-1">
       <span data-i18n="calls_filters_reset">إعادة تعيين الفلاتر</span>
     </button>
   </div>
@@ -63,14 +63,14 @@
         placeholder="رقم الهاتف، اسم العميل، اسم الغرفة، أو الهدف..." 
         data-i18n-placeholder="calls_filter_search_placeholder"
         oninput="debounceCallsFilter()"
-        class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]"
+        class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed]"
       />
     </div>
 
     <!-- Direction Filter -->
     <div>
       <label class="block font-medium text-slate-700 mb-1" data-i18n="calls_filter_direction">اتجاه المكالمة</label>
-      <select id="filter-calls-direction" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-calls-direction" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#7c3aed]">
         <option value="all" data-i18n="calls_dir_all">جميع الاتجاهات</option>
         <option value="inbound" data-i18n="calls_dir_inbound">مكالمة واردة</option>
         <option value="outbound_ai" data-i18n="calls_dir_outbound_ai">صادرة (ذكاء اصطناعي)</option>
@@ -82,7 +82,7 @@
     <!-- Duration Filter -->
     <div>
       <label class="block font-medium text-slate-700 mb-1" data-i18n="calls_filter_duration">مدة المكالمة</label>
-      <select id="filter-calls-duration" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-calls-duration" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#7c3aed]">
         <option value="all" data-i18n="calls_dur_all">جميع المدد</option>
         <option value="under_1m" data-i18n="calls_dur_under_1m">أقل من دقيقة (&lt; 60ث)</option>
         <option value="1m_to_5m" data-i18n="calls_dur_1m_5m">من 1 إلى 5 دقائق</option>
@@ -94,7 +94,7 @@
   <!-- Call Type Quick Pills -->
   <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/80">
     <span class="text-xs font-medium text-slate-500" data-i18n="calls_filter_type_label">تصفية المكالمات:</span>
-    <button type="button" onclick="setCallsTypeFilter('all')" id="btn-type-all" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#1f93ff] text-white transition" data-i18n="calls_type_all">الكل</button>
+    <button type="button" onclick="setCallsTypeFilter('all')" id="btn-type-all" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#7c3aed] text-white transition" data-i18n="calls_type_all">الكل</button>
     <button type="button" onclick="setCallsTypeFilter('ai')" id="btn-type-ai" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_ai">مكالمات الذكاء الاصطناعي</button>
     <button type="button" onclick="setCallsTypeFilter('internal')" id="btn-type-internal" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_internal">مكالمات الموظفين الداخلية</button>
   </div>
@@ -102,7 +102,7 @@
   <!-- Date Preset Quick Pills -->
   <div class="flex flex-wrap items-center gap-2 pt-1">
     <span class="text-xs font-medium text-slate-500" data-i18n="calls_filter_date">النطاق الزمني:</span>
-    <button type="button" onclick="setCallsDatePreset('all')" id="btn-preset-all" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#1f93ff] text-white transition" data-i18n="calls_date_all">الكل</button>
+    <button type="button" onclick="setCallsDatePreset('all')" id="btn-preset-all" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#7c3aed] text-white transition" data-i18n="calls_date_all">الكل</button>
     <button type="button" onclick="setCallsDatePreset('today')" id="btn-preset-today" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_today">اليوم</button>
     <button type="button" onclick="setCallsDatePreset('last_7_days')" id="btn-preset-last_7_days" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_7days">آخر 7 أيام</button>
     <button type="button" onclick="setCallsDatePreset('this_month')" id="btn-preset-this_month" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_month">هذا الشهر</button>
@@ -115,14 +115,14 @@
     <table class="w-full text-xs text-start">
       <thead>
         <tr class="border-b border-slate-200/80 bg-slate-50/70 text-slate-500">
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_time">وقت المكالمة</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_direction">الاتجاه</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_party">الطرف / العميل</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_room">الغرفة / المساعد</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_duration">المدة الفعلية</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_cost">التكلفة</th>
-          <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_actions">الإجراءات</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_time">وقت المكالمة</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_direction">الاتجاه</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_party">الطرف / العميل</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_room">الغرفة / المساعد</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_duration">المدة الفعلية</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_cost">التكلفة</th>
+          <th class="py-2.5 px-3 text-start font-semibold" data-i18n="calls_th_actions">الإجراءات</th>
         </tr>
       </thead>
       <tbody id="calls-table-tbody" class="divide-y divide-slate-200/80">
@@ -164,7 +164,7 @@
         </div>
         <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
           <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</span>
-          <span id="cdm-billed-mins" class="font-mono font-semibold text-[#1f93ff]">0 <span data-i18n="unit_mins">دقيقة</span></span>
+          <span id="cdm-billed-mins" class="font-mono font-semibold text-[#7c3aed]">0 <span data-i18n="unit_mins">دقيقة</span></span>
         </div>
         <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
           <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_cost">التكلفة</span>

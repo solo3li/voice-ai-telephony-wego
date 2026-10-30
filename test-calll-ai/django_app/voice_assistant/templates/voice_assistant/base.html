@@ -37,14 +37,14 @@
           },
           colors: {
             chatwoot: {
-              50: '#eff8ff',
-              100: '#dbeafe',
-              200: '#b2ddff',
-              500: '#1f93ff',
-              600: '#1570ef',
-              700: '#175cd3',
-              800: '#1849a9',
-              900: '#194185',
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              200: '#ddd6fe',
+              500: '#7c3aed',
+              600: '#6d28d9',
+              700: '#5b21b6',
+              800: '#4c1d95',
+              900: '#2e1065',
             }
           }
         }
@@ -60,9 +60,9 @@
       --bg-canvas: #f8fafc;
       --bg-surface: #ffffff;
       --bg-card: #ffffff;
-      --brand-primary: #1f93ff;
-      --brand-hover: #1570ef;
-      --brand-light: #eff8ff;
+      --brand-primary: #7c3aed;
+      --brand-hover: #6d28d9;
+      --brand-light: #f5f3ff;
       --border-color: #e2e8f0;
       --text-dark: #0f172a;
       --text-muted: #64748b;
@@ -112,13 +112,13 @@
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #1f93ff;
+      background: #7c3aed;
     }
 
     /* Independent Sidebar Custom Scrollbar */
     .custom-sidebar-scroll {
       scrollbar-width: thin;
-      scrollbar-color: rgba(203, 213, 225, 0.6) transparent;
+      scrollbar-color: rgba(124, 58, 237, 0.2) transparent;
     }
     .custom-sidebar-scroll::-webkit-scrollbar {
       width: 4px;
@@ -131,7 +131,7 @@
       border-radius: 9999px;
     }
     .custom-sidebar-scroll:hover::-webkit-scrollbar-thumb {
-      background: #1f93ff;
+      background: #7c3aed;
     }
 
     /* Clean Hide Scrollbar for Horizontal Top Tabs Bar */
@@ -146,7 +146,7 @@
 
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased selection:bg-[#1f93ff] selection:text-white">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased selection:bg-[#7c3aed] selection:text-white">
 
   <!-- ==================== Shared Sidebar ==================== -->
   {% include "voice_assistant/components/sidebar.html" %}

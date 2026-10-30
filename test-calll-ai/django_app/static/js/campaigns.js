@@ -421,7 +421,7 @@ function onCampaignChannelChanged(channel) {
     const card = document.getElementById(`card-channel-${ch}`);
     if (card) {
       if (ch === channel) {
-        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-xl border border-[#1f93ff] bg-[#eff8ff] cursor-pointer transition text-center shadow-2xs';
+        card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-xl border border-[#7c3aed] bg-[#f5f3ff] cursor-pointer transition text-center shadow-2xs';
       } else {
         card.className = 'channel-card flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition text-center';
       }
@@ -795,7 +795,7 @@ function filterCampaignContacts(status) {
 
   document.querySelectorAll('.camp-filter-btn').forEach(btn => {
     if (btn.getAttribute('data-filter') === status) {
-      btn.className = 'camp-filter-btn px-3 py-1 rounded-lg bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] font-medium transition';
+      btn.className = 'camp-filter-btn px-3 py-1 rounded-lg bg-[#f5f3ff] border border-[#ddd6fe] text-[#7c3aed] font-medium transition';
     } else {
       btn.className = 'camp-filter-btn px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition';
     }

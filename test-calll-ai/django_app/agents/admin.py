@@ -50,7 +50,7 @@ class UserMCPServerAdmin(admin.ModelAdmin):
     def connection_test_badge(self, obj):
         test_url = reverse('admin:agents_usermcpserver_test', args=[obj.id])
         return format_html(
-            '<a class="button" style="padding:4px 10px; font-size:11px; font-weight:600; background:#eff8ff; color:#1f93ff; border:1px solid #b2ddff; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" href="{}" title="اختبار الاتصال بالخادم وتحديث أدواته فوراً">'
+            '<a class="button" style="padding:4px 10px; font-size:11px; font-weight:600; background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" href="{}" title="اختبار الاتصال بالخادم وتحديث أدواته فوراً">'
             '<span>🔌</span> <span>فحص الآن</span>'
             '</a>',
             test_url
@@ -63,7 +63,7 @@ class UserMCPServerAdmin(admin.ModelAdmin):
         test_url = reverse('admin:agents_usermcpserver_test', args=[obj.id])
         return format_html(
             '<div style="margin: 6px 0;">'
-            '<a class="button" style="background:#1f93ff; color:#fff; font-weight:bold; padding:9px 18px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 1px 3px rgba(31,147,255,0.2);" href="{}">'
+            '<a class="button" style="background:#7c3aed; color:#fff; font-weight:bold; padding:9px 18px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 1px 3px rgba(124,58,237,0.2);" href="{}">'
             '<span>🔌</span> <span>فحص الاتصال وتحديث الأدوات الحية الآن (Live Test & Sync)</span>'
             '</a>'
             '<p style="margin: 6px 0 0 0; font-size:11px; color:#64748b;">يقوم هذا الإجراء بالاتصال الفوري بنقطة نهاية SSE للخادم، وقياس سرعة الاستجابة، وتحديث قائمة الأدوات تلقائياً.</p>'
@@ -99,7 +99,7 @@ class UserMCPServerAdmin(admin.ModelAdmin):
                     is_req = p_name in required
                     if is_req:
                         param_badges.append(
-                            f'<span style="background:#eff8ff; color:#1f93ff; border:1px solid #b2ddff; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:bold; margin:2px;" title="حقل إلزامي">{p_name}*</span>'
+                            f'<span style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:bold; margin:2px;" title="حقل إلزامي">{p_name}*</span>'
                         )
                     else:
                         param_badges.append(
@@ -135,12 +135,12 @@ class UserMCPServerAdmin(admin.ModelAdmin):
             rows.append(f"""
             <tr style="border-bottom:1px solid #eaedf0; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
               <td style="padding:10px 8px; text-align:center; color:#94a3b8; font-weight:bold;">{idx}</td>
-              <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#1f93ff; font-size:12px;">{name}</td>
+              <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#7c3aed; font-size:12px;">{name}</td>
               <td style="padding:10px 12px; color:#334155; line-height:1.4;">{desc}</td>
               <td style="padding:10px 12px; display:flex; flex-wrap:wrap; gap:3px;">{params_html}</td>
               <td style="padding:10px 12px; text-align:center;">{status_html}</td>
               <td style="padding:10px 12px; text-align:center;">
-                <button type="button" onclick="adminOpenTestToolModal({obj.id}, '{name}', {idx})" style="background:#1f93ff; color:#fff; border:none; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(31,147,255,0.25);" onmouseover="this.style.background='#1570ef'" onmouseout="this.style.background='#1f93ff'">
+                <button type="button" onclick="adminOpenTestToolModal({obj.id}, '{name}', {idx})" style="background:#7c3aed; color:#fff; border:none; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(124,58,237,0.25);" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">
                   <span>⚡</span> <span>اختبار الأداة</span>
                 </button>
               </td>
@@ -174,7 +174,7 @@ class UserMCPServerAdmin(admin.ModelAdmin):
           <div style="background:#fff; border-radius:14px; width:100%; max-width:620px; box-shadow:0 10px 25px rgba(0,0,0,0.1); overflow:hidden; font-family:inherit; border:1px solid #eaedf0;">
             <div style="background:#f8fafc; padding:14px 20px; border-bottom:1px solid #eaedf0; display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0; font-size:14px; color:#0f172a; font-weight:bold; display:flex; align-items:center; gap:8px;">
-                <span>⚡</span> <span>اختبار الأداة حياً:</span> <code id="admin-modal-tool-name" style="color:#1f93ff; font-size:13px; font-family:monospace;"></code>
+                <span>⚡</span> <span>اختبار الأداة حياً:</span> <code id="admin-modal-tool-name" style="color:#7c3aed; font-size:13px; font-family:monospace;"></code>
               </h3>
               <button type="button" onclick="adminCloseTestToolModal()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">&times;</button>
             </div>
@@ -188,14 +188,14 @@ class UserMCPServerAdmin(admin.ModelAdmin):
               <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                   <label style="font-weight:bold; color:#0f172a;">مُدخلات الاختبار (JSON Arguments):</label>
-                  <button type="button" onclick="adminFillSampleArgs()" style="background:none; border:none; color:#1f93ff; font-weight:bold; font-size:11px; cursor:pointer; text-decoration:underline;">🪄 ملء تلقائي للبيانات</button>
+                  <button type="button" onclick="adminFillSampleArgs()" style="background:none; border:none; color:#7c3aed; font-weight:bold; font-size:11px; cursor:pointer; text-decoration:underline;">🪄 ملء تلقائي للبيانات</button>
                 </div>
                 <textarea id="admin-modal-args" rows="4" style="width:100%; padding:10px; border:1px solid #eaedf0; border-radius:8px; font-family:monospace; font-size:12px; box-sizing:border-box; outline:none; background:#f8fafc; color:#0f172a;" placeholder="{{}}"></textarea>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
                 <button type="button" onclick="adminCloseTestToolModal()" style="padding:7px 14px; border:1px solid #eaedf0; border-radius:8px; background:#fff; color:#334155; font-weight:600; cursor:pointer;">إلغاء</button>
-                <button type="button" id="btn-admin-modal-run" onclick="adminExecuteToolTest()" style="padding:7px 18px; border:none; border-radius:8px; background:#1f93ff; color:#fff; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(31,147,255,0.2);">
+                <button type="button" id="btn-admin-modal-run" onclick="adminExecuteToolTest()" style="padding:7px 18px; border:none; border-radius:8px; background:#7c3aed; color:#fff; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(124,58,237,0.2);">
                   <span>⚡</span> <span id="btn-admin-modal-run-text">تنفيذ الاستدعاء الحَي</span>
                 </button>
               </div>
@@ -558,7 +558,7 @@ class AgentToolCallLogAdmin(admin.ModelAdmin):
 
         kpi_html = f"""
         <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;font-family:sans-serif;">
-            <div style="flex:1;min-width:180px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-top:4px solid #3b82f6;">
+            <div style="flex:1;min-width:180px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-top:4px solid #7c3aed;">
                 <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:4px;">إجمالي الاستدعاءات</div>
                 <div style="font-size:24px;font-weight:700;color:#111827;">{total_count:,}</div>
                 <div style="font-size:11px;color:#9ca3af;margin-top:2px;">كافة الأدوات المسجلة</div>
@@ -602,7 +602,7 @@ class AgentToolCallLogAdmin(admin.ModelAdmin):
 
     def tool_badge(self, obj):
         type_colors = {
-            'mcp': ('#e1effe', '#1e429f', 'FastMCP'),
+            'mcp': ('#f5f3ff', '#7c3aed', 'FastMCP'),
             'rag': ('#fef9c3', '#854d0e', 'RAG'),
             'memory': ('#dcfce7', '#166534', 'ذاكرة CRM'),
             'transfer': ('#e0e7ff', '#3730a3', 'تحويل طابور'),
@@ -659,7 +659,7 @@ class AgentToolCallLogAdmin(admin.ModelAdmin):
             content = json.dumps(raw, ensure_ascii=False, indent=2)
         else:
             content = str(raw or "")
-        return format_html('<pre style="background:#0f172a;color:#38bdf8;padding:12px;border-radius:8px;font-size:12px;max-height:400px;overflow:auto;">{}</pre>', content)
+        return format_html('<pre style="background:#0f172a;color:#a78bfa;padding:12px;border-radius:8px;font-size:12px;max-height:400px;overflow:auto;">{}</pre>', content)
     formatted_raw_response.short_description = "الرد الكامل (JSON/Raw)"
 
 

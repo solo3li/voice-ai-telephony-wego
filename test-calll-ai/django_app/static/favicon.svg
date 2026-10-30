@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#841832"/>
-      <stop offset="50%" stop-color="#680E23"/>
-      <stop offset="100%" stop-color="#4A0817"/>
+    <linearGradient id="bgViolet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1035"/>
+      <stop offset="50%" stop-color="#2e1065"/>
+      <stop offset="100%" stop-color="#0f0728"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E8DAC6"/>
-      <stop offset="50%" stop-color="#C5A880"/>
-      <stop offset="100%" stop-color="#A27D4C"/>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
     </linearGradient>
   </defs>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)" stroke="url(#gold)" stroke-width="2.5"/>
-  <g fill="#FFFFFF">
-    <rect x="30" y="16" width="4" height="32" rx="2" fill="#C5A880"/>
-    <rect x="23" y="22" width="4" height="20" rx="2" fill="#FFFFFF"/>
-    <rect x="37" y="22" width="4" height="20" rx="2" fill="#FFFFFF"/>
-    <rect x="16" y="27" width="4" height="10" rx="2" fill="#C5A880"/>
-    <rect x="44" y="27" width="4" height="10" rx="2" fill="#C5A880"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bgViolet)" stroke="#7c3aed" stroke-width="2"/>
+  <g>
+    <rect x="16" y="27" width="4" height="10" rx="2" fill="#a78bfa" opacity="0.9"/>
+    <rect x="23" y="20" width="4" height="24" rx="2" fill="#c4b5fd"/>
+    <rect x="30" y="14" width="4" height="36" rx="2" fill="#ffffff"/>
+    <rect x="37" y="20" width="4" height="24" rx="2" fill="#c4b5fd"/>
+    <rect x="44" y="27" width="4" height="10" rx="2" fill="#a78bfa" opacity="0.9"/>
   </g>
 </svg>

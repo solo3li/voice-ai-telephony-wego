@@ -32,7 +32,7 @@
   <!-- Top Brand (Pinned) -->
   <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200/80 shrink-0 bg-white">
     <a href="{% url 'voice_assistant:room' %}" class="flex items-center gap-2.5 overflow-hidden cursor-pointer group">
-      <div class="w-7 h-7 rounded-lg bg-[#1f93ff] text-white flex items-center justify-center shrink-0">
+      <div class="w-7 h-7 rounded-lg bg-[#7c3aed] text-white flex items-center justify-center shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -41,7 +41,7 @@
       </div>
       <div class="brand-text">
         <h1 class="text-xs font-semibold text-slate-900 tracking-tight" data-i18n="app_title">المساعد الصوتي الذكي</h1>
-        <p class="text-xs text-slate-400 font-mono" data-i18n="app_subtitle">Enterprise Voice AI</p>
+        <p class="text-xs text-slate-400 font-mono font-light" data-i18n="app_subtitle">Enterprise Voice AI</p>
       </div>
     </a>
     
@@ -50,7 +50,7 @@
       type="button" 
       onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
       id="sidebar-top-lang-btn" 
-      class="text-slate-500 hover:text-[#1f93ff] hover:bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
+      class="text-slate-500 hover:text-[#7c3aed] hover:bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
       title="تغيير اللغة / Switch Language" 
       data-i18n-title="switch_language"
     >
@@ -68,27 +68,27 @@
   <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-1 text-xs custom-sidebar-scroll min-h-0">
     
     <!-- 1. Voice & Telephony Suite Portal -->
-    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours,whatsapp,whatsapp_desk' or not active_nav %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours,whatsapp,whatsapp_desk' or not active_nav %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_telephony_suite">المساعد الصوتي والاتصالات</span>
     </a>
 
     <!-- 2. Chatwoot Omnichannel Chat -->
-    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_chat_hub">شات (Chatwoot Hub)</span>
     </a>
 
     <!-- 3. Billing & Wallet -->
-    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_billing">الرصيد والفواتير</span>
     </a>
 
     <!-- 4. Developer API -->
-    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_developer">واجهات المطورين (API)</span>
     </a>
 
     <!-- 5. Partner & SaaS -->
-    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#eff8ff] text-[#1f93ff] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_partner">الشريك والـ SaaS</span>
     </a>
 
@@ -112,7 +112,7 @@
           type="button" 
           onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
           id="sidebar-bottom-lang-btn" 
-          class="text-slate-400 hover:text-[#1f93ff] p-1.5 rounded-md hover:bg-slate-50 transition flex items-center gap-1 cursor-pointer" 
+          class="text-slate-400 hover:text-[#7c3aed] p-1.5 rounded-md hover:bg-slate-50 transition flex items-center gap-1 cursor-pointer" 
           title="تغيير اللغة / Switch Language" 
           data-i18n-title="switch_language"
         >

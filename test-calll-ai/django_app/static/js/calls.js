@@ -100,7 +100,7 @@ function renderCallsTable(calls) {
     } else if (c.direction === 'internal_employee') {
       dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">${badgeInternal}</span>`;
     } else if (c.direction === 'inbound') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">${badgeInbound}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">${badgeInbound}</span>`;
     } else if (c.direction === 'outbound_ai') {
       dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${badgeOutAi}</span>`;
     } else {
@@ -164,7 +164,7 @@ function setCallsTypeFilter(type) {
   });
   const activeBtn = document.getElementById('btn-type-' + type);
   if (activeBtn) {
-    activeBtn.className = 'call-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] transition';
+    activeBtn.className = 'call-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f5f3ff] border border-[#ddd6fe] text-[#7c3aed] transition';
   }
   loadCallsList();
 }
@@ -176,7 +176,7 @@ function setCallsDatePreset(preset) {
   });
   const activeBtn = document.getElementById('btn-preset-' + preset);
   if (activeBtn) {
-    activeBtn.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#eff8ff] border border-[#b2ddff] text-[#1f93ff] transition';
+    activeBtn.className = 'preset-date-btn px-3 py-1 rounded-lg text-xs font-semibold bg-[#f5f3ff] border border-[#ddd6fe] text-[#7c3aed] transition';
   }
   loadCallsList();
 }

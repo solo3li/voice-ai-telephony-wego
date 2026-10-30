@@ -48,7 +48,7 @@ async function checkPartnerStatusOnLoad() {
           <div class="flex items-center gap-2">
             <span>لم تقم بالتقديم لبرنامج الشركاء والموزعين بعد. انضم الآن للحصول على خصومات تسعير الجملة ومفاتيح الربط البرمجي.</span>
           </div>
-          <button type="button" onclick="openPartnerApplyModal(null)" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition shadow-2xs">
+          <button type="button" onclick="openPartnerApplyModal(null)" class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition shadow-2xs">
             تقديم طلب شراكة
           </button>
         `;
@@ -132,7 +132,7 @@ async function loadPartnerDashboard() {
       } else {
         cTbody.innerHTML = clients.map(c => `
           <tr class="hover:bg-slate-50/60 transition">
-            <td class="py-3 px-4 font-mono font-medium text-[#1f93ff]">${c.client_id}</td>
+            <td class="py-3 px-4 font-mono font-medium text-[#7c3aed]">${c.client_id}</td>
             <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.name)} <span class="text-xs text-slate-400 block font-mono">${escapeHtml(c.email || '')}</span></td>
             <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(c.external_reference || '-')}</td>
             <td class="py-3 px-4 text-slate-400">${escapeHtml(c.created_at || '')}</td>
