@@ -95,6 +95,11 @@ urlpatterns = [
     path('chat/', views.chat_page_view, name='chat_page'),
     path('api/chat/sso-url/', views.api_chatwoot_sso_url, name='chatwoot_sso_url'),
     path('api/chat/assistant/settings/', views.api_captain_settings, name='captain_settings'),
+    path('api/chat/channels/', views.api_chat_channels, name='chat_channels_api'),
+    path('api/chat/channels/toggle-ai/', views.api_chat_channels_toggle_ai, name='chat_channels_toggle_ai'),
+    path('api/chat/channels/<int:inbox_id>/delete/', views.api_chat_channels_delete, name='chat_channels_delete'),
+    path('api/chat/channels/whatsapp-qr/', views.api_chat_channels_whatsapp_qr, name='chat_channels_whatsapp_qr'),
+    path('api/chat/channels/create/', views.api_chat_channels_create, name='chat_channels_create'),
     path('whatsapp/', views.whatsapp_page_view, name='whatsapp_page'),
     path('desk/whatsapp/', views.whatsapp_desk_page_view, name='whatsapp_desk_page'),
 ]

@@ -954,6 +954,76 @@ def api_captain_settings(request):
 
 
 @login_required
+def api_chat_channels(request):
+    """GET /api/chat/channels/ - Retrieve all inboxes and connection status."""
+    from .chatwoot_service import get_all_channels_detailed
+    res = get_all_channels_detailed()
+    return JsonResponse(res)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_toggle_ai(request):
+    """POST /api/chat/channels/toggle-ai/ - Toggle Captain AI on an inbox."""
+    from .chatwoot_service import toggle_channel_ai
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST.dict()
+
+    inbox_id = data.get('inbox_id')
+    enable = data.get('enable', True)
+    if not inbox_id:
+        return JsonResponse({"status": "error", "message": "inbox_id مطلوب"}, status=400)
+
+    success, msg = toggle_channel_ai(inbox_id, enable=bool(enable))
+    if success:
+        return JsonResponse({"status": "success", "message": msg, "is_captain_enabled": bool(enable)})
+    return JsonResponse({"status": "error", "message": msg}, status=400)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_delete(request, inbox_id):
+    """POST/DELETE /api/chat/channels/<inbox_id>/delete/ - Remove an inbox."""
+    from .chatwoot_service import delete_channel_inbox
+    success, msg = delete_channel_inbox(inbox_id)
+    if success:
+        return JsonResponse({"status": "success", "message": msg})
+    return JsonResponse({"status": "error", "message": msg}, status=400)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_whatsapp_qr(request):
+    """GET/POST /api/chat/channels/whatsapp-qr/ - Fetch live Evolution WhatsApp QR."""
+    from .chatwoot_service import get_evolution_whatsapp_qr
+    res = get_evolution_whatsapp_qr()
+    return JsonResponse(res)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_create(request):
+    """POST /api/chat/channels/create/ - Create any supported channel in Chatwoot."""
+    from .chatwoot_service import create_channel_inbox
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST.dict()
+
+    success, msg = create_channel_inbox(data)
+    if success:
+        return JsonResponse({"status": "success", "message": msg})
+    return JsonResponse({"status": "error", "message": msg}, status=400)
+
+
+
+@login_required
 def whatsapp_page_view(request):
     """Render dedicated WhatsApp & Omnichannel 24/7 Follow-up page."""
     context = {
