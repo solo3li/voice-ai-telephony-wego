@@ -1110,24 +1110,14 @@ def api_chat_channels_create(request):
 
 @login_required
 def whatsapp_page_view(request):
-    """Render dedicated WhatsApp & Omnichannel 24/7 Follow-up page."""
-    context = {
-        'page_title': 'واتساب ومتابعة الذكاء الاصطناعي 24/7',
-        'page_icon': '',
-        'active_nav': 'whatsapp',
-    }
-    return render(request, 'voice_assistant/pages/whatsapp.html', context)
+    """Redirect legacy WhatsApp page to Chatwoot Hub."""
+    return redirect('voice_assistant:chat_page')
 
 
 @login_required
 def whatsapp_desk_page_view(request):
-    """Render dedicated Tier 2 WhatsApp Human Support Desk."""
-    context = {
-        'page_title': 'مكتب دعم عملاء الواتساب (الدعم البشري)',
-        'page_icon': '',
-        'active_nav': 'whatsapp_desk',
-    }
-    return render(request, 'voice_assistant/pages/whatsapp_desk.html', context)
+    """Redirect legacy WhatsApp Support Desk to Chatwoot Hub."""
+    return redirect('voice_assistant:chat_page')
 
 
 

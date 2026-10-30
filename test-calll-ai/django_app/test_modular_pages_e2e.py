@@ -247,8 +247,16 @@ def test_modular_pages():
         assert len(body) > 100, f"{sf} file content too short ({len(body)} bytes)"
     print(f"✅ All {len(static_files)} static JS files are properly served with non-empty content!")
 
+    # 15. Legacy WhatsApp pages redirect to Chatwoot Hub
+    print("\n[TEST 15] Testing legacy WhatsApp routes redirect gracefully to /chat/...")
+    for legacy_ep in ['/whatsapp/', '/whatsapp-desk/', '/desk/whatsapp/']:
+        resp_leg = client.get(legacy_ep)
+        assert resp_leg.status_code == 302, f"Expected 302 redirect for {legacy_ep}, got {resp_leg.status_code}"
+        assert '/chat/' in resp_leg.url, f"Expected redirect to /chat/ for {legacy_ep}, got {resp_leg.url}"
+    print("✅ All legacy WhatsApp routes gracefully redirect to /chat/!")
+
     print("\n========================================================")
-    print("🎉 ALL 14/14 MODULAR MULTI-PAGE END-TO-END TESTS PASSED! (100%)")
+    print("🎉 ALL 15/15 MODULAR MULTI-PAGE END-TO-END TESTS PASSED! (100%)")
     print("========================================================\n")
 
 

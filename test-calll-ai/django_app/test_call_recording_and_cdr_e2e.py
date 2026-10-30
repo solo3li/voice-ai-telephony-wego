@@ -41,6 +41,13 @@ def run_e2e_tests():
     test_user_a, _ = User.objects.get_or_create(username="test_cdr_tenant_a", defaults={"email": "a@test.com"})
     test_user_b, _ = User.objects.get_or_create(username="test_cdr_tenant_b", defaults={"email": "b@test.com"})
 
+    # Ensure test user wallet has sufficient balance
+    from decimal import Decimal
+    from billing.models import UserWallet
+    wallet_a, _ = UserWallet.objects.get_or_create(user=test_user_a)
+    wallet_a.balance = Decimal('100.00')
+    wallet_a.save()
+
     # Clean old test sessions
     CallSession.objects.filter(user__in=[test_user_a, test_user_b]).delete()
 

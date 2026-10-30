@@ -58,12 +58,19 @@ def run_suite():
     test_phone = f"+2010{uuid.uuid4().int % 100000000:08d}"
 
     try:
-        # 1. Test GET /desk/whatsapp/
+        # 1. Test GET /desk/whatsapp/ (Graceful redirect to Chatwoot Hub /chat/)
         resp_desk = client_a.get("/desk/whatsapp/")
-        assert_true(resp_desk.status_code == 200, "GET /desk/whatsapp/ renders with HTTP 200")
-        assert_true("مكتب دعم عملاء الواتساب" in resp_desk.content.decode("utf-8"), "Desk template contains Arabic title")
-        assert_true("طابور الرنين العام" in resp_desk.content.decode("utf-8"), "Desk template contains Broadcast Ringing Queue")
-        assert_true("05:00" in resp_desk.content.decode("utf-8"), "Desk template contains 5-minute SLA timer initial display")
+        assert_true(resp_desk.status_code == 302, "GET /desk/whatsapp/ redirects with HTTP 302")
+        assert_true("/chat/" in resp_desk.url, "GET /desk/whatsapp/ redirect target is /chat/")
+        resp_follow = client_a.get("/desk/whatsapp/", follow=True)
+        assert_true(resp_follow.status_code == 200, "Followed redirect to Chatwoot Hub renders with HTTP 200")
+        assert_true("Chatwoot" in resp_follow.content.decode("utf-8") or "chat" in resp_follow.content.decode("utf-8"), "Chatwoot Hub rendered successfully")
+
+        # Also verify legacy /whatsapp/ and /whatsapp-desk/ redirects
+        resp_wa = client_a.get("/whatsapp/")
+        assert_true(resp_wa.status_code == 302 and "/chat/" in resp_wa.url, "GET /whatsapp/ redirects to /chat/")
+        resp_wa_desk = client_a.get("/whatsapp-desk/")
+        assert_true(resp_wa_desk.status_code == 302 and "/chat/" in resp_wa_desk.url, "GET /whatsapp-desk/ redirects to /chat/")
 
         # 2. Test Direct Dispatcher claim_conversation
         claim_res = claim_conversation(user_id=user_a, phone_number=test_phone, agent_user_id=user_a.id)

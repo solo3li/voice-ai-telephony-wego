@@ -102,8 +102,9 @@ urlpatterns = [
     path('api/chat/channels/<int:inbox_id>/delete/', views.api_chat_channels_delete, name='chat_channels_delete'),
     path('api/chat/channels/disconnect/', views.api_chat_channels_disconnect, name='chat_channels_disconnect'),
     path('api/chat/channels/whatsapp-qr/', views.api_chat_channels_whatsapp_qr, name='chat_channels_whatsapp_qr'),
-    path('api/chat/channels/create/', views.api_chat_channels_create, name='chat_channels_create'),
+    # Legacy WhatsApp routes - redirected to Chatwoot Hub
     path('whatsapp/', views.whatsapp_page_view, name='whatsapp_page'),
+    path('whatsapp-desk/', views.whatsapp_desk_page_view, name='whatsapp_desk_page_alias'),
     path('desk/whatsapp/', views.whatsapp_desk_page_view, name='whatsapp_desk_page'),
 
     # Embedded widgets & Smart Hybrid messaging (Scenario 3)

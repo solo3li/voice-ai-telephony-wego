@@ -68,23 +68,13 @@
   <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-1 text-xs custom-sidebar-scroll min-h-0">
     
     <!-- 1. Voice & Telephony Suite Portal -->
-    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours,whatsapp,whatsapp_desk' or not active_nav %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours' or not active_nav %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_telephony_suite">المساعد الصوتي والاتصالات</span>
     </a>
 
     <!-- 2. Chatwoot Omnichannel Chat -->
     <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_chat_hub">شات (Chatwoot Hub)</span>
-    </a>
-
-    <!-- 2.1 WhatsApp Web -->
-    <a href="{% url 'voice_assistant:whatsapp_page' %}" id="nav-btn-whatsapp" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'whatsapp' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
-      <span class="nav-text" data-i18n="nav_whatsapp">واتساب (WhatsApp)</span>
-    </a>
-
-    <!-- 2.2 WhatsApp Support Desk -->
-    <a href="{% url 'voice_assistant:whatsapp_desk_page' %}" id="nav-btn-whatsapp-desk" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'whatsapp_desk' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
-      <span class="nav-text" data-i18n="nav_whatsapp_desk">مكتب دعم الواتساب</span>
     </a>
 
     <!-- 3. Billing & Wallet -->
