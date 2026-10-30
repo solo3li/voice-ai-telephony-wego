@@ -17,10 +17,10 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-  <!-- Google Fonts: Cairo (Arabic), Inter (English) & JetBrains Mono -->
+  <!-- Google Fonts: Inter (matching Chatwoot typography) & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script>
@@ -32,7 +32,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Cairo', 'Inter', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'system-ui', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Tahoma', 'Arial', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
@@ -68,11 +68,10 @@
       --text-muted: #64748b;
     }
 
-    html[dir="rtl"] body, html[lang="ar"] body {
-      font-family: 'Cairo', sans-serif !important;
-    }
-    html[dir="ltr"] body, html[lang="en"] body {
-      font-family: 'Inter', sans-serif !important;
+    html, body {
+      font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Tahoma, Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* Minimalist text-only sidebar dimensions */

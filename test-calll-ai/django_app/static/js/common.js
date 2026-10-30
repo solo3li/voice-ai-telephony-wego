@@ -2929,9 +2929,9 @@ function applyCommonLanguage(lang) {
   document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
 
-  // Apply font family
+  // Apply font family matching Chatwoot exactly
   if (document.body) {
-    document.body.style.fontFamily = isRtl ? "'Cairo', sans-serif" : "'Inter', sans-serif";
+    document.body.style.fontFamily = "'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Tahoma, Arial, sans-serif";
   }
 
   // Update document title if recognized route
