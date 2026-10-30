@@ -2906,11 +2906,13 @@ function applyCommonLanguage(lang) {
     document.title = PAGE_TITLES[currentPath][lang];
   }
 
-  // Update language switcher button text in header
-  const langText = document.getElementById('lang-text');
-  if (langText && APP_I18N[lang]) {
-    langText.innerText = APP_I18N[lang].switch_to;
-  }
+  // Update language switcher button text in header and sidebar
+  const langTargets = document.querySelectorAll('#lang-text, #sidebar-top-lang-text, #sidebar-bottom-lang-text, .lang-switch-text');
+  langTargets.forEach(el => {
+    if (APP_I18N[lang]) {
+      el.innerText = APP_I18N[lang].switch_to;
+    }
+  });
 
   // Update all [data-i18n] text elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
