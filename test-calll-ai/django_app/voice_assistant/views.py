@@ -1365,44 +1365,284 @@ def save_business_hours(request):
 
 
 # ==============================================================================
-# SCENARIO 3: SMART HYBRID EMBED VIEWS & LIGHTWEIGHT MESSAGING API
+# SCENARIO 3: SMART HYBRID EMBED VIEWS & FULL WHITE-LABEL EMBEDDED SUITES
 # ==============================================================================
 from django.views.decorators.clickjacking import xframe_options_exempt
+
+
+def resolve_embed_user(request):
+    """
+    Authenticate tenant user for embed routes:
+    1. Check ?token=... or ?key=... or Authorization / X-API-Key / X-Partner-Key headers
+    2. Validate against UserApiKey (is_active=True) and PartnerProfile
+    3. If valid, set request.user = user and return (user, None)
+    4. If token is provided but invalid/inactive, return (None, "invalid_token")
+    5. If no token provided and request.user.is_authenticated, return (request.user, None)
+    6. If no token and not authenticated, return (None, "no_user")
+    """
+    token = request.GET.get('token') or request.GET.get('key')
+    if not token:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ', 1)[1].strip()
+        elif request.headers.get('X-API-Key'):
+            token = request.headers.get('X-API-Key').strip()
+        elif request.headers.get('X-Partner-Key'):
+            token = request.headers.get('X-Partner-Key').strip()
+
+    if token:
+        from developer.models import UserApiKey
+        from partners.models import PartnerProfile, PartnerClientRelationship
+        key_obj = UserApiKey.objects.filter(key=token, is_active=True).select_related('user').first()
+        if key_obj:
+            request.user = key_obj.user
+            return key_obj.user, None
+        partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
+        if partner:
+            client_id = request.GET.get('client_id')
+            if client_id:
+                rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
+                if rel:
+                    request.user = rel.client
+                    return rel.client, None
+            request.user = partner.user
+            return partner.user, None
+        return None, "invalid_token"
+
+    if request.user.is_authenticated:
+        return request.user, None
+
+    return None, "no_user"
+
+
+@xframe_options_exempt
+def embed_call_center_view(request, section=None):
+    """
+    GET /embed/call-center/
+    GET /embed/call-center/<section>/
+    Full White-Label Call Center AI Embedded Suite supporting 10 multi-page sub-routes:
+    1. /embed/call-center/room/ (Voice Room & Live WebRTC)
+    2. /embed/call-center/calls/ (CDR & Audio Recordings)
+    3. /embed/call-center/documents/ (Knowledge Base & Documents)
+    4. /embed/call-center/personas/ (AI Personas & Studio)
+    5. /embed/call-center/crm/ (CRM & Customer Memory)
+    6. /embed/call-center/tools/ (Tools Store & MCP)
+    7. /embed/call-center/campaigns/ (Outbound Campaigns)
+    8. /embed/call-center/call-center/ (Call Center & Queues)
+    9. /embed/call-center/telephony/ (SIP Trunks & PBX)
+    10. /embed/call-center/hours/ (Business Hours & Fallback Plan)
+    """
+    user, err = resolve_embed_user(request)
+    if err == "invalid_token":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "مفتاح الـ API غير صالح أو غير نشط (Invalid or expired API token)."
+        }, status=401)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    if not user:
+        resp = JsonResponse({
+            "status": "error",
+            "message": "يتطلب الوصول مصادقة صالحة أو مفتاح API (Authentication required)."
+        }, status=401)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    # Default /embed/call-center/ redirects to /embed/call-center/room/ preserving query parameters
+    if not section or section.strip('/') == '':
+        qs = request.GET.urlencode()
+        target = '/embed/call-center/room/' + (f'?{qs}' if qs else '')
+        resp = redirect(target)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    normalized_section = section.strip().lower()
+
+    from .chatwoot_service import generate_chatwoot_sso_url
+
+    section_map = {
+        'room': {
+            'template': 'voice_assistant/room.html',
+            'active_nav': 'voice',
+            'title': 'غرفة المساعد الصوتي',
+            'extra': lambda req, u: {
+                'centrifugo_ws_url': settings.CENTRIFUGO_WS_URL,
+                'livekit_url': settings.LIVEKIT_URL,
+                'username': u.username,
+                'user_id': u.id,
+                'chatwoot_url': generate_chatwoot_sso_url(user=u, account_id=2, locale=req.GET.get('locale') or req.GET.get('lang') or 'ar'),
+            }
+        },
+        'calls': {
+            'template': 'voice_assistant/pages/calls.html',
+            'active_nav': 'calls',
+            'title': 'سجل المكالمات (CDR) والتسجيلات',
+            'extra': lambda req, u: {}
+        },
+        'documents': {
+            'template': 'voice_assistant/pages/rag.html',
+            'active_nav': 'rag',
+            'title': 'قاعدة المعرفة RAG',
+            'extra': lambda req, u: {}
+        },
+        'personas': {
+            'template': 'voice_assistant/pages/personas.html',
+            'active_nav': 'personas',
+            'title': 'الشخصيات واللهجات',
+            'extra': lambda req, u: {}
+        },
+        'crm': {
+            'template': 'voice_assistant/pages/crm.html',
+            'active_nav': 'crm',
+            'title': 'ذاكرة وسجل العملاء',
+            'extra': lambda req, u: {}
+        },
+        'tools': {
+            'template': 'voice_assistant/pages/store.html',
+            'active_nav': 'store',
+            'title': 'متجر وأدوات MCP',
+            'extra': lambda req, u: {
+                'mcp_url': 'https://mcp.169.58.32.179.nip.io/',
+            }
+        },
+        'campaigns': {
+            'template': 'voice_assistant/pages/campaigns.html',
+            'active_nav': 'campaigns',
+            'title': 'حملات الاتصال والعملاء',
+            'extra': lambda req, u: {}
+        },
+        'call-center': {
+            'template': 'voice_assistant/pages/callcenter.html',
+            'active_nav': 'callcenter',
+            'title': 'المركز الهاتفي وطوابير الانتظار',
+            'extra': lambda req, u: {}
+        },
+        'telephony': {
+            'template': 'voice_assistant/pages/telephony.html',
+            'active_nav': 'telephony',
+            'title': 'الاتصالات وسنترالات PBX',
+            'extra': lambda req, u: {}
+        },
+        'hours': {
+            'template': 'voice_assistant/pages/business_hours.html',
+            'active_nav': 'business_hours',
+            'title': 'مواعيد العمل والخطة البديلة',
+            'extra': lambda req, u: {}
+        },
+        'business-hours': {
+            'template': 'voice_assistant/pages/business_hours.html',
+            'active_nav': 'business_hours',
+            'title': 'مواعيد العمل والخطة البديلة',
+            'extra': lambda req, u: {}
+        },
+    }
+
+    if normalized_section not in section_map:
+        qs = request.GET.urlencode()
+        target = '/embed/call-center/room/' + (f'?{qs}' if qs else '')
+        resp = redirect(target)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    cfg = section_map[normalized_section]
+    token_val = request.GET.get('token') or request.GET.get('key') or ''
+    locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+
+    context = {
+        'is_embed': True,
+        'embed_token': token_val,
+        'embed_locale': locale_val,
+        'token': token_val,
+        'locale': locale_val,
+        'user_id': user.id,
+        'username': user.username,
+        'page_title': cfg['title'],
+        'page_icon': '',
+        'active_nav': cfg['active_nav'],
+    }
+    extra_ctx = cfg['extra'](request, user)
+    context.update(extra_ctx)
+
+    resp = render(request, cfg['template'], context)
+    resp['Content-Security-Policy'] = "frame-ancestors *"
+    resp['X-Frame-Options'] = "ALLOWALL"
+    return resp
+
+
+@xframe_options_exempt
+def embed_chat_hub_view(request):
+    """
+    GET /embed/chat-hub/ or /embed/chat/
+    Full White-Label Chatwoot Hub Embedded Suite with all 3 internal tabs:
+    1. المحادثات المباشرة (Live Conversations)
+    2. ربط القنوات الشاملة (Omnichannel Connections & WhatsApp QR)
+    3. إعدادات الذكاء الاصطناعي والمتابعة (AI Automation Settings)
+    """
+    # Raw iframe fallback if explicitly requested via ?raw=1
+    if request.GET.get('raw') == '1':
+        return embed_chat_view(request)
+
+    user, err = resolve_embed_user(request)
+    if err == "invalid_token":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "مفتاح الـ API غير صالح أو غير نشط (Invalid or expired API token)."
+        }, status=401)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    if not user:
+        resp = JsonResponse({
+            "status": "error",
+            "message": "يتطلب الوصول مصادقة صالحة أو مفتاح API (Authentication required)."
+        }, status=401)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+
+    token_val = request.GET.get('token') or request.GET.get('key') or ''
+    locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+
+    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings
+    chatwoot_url = generate_chatwoot_sso_url(user=user, account_id=2, locale=locale_val)
+    captain_settings = get_captain_settings() or {}
+
+    context = {
+        'is_embed': True,
+        'embed_token': token_val,
+        'embed_locale': locale_val,
+        'token': token_val,
+        'locale': locale_val,
+        'user_id': user.id,
+        'username': user.username,
+        'page_title': 'شات - منصة المحادثات الشاملة',
+        'page_icon': '',
+        'active_nav': 'chat',
+        'chatwoot_url': chatwoot_url,
+        'captain_settings': captain_settings,
+        'captain_settings_json': json.dumps(captain_settings, ensure_ascii=False),
+    }
+
+    resp = render(request, 'voice_assistant/pages/chat.html', context)
+    resp['Content-Security-Policy'] = "frame-ancestors *"
+    resp['X-Frame-Options'] = "ALLOWALL"
+    return resp
+
 
 @xframe_options_exempt
 def embed_chat_view(request):
     """
-    GET /embed/chat/
+    GET /embed/chat/?raw=1
     Standalone, white-label Chatwoot Omnichannel Inbox Iframe Embed.
     Allows zero-code embedding on external partner domains without X-Frame-Options blocking.
-    Accepts:
-    - ?token=... (User API key or Partner key) or authenticated session
-    - ?theme=light|dark (defaults to light)
-    - ?locale=ar|en (defaults to ar)
     """
-    user = None
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        token = request.GET.get('token') or request.GET.get('key')
-        if token:
-            from developer.models import UserApiKey
-            from partners.models import PartnerProfile
-            key_obj = UserApiKey.objects.filter(key=token, is_active=True).select_related('user').first()
-            if key_obj:
-                user = key_obj.user
-            else:
-                partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
-                if partner:
-                    client_id = request.GET.get('client_id')
-                    if client_id:
-                        from partners.models import PartnerClientRelationship
-                        rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
-                        if rel:
-                            user = rel.client
-                    if not user:
-                        user = partner.user
-
+    user, _ = resolve_embed_user(request)
     if not user:
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -1419,6 +1659,7 @@ def embed_chat_view(request):
     }
     response = render(request, 'voice_assistant/embed/chat_embed.html', context)
     response['Content-Security-Policy'] = "frame-ancestors *"
+    response['X-Frame-Options'] = "ALLOWALL"
     return response
 
 
@@ -1429,29 +1670,7 @@ def embed_voice_view(request):
     Standalone, white-label AI Voice Dialer & Webphone Iframe Embed.
     Permits embedding on external partner websites and CRMs.
     """
-    user = None
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        token = request.GET.get('token') or request.GET.get('key')
-        if token:
-            from developer.models import UserApiKey
-            from partners.models import PartnerProfile
-            key_obj = UserApiKey.objects.filter(key=token, is_active=True).select_related('user').first()
-            if key_obj:
-                user = key_obj.user
-            else:
-                partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
-                if partner:
-                    client_id = request.GET.get('client_id')
-                    if client_id:
-                        from partners.models import PartnerClientRelationship
-                        rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
-                        if rel:
-                            user = rel.client
-                    if not user:
-                        user = partner.user
-
+    user, _ = resolve_embed_user(request)
     if not user:
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -1468,6 +1687,7 @@ def embed_voice_view(request):
     }
     response = render(request, 'voice_assistant/embed/voice_embed.html', context)
     response['Content-Security-Policy'] = "frame-ancestors *"
+    response['X-Frame-Options'] = "ALLOWALL"
     return response
 
 

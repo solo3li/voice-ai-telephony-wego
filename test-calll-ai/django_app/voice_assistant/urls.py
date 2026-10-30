@@ -107,8 +107,11 @@ urlpatterns = [
     path('whatsapp-desk/', views.whatsapp_desk_page_view, name='whatsapp_desk_page_alias'),
     path('desk/whatsapp/', views.whatsapp_desk_page_view, name='whatsapp_desk_page'),
 
-    # Embedded widgets & Smart Hybrid messaging (Scenario 3)
-    path('embed/chat/', views.embed_chat_view, name='embed_chat'),
+    # Embedded suites & Smart Hybrid messaging
+    path('embed/call-center/', views.embed_call_center_view, name='embed_call_center_default'),
+    path('embed/call-center/<str:section>/', views.embed_call_center_view, name='embed_call_center_section'),
+    path('embed/chat-hub/', views.embed_chat_hub_view, name='embed_chat_hub'),
+    path('embed/chat/', views.embed_chat_hub_view, name='embed_chat'),
     path('embed/voice/', views.embed_voice_view, name='embed_voice'),
     path('embed/dialer/', views.embed_voice_view, name='embed_dialer'),
     path('api/chat/send/', views.api_chat_send_message, name='api_chat_send_message'),

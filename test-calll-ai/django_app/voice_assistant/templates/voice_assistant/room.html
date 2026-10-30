@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="user-id" content="{{ user_id|default:request.user.id }}" />
+  <meta name="user-username" content="{{ username|default:request.user.username }}" />
   <script>
     (function() {
       var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
@@ -201,7 +203,9 @@
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased selection:bg-[#7c3aed] selection:text-white">
 
   <!-- ==================== Shared Clean Sidebar (Chatwoot Style) ==================== -->
+  {% if not is_embed %}
   {% include "voice_assistant/components/sidebar.html" %}
+  {% endif %}
 
   <!-- ==================== Main App Workspace ==================== -->
   <div id="main-wrapper" class="flex-1 flex flex-col min-w-0 min-h-screen bg-slate-50">
@@ -210,7 +214,7 @@
     {% include "voice_assistant/components/header.html" %}
 
     <!-- Content Workspace -->
-    <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+    <main class="flex-1 p-4 md:p-6 lg:p-8 {% if is_embed %}w-full max-w-none{% else %}max-w-7xl mx-auto{% endif %} space-y-6">
 
       <!-- ==================== Tab 1: Voice Room ==================== -->
       <div id="tab-voice" class="tab-panel active space-y-6">
@@ -2126,6 +2130,7 @@
       </div>
 
       <!-- ==================== Tab 8: Usage & Billing (OpenRouter Prepaid Model) ==================== -->
+      {% if not is_embed %}
       <div id="tab-billing" class="tab-panel space-y-6">
         <!-- Billing Header Bar -->
         <div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
@@ -2254,6 +2259,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
       <!-- ==================== Tab 9: All Calls CDR with Advanced Filters ==================== -->
       <div id="tab-calls" class="tab-panel space-y-6">
@@ -2392,6 +2398,7 @@
       </div>
 
       <!-- ==================== Tab 10: Partner & SaaS Portal ==================== -->
+      {% if not is_embed %}
       <div id="tab-partner" class="tab-panel space-y-6">
         <!-- Partner Header & Refresh -->
         <div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
@@ -3163,6 +3170,7 @@
 
         </div>
       </div>
+      {% endif %}
 
       <!-- ==================== Tab 10: Business Hours & Schedule ==================== -->
       <div id="tab-hours" class="tab-panel space-y-6">
@@ -8919,8 +8927,12 @@
     }
 
     // Initialize lists on load
+    {% if not is_embed %}
     checkPartnerStatusOnLoad();
     loadDeveloperKeys();
+    loadWalletData();
+    loadTransactions('all');
+    {% endif %}
     loadLiveContext();
     loadDocuments();
     loadProfiles();
@@ -8932,9 +8944,7 @@
     loadQueues();
     loadOutboundTrunk();
     loadPbxTrunks();
-    loadWalletData();
     loadCallsList();
-    loadTransactions('all');
     if (typeof loadBusinessHours === 'function') loadBusinessHours();
 
     // Deep-linking URL hash router: e.g. /#rag or /#calls or /#hours
@@ -8954,10 +8964,68 @@
       }
     });
 
-    // Periodic polling to update agent presence states & queue waiting counts
-    setInterval(loadQueues, 8000);
-    setInterval(loadEmployees, 8000);
-  
   </script>
+  {% if is_embed %}
+  <script>
+    (function() {
+      // Auto-propagate query params (?token=...&locale=...) to all internal embed navigation links
+      function syncEmbedLinks(newLocale) {
+        var currentParams = new URLSearchParams(window.location.search);
+        if (newLocale) {
+          currentParams.set('locale', newLocale);
+        }
+        if (currentParams.toString()) {
+          document.querySelectorAll('a[href^="/embed/"]').forEach(function(link) {
+            try {
+              var url = new URL(link.getAttribute('href'), window.location.origin);
+              currentParams.forEach(function(val, key) {
+                if (!url.searchParams.has(key) || !url.searchParams.get(key) || (key === 'locale' && newLocale)) {
+                  url.searchParams.set(key, val);
+                }
+              });
+              link.setAttribute('href', url.pathname + '?' + url.searchParams.toString());
+            } catch(e) {}
+          });
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        syncEmbedLinks();
+      });
+
+      window.addEventListener('appLanguageChanged', function(e) {
+        var newLang = e.detail && e.detail.lang;
+        if (newLang) syncEmbedLinks(newLang);
+      });
+
+      // Automatically attach token to API requests for seamless iframe authentication
+      var urlParams = new URLSearchParams(window.location.search);
+      var embedToken = urlParams.get('token') || urlParams.get('key');
+      if (embedToken) {
+        var origFetch = window.fetch;
+        window.fetch = function(input, init) {
+          if (typeof input === 'string' || input instanceof URL) {
+            init = init || {};
+            init.headers = init.headers || {};
+            if (typeof init.headers.append === 'function') {
+              if (!init.headers.has('X-API-Key')) init.headers.append('X-API-Key', embedToken);
+            } else if (Array.isArray(init.headers)) {
+              init.headers.push(['X-API-Key', embedToken]);
+            } else {
+              if (!init.headers['X-API-Key']) init.headers['X-API-Key'] = embedToken;
+            }
+            return origFetch(input, init);
+          } else if (input instanceof Request) {
+            if (!input.headers.has('X-API-Key')) {
+              try { input.headers.set('X-API-Key', embedToken); } catch(e) {}
+            }
+            return origFetch(input, init);
+          }
+          return origFetch(input, init);
+        };
+      }
+    })();
+  </script>
+  {% endif %}
 </body>
 </html>

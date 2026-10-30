@@ -64,14 +64,15 @@ function initSidebarState() {
 
 // Global Wallet Balance in Header
 async function loadHeaderBalance() {
+  const hVal = document.getElementById('header-balance-val');
+  if (!hVal) return;
   try {
     const res = await fetch('/api/billing/wallet/');
     const data = await res.json();
     if (data.status === 'success') {
       const w = data.wallet;
-      const hVal = document.getElementById('header-balance-val');
       const hCurr = document.getElementById('header-balance-curr');
-      if (hVal) hVal.innerText = w.balance.toFixed(2);
+      hVal.innerText = w.balance.toFixed(2);
       if (hCurr) hCurr.innerText = w.currency;
     }
   } catch (err) {

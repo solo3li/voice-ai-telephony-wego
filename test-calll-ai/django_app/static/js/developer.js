@@ -38,6 +38,8 @@ async function loadDeveloperKeys() {
       }
 
       // Zero-Code Iframes & Automation APIs
+      const embedCallCenterSnippet = document.getElementById('dev-embed-callcenter-snippet');
+      const previewCallCenter = document.getElementById('dev-embed-callcenter-preview-btn');
       const embedChatSnippet = document.getElementById('dev-embed-chat-snippet');
       const embedVoiceSnippet = document.getElementById('dev-embed-voice-snippet');
       const curlChatSend = document.getElementById('dev-curl-chat-send-sample');
@@ -45,8 +47,14 @@ async function loadDeveloperKeys() {
       const previewChat = document.getElementById('dev-embed-chat-preview-btn');
       const previewVoice = document.getElementById('dev-embed-voice-preview-btn');
 
+      if (embedCallCenterSnippet) {
+        embedCallCenterSnippet.innerText = `<iframe src="${origin}/embed/call-center/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      }
+      if (previewCallCenter) {
+        previewCallCenter.href = `/embed/call-center/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
       if (embedChatSnippet) {
-        embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat/?token=${currentDeveloperKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0;"></iframe>`;
+        embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (embedVoiceSnippet) {
         embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/voice/?token=${currentDeveloperKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);"></iframe>`;
@@ -58,7 +66,7 @@ async function loadDeveloperKeys() {
         curlDial2.innerText = `curl -X POST "${origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
       }
       if (previewChat) {
-        previewChat.href = `/embed/chat/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
       }
       if (previewVoice) {
         previewVoice.href = `/embed/voice/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
