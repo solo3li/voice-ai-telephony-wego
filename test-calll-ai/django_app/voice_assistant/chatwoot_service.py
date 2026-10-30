@@ -276,6 +276,100 @@ EVOLUTION_API_URL = "http://omni_evolution_api:8080"
 EVOLUTION_API_KEY = "evolution_secret_key_123"
 
 
+def _get_account_user_ids(account_id=2):
+    """Fetch all user IDs belonging to a Chatwoot account."""
+    try:
+        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        cur = conn.cursor()
+        cur.execute("SELECT user_id FROM account_users WHERE account_id = %s", (account_id,))
+        rows = cur.fetchall()
+        conn.close()
+        return [r[0] for r in rows]
+    except Exception as e:
+        logger.error(f"[ChatwootChannels] Error fetching account user ids: {e}")
+        return []
+
+
+def _assign_all_agents_to_inbox(inbox_id, account_id=2):
+    """
+    Auto-assign all agents and administrators in the account to the inbox
+    so it becomes visible immediately in Chatwoot UI and ActionCable streams.
+    """
+    user_ids = _get_account_user_ids(account_id)
+    if not user_ids:
+        return False
+
+    import urllib.request
+    # 1. Call Chatwoot API to trigger ActionCable broadcasts
+    try:
+        url = f"http://omni_chatwoot_rails:3000/api/v1/accounts/{account_id}/inbox_members"
+        payload = {"inbox_id": inbox_id, "user_ids": user_ids}
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                "api_access_token": CHATWOOT_API_TOKEN,
+                "X-Forwarded-Proto": "https",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            logger.info(f"[ChatwootChannels] Auto-assigned users {user_ids} to inbox {inbox_id} via API")
+    except Exception as e:
+        logger.warning(f"[ChatwootChannels] Warning auto-assigning inbox_members via API: {e}")
+
+    # 2. Direct DB fallback to guarantee persistence
+    try:
+        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        cur = conn.cursor()
+        for uid in user_ids:
+            cur.execute("""
+                INSERT INTO inbox_members (user_id, inbox_id, created_at, updated_at)
+                VALUES (%s, %s, NOW(), NOW())
+                ON CONFLICT (inbox_id, user_id) DO NOTHING
+            """, (uid, inbox_id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"[ChatwootChannels] Error in DB fallback for inbox_members: {e}")
+
+    return True
+
+
+def _patch_chatwoot_inbox(inbox_id, payload, account_id=2):
+    """
+    Update inbox properties via Chatwoot Rails API so cache is cleared and
+    ActionCable broadcasts update events to all active sessions.
+    """
+    import urllib.request
+    url = f"http://omni_chatwoot_rails:3000/api/v1/accounts/{account_id}/inboxes/{inbox_id}"
+    data_bytes = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(
+        url,
+        data=data_bytes,
+        headers={
+            "api_access_token": CHATWOOT_API_TOKEN,
+            "X-Forwarded-Proto": "https",
+            "Content-Type": "application/json"
+        },
+        method="PATCH"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as err:
+        body = err.read().decode('utf-8', errors='ignore')
+        logger.error(f"[ChatwootAPI] HTTPError patching inbox {inbox_id} ({err.code}): {body}")
+        try:
+            return json.loads(body)
+        except Exception:
+            return {"message": f"Chatwoot Error {err.code}: {body[:200]}"}
+    except Exception as e:
+        logger.error(f"[ChatwootAPI] Error patching inbox {inbox_id}: {e}")
+        return {}
+
+
 def get_all_channels_detailed(account_id=2, assistant_id=1):
     """
     Retrieve all inboxes/channels with their live status, configuration,
@@ -318,14 +412,17 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
         for ibx in inboxes:
             c_type = ibx['channel_type']
             c_id = ibx['channel_id']
+            name = ibx['name'] or ''
+            is_archived = name.startswith("[مؤرشف]") or name.startswith("[Archived]")
             details = {
                 "id": ibx['id'],
-                "name": ibx['name'],
+                "name": name,
                 "channel_type": c_type,
                 "platform": "api",
                 "is_captain_enabled": ibx['is_captain_enabled'],
+                "is_archived": is_archived,
                 "created_at": ibx['created_at'].strftime("%Y-%m-%d %H:%M") if ibx.get('created_at') else "",
-                "status": "connected",
+                "status": "archived" if is_archived else "connected",
                 "identifier": "",
                 "instance_name": None,
                 "extra": {}
@@ -456,22 +553,33 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
             "web_widget": [],
             "email": [],
             "sms": [],
-            "api": []
+            "api": [],
+            "archived": []
         }
 
+        active_channels_list = []
+        archived_channels_list = []
+
         for ch in channels_list:
-            plt = ch.get('platform', 'api')
-            if plt in grouped:
-                grouped[plt].append(ch)
+            if ch.get('is_archived'):
+                grouped['archived'].append(ch)
+                archived_channels_list.append(ch)
             else:
-                grouped['api'].append(ch)
+                active_channels_list.append(ch)
+                plt = ch.get('platform', 'api')
+                if plt in grouped:
+                    grouped[plt].append(ch)
+                else:
+                    grouped['api'].append(ch)
 
         # Primary Evolution status for fallback
         evolution_status = get_evolution_instance_status('whatsapp_main')
 
         return {
             "ok": True,
-            "channels": channels_list,
+            "channels": active_channels_list,
+            "archived_channels": archived_channels_list,
+            "all_channels": channels_list,
             "grouped": grouped,
             "evolution": evolution_status,
             "evolution_instances": list(evolution_instances_map.values())
@@ -512,36 +620,56 @@ def toggle_channel_ai(inbox_id, enable=True, assistant_id=1):
 def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
     """
     Update channel inbox details (name, AI toggle, etc.).
+    Synchronizes with Chatwoot API and Evolution API in real-time.
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
-        cur = conn.cursor()
-
         new_name = data.get('name')
         if new_name:
+            new_name = new_name.strip()
+            # 1. Update via Chatwoot Rails API to invalidate cache and broadcast ActionCable event
+            _patch_chatwoot_inbox(inbox_id, {"name": new_name}, account_id)
+
+            # 2. Update database record
+            conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
                 UPDATE inboxes
                 SET name = %s, updated_at = NOW()
                 WHERE id = %s AND account_id = %s
-            """, (new_name.strip(), inbox_id, account_id))
+            """, (new_name, inbox_id, account_id))
+
+            # 3. If WhatsApp QR (Evolution), update nameInbox in Evolution API
+            cur.execute("SELECT channel_id, channel_type FROM inboxes WHERE id = %s", (inbox_id,))
+            ibx = cur.fetchone()
+            if ibx and ibx['channel_type'] == 'Channel::Api':
+                cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (ibx['channel_id'],))
+                ch_api = cur.fetchone()
+                if ch_api and ch_api.get('webhook_url') and '/chatwoot/webhook/' in ch_api['webhook_url']:
+                    inst_name = ch_api['webhook_url'].split('/chatwoot/webhook/')[-1].strip('/')
+                    try:
+                        import urllib.request
+                        set_cw_url = f"{EVOLUTION_API_URL}/chatwoot/set/{inst_name}"
+                        set_payload = json.dumps({
+                            "enabled": True,
+                            "nameInbox": new_name
+                        }).encode('utf-8')
+                        req = urllib.request.Request(
+                            set_cw_url,
+                            data=set_payload,
+                            headers={"apikey": EVOLUTION_API_KEY, "Content-Type": "application/json"}
+                        )
+                        urllib.request.urlopen(req, timeout=4)
+                    except Exception as e:
+                        logger.warning(f"[EvolutionAPI] Warning updating name on {inst_name}: {e}")
+
+            conn.commit()
+            conn.close()
 
         if 'enable_ai' in data:
             enable = bool(data.get('enable_ai'))
-            if enable:
-                cur.execute("""
-                    INSERT INTO captain_inboxes (captain_assistant_id, inbox_id, created_at, updated_at)
-                    VALUES (%s, %s, NOW(), NOW())
-                    ON CONFLICT (captain_assistant_id, inbox_id) DO NOTHING
-                """, (assistant_id, inbox_id))
-            else:
-                cur.execute("""
-                    DELETE FROM captain_inboxes
-                    WHERE captain_assistant_id = %s AND inbox_id = %s
-                """, (assistant_id, inbox_id))
+            toggle_channel_ai(inbox_id, enable=enable, assistant_id=assistant_id)
 
-        conn.commit()
-        conn.close()
-        return True, "تم تحديث بيانات القناة بنجاح"
+        return True, "تم تحديث بيانات القناة بنجاح ومزامنتها مع شات وت"
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error updating inbox {inbox_id}: {e}", exc_info=True)
         return False, f"فشل تحديث القناة: {str(e)}"
@@ -549,57 +677,70 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
 
 def delete_channel_inbox(inbox_id, account_id=2):
     """
-    Delete an inbox from Chatwoot and its underlying Evolution instance if applicable.
+    Archive channel inbox for read-only reference ("2+ للقراءة فقط"):
+    - Disconnect Evolution API WhatsApp instance if applicable so phone session terminates.
+    - Remove from Captain AI auto-response so bot never replies.
+    - Prefix inbox name with [مؤرشف] in Chatwoot API & DB so agents see it as archived.
+    - Set allow_messages_after_resolved = false.
+    - Keep all previous conversations, messages, and contact links intact for read-only viewing in Chatwoot.
     """
     import urllib.request
     try:
-        # Check if this inbox has an Evolution WhatsApp instance
-        instance_to_delete = None
         conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT channel_id, channel_type FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+        cur.execute("SELECT channel_id, channel_type, name FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
         ibx = cur.fetchone()
-        if ibx and ibx['channel_type'] == 'Channel::Api':
-            cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (ibx['channel_id'],))
+        if not ibx:
+            conn.close()
+            return False, "القناة غير موجودة"
+
+        current_name = ibx['name']
+        channel_id = ibx['channel_id']
+        channel_type = ibx['channel_type']
+
+        # 1. Disconnect Evolution WhatsApp instance if applicable
+        if channel_type == 'Channel::Api':
+            cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (channel_id,))
             ch_api = cur.fetchone()
             if ch_api and ch_api.get('webhook_url') and '/chatwoot/webhook/' in ch_api['webhook_url']:
-                instance_to_delete = ch_api['webhook_url'].split('/chatwoot/webhook/')[-1].strip('/')
+                inst_name = ch_api['webhook_url'].split('/chatwoot/webhook/')[-1].strip('/')
+                try:
+                    # Logout and delete instance in Evolution API to release WhatsApp connection
+                    del_url = f"{EVOLUTION_API_URL}/instance/delete/{inst_name}"
+                    req = urllib.request.Request(del_url, headers={"apikey": EVOLUTION_API_KEY}, method="DELETE")
+                    urllib.request.urlopen(req, timeout=5)
+                    logger.info(f"[EvolutionAPI] Deleted instance {inst_name} on channel archive")
+                except Exception as ev_err:
+                    logger.warning(f"[EvolutionAPI] Warning deleting instance {inst_name}: {ev_err}")
 
-        # Clean up captain_inboxes
+        # 2. Remove from Captain AI auto-response
         cur.execute("DELETE FROM captain_inboxes WHERE inbox_id = %s", (inbox_id,))
-        cur.execute("DELETE FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+
+        # 3. Archive name: prefix with [مؤرشف]
+        archived_name = current_name
+        if not archived_name.startswith("[مؤرشف]"):
+            archived_name = f"[مؤرشف] {current_name}"
+
+        # 4. Sync with Chatwoot API so UI reflects archived state immediately
+        _patch_chatwoot_inbox(inbox_id, {
+            "name": archived_name,
+            "allow_messages_after_resolved": False
+        }, account_id)
+
+        # 5. Update DB record to archived name
+        cur.execute("""
+            UPDATE inboxes 
+            SET name = %s, updated_at = NOW() 
+            WHERE id = %s AND account_id = %s
+        """, (archived_name, inbox_id, account_id))
+
         conn.commit()
         conn.close()
 
-        # Delete Evolution API instance if applicable
-        if instance_to_delete:
-            try:
-                del_url = f"{EVOLUTION_API_URL}/instance/delete/{instance_to_delete}"
-                req = urllib.request.Request(del_url, headers={"apikey": EVOLUTION_API_KEY}, method="DELETE")
-                urllib.request.urlopen(req, timeout=5)
-                logger.info(f"[EvolutionAPI] Deleted instance {instance_to_delete}")
-            except Exception as ev_err:
-                logger.warning(f"[EvolutionAPI] Warning deleting instance {instance_to_delete}: {ev_err}")
-
-        # Also try via Chatwoot API for complete internal cache cleanup
-        try:
-            url = f"{CHATWOOT_INTERNAL_API}/inboxes/{inbox_id}"
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "api_access_token": CHATWOOT_API_TOKEN,
-                    "X-Forwarded-Proto": "https"
-                },
-                method="DELETE"
-            )
-            urllib.request.urlopen(req, timeout=4)
-        except Exception:
-            pass
-
-        return True, "تم حذف القناة نهائياً بنجاح"
+        return True, "تم أرشفة القناة وقطع اتصالها بنجاح مع الاحتفاظ بكافة المحادثات للقراءة فقط في شات وت"
     except Exception as e:
-        logger.error(f"[ChatwootChannels] Error deleting inbox {inbox_id}: {e}", exc_info=True)
-        return False, f"فشل حذف القناة: {str(e)}"
+        logger.error(f"[ChatwootChannels] Error archiving inbox {inbox_id}: {e}", exc_info=True)
+        return False, f"فشل أرشفة القناة: {str(e)}"
 
 
 def get_evolution_instance_status(instance_name='whatsapp_main'):
@@ -916,6 +1057,10 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
         else:
             return False, f"نوع القناة غير مدعوم: {channel_type}"
 
+        # Auto-assign all agents & administrators in this account so the inbox appears immediately in Chatwoot UI
+        if inbox_id:
+            _assign_all_agents_to_inbox(inbox_id, account_id=account_id)
+
         # If enable_ai is checked, auto-link to Captain AI
         if inbox_id and enable_ai:
             toggle_channel_ai(inbox_id, enable=True, assistant_id=assistant_id)
@@ -932,7 +1077,7 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
 
 def _post_chatwoot_inbox(payload, account_id=2):
     import urllib.request
-    url = f"{CHATWOOT_INTERNAL_API}/inboxes"
+    url = f"http://omni_chatwoot_rails:3000/api/v1/accounts/{account_id}/inboxes"
     data_bytes = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(
         url,
