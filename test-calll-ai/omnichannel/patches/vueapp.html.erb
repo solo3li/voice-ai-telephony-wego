@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      <%= @global_config['INSTALLATION_NAME'] %>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0"/>
+    <% unless ChatwootApp.chatwoot_cloud? %>
+      <meta name="robots" content="noindex">
+    <% end %>
+    <% if @global_config['DISPLAY_MANIFEST'] %>
+      <meta name="msapplication-TileColor" content="#2781F6">
+      <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+      <meta name="theme-color" content="#2781F6">
+      <meta name="description" content="<%= @global_config['INSTALLATION_NAME'] %> is a customer support solution that helps companies engage customers over Messenger, Twitter, Telegram, WeChat, Whatsapp. Simply connect your channels and converse with your customers from a single place. Easily add new agents to your system and have them own and resolve conversations with customers. <%= @global_config['INSTALLATION_NAME'] %> also gives you real-time reports to measure your team's performance, canned responses to easily respond to frequently asked questions and private notes for agents to collaborate among themselves.">
+      <% if ENV['IOS_APP_IDENTIFIER'].present? %>
+        <meta name="apple-itunes-app" content='app-id=<%= ENV['IOS_APP_IDENTIFIER'] %>'>
+      <% end %>
+      <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+      <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+      <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+      <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+      <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+      <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+      <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+      <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+      <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+      <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+      <link class="favicon" rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+      <link class="favicon" rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+      <link class="favicon" rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+      <link rel="manifest" href="/manifest.json">
+    <% end %>
+    <link rel="icon" type="image/png" sizes="512x512" href="<%= @global_config['LOGO_THUMBNAIL'] %>">
+    <%= csrf_meta_tags %>
+    <script>
+      window.chatwootConfig = {
+        hostURL: '<%= ENV.fetch('FRONTEND_URL', '') %>',
+        helpCenterURL: '<%= ENV.fetch('HELPCENTER_URL', '') %>',
+        fbAppId: '<%= @global_config['FB_APP_ID'] %>',
+        instagramAppId: '<%= @global_config['INSTAGRAM_APP_ID'] %>',
+        tiktokAppId: '<%= @global_config['TIKTOK_APP_ID'] %>',
+        googleOAuthClientId: '<%= ENV.fetch('GOOGLE_OAUTH_CLIENT_ID', nil) %>',
+        googleOAuthCallbackUrl: '<%= ENV.fetch('GOOGLE_OAUTH_CALLBACK_URL', nil) %>',
+        allowedLoginMethods: <%= @global_config['ALLOWED_LOGIN_METHODS'].to_json.html_safe %>,
+        fbApiVersion: '<%= @global_config['FACEBOOK_API_VERSION'] %>',
+        whatsappAppId: '<%= @global_config['WHATSAPP_APP_ID'] %>',
+        whatsappConfigurationId: '<%= @global_config['WHATSAPP_CONFIGURATION_ID'] %>',
+        whatsappApiVersion: '<%= @global_config['WHATSAPP_API_VERSION'] %>',
+        signupEnabled: '<%= @global_config['ENABLE_ACCOUNT_SIGNUP'] %>',
+        isEnterprise: '<%= @global_config['IS_ENTERPRISE'] %>',
+        isMfaEnabled: '<%= Chatwoot.mfa_enabled? %>',
+        <% if @global_config['IS_ENTERPRISE'] %>
+        enterprisePlanName: '<%= @global_config['INSTALLATION_PRICING_PLAN'] %>',
+        <% end %>
+        <% if @global_config['VAPID_PUBLIC_KEY'] %>
+        vapidPublicKey: new Uint8Array(<%= Base64.urlsafe_decode64(@global_config['VAPID_PUBLIC_KEY']).bytes %>),
+        <% end %>
+        enabledLanguages: <%= available_locales_with_name.to_json.html_safe %>,
+        helpUrls: <%= feature_help_urls.to_json.html_safe %>,
+        inboxEventsEnabled: '<%= ENV['ENABLE_INBOX_EVENTS'].present? %>',
+        searchTimeRangeLimitDays: <%= Limits.search_time_range_limit_days %>,
+        autoResolveMinMinutes: <%= Limits.auto_resolve_min_minutes %>,
+        selectedLocale: '<%= I18n.locale %>'
+      }
+      window.globalConfig = <%= raw @global_config.to_json %>
+      window.browserConfig = {
+        browser_name: '<%= browser.name %>',
+      }
+      window.errorLoggingConfig = '<%= ENV.fetch('SENTRY_FRONTEND_DSN', '') || ENV.fetch('SENTRY_DSN', '') %>'
+    </script>
+    <% if @global_config['CLOUD_ANALYTICS_TOKEN'].present? %>
+    <script>
+      window.analyticsConfig = {
+        token: '<%= @global_config['CLOUD_ANALYTICS_TOKEN'] %>',
+      }
+    </script>
+    <% end %>
+
+    <!-- SSO Silent Login Mask & Theme Synchronization Patch -->
+    <style id="sso-silent-style">
+      html.sso-in-progress body {
+        overflow: hidden !important;
+      }
+      html.sso-in-progress #app {
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      #sso-silent-curtain {
+        position: fixed;
+        inset: 0;
+        background: #ffffff;
+        z-index: 2147483647;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", sans-serif;
+      }
+      .sso-silent-spinner {
+        width: 38px;
+        height: 38px;
+        border: 3px solid rgba(31, 147, 255, 0.15);
+        border-top-color: #1f93ff;
+        border-radius: 50%;
+        animation: sso-spin 0.75s linear infinite;
+      }
+      .sso-silent-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        letter-spacing: -0.01em;
+      }
+      @keyframes sso-spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    <script>
+      (function() {
+        var isSSO = window.location.search.indexOf('sso_auth_token') !== -1;
+        if (isSSO) {
+          document.documentElement.classList.add('sso-in-progress');
+          function injectCurtain() {
+            if (!document.getElementById('sso-silent-curtain')) {
+              var curtain = document.createElement('div');
+              curtain.id = 'sso-silent-curtain';
+              curtain.innerHTML = '<div class="sso-silent-spinner"></div><div class="sso-silent-text">جاري تحميل منصة المحادثات مع تسجيل الدخول...</div>';
+              if (document.body) {
+                document.body.prepend(curtain);
+              }
+            }
+          }
+          if (document.body) {
+            injectCurtain();
+          } else {
+            document.addEventListener('DOMContentLoaded', injectCurtain);
+          }
+        }
+
+        // Notify parent when dashboard is ready
+        function notifyParentReady() {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'chatwoot:ready', url: window.location.href }, '*');
+          }
+        }
+
+        if (window.location.pathname.indexOf('/app/accounts') !== -1) {
+          notifyParentReady();
+          document.addEventListener('DOMContentLoaded', notifyParentReady);
+          window.addEventListener('load', notifyParentReady);
+          var readyPollCount = 0;
+          var readyInterval = setInterval(function() {
+            readyPollCount++;
+            notifyParentReady();
+            if (readyPollCount >= 10) clearInterval(readyInterval);
+          }, 300);
+        }
+
+        // Theme synchronization: enforce light theme to match host portal
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var explicitTheme = params.get('theme') || params.get('color_scheme');
+          if (explicitTheme === 'dark') {
+            window.localStorage.setItem('color_scheme', 'dark');
+            document.documentElement.classList.add('dark');
+          } else {
+            window.localStorage.setItem('color_scheme', 'light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.setProperty('color-scheme', 'light');
+          }
+        } catch(e) {}
+
+        var origMatchMedia = window.matchMedia;
+        window.matchMedia = function(query) {
+          if (query === '(prefers-color-scheme: dark)') {
+            var isDark = false;
+            try {
+              isDark = window.localStorage.getItem('color_scheme') === 'dark';
+            } catch(e) {}
+            return {
+              matches: isDark,
+              media: query,
+              onchange: null,
+              addListener: function(fn) { this.addEventListener('change', fn); },
+              removeListener: function(fn) { this.removeEventListener('change', fn); },
+              addEventListener: function(type, fn) {
+                window.addEventListener('chatwoot:themechange', function(e) {
+                  if (type === 'change') fn({ matches: e.detail === 'dark', media: query });
+                });
+              },
+              removeEventListener: function() {},
+              dispatchEvent: function() { return false; }
+            };
+          }
+          return origMatchMedia ? origMatchMedia.apply(window, arguments) : { matches: false, media: query };
+        };
+
+        function ensureLightTheme() {
+          try {
+            if (window.localStorage.getItem('color_scheme') !== 'dark') {
+              if (document.documentElement && document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.setProperty('color-scheme', 'light');
+              }
+              if (document.body && document.body.classList.contains('dark')) {
+                document.body.classList.remove('dark');
+                document.documentElement.style.setProperty('color-scheme', 'light');
+              }
+            }
+          } catch(e) {}
+        }
+
+        ensureLightTheme();
+        document.addEventListener('DOMContentLoaded', ensureLightTheme);
+        window.addEventListener('load', ensureLightTheme);
+
+        if (window.MutationObserver && document.documentElement) {
+          var observer = new MutationObserver(function() {
+            ensureLightTheme();
+          });
+          observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+          document.addEventListener('DOMContentLoaded', function() {
+            if (document.body) {
+              observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+            }
+          });
+        }
+
+        window.addEventListener('message', function(event) {
+          if (event.data && (event.data.type === 'set_theme' || event.data.type === 'change_theme')) {
+            var newTheme = event.data.theme === 'dark' ? 'dark' : 'light';
+            try {
+              window.localStorage.setItem('color_scheme', newTheme);
+            } catch(e) {}
+            if (newTheme === 'dark') {
+              document.documentElement.classList.add('dark');
+              if (document.body) document.body.classList.add('dark');
+              document.documentElement.style.setProperty('color-scheme', 'dark');
+            } else {
+              ensureLightTheme();
+            }
+            window.dispatchEvent(new CustomEvent('chatwoot:themechange', { detail: newTheme }));
+          }
+        });
+      })();
+    </script>
+    <style id="clean-sidebar-strict-ui">
+      /* 1. Hide Changelog and What's New cards/buttons */
+      [class*="Changelog"], [class*="changelog"], .SidebarChangelogCard, .SidebarChangelogButton {
+        display: none !important;
+      }
+
+      /* 2. Defensive CSS: hide any remaining links or items to removed sections */
+      a[href*="/settings"], a[href*="/contacts"], a[href*="/companies"], 
+      a[href*="/reports"], a[href*="/campaigns"], a[href*="/portals"], 
+      a[href*="/captain"], a[href*="/calls"], a[href*="/super_admin"] {
+        display: none !important;
+      }
+
+      /* 3. Keep layout clean and focused on Conversations and Inbox */
+      aside nav {
+        padding-bottom: 0.5rem !important;
+      }
+    </style>
+    <script id="route-guard-strict-ui">
+      (function() {
+        function enforceAllowedRoutes() {
+          var p = window.location.pathname;
+          var blocked = ['/settings', '/contacts', '/companies', '/reports', '/campaigns', '/portals', '/captain', '/calls'];
+          for (var i = 0; i < blocked.length; i++) {
+            if (p.indexOf(blocked[i]) !== -1) {
+              var accountMatch = p.match(/\/app\/accounts\/(\d+)/);
+              var accId = accountMatch ? accountMatch[1] : '2';
+              window.location.replace('/app/accounts/' + accId + '/dashboard');
+              return;
+            }
+          }
+        }
+        enforceAllowedRoutes();
+        window.addEventListener('popstate', enforceAllowedRoutes);
+      })();
+    </script>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag @application_pack %>
+  </head>
+  <body class="text-slate-600">
+    <div id="app"></div>
+    <noscript id="noscript">This app works best with JavaScript enabled.</noscript>
+    <%= yield %>
+    <% if @dashboard_scripts.present? %>
+      <%= @dashboard_scripts.html_safe %>
+    <% end %>
+  </body>
+</html>

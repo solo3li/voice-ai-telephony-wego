@@ -1,0 +1,143 @@
+name: omnichannel-stack
+
+version: '3.8'
+
+networks:
+  omnichannel_net:
+    driver: bridge
+
+volumes:
+  omni_postgres_data:
+  omni_redis_data:
+  omni_chatwoot_storage:
+  omni_evolution_instances:
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: omni_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatwoot_production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ChatwootDbPassword2026
+    volumes:
+      - omni_postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    networks:
+      - omnichannel_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: omni_redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "ChatwootRedisPassword2026"]
+    volumes:
+      - omni_redis_data:/data
+    networks:
+      - omnichannel_net
+
+  chatwoot_rails:
+    image: chatwoot/chatwoot:latest
+    container_name: omni_chatwoot_rails
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "3005:3000"
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - CAPTAIN_OPEN_AI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CAPTAIN_OPEN_AI_MODEL=gpt-4o-mini
+    volumes:
+      - omni_chatwoot_storage:/app/storage
+      - ./patches/limits_patch.rb:/app/config/initializers/limits_patch.rb:ro
+      - ./patches/dashboard-BqW1bkNo.js:/app/public/vite/assets/dashboard-BqW1bkNo.js:ro
+      - ./patches/useKeyboardNavigableList-Dr2LyJfM.js:/app/public/vite/assets/useKeyboardNavigableList-Dr2LyJfM.js:ro
+      - ./patches/vueapp.html.erb:/app/app/views/layouts/vueapp.html.erb:ro
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+    networks:
+      - omnichannel_net
+
+  chatwoot_sidekiq:
+    image: chatwoot/chatwoot:latest
+    container_name: omni_chatwoot_sidekiq
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - CAPTAIN_OPEN_AI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CAPTAIN_OPEN_AI_MODEL=gpt-4o-mini
+    volumes:
+      - omni_chatwoot_storage:/app/storage
+      - ./patches/limits_patch.rb:/app/config/initializers/limits_patch.rb:ro
+      - ./patches/dashboard-BqW1bkNo.js:/app/public/vite/assets/dashboard-BqW1bkNo.js:ro
+      - ./patches/useKeyboardNavigableList-Dr2LyJfM.js:/app/public/vite/assets/useKeyboardNavigableList-Dr2LyJfM.js:ro
+      - ./patches/vueapp.html.erb:/app/app/views/layouts/vueapp.html.erb:ro
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+    networks:
+      - omnichannel_net
+
+  evolution_api:
+    image: evoapicloud/evolution-api:v2.1.2
+    container_name: omni_evolution_api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8085:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SERVER_URL=https://evolution.169.58.32.179.nip.io
+      - AUTHENTICATION_API_KEY=evolution_secret_key_123
+      - CONFIG_SESSION_PHONE_CLIENT=Ubuntu
+      - CONFIG_SESSION_PHONE_NAME=Chrome
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1043857760
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://postgres:ChatwootDbPassword2026@postgres:5432/evolution_db
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://:ChatwootRedisPassword2026@redis:6379/1
+      - CHATWOOT_ENABLED=true
+      - CHATWOOT_MESSAGE_READ=true
+      - CHATWOOT_MESSAGE_DELETE=true
+      - CHATWOOT_IMPORT_DATABASE_CONNECTION_URI=postgresql://postgres:ChatwootDbPassword2026@postgres:5432/chatwoot_production
+      - CHATWOOT_IMPORT_PLACEHOLDER_MEDIA_MESSAGE=true
+    volumes:
+      - omni_evolution_instances:/evolution/instances
+    networks:
+      - omnichannel_net
+
+  mcp_bridge:
+    build:
+      context: ./mcp-bridge
+    container_name: omni_mcp_bridge
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - MCP_SERVER_URL=https://uggu.space/sse?access_key=ak_live_DXm-0yhymjVa8OU5lUWNkxmoxpxUEI2BR3aGj1iuR8k
+      - MCP_AUTH_TOKEN=ak_live_DXm-0yhymjVa8OU5lUWNkxmoxpxUEI2BR3aGj1iuR8k
+      - PORT=8086
+      - CHATWOOT_BASE_URL=http://chatwoot_rails:3000
+      - CHATWOOT_API_TOKEN=jXAkbazr7faTZWeoNbVf8Lt2
+      - PUBLIC_BRIDGE_URL=https://mcp.169.58.32.179.nip.io
+    volumes:
+      - ./mcp-bridge/data:/app/data
+      - ./mcp-bridge/templates:/app/templates:ro
+      - ./mcp-bridge/main.py:/app/main.py:ro
+    networks:
+      - omnichannel_net

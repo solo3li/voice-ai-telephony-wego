@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بوابة FastMCP المركزية | Universal MCP Gateway</title>
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .clean-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    }
+    .clean-card:hover {
+      border-color: #cbd5e1;
+    }
+    .clean-modal {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased bg-slate-50 selection:bg-slate-900 selection:text-white">
+
+  <!-- Minimalist Navbar -->
+  <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
+          <i data-lucide="cpu" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold text-slate-900 tracking-tight leading-none">بوابة FastMCP المركزية</h1>
+          <p class="text-[10px] text-slate-500 mt-0.5 font-mono">Universal Multi-Tenant Gateway</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          الخدمة نشطة
+        </div>
+        <button onclick="openAddModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition active:scale-95 shadow-xs">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          إضافة منشأة
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Container -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- KPI Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div class="clean-card rounded-xl p-4 transition">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-medium">المنشآت المسجلة</span>
+          <i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <p id="stat-tenants" class="text-2xl font-bold text-slate-900 mt-2 font-mono">--</p>
+        <span class="text-[11px] text-slate-400">نشطة ومتصلة</span>
+      </div>
+
+      <div class="clean-card rounded-xl p-4 transition">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-medium">دوال FastMCP</span>
+          <i data-lucide="wrench" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <p id="stat-tools" class="text-2xl font-bold text-slate-900 mt-2 font-mono">--</p>
+        <span class="text-[11px] text-slate-400">مكتشفة ومتاحة</span>
+      </div>
+
+      <div class="clean-card rounded-xl p-4 transition">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-medium">ربط شات ووت</span>
+          <i data-lucide="message-square" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-emerald-600 mt-2 flex items-center gap-1.5">
+          <span class="text-base font-semibold">متصل</span>
+          <i data-lucide="check" class="w-4 h-4"></i>
+        </div>
+        <span class="text-[11px] text-slate-400">Captain AI مفعّل</span>
+      </div>
+
+      <div class="clean-card rounded-xl p-4 transition">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-medium">محرك المكالمات</span>
+          <i data-lucide="phone-call" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-slate-900 mt-2 flex items-center gap-1.5">
+          <span class="text-base font-semibold">جاهز</span>
+          <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <span class="text-[11px] text-slate-400">LiveKit / SIP Voice</span>
+      </div>
+    </div>
+
+    <!-- Tenants Section Header -->
+    <div class="flex items-center justify-between pt-2 pb-1 border-b border-slate-200">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+          <span>المنشآت وخوادم الأدوات</span>
+        </h2>
+        <p class="text-[11px] text-slate-500">إدارة ومزامنة أدوات FastMCP لكل منشأة بشكل مستقل</p>
+      </div>
+      <button onclick="refreshData()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition shadow-2xs">
+        <i data-lucide="refresh-cw" class="w-3 h-3 text-slate-500" id="refresh-icon"></i>
+        تحديث
+      </button>
+    </div>
+
+    <!-- Tenants Grid -->
+    <div id="tenants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="col-span-full py-12 text-center text-slate-400 clean-card rounded-xl">
+        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-slate-500"></i>
+        <p class="text-xs font-medium">جاري تحميل المنشآت...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add/Edit Tenant Modal -->
+  <div id="modal-tenant" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="clean-modal rounded-2xl w-full max-w-md p-5 space-y-4 relative animate-in fade-in duration-150">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+            <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+          </div>
+          <h3 id="modal-title" class="text-sm font-bold text-slate-900">إضافة منشأة جديدة</h3>
+        </div>
+        <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="tenant-form" onsubmit="handleSaveTenant(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">معرف المنشأة (Tenant ID) *</label>
+          <input type="text" id="form-tenant-id" required placeholder="مثال: clinic_101 أو 2" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-900 font-mono">
+          <p class="text-[10px] text-slate-400 mt-1">يُستخدم لربط المكالمات والشات بالمنشأة</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المنشأة *</label>
+          <input type="text" id="form-name" required placeholder="مثال: مطاعم كُورا" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-900">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">رابط سيرفر FastMCP (SSE Endpoint) *</label>
+          <input type="url" id="form-mcp-url" required placeholder="https://example.com/sse" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-900 font-mono" dir="ltr">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">مفتاح الوصول (Bearer Token اختياري)</label>
+          <input type="text" id="form-token" placeholder="ak_live_..." class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-900 font-mono" dir="ltr">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-0.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">رقم حساب شات ووت</label>
+            <input type="number" id="form-chatwoot-acc" value="2" class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-xs font-mono text-center focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">معرف المساعد الذكي</label>
+            <input type="number" id="form-chatwoot-asst" value="1" class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-xs font-mono text-center focus:outline-none focus:border-slate-900">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeAddModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 text-xs font-medium transition">إلغاء</button>
+          <button type="submit" id="btn-save-tenant" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition active:scale-95 shadow-xs">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            حفظ وتفعيل
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tools Viewer Modal -->
+  <div id="modal-tools" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="clean-modal rounded-2xl w-full max-w-2xl max-h-[85vh] p-5 space-y-4 flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="tools-modal-title" class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="wrench" class="w-4 h-4 text-slate-600"></i>
+            <span>الأدوات المكتشفة</span>
+          </h3>
+          <p id="tools-modal-sub" class="text-[11px] text-slate-500 mt-0.5"></p>
+        </div>
+        <button onclick="closeToolsModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="tools-modal-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
+        <!-- Tools will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Embed Code Modal -->
+  <div id="modal-embed" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="clean-modal rounded-2xl w-full max-w-xl p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+            <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">كود التضمين للشركاء (Embed Code)</h3>
+            <p class="text-[11px] text-slate-500">انسخ الكود وضعه في لوحة تحكم موقع الشريك</p>
+          </div>
+        </div>
+        <button onclick="closeEmbedModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+              <span>تضمين الشات داخل إطار (iFrame Inbox)</span>
+            </label>
+            <button onclick="copySnippet('embed-iframe-code')" class="text-[11px] text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              نسخ الكود
+            </button>
+          </div>
+          <pre id="embed-iframe-code" class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 overflow-x-auto whitespace-pre-wrap select-all" dir="ltr">&lt;iframe src="https://chatwoot.169.58.32.179.nip.io/app/accounts/2/conversations" width="100%" height="800px" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+              <span>سكربت ودجت المحادثة الحية (Live Widget)</span>
+            </label>
+            <button onclick="copySnippet('embed-widget-code')" class="text-[11px] text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              نسخ الكود
+            </button>
+          </div>
+          <pre id="embed-widget-code" class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 overflow-x-auto whitespace-pre-wrap select-all" dir="ltr">&lt;script&gt;
+  window.chatwootSettings = {"position":"right","type":"standard","launcherTitle":"تواصل معنا"};
+  (function(d,t) {
+    var BASE_URL="https://chatwoot.169.58.32.179.nip.io";
+    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=BASE_URL+"/packs/js/sdk.js";
+    g.defer = true;
+    s.parentNode.insertBefore(g,s);
+  })(document,"script");
+&lt;/script&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 left-5 z-50 px-3.5 py-2.5 rounded-xl bg-slate-900 text-white text-xs shadow-lg flex items-center gap-2.5 hidden transition-all duration-200">
+    <div id="toast-icon"></div>
+    <span id="toast-msg" class="font-medium"></span>
+  </div>
+
+  <script>
+    let tenants = [];
+
+    async function refreshData() {
+      const icon = document.getElementById('refresh-icon');
+      if (icon) icon.classList.add('animate-spin');
+      try {
+        const res = await fetch('/tenants');
+        tenants = await res.json();
+        renderTenants();
+        updateStats();
+      } catch (err) {
+        showToast('تعذر جلب البيانات', 'error');
+      } finally {
+        if (icon) icon.classList.remove('animate-spin');
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('stat-tenants').innerText = tenants.length;
+      fetch('/').then(r => r.json()).then(data => {
+        let total = 0;
+        if (data.tenants) {
+          data.tenants.forEach(t => total += (t.tools_count || 0));
+        }
+        document.getElementById('stat-tools').innerText = total;
+      }).catch(() => {});
+    }
+
+    function renderTenants() {
+      const grid = document.getElementById('tenants-grid');
+      if (!tenants || tenants.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 clean-card rounded-xl">
+            <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+            <p class="text-sm font-semibold text-slate-700">لا توجد منشآت مسجلة حالياً</p>
+            <p class="text-xs text-slate-400 mt-0.5">اضغط على "إضافة منشأة" لتسجيل أول عميل وسيرفر MCP</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      grid.innerHTML = tenants.map(t => `
+        <div class="clean-card rounded-xl p-4 flex flex-col justify-between transition group">
+          <div class="space-y-3">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm">
+                  ${t.name ? t.name.charAt(0) : 'T'}
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm leading-tight">${t.name}</h3>
+                  <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-mono mt-0.5">معرف: ${t.tenant_id}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition">
+                <button onclick="handleDeleteTenant('${t.tenant_id}')" title="حذف" class="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 truncate bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100" dir="ltr">
+              <i data-lucide="link" class="w-3 h-3 text-slate-400 flex-shrink-0"></i>
+              <span class="truncate">${t.mcp_url}</span>
+            </div>
+          </div>
+
+          <div class="pt-3.5 mt-3.5 border-t border-slate-100 flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <button onclick="viewTools('${t.tenant_id}', '${t.name}')" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition">
+                <i data-lucide="wrench" class="w-3.5 h-3.5 text-slate-500"></i>
+                الأدوات
+              </button>
+              <button onclick="openEmbedModal('${t.tenant_id}')" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs transition" title="كود التضمين">
+                <i data-lucide="code-2" class="w-3.5 h-3.5 text-slate-500"></i>
+              </button>
+            </div>
+
+            <button onclick="syncToChatwoot('${t.tenant_id}', this)" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition active:scale-95 shadow-2xs">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i>
+              مزامنة فورية مع شات ووت
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    async function syncToChatwoot(tenantId, btn) {
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> جاري المزامنة...`;
+      btn.disabled = true;
+      lucide.createIcons();
+      try {
+        const res = await fetch(`/tenants/${tenantId}/sync-chatwoot`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`تمت مزامنة ${data.tools_count} أداة مع شات ووت بنجاح!`, 'success');
+        } else {
+          showToast(data.detail || 'فشلت المزامنة', 'error');
+        }
+      } catch (err) {
+        showToast('خطأ في الاتصال بالخادم', 'error');
+      } finally {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    async function viewTools(tenantId, tenantName) {
+      document.getElementById('tools-modal-title').innerHTML = `
+        <i data-lucide="wrench" class="w-4 h-4 text-slate-600"></i>
+        <span>أدوات: ${tenantName}</span>
+      `;
+      document.getElementById('tools-modal-sub').innerText = `جاري استكشاف دوال MCP الحية...`;
+      const list = document.getElementById('tools-modal-list');
+      list.innerHTML = `<div class="py-8 text-center text-slate-400"><i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-slate-500"></i> جاري استدعاء الأدوات...</div>`;
+      document.getElementById('modal-tools').classList.remove('hidden');
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`/tenants/${tenantId}/tools`);
+        const data = await res.json();
+        document.getElementById('tools-modal-sub').innerText = `${data.count} أداة مكتشفة من سيرفر الـ MCP`;
+
+        if (!data.tools || data.tools.length === 0) {
+          list.innerHTML = `<p class="py-8 text-center text-slate-400 text-xs">لم يتم العثور على دوال مسجلة في هذا السيرفر.</p>`;
+          return;
+        }
+
+        list.innerHTML = data.tools.map(tool => {
+          const props = tool.input_schema?.properties ? Object.keys(tool.input_schema.properties) : [];
+          return `
+            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/90 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-xs font-bold text-slate-900" dir="ltr">${tool.name}</span>
+                <span class="px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-700 text-[10px] font-mono font-medium">${props.length} معاملات</span>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">${tool.description || 'لا يوجد وصف متاح'}</p>
+              ${props.length > 0 ? `
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  ${props.map(p => `<span class="px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200 font-mono text-[10px]" dir="ltr">${p}</span>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = `<p class="py-8 text-center text-red-600 text-xs">تعذر استدعاء الأدوات من سيرفر الـ MCP.</p>`;
+      } finally {
+        lucide.createIcons();
+      }
+    }
+
+    function openAddModal() {
+      document.getElementById('tenant-form').reset();
+      document.getElementById('modal-tenant').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAddModal() {
+      document.getElementById('modal-tenant').classList.add('hidden');
+    }
+
+    function closeToolsModal() {
+      document.getElementById('modal-tools').classList.add('hidden');
+    }
+
+    function openEmbedModal(tenantId) {
+      document.getElementById('modal-embed').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeEmbedModal() {
+      document.getElementById('modal-embed').classList.add('hidden');
+    }
+
+    async function handleSaveTenant(e) {
+      e.preventDefault();
+      const payload = {
+        tenant_id: document.getElementById('form-tenant-id').value.trim(),
+        name: document.getElementById('form-name').value.trim(),
+        mcp_url: document.getElementById('form-mcp-url').value.trim(),
+        access_token: document.getElementById('form-token').value.trim() || null,
+        chatwoot_account_id: parseInt(document.getElementById('form-chatwoot-acc').value) || 2,
+        chatwoot_assistant_id: parseInt(document.getElementById('form-chatwoot-asst').value) || 1
+      };
+
+      try {
+        const res = await fetch('/tenants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`تم حفظ المنشأة '${payload.name}' بنجاح!`, 'success');
+          closeAddModal();
+          refreshData();
+        } else {
+          showToast(data.detail || 'حدث خطأ أثناء الحفظ', 'error');
+        }
+      } catch (err) {
+        showToast('خطأ في الاتصال بالخادم', 'error');
+      }
+    }
+
+    async function handleDeleteTenant(tenantId) {
+      if (!confirm(`هل أنت متأكد من حذف المنشأة '${tenantId}'؟`)) return;
+      try {
+        const res = await fetch(`/tenants/${tenantId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('تم الحذف بنجاح', 'success');
+          refreshData();
+        }
+      } catch (e) {
+        showToast('خطأ أثناء الحذف', 'error');
+      }
+    }
+
+    function copySnippet(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('تم نسخ الكود بنجاح إلى الحافظة!', 'success');
+      });
+    }
+
+    function showToast(msg, type = 'info') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      const text = document.getElementById('toast-msg');
+      text.innerText = msg;
+      if (type === 'success') {
+        icon.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>`;
+      } else if (type === 'error') {
+        icon.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i>`;
+      } else {
+        icon.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-slate-300"></i>`;
+      }
+      lucide.createIcons();
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    // Initialize
+    refreshData();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
