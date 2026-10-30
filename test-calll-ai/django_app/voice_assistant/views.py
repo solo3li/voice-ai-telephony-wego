@@ -1313,7 +1313,14 @@ def embed_chat_view(request):
             else:
                 partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
                 if partner:
-                    user = partner.user
+                    client_id = request.GET.get('client_id')
+                    if client_id:
+                        from partners.models import PartnerClientRelationship
+                        rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
+                        if rel:
+                            user = rel.client
+                    if not user:
+                        user = partner.user
 
     if not user:
         from django.contrib.auth import get_user_model
@@ -1355,7 +1362,14 @@ def embed_voice_view(request):
             else:
                 partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
                 if partner:
-                    user = partner.user
+                    client_id = request.GET.get('client_id')
+                    if client_id:
+                        from partners.models import PartnerClientRelationship
+                        rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
+                        if rel:
+                            user = rel.client
+                    if not user:
+                        user = partner.user
 
     if not user:
         from django.contrib.auth import get_user_model
@@ -1393,7 +1407,7 @@ def api_chat_send_message(request):
     if request.user.is_authenticated:
         user = request.user
     else:
-        api_key = request.headers.get('X-API-Key')
+        api_key = request.headers.get('X-API-Key') or request.headers.get('X-Partner-Key')
         if not api_key:
             auth_header = request.headers.get('Authorization', '')
             if auth_header.startswith('Bearer '):
@@ -1401,7 +1415,7 @@ def api_chat_send_message(request):
 
         if api_key:
             from developer.models import UserApiKey
-            from partners.models import PartnerProfile
+            from partners.models import PartnerProfile, PartnerClientRelationship
             key_obj = UserApiKey.objects.filter(key=api_key, is_active=True).select_related('user').first()
             if key_obj:
                 user = key_obj.user
@@ -1410,17 +1424,26 @@ def api_chat_send_message(request):
                 if partner:
                     user = partner.user
 
-    if not user:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = User.objects.filter(is_superuser=True).first() or User.objects.first()
-
     data = {}
     if request.body:
         try:
             data = json.loads(request.body.decode('utf-8'))
         except Exception:
             pass
+
+    # If partner authenticated, optionally scope to specific sub-client
+    if user and hasattr(user, 'partner_profile'):
+        sub_id = data.get('client_id') or request.GET.get('client_id')
+        if sub_id:
+            from partners.models import PartnerClientRelationship
+            rel = PartnerClientRelationship.objects.filter(partner=user.partner_profile, client_id=sub_id).select_related('client').first()
+            if rel:
+                user = rel.client
+
+    if not user:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.filter(is_superuser=True).first() or User.objects.first()
 
     to_phone = str(data.get("to") or data.get("phone") or data.get("phone_number") or "").strip()
     text = str(data.get("message") or data.get("text") or "").strip()
