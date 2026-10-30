@@ -3525,6 +3525,20 @@
       if (e.detail && e.detail.lang && e.detail.lang !== currentLanguage) {
         currentLanguage = e.detail.lang;
         updateHeaderTitle();
+        const roomFrame = document.getElementById('room-chatwoot-frame');
+        if (roomFrame) {
+          fetch('/api/chat/set-locale/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': (typeof getCsrfToken === 'function') ? getCsrfToken() : ''
+            },
+            body: JSON.stringify({ locale: currentLanguage })
+          })
+          .then(res => res.json())
+          .then(data => { if (data && data.sso_url) roomFrame.src = data.sso_url; })
+          .catch(err => console.debug('Room chatwoot sync error:', err));
+        }
       }
     });
 

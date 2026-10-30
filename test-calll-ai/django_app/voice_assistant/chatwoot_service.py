@@ -28,10 +28,11 @@ CHATWOOT_REDIS_CONFIG = {
 CHATWOOT_BASE_URL = getattr(settings, 'CHATWOOT_BASE_URL', 'https://chatwoot.169.58.32.179.nip.io')
 
 
-def generate_chatwoot_sso_url(user=None, account_id=2):
+def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
     """
     Generate a direct SSO login link for Chatwoot that logs the user in
     silently without asking for credentials, using Chatwoot's Redis Alfred SSO token.
+    Supports setting the user's and account's active locale ('ar' or 'en').
     """
     try:
         conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
@@ -51,13 +52,31 @@ def generate_chatwoot_sso_url(user=None, account_id=2):
             cur.execute("SELECT id, email FROM users ORDER BY id ASC LIMIT 1")
             chatwoot_user = cur.fetchone()
 
-        conn.close()
-
         if not chatwoot_user:
+            conn.close()
             logger.warning("[ChatwootSSO] No Chatwoot user found in database.")
             return f"{CHATWOOT_BASE_URL}/app/accounts/{account_id}"
 
         user_id, email = chatwoot_user[0], chatwoot_user[1]
+
+        # If locale is provided, synchronize with Chatwoot user & account
+        norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar' if locale else None
+        if norm_locale:
+            try:
+                account_locale_int = 0 if norm_locale == 'en' else 1
+                cur.execute("""
+                    UPDATE users 
+                    SET ui_settings = jsonb_set(COALESCE(ui_settings, '{}'), '{locale}', to_jsonb(%s::text))
+                    WHERE id = %s
+                """, (norm_locale, user_id))
+                cur.execute("UPDATE accounts SET locale = %s WHERE id = %s", (account_locale_int, account_id))
+                conn.commit()
+                logger.info(f"[ChatwootSSO] Synchronized user {user_id} and account {account_id} locale to '{norm_locale}'")
+            except Exception as loc_err:
+                logger.warning(f"[ChatwootSSO] Could not update locale in DB: {loc_err}")
+
+        conn.close()
+
         token = secrets.token_hex(32)
 
         # Store in Chatwoot's Redis
@@ -67,12 +86,29 @@ def generate_chatwoot_sso_url(user=None, account_id=2):
 
         encoded_email = urllib.parse.quote(email)
         redirect_target = f"/app/accounts/{account_id}"
+        if norm_locale:
+            redirect_target += f"?locale={norm_locale}"
+
         sso_url = f"{CHATWOOT_BASE_URL}/app/login?email={encoded_email}&sso_auth_token={token}&redirect_url={urllib.parse.quote(redirect_target)}"
-        logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id})")
+        logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id}) [locale: {norm_locale}]")
         return sso_url
     except Exception as e:
         logger.error(f"[ChatwootSSO] Error generating SSO URL: {e}", exc_info=True)
         return f"{CHATWOOT_BASE_URL}/app/accounts/{account_id}"
+
+
+def set_chatwoot_user_locale(user=None, account_id=2, locale='ar'):
+    """
+    Update Chatwoot user's ui_settings.locale and account.locale,
+    and generate a fresh SSO URL matching the language.
+    """
+    norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar'
+    sso_url = generate_chatwoot_sso_url(user=user, account_id=account_id, locale=norm_locale)
+    return {
+        "status": "success",
+        "locale": norm_locale,
+        "sso_url": sso_url
+    }
 
 
 def get_captain_settings(assistant_id=1, account_id=2):

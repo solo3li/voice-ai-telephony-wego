@@ -854,7 +854,8 @@
       loader.classList.remove('opacity-0', 'pointer-events-none');
     }
     
-    fetch('/api/chat/sso-url/')
+    const currentLang = localStorage.getItem('app_lang') || 'ar';
+    fetch('/api/chat/sso-url/?locale=' + encodeURIComponent(currentLang))
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success' && data.sso_url) {
@@ -867,6 +868,53 @@
         frame.contentWindow.location.reload();
       });
   }
+
+  // Language synchronization between Main Website and Chatwoot
+  async function syncChatwootLocale(lang) {
+    const targetLang = lang ? (lang.startsWith('en') ? 'en' : 'ar') : (localStorage.getItem('app_lang') || 'ar');
+    const loader = document.getElementById('chat-frame-loader');
+    const frame = document.getElementById('chatwoot-frame');
+
+    if (loader) {
+      loader.style.display = 'flex';
+      loader.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    try {
+      const res = await fetch('/api/chat/set-locale/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': (typeof getCsrfToken === 'function') ? getCsrfToken() : ''
+        },
+        body: JSON.stringify({ locale: targetLang })
+      });
+      const data = await res.json();
+      if (data && data.sso_url && frame) {
+        frame.src = data.sso_url;
+      }
+    } catch (err) {
+      console.error('[ChatwootLocale] Error syncing locale:', err);
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+  }
+
+  // Listen to site-wide language change from header
+  window.addEventListener('appLanguageChanged', function(e) {
+    const newLang = e.detail && e.detail.lang ? e.detail.lang : (localStorage.getItem('app_lang') || 'ar');
+    syncChatwootLocale(newLang);
+  });
+
+  // Verify initial language match on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const activeLang = localStorage.getItem('app_lang') || 'ar';
+    const frame = document.getElementById('chatwoot-frame');
+    if (frame && activeLang === 'en' && !frame.src.includes('locale=en')) {
+      syncChatwootLocale('en');
+    }
+  });
 
   // Platform definitions for grouped rendering
   const PLATFORMS_META = {

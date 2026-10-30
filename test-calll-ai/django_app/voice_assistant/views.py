@@ -906,7 +906,8 @@ def crm_page_view(request):
 def chat_page_view(request):
     """Render dedicated Chatwoot Omnichannel Chat page with silent SSO & AI Settings."""
     from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings
-    sso_url = generate_chatwoot_sso_url(user=request.user)
+    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    sso_url = generate_chatwoot_sso_url(user=request.user, locale=user_lang)
     captain_settings = get_captain_settings() or {}
     context = {
         'page_title': 'شات',
@@ -923,8 +924,31 @@ def chat_page_view(request):
 def api_chatwoot_sso_url(request):
     """GET /api/chat/sso-url/ - Generate a fresh silent SSO URL for Chatwoot."""
     from .chatwoot_service import generate_chatwoot_sso_url
-    url = generate_chatwoot_sso_url(user=request.user)
-    return JsonResponse({"status": "success", "sso_url": url})
+    locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    url = generate_chatwoot_sso_url(user=request.user, locale=locale)
+    return JsonResponse({"status": "success", "sso_url": url, "locale": locale})
+
+
+@csrf_exempt
+@login_required
+def api_chat_set_locale(request):
+    """
+    POST /api/chat/set-locale/
+    Synchronizes the active user language with Chatwoot and returns refreshed SSO URL.
+    """
+    from .chatwoot_service import set_chatwoot_user_locale
+    locale = 'ar'
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body.decode('utf-8')) if request.body else {}
+            locale = body.get('locale') or body.get('lang') or 'ar'
+        except Exception:
+            locale = request.POST.get('locale', 'ar')
+    else:
+        locale = request.GET.get('locale', 'ar')
+
+    res = set_chatwoot_user_locale(user=request.user, locale=locale)
+    return JsonResponse(res)
 
 
 @csrf_exempt

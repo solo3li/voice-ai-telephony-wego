@@ -94,6 +94,7 @@ urlpatterns = [
     path('partner/', views.partner_page_view, name='partner_page'),
     path('chat/', views.chat_page_view, name='chat_page'),
     path('api/chat/sso-url/', views.api_chatwoot_sso_url, name='chatwoot_sso_url'),
+    path('api/chat/set-locale/', views.api_chat_set_locale, name='chat_set_locale'),
     path('api/chat/assistant/settings/', views.api_captain_settings, name='captain_settings'),
     path('api/chat/channels/', views.api_chat_channels, name='chat_channels_api'),
     path('api/chat/channels/toggle-ai/', views.api_chat_channels_toggle_ai, name='chat_channels_toggle_ai'),
