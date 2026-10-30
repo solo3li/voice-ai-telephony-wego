@@ -59,6 +59,34 @@ def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
 
         user_id, email = chatwoot_user[0], chatwoot_user[1]
 
+        # Prevent Chatwoot 25-session limit (which causes HTTP 409 Conflict on /auth/sign_in)
+        try:
+            cur.execute("SELECT count(*) FROM user_sessions WHERE user_id = %s", (user_id,))
+            sess_cnt = cur.fetchone()[0]
+            if sess_cnt >= 10:
+                cur.execute("""
+                    DELETE FROM user_sessions 
+                    WHERE user_id = %s AND id NOT IN (
+                        SELECT id FROM user_sessions 
+                        WHERE user_id = %s 
+                        ORDER BY COALESCE(last_activity_at, created_at) DESC 
+                        LIMIT 5
+                    )
+                """, (user_id, user_id))
+                
+                cur.execute("SELECT client_id FROM user_sessions WHERE user_id = %s", (user_id,))
+                active_clients = {r[0] for r in cur.fetchall()}
+                cur.execute("SELECT tokens FROM users WHERE id = %s", (user_id,))
+                raw_tokens = cur.fetchone()[0]
+                if raw_tokens:
+                    tok_dict = raw_tokens if isinstance(raw_tokens, dict) else json.loads(raw_tokens)
+                    pruned_dict = {k: v for k, v in tok_dict.items() if k in active_clients}
+                    cur.execute("UPDATE users SET tokens = %s WHERE id = %s", (json.dumps(pruned_dict), user_id))
+                conn.commit()
+                logger.info(f"[ChatwootSSO] Pruned user {user_id} sessions from {sess_cnt} to prevent 409 Conflict.")
+        except Exception as sess_err:
+            logger.warning(f"[ChatwootSSO] Warning pruning old sessions: {sess_err}")
+
         # If locale is provided, synchronize with Chatwoot user & account
         norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar' if locale else None
         if norm_locale:
