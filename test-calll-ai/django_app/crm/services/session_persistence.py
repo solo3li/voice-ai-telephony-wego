@@ -33,7 +33,31 @@ def persist_call_session_and_memory(data: Dict[str, Any]) -> Dict[str, Any]:
     if not user:
         return {"status": "error", "message": f"User with id '{user_id}' not found."}
 
-    duration_seconds = int(data.get('duration_seconds', 0))
+    MAX_CALL_DURATION_SECONDS = 14400  # 4 hours cap
+
+    raw_duration = data.get('duration_seconds', 0)
+    try:
+        duration_seconds = int(raw_duration)
+    except (ValueError, TypeError):
+        duration_seconds = 0
+
+    if duration_seconds < 0:
+        duration_seconds = 0
+    elif duration_seconds > MAX_CALL_DURATION_SECONDS:
+        # Detect anomalous epoch timestamps (e.g. 1.79 billion seconds) vs realistic long calls
+        if duration_seconds > 1_000_000:
+            logger.warning(
+                f"Anomalous epoch timestamp detected as call duration ({duration_seconds}s) for room {room_name}. "
+                f"Clamping duration to 0s."
+            )
+            duration_seconds = 0
+        else:
+            logger.warning(
+                f"Call duration exceeded max cap ({duration_seconds}s > {MAX_CALL_DURATION_SECONDS}s) for room {room_name}. "
+                f"Clamping to {MAX_CALL_DURATION_SECONDS}s."
+            )
+            duration_seconds = MAX_CALL_DURATION_SECONDS
+
     direction = data.get('direction', 'inbound')
     is_internal_test = bool(data.get('is_internal_test')) or direction == 'internal_test'
     caller_extension = str(data.get('caller_extension') or '').strip()
@@ -92,137 +116,143 @@ def persist_call_session_and_memory(data: Dict[str, Any]) -> Dict[str, Any]:
             pass
 
     # 1. Update existing CallSession (e.g. created by outbound dialer) or create a new record
-    session = CallSession.objects.filter(room_name=room_name).first()
-    has_billing_tx = session.billing_transactions.filter(transaction_type='call_deduction').exists() if session else False
-    is_already_completed = bool(session and session.ended_at is not None and (session.billed_minutes > 0 or has_billing_tx))
+    # Enclose session resolution and billing deduction in transaction.atomic with advisory & row lock
+    # to prevent double deduction race between concurrent Inngest consumers and HTTP completion webhooks.
+    from django.db import connection
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [f"call_room_{room_name}"])
 
-    if is_already_completed:
-        # Idempotent path: Call was already billed and call count incremented.
-        # Update summary, transcript, recording, and permanent memory without re-billing.
-        update_fields = []
-        if summary and (not session.summary or len(summary) > len(session.summary) or "مكالمة صوتية مكتملة" in session.summary):
-            session.summary = summary
-            update_fields.append('summary')
-        if transcript_text and (not session.transcript_text or len(transcript_text) > len(session.transcript_text)):
-            session.transcript_text = transcript_text
-            update_fields.append('transcript_text')
-        if duration_seconds > session.duration_seconds:
+        session = CallSession.objects.select_for_update().filter(room_name=room_name).first()
+        has_billing_tx = session.billing_transactions.filter(transaction_type='call_deduction').exists() if session else False
+        is_already_completed = bool(session and session.ended_at is not None and (session.billed_minutes > 0 or has_billing_tx))
+
+        if is_already_completed:
+            # Idempotent path: Call was already billed and call count incremented.
+            # Update summary, transcript, recording, and permanent memory without re-billing.
+            update_fields = []
+            if summary and (not session.summary or len(summary) > len(session.summary) or "مكالمة صوتية مكتملة" in session.summary):
+                session.summary = summary
+                update_fields.append('summary')
+            if transcript_text and (not session.transcript_text or len(transcript_text) > len(session.transcript_text)):
+                session.transcript_text = transcript_text
+                update_fields.append('transcript_text')
+            if duration_seconds > session.duration_seconds:
+                session.duration_seconds = duration_seconds
+                update_fields.append('duration_seconds')
+            if req_recording_url and not session.recording_url:
+                session.recording_url = req_recording_url
+                update_fields.append('recording_url')
+            if update_fields:
+                session.save(update_fields=update_fields)
+
+            # Update CustomerMemory with permanent profile & distilled summary without incrementing total_calls_count
+            total_calls_count = 0
+            memory = None
+            if not is_internal_test and caller_phone:
+                memory, _ = CustomerMemory.objects.get_or_create(user=user, phone_number=caller_phone)
+                if customer_name:
+                    memory.customer_name = customer_name
+                if permanent_profile is not None:
+                    if isinstance(permanent_profile, dict):
+                        memory.permanent_profile = permanent_profile
+                    elif isinstance(permanent_profile, str):
+                        try:
+                            memory.permanent_profile = json.loads(permanent_profile)
+                        except Exception:
+                            pass
+                if summary:
+                    memory.last_interaction_summary = summary
+                memory.last_interaction_at = now_dt
+                total_calls_count = memory.total_calls_count
+
+                cm = memory.call_memory or {}
+                if summary:
+                    cm["last_call_summary"] = summary
+                cm["last_call_at"] = now_dt.strftime("%Y-%m-%d %H:%M")
+                if isinstance(permanent_profile, dict) and permanent_profile.get("agreed_next_steps"):
+                    cm["agreed_next_steps"] = permanent_profile.get("agreed_next_steps")
+                memory.call_memory = cm
+                memory.save()
+
+            logger.info(f"Idempotent update applied for CallSession #{session.id} (room {room_name}) without duplicate billing.")
+            return {
+                "status": "success",
+                "session_id": session.id,
+                "caller_phone": caller_phone,
+                "phone_number": caller_phone,
+                "duration_seconds": session.duration_seconds,
+                "billed_minutes": session.billed_minutes,
+                "cost": float(session.cost),
+                "total_calls_count": total_calls_count,
+                "is_idempotent_update": True
+            }
+
+        if session:
+            session.ended_at = now_dt
             session.duration_seconds = duration_seconds
-            update_fields.append('duration_seconds')
-        if req_recording_url and not session.recording_url:
-            session.recording_url = req_recording_url
-            update_fields.append('recording_url')
-        if update_fields:
+            session.transcript_text = transcript_text
+            session.summary = summary
+            if caller_phone:
+                session.caller_phone = caller_phone
+            if destination_phone:
+                session.destination_phone = destination_phone
+            if is_internal_test:
+                session.is_internal_test = True
+                session.direction = 'internal_test'
+            if caller_extension:
+                session.caller_extension = caller_extension
+            update_fields = ['ended_at', 'duration_seconds', 'transcript_text', 'summary', 'caller_phone', 'destination_phone', 'is_internal_test', 'caller_extension', 'direction']
+            if req_recording_url and not session.recording_url:
+                session.recording_url = req_recording_url
+                update_fields.append('recording_url')
             session.save(update_fields=update_fields)
+        else:
+            session = CallSession.objects.create(
+                user=user,
+                room_name=room_name,
+                direction='internal_test' if is_internal_test else direction,
+                caller_phone=caller_phone,
+                destination_phone=destination_phone,
+                call_goal=call_goal,
+                ended_at=now_dt,
+                duration_seconds=duration_seconds,
+                transcript_text=transcript_text,
+                summary=summary,
+                recording_url=req_recording_url,
+                is_internal_test=is_internal_test,
+                caller_extension=caller_extension
+            )
 
-        # Update CustomerMemory with permanent profile & distilled summary without incrementing total_calls_count
-        total_calls_count = 0
-        memory = None
-        if not is_internal_test and caller_phone:
-            memory, _ = CustomerMemory.objects.get_or_create(user=user, phone_number=caller_phone)
-            if customer_name:
-                memory.customer_name = customer_name
-            if permanent_profile is not None:
-                if isinstance(permanent_profile, dict):
-                    memory.permanent_profile = permanent_profile
-                elif isinstance(permanent_profile, str):
-                    try:
-                        memory.permanent_profile = json.loads(permanent_profile)
-                    except Exception:
-                        pass
-            if summary:
-                memory.last_interaction_summary = summary
-            memory.last_interaction_at = now_dt
-            total_calls_count = memory.total_calls_count
-
-            cm = memory.call_memory or {}
-            if summary:
-                cm["last_call_summary"] = summary
-            cm["last_call_at"] = now_dt.strftime("%Y-%m-%d %H:%M")
-            if isinstance(permanent_profile, dict) and permanent_profile.get("agreed_next_steps"):
-                cm["agreed_next_steps"] = permanent_profile.get("agreed_next_steps")
-            memory.call_memory = cm
-            memory.save()
-
-        logger.info(f"Idempotent update applied for CallSession #{session.id} (room {room_name}) without duplicate billing.")
-        return {
-            "status": "success",
-            "session_id": session.id,
-            "caller_phone": caller_phone,
-            "phone_number": caller_phone,
-            "duration_seconds": session.duration_seconds,
-            "billed_minutes": session.billed_minutes,
-            "cost": float(session.cost),
-            "total_calls_count": total_calls_count,
-            "is_idempotent_update": True
-        }
-
-    if session:
-        session.ended_at = now_dt
-        session.duration_seconds = duration_seconds
-        session.transcript_text = transcript_text
-        session.summary = summary
-        if caller_phone:
-            session.caller_phone = caller_phone
-        if destination_phone:
-            session.destination_phone = destination_phone
-        if is_internal_test:
-            session.is_internal_test = True
-            session.direction = 'internal_test'
-        if caller_extension:
-            session.caller_extension = caller_extension
-        update_fields = ['ended_at', 'duration_seconds', 'transcript_text', 'summary', 'caller_phone', 'destination_phone', 'is_internal_test', 'caller_extension', 'direction']
-        if req_recording_url and not session.recording_url:
-            session.recording_url = req_recording_url
-            update_fields.append('recording_url')
-        session.save(update_fields=update_fields)
-    else:
-        session = CallSession.objects.create(
-            user=user,
-            room_name=room_name,
-            direction='internal_test' if is_internal_test else direction,
-            caller_phone=caller_phone,
-            destination_phone=destination_phone,
-            call_goal=call_goal,
-            ended_at=now_dt,
-            duration_seconds=duration_seconds,
-            transcript_text=transcript_text,
-            summary=summary,
-            recording_url=req_recording_url,
-            is_internal_test=is_internal_test,
-            caller_extension=caller_extension
-        )
-
-    # 1.1 Calculate billing with strict ceiling rounding and deduct from wallet (Partner or User)
-    billed_minutes = 0
-    call_cost = 0.0
-    try:
-        from billing.models import BillingConfig, UserWallet, BillingTransaction
-        config = BillingConfig.get_config()
-        b_mins, cost_dec = config.calculate_cost(duration_seconds)
-        billed_minutes = b_mins
-        call_cost = float(cost_dec)
-
-        # Check if user is a sub-client under an approved partner
-        partner_rel = None
+        # 1.1 Calculate billing with strict ceiling rounding and deduct from wallet (Partner or User)
+        billed_minutes = 0
+        call_cost = 0.0
         try:
-            from partners.models import PartnerClientRelationship
-            partner_rel = PartnerClientRelationship.objects.select_related('partner', 'partner__user').filter(
-                client=user,
-                partner__status='approved'
-            ).first()
-        except Exception:
-            pass
-
-        if partner_rel and partner_rel.partner:
-            partner = partner_rel.partner
-            rate = partner.custom_rate_per_minute
-            cost_dec = round(Decimal(str(billed_minutes)) * rate, 4)
+            from billing.models import BillingConfig, UserWallet, BillingTransaction
+            config = BillingConfig.get_config()
+            b_mins, cost_dec = config.calculate_cost(duration_seconds)
+            billed_minutes = b_mins
             call_cost = float(cost_dec)
 
-            # Deduct from Partner's pooled wallet with atomic row lock
-            target_user = partner.user
-            with transaction.atomic():
+            # Check if user is a sub-client under an approved partner
+            partner_rel = None
+            try:
+                from partners.models import PartnerClientRelationship
+                partner_rel = PartnerClientRelationship.objects.select_related('partner', 'partner__user').filter(
+                    client=user,
+                    partner__status='approved'
+                ).first()
+            except Exception:
+                pass
+
+            if partner_rel and partner_rel.partner:
+                partner = partner_rel.partner
+                rate = partner.custom_rate_per_minute
+                cost_dec = round(Decimal(str(billed_minutes)) * rate, 4)
+                call_cost = float(cost_dec)
+
+                # Deduct from Partner's pooled wallet with atomic row lock
+                target_user = partner.user
                 wallet = UserWallet.objects.select_for_update().filter(user=target_user).first()
                 if not wallet:
                     wallet = UserWallet.objects.create(
@@ -254,25 +284,24 @@ def persist_call_session_and_memory(data: Dict[str, Any]) -> Dict[str, Any]:
                     description=f"مكالمة عميل الساس '{user.first_name or user.username}' ({billed_minutes} دقيقة - بسعر الشريك المخصص {rate}$)"
                 )
 
-            # Dispatch Webhook to partner's SaaS backend
-            try:
-                from partners.services.webhook import dispatch_partner_webhook
-                dispatch_partner_webhook(partner, "call.completed", {
-                    "client_id": user.id,
-                    "client_name": user.first_name or user.username,
-                    "external_reference": partner_rel.external_reference,
-                    "call_id": room_name,
-                    "caller_phone": caller_phone,
-                    "duration_seconds": duration_seconds,
-                    "billed_minutes": billed_minutes,
-                    "cost": float(cost_dec),
-                    "summary": summary,
-                    "partner_remaining_balance": float(wallet.balance),
-                })
-            except Exception as wh_e:
-                logger.warning(f"Error triggering partner webhook: {wh_e}")
-        else:
-            with transaction.atomic():
+                # Dispatch Webhook to partner's SaaS backend
+                try:
+                    from partners.services.webhook import dispatch_partner_webhook
+                    dispatch_partner_webhook(partner, "call.completed", {
+                        "client_id": user.id,
+                        "client_name": user.first_name or user.username,
+                        "external_reference": partner_rel.external_reference,
+                        "call_id": room_name,
+                        "caller_phone": caller_phone,
+                        "duration_seconds": duration_seconds,
+                        "billed_minutes": billed_minutes,
+                        "cost": float(cost_dec),
+                        "summary": summary,
+                        "partner_remaining_balance": float(wallet.balance),
+                    })
+                except Exception as wh_e:
+                    logger.warning(f"Error triggering partner webhook: {wh_e}")
+            else:
                 wallet = UserWallet.objects.select_for_update().filter(user=user).first()
                 if not wallet:
                     wallet = UserWallet.objects.create(
@@ -299,12 +328,12 @@ def persist_call_session_and_memory(data: Dict[str, Any]) -> Dict[str, Any]:
                     description=f"مكالمة {session.get_direction_display()} ({billed_minutes} دقيقة تقريب لأعلى - {duration_seconds} ثانية)"
                 )
 
-        session.billed_minutes = billed_minutes
-        session.cost = cost_dec
-        session.save(update_fields=['billed_minutes', 'cost'])
-        logger.info(f"Billed {billed_minutes} mins ({cost_dec} {wallet.currency}) for room {room_name} from user {user.username}")
-    except Exception as b_err:
-        logger.error(f"Error processing call billing for room {room_name}: {b_err}", exc_info=True)
+            session.billed_minutes = billed_minutes
+            session.cost = cost_dec
+            session.save(update_fields=['billed_minutes', 'cost'])
+            logger.info(f"Billed {billed_minutes} mins ({cost_dec} {wallet.currency}) for room {room_name} from user {user.username}")
+        except Exception as b_err:
+            logger.error(f"Error processing call billing for room {room_name}: {b_err}", exc_info=True)
 
     # 2. Upsert CustomerMemory for (user, caller_phone) (Skip for internal employee test calls)
     total_calls_count = 0

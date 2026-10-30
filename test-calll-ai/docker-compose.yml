@@ -36,9 +36,11 @@ services:
     image: redis:7-alpine
     container_name: voice_redis
     restart: unless-stopped
-    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --maxmemory 512mb --maxmemory-policy volatile-lru
     ports:
       - "127.0.0.1:6379:6379"
+    volumes:
+      - voice_redis_data:/data
     networks:
       - voice_net
 
@@ -104,6 +106,7 @@ services:
       - "livekit:host-gateway"
     networks:
       - voice_net
+      - omnichannel_net
 
   agent:
     build:
@@ -229,9 +232,13 @@ volumes:
   media_data:
   traefik_acme:
   minio_data:
+  voice_redis_data:
 
 networks:
   voice_net:
     name: test-calll-ai_voice_net
     driver: bridge
+  omnichannel_net:
+    external: true
+    name: omnichannel-stack_omnichannel_net
 

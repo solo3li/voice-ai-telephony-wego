@@ -4,6 +4,7 @@ import logging
 import secrets
 import urllib.parse
 import psycopg2
+import psycopg2.pool
 from psycopg2.extras import RealDictCursor
 import redis
 from django.conf import settings
@@ -17,6 +18,65 @@ CHATWOOT_DB_CONFIG = {
     "host": "omni_postgres",
     "port": 5432
 }
+
+_CHATWOOT_DB_POOL = None
+
+def get_chatwoot_db_pool():
+    global _CHATWOOT_DB_POOL
+    if _CHATWOOT_DB_POOL is None or _CHATWOOT_DB_POOL.closed:
+        try:
+            _CHATWOOT_DB_POOL = psycopg2.pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=20,
+                **CHATWOOT_DB_CONFIG
+            )
+            logger.info("[ChatwootService] Initialized ThreadedConnectionPool (minconn=1, maxconn=20)")
+        except Exception as e:
+            logger.error(f"[ChatwootService] Failed to initialize ThreadedConnectionPool: {e}", exc_info=True)
+            raise
+    return _CHATWOOT_DB_POOL
+
+class PooledChatwootConnection:
+    """
+    Wrapper around a pooled psycopg2 connection that returns the connection
+    to the ThreadedConnectionPool on close(), rather than closing the underlying socket.
+    Supports both context manager (with get_chatwoot_db_conn() as conn:) and standard conn.close() pattern.
+    """
+    def __init__(self, conn, pool_inst):
+        self._conn = conn
+        self._pool = pool_inst
+        self._closed = False
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            try:
+                if self._conn.status == psycopg2.extensions.STATUS_IN_TRANSACTION:
+                    self._conn.rollback()
+            except Exception:
+                pass
+            try:
+                self._pool.putconn(self._conn)
+            except Exception as e:
+                logger.warning(f"[ChatwootService] Error returning connection to pool: {e}")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+def get_chatwoot_db_conn():
+    """
+    Acquires a pooled connection from the ThreadedConnectionPool.
+    Returns a PooledChatwootConnection wrapper.
+    """
+    p = get_chatwoot_db_pool()
+    raw_conn = p.getconn()
+    return PooledChatwootConnection(raw_conn, p)
 
 CHATWOOT_REDIS_CONFIG = {
     "host": "omni_redis",
@@ -35,7 +95,7 @@ def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
     Supports setting the user's and account's active locale ('ar' or 'en').
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor()
 
         chatwoot_user = None
@@ -146,7 +206,7 @@ def get_captain_settings(assistant_id=1, account_id=2):
     Retrieve Captain AI assistant settings and linked inboxes from Chatwoot database.
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         cur.execute("""
@@ -213,7 +273,7 @@ def update_captain_settings(data, assistant_id=1, account_id=2):
     Update Captain AI assistant settings and linked inboxes in Chatwoot database.
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor()
 
         cur.execute("SELECT config FROM captain_assistants WHERE id = %s AND account_id = %s", (assistant_id, account_id))
@@ -307,7 +367,7 @@ EVOLUTION_API_KEY = "evolution_secret_key_123"
 def _get_account_user_ids(account_id=2):
     """Fetch all user IDs belonging to a Chatwoot account."""
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor()
         cur.execute("SELECT user_id FROM account_users WHERE account_id = %s", (account_id,))
         rows = cur.fetchall()
@@ -349,7 +409,7 @@ def _assign_all_agents_to_inbox(inbox_id, account_id=2):
 
     # 2. Direct DB fallback to guarantee persistence
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor()
         for uid in user_ids:
             cur.execute("""
@@ -404,7 +464,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
     grouped by platform, and whether Captain AI auto-reply is active.
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         # Fetch inboxes joined with active captain_inboxes
@@ -622,7 +682,7 @@ def toggle_channel_ai(inbox_id, enable=True, assistant_id=1):
     Toggle Captain AI auto-reply on a specific inbox.
     """
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor()
 
         if enable:
@@ -658,7 +718,7 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
             _patch_chatwoot_inbox(inbox_id, {"name": new_name}, account_id)
 
             # 2. Update database record
-            conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+            conn = get_chatwoot_db_conn()
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
                 UPDATE inboxes
@@ -714,7 +774,7 @@ def delete_channel_inbox(inbox_id, account_id=2):
     """
     import urllib.request
     try:
-        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        conn = get_chatwoot_db_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT channel_id, channel_type, name FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
         ibx = cur.fetchone()
@@ -998,7 +1058,7 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
             user_token = data.get('user_access_token') or page_token
             name = data.get('name') or f"Facebook ({page_id})"
 
-            conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+            conn = get_chatwoot_db_conn()
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO channel_facebook_pages (page_id, user_access_token, page_access_token, account_id, created_at, updated_at)
@@ -1022,7 +1082,7 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
             access_token = data.get('access_token')
             name = data.get('name') or f"Instagram ({instagram_id})"
 
-            conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+            conn = get_chatwoot_db_conn()
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO channel_instagram (instagram_id, access_token, expires_at, account_id, created_at, updated_at)

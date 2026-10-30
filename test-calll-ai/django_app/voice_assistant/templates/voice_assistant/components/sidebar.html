@@ -77,6 +77,16 @@
       <span class="nav-text" data-i18n="nav_chat_hub">شات (Chatwoot Hub)</span>
     </a>
 
+    <!-- 2.1 WhatsApp Web -->
+    <a href="{% url 'voice_assistant:whatsapp_page' %}" id="nav-btn-whatsapp" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'whatsapp' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+      <span class="nav-text" data-i18n="nav_whatsapp">واتساب (WhatsApp)</span>
+    </a>
+
+    <!-- 2.2 WhatsApp Support Desk -->
+    <a href="{% url 'voice_assistant:whatsapp_desk_page' %}" id="nav-btn-whatsapp-desk" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'whatsapp_desk' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+      <span class="nav-text" data-i18n="nav_whatsapp_desk">مكتب دعم الواتساب</span>
+    </a>
+
     <!-- 3. Billing & Wallet -->
     <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_billing">الرصيد والفواتير</span>

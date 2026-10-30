@@ -831,40 +831,60 @@ def livekit_webhook(request):
 
 
 @csrf_exempt
-def stream_call_recording(request, filename):
+async def stream_call_recording(request, filename):
     """
     Stream call recording from internal MinIO storage to browser/client.
+    Async-safe streaming using httpx.AsyncClient with an async generator
+    to prevent synchronous generator warnings under ASGI/Uvicorn.
     Supports range headers for smooth scrubbing in audio players.
     """
-    import requests
-    from django.http import StreamingHttpResponse, Http404
+    import httpx
+    from django.http import StreamingHttpResponse, HttpResponse
 
     minio_endpoint = getattr(settings, 'MINIO_ENDPOINT', 'http://minio:9000')
     bucket = getattr(settings, 'MINIO_BUCKET_NAME', 'call-recordings')
     clean_filename = filename.lstrip('/')
     minio_url = f"{minio_endpoint}/{bucket}/{clean_filename}"
 
-    try:
-        headers = {}
-        if 'HTTP_RANGE' in request.META:
-            headers['Range'] = request.META['HTTP_RANGE']
+    headers = {}
+    if 'HTTP_RANGE' in request.META:
+        headers['Range'] = request.META['HTTP_RANGE']
 
-        upstream_resp = requests.get(minio_url, headers=headers, stream=True, timeout=10)
+    client = httpx.AsyncClient(timeout=15.0)
+    try:
+        req = client.build_request("GET", minio_url, headers=headers)
+        upstream_resp = await client.send(req, stream=True)
+
         if upstream_resp.status_code in [200, 206]:
+            async def async_content_iterator():
+                try:
+                    async for chunk in upstream_resp.aiter_bytes(chunk_size=8192):
+                        yield chunk
+                finally:
+                    await upstream_resp.aclose()
+                    await client.aclose()
+
             response = StreamingHttpResponse(
-                upstream_resp.iter_content(chunk_size=8192),
+                async_content_iterator(),
                 status=upstream_resp.status_code,
-                content_type=upstream_resp.headers.get('Content-Type', 'audio/mpeg')
+                content_type=upstream_resp.headers.get('content-type', 'audio/mpeg')
             )
-            for h in ['Content-Length', 'Content-Range', 'Accept-Ranges', 'ETag', 'Last-Modified']:
+            for h in ['content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']:
                 if h in upstream_resp.headers:
-                    response[h] = upstream_resp.headers[h]
+                    formatted_name = '-'.join(part.capitalize() for part in h.split('-'))
+                    response[formatted_name] = upstream_resp.headers[h]
             return response
         elif upstream_resp.status_code == 404:
+            await upstream_resp.aclose()
+            await client.aclose()
             return HttpResponse("Recording not found", status=404)
         else:
-            return HttpResponse("Error fetching recording", status=upstream_resp.status_code)
+            status_code = upstream_resp.status_code
+            await upstream_resp.aclose()
+            await client.aclose()
+            return HttpResponse("Error fetching recording", status=status_code)
     except Exception as e:
+        await client.aclose()
         logger.error(f"Error streaming recording {filename}: {e}")
         return HttpResponse(f"Error streaming recording: {e}", status=500)
 

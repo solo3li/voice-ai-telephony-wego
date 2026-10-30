@@ -103,10 +103,10 @@ def sync_whatsapp_data(user: User, clean_old: bool = True, max_messages_per_chat
     instance_name = f"user_{user.id}"
     logger.info(f"Starting real WhatsApp sync for user {user.username} (instance: {instance_name})...")
 
-    db_host = os.getenv("POSTGRES_HOST", "voice_postgres")
-    db_port = int(os.getenv("POSTGRES_PORT", "5432"))
-    db_user = os.getenv("POSTGRES_USER", "voice_user")
-    db_pass = os.getenv("POSTGRES_PASSWORD", "voice_password_123")
+    db_host = os.getenv("EVOLUTION_DB_HOST", os.getenv("OMNI_POSTGRES_HOST", "omni_postgres"))
+    db_port = int(os.getenv("EVOLUTION_DB_PORT", os.getenv("OMNI_POSTGRES_PORT", "5432")))
+    db_user = os.getenv("EVOLUTION_DB_USER", os.getenv("OMNI_POSTGRES_USER", "postgres"))
+    db_pass = os.getenv("EVOLUTION_DB_PASSWORD", os.getenv("OMNI_POSTGRES_PASSWORD", "ChatwootDbPassword2026"))
     db_name = os.getenv("EVOLUTION_DB_NAME", "evolution_db")
 
     try:

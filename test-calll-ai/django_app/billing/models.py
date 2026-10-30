@@ -108,6 +108,12 @@ class UserWallet(models.Model):
         verbose_name = "محفظة رصيد العميل"
         verbose_name_plural = "محافظ رصيد العملاء"
         ordering = ['-updated_at']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(balance__gte=Decimal('0.0000')),
+                name='userwallet_balance_non_negative'
+            )
+        ]
 
     def __str__(self):
         sym = "$" if self.currency == "USD" else "ج.م"
