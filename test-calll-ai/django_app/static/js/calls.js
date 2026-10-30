@@ -25,7 +25,7 @@ async function loadCallsList() {
     tbody.innerHTML = `
       <tr>
         <td colspan="8" class="py-8 text-center text-slate-400">
-          <span class="inline-block animate-spin mr-2">🔄</span> جاري تحميل سجل المكالمات...
+          <svg class="inline-block animate-spin w-4 h-4 mr-2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg> جاري تحميل سجل المكالمات...
         </td>
       </tr>
     `;
@@ -96,15 +96,15 @@ function renderCallsTable(calls) {
     let dirBadge = '';
     if (c.is_internal_test || c.direction === 'internal_test') {
       const extLabel = c.caller_extension ? ` (${c.caller_extension})` : '';
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">${badgeInternalTest}${extLabel}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">${badgeInternalTest}${extLabel}</span>`;
     } else if (c.direction === 'internal_employee') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">${badgeInternal}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">${badgeInternal}</span>`;
     } else if (c.direction === 'inbound') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200">${badgeInbound}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">${badgeInbound}</span>`;
     } else if (c.direction === 'outbound_ai') {
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${badgeOutAi}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${badgeOutAi}</span>`;
     } else {
-      dirBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">${badgeOutAgent}</span>`;
+      dirBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">${badgeOutAgent}</span>`;
     }
 
     const party = c.destination_phone || c.caller_phone || 'Web Dashboard';
@@ -115,16 +115,16 @@ function renderCallsTable(calls) {
 
     return `
       <tr class="hover:bg-slate-50/60 transition">
-        <td class="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">${c.started_at}</td>
+        <td class="py-3 px-4 text-slate-500 font-mono text-xs whitespace-nowrap">${c.started_at}</td>
         <td class="py-3 px-4">
           ${dirBadge}
-          ${isTransferred ? `<span class="mt-1 block px-2 py-0.5 rounded-md text-[9px] font-medium bg-purple-50 text-purple-700 border border-purple-200 w-fit">${badgeTransferred}</span>` : ''}
+          ${isTransferred ? `<span class="mt-1 block px-2 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 w-fit">${badgeTransferred}</span>` : ''}
         </td>
         <td class="py-3 px-4 font-mono font-medium text-slate-900">${escapeHtml(party)}</td>
         <td class="py-3 px-4 text-slate-700 max-w-[130px] truncate" title="${escapeHtml(c.room_name)}">${escapeHtml(c.room_name)}</td>
         <td class="py-3 px-4 font-mono text-slate-500">${durFormatted}</td>
         <td class="py-3 px-4">
-          <span class="px-2 py-0.5 rounded-md font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200 text-[11px]">${c.billed_minutes || 0} ${minSuffix}</span>
+          <span class="px-2 py-0.5 rounded-md font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200 text-xs">${c.billed_minutes || 0} ${minSuffix}</span>
         </td>
         <td class="py-3 px-4 font-mono font-medium text-emerald-700">$${(c.cost || 0).toFixed(2)}</td>
         <td class="py-3 px-4 whitespace-nowrap">

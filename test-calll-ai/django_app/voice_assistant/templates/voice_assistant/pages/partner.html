@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- Partner Header & Refresh Ribbon -->
-<div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+<div class="flex flex-wrap items-center justify-between gap-4 pb-1">
   <div>
     <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
       <span data-i18n="partner_title">برنامج الشركاء وحلول الـ SaaS (Partner &amp; Reseller Portal)</span>
@@ -19,10 +19,10 @@
       <span data-i18n="partner_docs_btn">وثائق الـ API للمطورين</span>
       <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
     </a>
-    <button type="button" onclick="openPartnerDocsModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+    <button type="button" onclick="openPartnerDocsModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <span data-i18n="partner_quick_guide">الدليل السريع</span>
     </button>
-    <button type="button" onclick="loadPartnerDashboard()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+    <button type="button" onclick="loadPartnerDashboard()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
@@ -36,19 +36,19 @@
 
 <!-- Partner KPIs Metric Cards -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_balance">رصيد محفظة الشريك المتاحة</span>
     <p id="partner-kpi-balance" class="text-xl font-semibold font-mono text-slate-900 mt-1">$0.00</p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_rate">سعر الدقيقة المخصص لك</span>
     <p id="partner-kpi-rate" class="text-xl font-semibold font-mono text-emerald-700 mt-1">$0.0300 / د</p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_clients">إجمالي عملاء الساس النشطين</span>
     <p id="partner-kpi-clients" class="text-xl font-semibold font-mono text-slate-900 mt-1">0</p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="partner_kpi_minutes">إجمالي الدقائق المستهلكة لعملائك</span>
     <p id="partner-kpi-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1" data-i18n="partner_unit_min">0 د</p>
   </div>
@@ -57,8 +57,8 @@
 <!-- Developer Credentials & Shared MCP Configuration -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
   <!-- Card 1: API Key & Webhook Settings -->
-  <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-    <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-[#eaedf0]">
+  <div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+    <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-slate-200/80">
       <span data-i18n="partner_api_access_title">بيانات الربط البرمجي الخلفي (Headless API Access)</span>
     </h4>
 
@@ -66,17 +66,17 @@
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_code_label">كود الشريك (Partner Code)</label>
         <div class="flex items-center gap-2">
-          <input type="text" id="partner-code-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-[#eaedf0] rounded-lg text-[#1f93ff] font-mono font-semibold" />
-          <button type="button" onclick="copyPartnerText('partner-code-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
+          <input type="text" id="partner-code-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-lg text-[#1f93ff] font-mono font-semibold" />
+          <button type="button" onclick="copyPartnerText('partner-code-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
         </div>
       </div>
 
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_api_key_label">مفتاح الوصول الرئيسي (X-Partner-Key)</label>
         <div class="flex items-center gap-2">
-          <input type="password" id="partner-api-key-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-[#eaedf0] rounded-lg text-slate-900 font-mono" />
-          <button type="button" onclick="togglePartnerKeyVisibility()" id="btn-toggle-partner-key" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="show">إظهار</button>
-          <button type="button" onclick="copyPartnerText('partner-api-key-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
+          <input type="password" id="partner-api-key-input" readonly class="w-full px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-900 font-mono" />
+          <button type="button" onclick="togglePartnerKeyVisibility()" id="btn-toggle-partner-key" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium shadow-2xs" data-i18n="show">إظهار</button>
+          <button type="button" onclick="copyPartnerText('partner-api-key-input')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium shadow-2xs" data-i18n="copy">نسخ</button>
           <button type="button" onclick="regeneratePartnerApiKey()" class="px-3 py-2 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 font-medium" title="إعادة توليد المفتاح" data-i18n="rotate">تدوير</button>
         </div>
       </div>
@@ -84,17 +84,17 @@
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_webhook_label">رابط استقبال الـ Webhook الخاص بنظامك</label>
         <div class="flex items-center gap-2">
-          <input type="url" id="partner-webhook-url-input" placeholder="https://your-saas.com/api/voice-webhooks/" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
+          <input type="url" id="partner-webhook-url-input" placeholder="https://your-saas.com/api/voice-webhooks/" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 font-mono text-xs focus:outline-none focus:border-[#1f93ff]" />
           <button type="button" onclick="savePartnerSettings()" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shrink-0 shadow-2xs" data-i18n="save">حفظ</button>
-          <button type="button" onclick="testPartnerWebhook()" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shrink-0 shadow-2xs" data-i18n="test">فحص</button>
+          <button type="button" onclick="testPartnerWebhook()" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium transition shrink-0 shadow-2xs" data-i18n="test">فحص</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 2: Shared MCP Server Configuration -->
-  <div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-    <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-[#eaedf0]">
+  <div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+    <h4 class="font-semibold text-slate-900 text-sm pb-3 border-b border-slate-200/80">
       <span data-i18n="partner_shared_mcp_title">خادم الـ MCP الموروث لعملائك (Shared SaaS Tools)</span>
     </h4>
 
@@ -105,7 +105,7 @@
     <div class="space-y-3 text-xs pt-1">
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_shared_mcp_select_label">خادم الـ MCP المشترك الافتراضي</label>
-        <select id="partner-shared-mcp-select" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]">
+        <select id="partner-shared-mcp-select" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]">
           <option value="" data-i18n="partner_no_inherited_mcp">-- بدون خادم موروث --</option>
         </select>
       </div>
@@ -120,56 +120,74 @@
 </div>
 
 <!-- White-Label Zero-Code Iframe Embeds Card for Partners -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-5">
-  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
     <div class="flex items-center gap-2.5 flex-wrap">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-[#1f93ff] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-        🌐
+      <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        <svg class="w-4 h-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        </svg>
       </div>
       <div>
         <h4 class="font-semibold text-sm text-slate-900" data-i18n="partner_embed_title">تضمين وايت ليبل بدون كود (White-Label Iframe Embeds)</h4>
         <p class="text-xs text-slate-500 mt-0.5" data-i18n="partner_embed_desc">قم بتضمين منصة الشات أو المساعد الصوتي مباشرة داخل بوابات عملائك باسم علامتك التجارية</p>
       </div>
     </div>
-    <span class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+    <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-50 text-purple-700 border border-purple-200">
       White-Label Embedded Suite
     </span>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <!-- Partner Chat Iframe -->
-    <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+    <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
       <div class="flex items-center justify-between">
-        <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_chat_title">💬 كود تضمين الشات المباشر لعملائك:</span>
-        <a id="partner-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
-          <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+        <div class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_chat_title">كود تضمين الشات المباشر لعملائك:</span>
+        </div>
+        <a id="partner-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-xs text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
         </a>
       </div>
       <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
         <pre id="partner-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;PARTNER_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
-        <button type="button" onclick="copyPartnerEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <button type="button" onclick="copyPartnerEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
       </div>
     </div>
 
     <!-- Partner Voice Iframe -->
-    <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+    <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
       <div class="flex items-center justify-between">
-        <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_voice_title">🎙️ كود تضمين المساعد الصوتي وقمرة الاتصال:</span>
-        <a id="partner-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
-          <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+        <div class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+          <span class="font-medium text-xs text-slate-900" data-i18n="partner_embed_voice_title">كود تضمين المساعد الصوتي وقمرة الاتصال:</span>
+        </div>
+        <a id="partner-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-xs text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
         </a>
       </div>
       <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
         <pre id="partner-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;PARTNER_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;"&gt;&lt;/iframe&gt;</pre>
-        <button type="button" onclick="copyPartnerEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <button type="button" onclick="copyPartnerEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Sub-Clients Management Table -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
     <div>
       <h4 class="font-semibold text-slate-900 text-sm">
         <span data-i18n="partner_subclients_title">إدارة عملاء الساس التابعين (Sub-Clients)</span>
@@ -182,7 +200,7 @@
   <div class="overflow-x-auto">
     <table class="w-full text-xs text-start">
       <thead>
-        <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
+        <tr class="border-b border-slate-200/80 bg-slate-50/70 text-slate-500">
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_client_id">معرف العميل (ID)</th>
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_name">الاسم والبيانات</th>
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_ref">المعرف الخارجي (Ref)</th>
@@ -194,7 +212,7 @@
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_actions">الإجراءات</th>
         </tr>
       </thead>
-      <tbody id="partner-clients-tbody" class="divide-y divide-[#eaedf0]">
+      <tbody id="partner-clients-tbody" class="divide-y divide-slate-200/80">
         <tr>
           <td colspan="9" class="py-8 text-center text-slate-400" data-i18n="partner_loading_clients">
             جاري تحميل عملاء الساس...
@@ -206,8 +224,8 @@
 </div>
 
 <!-- Sub-Clients CDR Live Call Logs Table -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
     <div>
       <h4 class="font-semibold text-slate-900 text-sm">
         <span data-i18n="partner_cdr_title">سجل مكالمات عملاء الساس (Partner Sub-Clients CDR)</span>
@@ -219,7 +237,7 @@
   <div class="overflow-x-auto">
     <table class="w-full text-xs text-start">
       <thead>
-        <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
+        <tr class="border-b border-slate-200/80 bg-slate-50/70 text-slate-500">
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_call_time">وقت المكالمة</th>
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_subclient">العميل التابع</th>
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_direction">الاتجاه والطرف</th>
@@ -229,7 +247,7 @@
           <th class="py-2.5 px-3.5 text-start font-medium" data-i18n="partner_th_summary">الملخص الذكي</th>
         </tr>
       </thead>
-      <tbody id="partner-calls-tbody" class="divide-y divide-[#eaedf0]">
+      <tbody id="partner-calls-tbody" class="divide-y divide-slate-200/80">
         <tr>
           <td colspan="7" class="py-8 text-center text-slate-400" data-i18n="partner_no_calls">
             لا توجد مكالمات مسجلة لعملاء الشريك حتى الآن.
@@ -244,12 +262,16 @@
 {% block modals %}
 <!-- Modal: Partner Application -->
 <div id="partner-apply-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-lg w-full p-5 shadow-md space-y-4 text-xs">
-    <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
+  <div class="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-5 shadow-lg space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-2.5 border-b border-slate-100">
       <h3 class="text-sm font-semibold text-slate-900">
         <span data-i18n="partner_apply_title">طلب الانضمام كشريك SaaS و موزع معتمد</span>
       </h3>
-      <button type="button" onclick="closePartnerApplyModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
+      <button type="button" onclick="closePartnerApplyModal()" class="text-slate-400 hover:text-slate-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <p class="text-slate-600 leading-relaxed" data-i18n="partner_apply_desc">
@@ -261,21 +283,21 @@
     <form id="partner-apply-form" onsubmit="submitPartnerApply(event)" class="space-y-3">
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_company_label">اسم الشركة أو المنصة (SaaS Name) *</label>
-        <input type="text" id="partner-apply-company" required placeholder="مثال: متجر بلس للحلول الرقمية" data-i18n-placeholder="partner_company_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
+        <input type="text" id="partner-apply-company" required placeholder="مثال: متجر بلس للحلول الرقمية" data-i18n-placeholder="partner_company_ph" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_website_label">موقع المنصة الإلكتروني</label>
-        <input type="url" id="partner-apply-website" placeholder="https://example.com" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
+        <input type="url" id="partner-apply-website" placeholder="https://example.com" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
       </div>
 
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_desc_label">نبذة عن النشاط وحجم الاستخدام المتوقع</label>
-        <textarea id="partner-apply-desc" rows="3" placeholder="وصف موجز عن كيفية استخدام الذكاء الاصطناعي والصوت لخدمة عملائك..." data-i18n-placeholder="partner_desc_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]"></textarea>
+        <textarea id="partner-apply-desc" rows="3" placeholder="وصف موجز عن كيفية استخدام الذكاء الاصطناعي والصوت لخدمة عملائك..." data-i18n-placeholder="partner_desc_ph" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]"></textarea>
       </div>
 
-      <div class="flex justify-end gap-2 pt-3 border-t border-[#eaedf0]">
-        <button type="button" onclick="closePartnerApplyModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200/80">
+        <button type="button" onclick="closePartnerApplyModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
         <button type="submit" id="btn-submit-partner-apply" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs">
           <span data-i18n="partner_submit_btn">إرسال الطلب للمراجعة</span>
         </button>
@@ -286,12 +308,16 @@
 
 <!-- Modal: Client Cap Adjustment -->
 <div id="partner-cap-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-md w-full p-5 shadow-md space-y-4 text-xs">
-    <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
+  <div class="bg-white border border-slate-200 rounded-xl max-w-md w-full p-5 shadow-lg space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-2.5 border-b border-slate-100">
       <h3 class="text-sm font-semibold text-slate-900">
         <span data-i18n="partner_cap_modal_title">تعديل سقف استهلاك العميل (Usage Cap)</span>
       </h3>
-      <button type="button" onclick="closeClientCapModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
+      <button type="button" onclick="closeClientCapModal()" class="text-slate-400 hover:text-slate-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <input type="hidden" id="cap-modal-client-id" />
@@ -299,14 +325,14 @@
     <div class="space-y-3">
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_cap_label">سقف الإنفاق بالدولار (Spending Cap $)</label>
-        <input type="number" id="cap-modal-spending" step="0.5" placeholder="اتركه فارغاً لعدم وضع حد مالي" data-i18n-placeholder="partner_cap_ph" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
-        <span class="text-[10px] text-slate-400 block mt-0.5" data-i18n="partner_cap_hint">الحد الأقصى للتكلفة المسموح بها لهذا العميل</span>
+        <input type="number" id="cap-modal-spending" step="0.5" placeholder="اتركه فارغاً لعدم وضع حد مالي" data-i18n-placeholder="partner_cap_ph" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
+        <span class="text-xs text-slate-400 block mt-0.5" data-i18n="partner_cap_hint">الحد الأقصى للتكلفة المسموح بها لهذا العميل</span>
       </div>
 
       <div>
         <label class="block font-medium text-slate-700 mb-1" data-i18n="partner_cap_minutes_label">سقف الدقائق (Minute Cap)</label>
-        <input type="number" id="cap-modal-minutes" step="1" placeholder="اتركه فارغاً لعدم وضع حد للدقائق" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
-        <span class="text-[10px] text-slate-400 block mt-0.5">الحد الأقصى للدقائق الصوتية المسموح بها</span>
+        <input type="number" id="cap-modal-minutes" step="1" placeholder="اتركه فارغاً لعدم وضع حد للدقائق" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 focus:outline-none focus:border-[#1f93ff]" />
+        <span class="text-xs text-slate-400 block mt-0.5">الحد الأقصى للدقائق الصوتية المسموح بها</span>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
@@ -317,8 +343,8 @@
 
     <div id="cap-modal-alert" class="hidden p-2 rounded-lg text-xs"></div>
 
-    <div class="flex justify-end gap-2 pt-3 border-t border-[#eaedf0]">
-      <button type="button" onclick="closeClientCapModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
+    <div class="flex justify-end gap-2 pt-3 border-t border-slate-200/80">
+      <button type="button" onclick="closeClientCapModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 transition font-medium" data-i18n="cancel">إلغاء</button>
       <button type="button" onclick="saveClientCap()" id="btn-save-client-cap" class="px-4 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-medium transition shadow-2xs" data-i18n="save_cap">حفظ السقف</button>
     </div>
   </div>
@@ -326,16 +352,20 @@
 
 <!-- Modal: Quick API Docs -->
 <div id="partner-docs-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-2xl w-full p-5 shadow-md space-y-4 text-xs max-h-[85vh] overflow-y-auto">
-    <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0]">
+  <div class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full p-5 shadow-lg space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+    <div class="flex justify-between items-center pb-2.5 border-b border-slate-100">
       <h3 class="text-sm font-semibold text-slate-900" data-i18n="partner_docs_modal_title">دليل مطوري الـ API وخدمات الـ SaaS</h3>
-      <button type="button" onclick="closePartnerDocsModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
+      <button type="button" onclick="closePartnerDocsModal()" class="text-slate-400 hover:text-slate-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
-    <div class="p-3 bg-slate-50 border border-[#eaedf0] rounded-lg flex items-center justify-between">
+    <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-lg flex items-center justify-between">
       <div>
         <span class="font-medium text-slate-900 block" data-i18n="partner_docs_interactive_portal">بوابة التوثيق التفاعلية الكاملة للمطورين:</span>
-        <span class="text-[11px] text-slate-500" data-i18n="partner_docs_interactive_desc">تحتوي على أمثلة كود ووحدة اختبار حية لجميع الواجهات.</span>
+        <span class="text-xs text-slate-500" data-i18n="partner_docs_interactive_desc">تحتوي على أمثلة كود ووحدة اختبار حية لجميع الواجهات.</span>
       </div>
       <a href="/api/partner/v1/docs/" target="_blank" class="px-3.5 py-1.5 bg-[#1f93ff] hover:bg-[#1570ef] text-white rounded-lg font-medium transition flex items-center gap-1.5 shadow-2xs shrink-0">
         <span data-i18n="partner_docs_open_portal">فتح البوابة</span>
@@ -344,49 +374,49 @@
     </div>
 
     <div class="space-y-2.5 font-mono">
-      <div class="border border-[#eaedf0] rounded-lg p-2.5 bg-white space-y-1">
+      <div class="border border-slate-200/80 rounded-lg p-2.5 bg-white space-y-1">
         <div class="flex items-center gap-2">
-          <span class="bg-[#1f93ff] text-white text-[10px] font-medium px-1.5 py-0.5 rounded">POST</span>
+          <span class="bg-[#1f93ff] text-white text-xs font-medium px-1.5 py-0.5 rounded">POST</span>
           <span class="font-semibold text-slate-900">/api/partner/v1/clients/register/</span>
         </div>
-        <p class="font-sans text-[11px] text-slate-500" data-i18n="partner_docs_api1_desc">تسجيل عميل ساس جديد خلفياً وإرجاع client_id فوراً.</p>
+        <p class="font-sans text-xs text-slate-500" data-i18n="partner_docs_api1_desc">تسجيل عميل ساس جديد خلفياً وإرجاع client_id فوراً.</p>
       </div>
 
-      <div class="border border-[#eaedf0] rounded-lg p-2.5 bg-white space-y-1">
+      <div class="border border-slate-200/80 rounded-lg p-2.5 bg-white space-y-1">
         <div class="flex items-center gap-2">
-          <span class="bg-amber-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">GET / POST</span>
+          <span class="bg-amber-600 text-white text-xs font-medium px-1.5 py-0.5 rounded">GET / POST</span>
           <span class="font-semibold text-slate-900">/api/partner/v1/clients/{id}/employees/</span>
         </div>
-        <p class="font-sans text-[11px] text-slate-500" data-i18n="partner_docs_api2_desc">إدارة الموظفين والتحويلات الداخلية للعميل.</p>
+        <p class="font-sans text-xs text-slate-500" data-i18n="partner_docs_api2_desc">إدارة الموظفين والتحويلات الداخلية للعميل.</p>
       </div>
 
-      <div class="border border-[#eaedf0] rounded-lg p-2.5 bg-white space-y-1">
+      <div class="border border-slate-200/80 rounded-lg p-2.5 bg-white space-y-1">
         <div class="flex items-center gap-2">
-          <span class="bg-amber-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">GET / POST</span>
+          <span class="bg-amber-600 text-white text-xs font-medium px-1.5 py-0.5 rounded">GET / POST</span>
           <span class="font-semibold text-slate-900">/api/partner/v1/clients/{id}/queues/</span>
         </div>
-        <p class="font-sans text-[11px] text-slate-500" data-i18n="partner_docs_api3_desc">إنشاء طوابير الانتظار وتعيين الموظفين داخل الطابور برمجياً.</p>
+        <p class="font-sans text-xs text-slate-500" data-i18n="partner_docs_api3_desc">إنشاء طوابير الانتظار وتعيين الموظفين داخل الطابور برمجياً.</p>
       </div>
 
-      <div class="border border-[#eaedf0] rounded-lg p-2.5 bg-white space-y-1">
+      <div class="border border-slate-200/80 rounded-lg p-2.5 bg-white space-y-1">
         <div class="flex items-center gap-2">
-          <span class="bg-[#1f93ff] text-white text-[10px] font-medium px-1.5 py-0.5 rounded">POST</span>
+          <span class="bg-[#1f93ff] text-white text-xs font-medium px-1.5 py-0.5 rounded">POST</span>
           <span class="font-semibold text-slate-900">/api/partner/v1/clients/{id}/rag/query/</span>
         </div>
-        <p class="font-sans text-[11px] text-slate-500" data-i18n="partner_docs_api4_desc">استعلام دلالي ذكي بالذكاء الاصطناعي في مستندات المتجر.</p>
+        <p class="font-sans text-xs text-slate-500" data-i18n="partner_docs_api4_desc">استعلام دلالي ذكي بالذكاء الاصطناعي في مستندات المتجر.</p>
       </div>
 
-      <div class="border border-[#eaedf0] rounded-lg p-2.5 bg-white space-y-1">
+      <div class="border border-slate-200/80 rounded-lg p-2.5 bg-white space-y-1">
         <div class="flex items-center gap-2">
-          <span class="bg-[#1f93ff] text-white text-[10px] font-medium px-1.5 py-0.5 rounded">POST</span>
+          <span class="bg-[#1f93ff] text-white text-xs font-medium px-1.5 py-0.5 rounded">POST</span>
           <span class="font-semibold text-slate-900">/api/partner/v1/clients/{id}/token/</span>
         </div>
-        <p class="font-sans text-[11px] text-slate-500" data-i18n="partner_docs_api5_desc">إصدار توكن اتصال WebRTC للعميل لبدء مكالمة صوتية فورية.</p>
+        <p class="font-sans text-xs text-slate-500" data-i18n="partner_docs_api5_desc">إصدار توكن اتصال WebRTC للعميل لبدء مكالمة صوتية فورية.</p>
       </div>
     </div>
 
-    <div class="flex justify-end pt-2 border-t border-[#eaedf0]">
-      <button type="button" onclick="closePartnerDocsModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs" data-i18n="close">إغلاق</button>
+    <div class="flex justify-end pt-2 border-t border-slate-200/80">
+      <button type="button" onclick="closePartnerDocsModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium transition shadow-2xs" data-i18n="close">إغلاق</button>
     </div>
   </div>
 </div>

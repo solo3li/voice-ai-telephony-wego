@@ -5,10 +5,12 @@
 
 {% block content %}
 <!-- Header & Action Bar -->
-<div class="bg-white p-5 rounded-xl border border-[#eaedf0] shadow-2xs flex flex-wrap justify-between items-center gap-4">
+<div class="flex flex-wrap justify-between items-center gap-4 pb-1">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg border border-slate-200/60">
-          🎭
+        <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200/60">
+          <svg class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
         <div>
           <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
@@ -36,19 +38,19 @@
         <h3 class="text-xs font-semibold text-slate-900 tracking-wide" data-i18n="personas_catalog_title">
           الشخصيات المتاحة للمحادثات (Available AI Personas)
         </h3>
-        <span class="text-[11px] text-slate-400" data-i18n="personas_catalog_hint">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
+        <span class="text-xs text-slate-400" data-i18n="personas_catalog_hint">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
       </div>
 
       <div id="personas-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="col-span-2 text-center py-10 text-slate-400 bg-white rounded-xl border border-[#eaedf0] text-xs" data-i18n="personas_empty_grid">
+        <div class="col-span-2 text-center py-10 text-slate-400 bg-white rounded-xl border border-slate-100 text-xs" data-i18n="personas_empty_grid">
           جاري تحميل كروت الشخصيات...
         </div>
       </div>
     </div>
 
     <!-- Customization Studio & Profile Details Editor -->
-    <div id="profile-editor-card" class="bg-white rounded-xl p-6 border border-[#eaedf0] shadow-2xs space-y-5 transition-all duration-300">
-      <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-[#eaedf0]">
+    <div id="profile-editor-card" class="bg-white rounded-xl p-6 border border-slate-200/80 shadow-2xs space-y-5 transition-all duration-300">
+      <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-slate-100">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-sm border border-slate-200/60">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -58,7 +60,7 @@
           </div>
           <div>
             <h3 class="text-sm font-semibold text-slate-900" data-i18n="personas_studio_title">استوديو تخصيص الشخصية المحددة</h3>
-            <p class="text-[11px] text-slate-500" data-i18n="personas_studio_subtitle">تعديل الخامة الصوتية من Google (30 خامة)، الدور، والتعليمات البرمجية</p>
+            <p class="text-xs text-slate-500" data-i18n="personas_studio_subtitle">تعديل الخامة الصوتية من Google (30 خامة)، الدور، والتعليمات البرمجية</p>
           </div>
         </div>
 
@@ -74,7 +76,7 @@
       <!-- Current Profile Summary / Editor Fields -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
         <!-- Gender, Language & Dialect -->
-        <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2">
+        <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3.5 space-y-2">
           <label class="block font-medium text-slate-700" data-i18n="personas_field_gender_dialect">النوع واللغة واللهجة</label>
           <div class="grid grid-cols-2 gap-2">
             <select id="field-gender" onchange="syncGenderVoiceOptions()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800">
@@ -102,24 +104,24 @@
         </div>
 
         <!-- Google Voice Selector -->
-        <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2">
+        <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3.5 space-y-2">
           <div class="flex justify-between items-center">
             <label class="font-medium text-slate-700" data-i18n="personas_field_voice">صوت Google الرسمي</label>
-            <span id="voice-tag-badge" class="text-[11px] px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_style_natural">طبيعي وهادئ</span>
+            <span id="voice-tag-badge" class="text-xs px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_style_natural">طبيعي وهادئ</span>
           </div>
           <select id="field-voice" onchange="updateVoiceTag()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs">
           </select>
         </div>
 
         <!-- Persona Role -->
-        <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2">
+        <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3.5 space-y-2">
           <div class="flex justify-between items-center">
             <label class="block font-medium text-slate-700" data-i18n="personas_field_role">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
             <div class="flex items-center gap-1.5">
-              <button type="button" onclick="openCustomRolesModal()" class="text-[11px] px-2 py-0.5 rounded-md bg-white hover:bg-slate-50 text-[#1f93ff] border border-[#b2ddff]/70 transition font-medium flex items-center gap-1">
+              <button type="button" onclick="openCustomRolesModal()" class="text-xs px-2 py-0.5 rounded-md bg-white hover:bg-slate-50 text-[#1f93ff] border border-[#b2ddff]/70 transition font-medium flex items-center gap-1">
                  <span data-i18n="personas_btn_custom_roles">مكتبة أدوار المؤسسة</span> (<span id="custom-roles-count">0</span>)
               </button>
-              <span class="text-[11px] px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_20_ready_badge">20 تخصص جاهز</span>
+              <span class="text-xs px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_20_ready_badge">20 تخصص جاهز</span>
             </div>
           </div>
           <div class="space-y-1.5">
@@ -128,8 +130,8 @@
             </select>
             <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." data-i18n-placeholder="personas_role_placeholder" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
             <div class="flex justify-between items-center pt-1">
-              <span id="role-selection-status" class="text-[10px] text-slate-400" data-i18n="personas_role_status">يمكنك التعديل على النص بحرية تامة</span>
-              <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+              <span id="role-selection-status" class="text-xs text-slate-400" data-i18n="personas_role_status">يمكنك التعديل على النص بحرية تامة</span>
+              <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-xs text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
                 <span data-i18n="personas_save_role_custom_btn">حفظ النص الحالي كدور مخصص في مكتبتي</span>
               </button>
             </div>
@@ -137,19 +139,19 @@
         </div>
 
         <!-- Speaking Style & Pacing -->
-        <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2">
+        <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3.5 space-y-2">
           <div class="flex justify-between items-center">
             <label class="block font-medium text-slate-700" data-i18n="personas_field_style">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
-            <span class="text-[11px] px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_free_style">نبرة حرة</span>
+            <span class="text-xs px-2 py-0.5 rounded-md bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-medium" data-i18n="personas_free_style">نبرة حرة</span>
           </div>
           <textarea id="field-style" rows="2" placeholder="اكتب أسلوب الإلقاء والنبرة بحرية تامة..." data-i18n-placeholder="personas_style_placeholder" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
         </div>
 
         <!-- Verbosity & Conciseness Level -->
-        <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3.5 space-y-2">
+        <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3.5 space-y-2">
           <div class="flex justify-between items-center">
             <label class="block font-medium text-slate-700" data-i18n="personas_field_verbosity">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
-            <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 font-medium" data-i18n="personas_verbosity_label">التحكم في الرغي</span>
+            <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 font-medium" data-i18n="personas_verbosity_label">التحكم في الرغي</span>
           </div>
           <select id="field-verbosity" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]">
             <option value="concise" data-i18n="personas_verbosity_brief">مختصر ومباشر (ردود سريعة في 1-2 جملة، بدون حشو أو أسئلة زائدة)</option>
@@ -160,12 +162,12 @@
       </div>
 
       <!-- Welcome Message & Proactive Greeting Control -->
-      <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-4 space-y-3">
+      <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-4 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <div>
               <label for="field-welcome-enabled" class="font-medium text-slate-800 text-xs cursor-pointer" data-i18n="personas_welcome_label">رسالة الترحيب الافتتاحية للمساعد</label>
-              <p class="text-[11px] text-slate-500" data-i18n="personas_welcome_desc">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
+              <p class="text-xs text-slate-500" data-i18n="personas_welcome_desc">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
@@ -176,7 +178,7 @@
         </div>
         <div id="welcome-message-input-wrapper">
           <textarea id="field-welcome" rows="2" placeholder="اكتب رسالة الترحيب المخصصة هنا (مثال: أهلاً بحضرتك يا فندم في متجرنا، معاك سارة، أقدر أساعدك في إيه النهاردة؟)..." data-i18n-placeholder="personas_welcome_ph" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
-          <p class="text-[10px] text-slate-400 mt-1" data-i18n="personas_welcome_hint">إذا تركتها فارغة مع التفعيل، سينطق المساعد تحية ذكية افتراضية مناسبة للهجة المحددة.</p>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="personas_welcome_hint">إذا تركتها فارغة مع التفعيل، سينطق المساعد تحية ذكية افتراضية مناسبة للهجة المحددة.</p>
         </div>
       </div>
 
@@ -195,10 +197,10 @@
         <textarea id="field-off-topic" rows="2"
           placeholder='مثال: "بعتذر جداً يا فندم، أنا بساعدك بس في طلبات المتجر، تحب تطلب حاجة؟"' data-i18n-placeholder="personas_off_topic_ph"
           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#1f93ff]"></textarea>
-        <p class="text-slate-400 text-[11px]" data-i18n="personas_off_topic_desc">لو تركتها فارغة، سيعتذر المساعد باختصار ثم يعيد توجيه العميل لنطاق الخدمة تلقائياً.</p>
+        <p class="text-slate-400 text-xs" data-i18n="personas_off_topic_desc">لو تركتها فارغة، سيعتذر المساعد باختصار ثم يعيد توجيه العميل لنطاق الخدمة تلقائياً.</p>
       </div>
 
-      <div class="flex flex-wrap justify-between items-center gap-3 pt-3 border-t border-[#eaedf0]">
+      <div class="flex flex-wrap justify-between items-center gap-3 pt-3 border-t border-slate-200/80">
         <div id="profile-status-msg" class="text-xs text-slate-500"></div>
         <div class="flex items-center gap-2">
           <button type="button" onclick="saveActiveProfileChanges()" id="btn-save-profile" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
@@ -218,8 +220,8 @@
 {% block modals %}
 <!-- Modal: New Profile -->
 <div id="profile-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-md w-full p-6 shadow-lg space-y-4 text-xs">
-    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
+  <div class="bg-white border border-slate-200/80 rounded-xl max-w-md w-full p-6 shadow-lg space-y-4 text-xs">
+    <div class="flex justify-between items-center pb-3 border-b border-slate-200/80">
       <h3 class="text-sm font-semibold text-slate-900" data-i18n="persona_modal_new_title">إنشاء بروفايل شخصية جديد</h3>
       <button type="button" onclick="closeNewProfileModal()" class="text-slate-400 hover:text-slate-600">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,7 +277,7 @@
         <div>
           <div class="flex justify-between items-center mb-1">
             <label class="block font-medium text-slate-700" data-i18n="persona_field_role">الدور والشخصية</label>
-            <span class="text-[11px] text-[#1f93ff] font-medium">20 دور + أدوارك</span>
+            <span class="text-xs text-[#1f93ff] font-medium">20 دور + أدوارك</span>
           </div>
           <select id="new-prof-role-preset" onchange="handleRolePresetSelect(this.value, 'new')" class="w-full px-2.5 py-1.5 mb-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs font-medium focus:outline-none focus:border-[#1f93ff]">
             <option value="" data-i18n="persona_role_preset_default">-- اختر دوراً جاهزاً أو اكتب بالأسفل --</option>
@@ -298,7 +300,7 @@
       </div>
 
       <!-- Welcome Message & Proactive Greeting in Modal -->
-      <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3 space-y-2">
+      <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3 space-y-2">
         <div class="flex items-center justify-between">
           <label for="new-prof-welcome-enabled" class="font-medium text-slate-800 text-xs cursor-pointer flex items-center gap-1.5">
             <span data-i18n="persona_welcome_enable">تفعيل رسالة الترحيب الافتتاحية</span>
@@ -309,15 +311,15 @@
       </div>
 
       <!-- Off-Topic Response in Modal -->
-      <div class="bg-slate-50/60 border border-[#eaedf0] rounded-lg p-3 space-y-2">
+      <div class="bg-slate-50/60 border border-slate-100 rounded-lg p-3 space-y-2">
         <label for="new-prof-off-topic" class="font-medium text-slate-800 text-xs flex items-center gap-1.5">
           <span data-i18n="persona_off_topic_label">رسالة الرد خارج النطاق (اختياري)</span>
         </label>
         <textarea id="new-prof-off-topic" rows="2" placeholder='مثال: "بعتذر لحضرتك، أنا مخصص فقط لخدمات المتجر، أقدر أساعدك في إيه بخصوص طلباتك؟"' data-i18n-placeholder="persona_off_topic_ph" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#1f93ff]"></textarea>
-        <p class="text-[10px] text-slate-400" data-i18n="persona_off_topic_hint">الرسالة التي ينطقها المساعد إذا سأله العميل عن موضوع خارج اختصاصه أو عمله.</p>
+        <p class="text-xs text-slate-400" data-i18n="persona_off_topic_hint">الرسالة التي ينطقها المساعد إذا سأله العميل عن موضوع خارج اختصاصه أو عمله.</p>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-[#eaedf0]">
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
         <button type="button" onclick="closeNewProfileModal()" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition text-xs font-medium" data-i18n="cancel">إلغاء</button>
         <button type="submit" id="btn-create-prof" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white font-semibold transition text-xs shadow-2xs" data-i18n="save_profile">حفظ البروفايل</button>
       </div>
@@ -327,15 +329,19 @@
 
 <!-- Modal: Custom Roles Library -->
 <div id="custom-roles-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-2xl w-full p-6 shadow-lg space-y-4 text-xs max-h-[90vh] flex flex-col">
-    <div class="flex justify-between items-center pb-3 border-b border-[#eaedf0]">
+  <div class="bg-white border border-slate-200/80 rounded-xl max-w-2xl w-full p-6 shadow-lg space-y-4 text-xs max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center pb-3 border-b border-slate-100">
       <div class="flex items-center gap-2">
         <div>
           <h3 class="text-sm font-semibold text-slate-900" data-i18n="personas_roles_modal_title">مكتبة أدوار الذكاء الاصطناعي المخصصة للمؤسسة</h3>
-          <p class="text-[10px] text-slate-400" data-i18n="personas_roles_modal_subtitle">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
+          <p class="text-xs text-slate-400" data-i18n="personas_roles_modal_subtitle">أنشئ أدواراً خاصة بشركتك واستخدمها في أي بروفايل أو تحويلة اتصال</p>
         </div>
       </div>
-      <button type="button" onclick="closeCustomRolesModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      <button type="button" onclick="closeCustomRolesModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <div class="overflow-y-auto space-y-4 flex-1 pr-1">
@@ -345,12 +351,12 @@
           <span data-i18n="personas_roles_saved_title">الأدوار المخصصة المحفوظة</span> (<span id="modal-roles-count">0</span>)
         </h4>
         <div id="modal-custom-roles-list" class="space-y-2">
-          <div class="text-center py-6 text-slate-400 bg-slate-50/60 rounded-lg border border-[#eaedf0]" data-i18n="personas_roles_empty">لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!</div>
+          <div class="text-center py-6 text-slate-400 bg-slate-50/60 rounded-lg border border-slate-100" data-i18n="personas_roles_empty">لا توجد أدوار مخصصة مسجلة بعد. يمكنك إنشاء دورك الأول أدناه!</div>
         </div>
       </div>
 
       <!-- Add / Edit Custom Role Form -->
-      <div class="bg-slate-50/60 p-4 rounded-lg border border-[#eaedf0] space-y-3">
+      <div class="bg-slate-50/60 p-4 rounded-lg border border-slate-100 space-y-3">
         <h4 class="font-semibold text-slate-900 flex items-center gap-1.5">
           <span data-i18n="personas_roles_add_title">إضافة دور مخصص جديد للمكتبة</span>
         </h4>

@@ -1,9 +1,9 @@
 {% load static %}
 <!-- Top Clean Header Component with Conditional Minimalist Telephony Horizontal Bar -->
-<div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[#eaedf0] shadow-2xs">
+<div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
   
   <!-- Row 1: Section Title & Live Service Badges -->
-  <header class="px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-[#eaedf0]/70">
+  <header class="px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-2.5">
       <h2 id="current-section-title" class="text-sm font-bold text-slate-900 flex items-center gap-2">
         <!-- Lucide Sparkles Line Icon -->
@@ -13,15 +13,15 @@
         <span data-i18n="header_system_title">{{ page_title|default:"منظومة الذكاء الاصطناعي الهاتفي" }}</span>
       </h2>
       <span class="text-slate-300">|</span>
-      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline" data-i18n="app_subtitle">Enterprise Voice AI</span>
+      <span class="text-xs text-slate-400 font-mono hidden sm:inline" data-i18n="app_subtitle">Enterprise Voice AI</span>
     </div>
 
     <!-- Live Service Status Badges & Quick Controls -->
     <div class="flex flex-wrap items-center gap-2 text-xs">
-      <span id="livekit-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-[11px] shadow-2xs">
+      <span id="livekit-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-xs shadow-2xs">
         <span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span> <span data-i18n="livekit_connected">LiveKit: متصل</span>
       </span>
-      <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-[11px] shadow-2xs">
+      <span id="centrifugo-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-medium text-xs shadow-2xs">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span data-i18n="centrifugo_connected">Centrifugo: متصل</span>
       </span>
 
@@ -30,10 +30,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#1f93ff] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
         </svg>
-        <span class="text-slate-500 font-normal text-[11px]" data-i18n="header_balance">الرصيد:</span>
+        <span class="text-slate-500 font-normal text-xs" data-i18n="header_balance">الرصيد:</span>
         <span id="header-balance-val" class="font-mono text-xs font-bold text-[#1f93ff]">--.--</span>
-        <span id="header-balance-curr" class="text-[10px] text-slate-500">USD</span>
-        <span class="w-3.5 h-3.5 rounded-full bg-[#1f93ff] text-white flex items-center justify-center text-[10px] group-hover:scale-110 transition font-bold leading-none" title="شحن الرصيد" data-i18n-title="topup_balance">+</span>
+        <span id="header-balance-curr" class="text-xs text-slate-500">USD</span>
+        <span class="w-4 h-4 rounded-full bg-[#1f93ff] text-white flex items-center justify-center group-hover:scale-105 transition shrink-0" title="شحن الرصيد" data-i18n-title="topup_balance">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="M12 5v14"/>
+          </svg>
+        </span>
       </a>
 
       <!-- Bilingual Switcher Toggle Button -->
@@ -41,14 +45,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
         </svg>
-        <span id="lang-text" class="text-[11px]">English</span>
+        <span id="lang-text" class="text-xs">English</span>
       </button>
     </div>
   </header>
 
   {% if active_nav in "voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours" or not active_nav or request.resolver_match.url_name == 'room' %}
   <!-- Row 2: Minimalist Flat Horizontal Scrolling Bar (Only for the 10 Telephony Pages) -->
-  <div class="relative px-3 py-1.5 bg-[#f8fafc]/95 border-t border-[#eaedf0]/60 flex items-center">
+  <div class="relative px-3 py-1.5 bg-[#f8fafc]/95 border-t border-slate-100 flex items-center">
     
     <!-- Left Smooth Scroll Arrow -->
     <button type="button" onclick="scrollTopTabs('left')" class="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-400 hover:text-[#1f93ff] hover:border-[#1f93ff]/40 shadow-xs shrink-0 mx-1 z-10 transition cursor-pointer" title="تمرير لليسار" data-i18n-title="scroll_left">

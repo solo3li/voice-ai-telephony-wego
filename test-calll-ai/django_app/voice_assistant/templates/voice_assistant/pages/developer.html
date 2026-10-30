@@ -5,11 +5,11 @@
 
 {% block content %}
 <!-- Header & Action Ribbon -->
-<div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+<div class="flex flex-wrap items-center justify-between gap-4 pb-1">
   <div>
     <div class="flex items-center gap-2">
       <h3 class="text-base font-semibold text-slate-900" data-i18n="dev_title">واجهات المطورين المباشرة (Direct Developer API &amp; Keys)</h3>
-      <span class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">v1 Active</span>
+      <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">v1 Active</span>
     </div>
     <p class="text-xs text-slate-500 mt-0.5 max-w-2xl leading-relaxed" data-i18n="dev_subtitle">
       ادمج المساعد الصوتي والذكاء الاصطناعي وخوادم FastMCP وبدء مكالمات WebRTC مباشرة في موقعك أو تطبيقاتك الخاصة باستخدام مفتاح الـ API الشخصي لحسابك (<code class="bg-slate-100 px-1 py-0.5 rounded text-[#1f93ff] font-mono">X-API-Key</code>).
@@ -19,9 +19,11 @@
   <div class="flex items-center gap-2 flex-wrap">
     <a href="/api/v1/docs/" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <span data-i18n="dev_btn_docs">فتح التوثيق التفاعلي (Scalar Docs)</span>
-      <span>↗</span>
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+      </svg>
     </a>
-    <button type="button" onclick="loadDeveloperKeys()" class="px-3.5 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition flex items-center gap-1.5 shadow-2xs">
+    <button type="button" onclick="loadDeveloperKeys()" class="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
@@ -31,8 +33,8 @@
 </div>
 
 <!-- API Key Management Card -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-  <div class="flex items-center justify-between flex-wrap gap-2 border-b border-[#eaedf0] pb-3">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/80 pb-3">
     <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_key_title">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
     <button type="button" onclick="rotateDeveloperKeyPrompt()" class="px-3 py-1 rounded-md border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-medium transition flex items-center gap-1">
       <span data-i18n="dev_btn_rotate">تدوير المفتاح (Regenerate Key)</span>
@@ -46,7 +48,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
     <div class="lg:col-span-8 relative">
       <input type="password" id="dev-api-key-input" readonly value="sk_live_usr_loading..."
-             class="w-full bg-slate-50 border border-[#eaedf0] rounded-lg px-3.5 py-2 text-xs font-mono text-slate-900 focus:outline-none select-all pe-24">
+             class="w-full bg-slate-50 border border-slate-200/80 rounded-lg px-3.5 py-2 text-xs font-mono text-slate-900 focus:outline-none select-all pe-24">
       <div class="absolute end-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
         <button type="button" onclick="toggleDevKeyVisibility()" id="btn-toggle-dev-key" class="p-1.5 text-xs text-slate-400 hover:text-slate-700 rounded-md transition" title="إظهار / إخفاء المفتاح" data-i18n-title="dev_toggle_key_title">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,26 +63,26 @@
     </div>
 
     <div class="lg:col-span-4 flex items-center gap-3 text-xs text-slate-500">
-      <div class="bg-slate-50 border border-[#eaedf0] rounded-lg p-2 flex-1">
-        <span class="block text-[10px] text-slate-400 font-medium" data-i18n="dev_created_at">تاريخ الإنشاء:</span>
+      <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2 flex-1">
+        <span class="block text-xs text-slate-400 font-medium" data-i18n="dev_created_at">تاريخ الإنشاء:</span>
         <span id="dev-key-created-at" class="font-medium text-slate-900 font-mono">--</span>
       </div>
-      <div class="bg-slate-50 border border-[#eaedf0] rounded-lg p-2 flex-1">
-        <span class="block text-[10px] text-slate-400 font-medium" data-i18n="dev_last_used">آخر استخدام:</span>
+      <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2 flex-1">
+        <span class="block text-xs text-slate-400 font-medium" data-i18n="dev_last_used">آخر استخدام:</span>
         <span id="dev-key-last-used" class="font-medium text-slate-900 font-mono">--</span>
       </div>
     </div>
   </div>
 
   <!-- Quick cURL Code Samples -->
-  <div class="mt-4 pt-3 border-t border-[#eaedf0] grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="mt-4 pt-3 border-t border-slate-200/80 grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       <h5 class="font-medium text-xs text-slate-700 mb-2" data-i18n="dev_account_sample">استعلام الحساب (Get Account):</h5>
       <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
         <pre id="dev-curl-sample">curl -X GET "https://localhost/api/v1/account/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Accept: application/json"</pre>
-        <button type="button" onclick="copyDevCurlSample()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <button type="button" onclick="copyDevCurlSample()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
       </div>
     </div>
 
@@ -91,25 +93,27 @@
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'</pre>
-        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-dial-sample').innerText); showToast('تم نسخ كود المكالمة الصادرة بنجاح', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-dial-sample').innerText); showToast('تم نسخ كود المكالمة الصادرة بنجاح', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Smart Hybrid Integration Card (Scenario 3: Zero-Code Embeds & Automation APIs) -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-5">
-  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
     <div class="flex items-center gap-2.5 flex-wrap">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1f93ff] to-[#60a5fa] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-        ⚡
+      <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        <svg class="w-4 h-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
       </div>
       <div>
         <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_hybrid_title">السيناريو الهجين الذكي (Smart Hybrid Integration)</h4>
         <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_hybrid_desc">أسهل وأسرع طريقة لدمج منصة المحادثات والمساعد الصوتي في موقعك أو نظامك بدون كتابة واجهات معقدة</p>
       </div>
     </div>
-    <span class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-blue-50 text-[#1f93ff] border border-blue-200">
+    <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-[#1f93ff] border border-blue-200">
       Zero-Code Iframe + Automation APIs
     </span>
   </div>
@@ -127,36 +131,46 @@
       </p>
 
       <!-- Chat Iframe Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="text-xs">💬</span>
+            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
             <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_chat_title">صندوق المحادثات الشامل المضمن (Chatwoot Inbox)</span>
           </div>
-          <a id="dev-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
-            <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+          <a id="dev-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-xs text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+            <span data-i18n="dev_preview_live">معاينة حية</span>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
           </a>
         </div>
         <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
           <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
-          <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
         </div>
       </div>
 
       <!-- Voice Assistant Iframe Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="text-xs">🎙️</span>
+            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
             <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_voice_title">قمرة الاتصال والمساعد الصوتي (Voice Webphone)</span>
           </div>
-          <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-[11px] text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
-            <span data-i18n="dev_preview_live">معاينة حية</span> ↗
+          <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-xs text-[#1f93ff] hover:underline font-medium flex items-center gap-1">
+            <span data-i18n="dev_preview_live">معاينة حية</span>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
           </a>
         </div>
         <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
           <pre id="dev-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;"&gt;&lt;/iframe&gt;</pre>
-          <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
         </div>
       </div>
     </div>
@@ -172,38 +186,38 @@
       </p>
 
       <!-- Chat Send API Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">POST</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-emerald-100 text-emerald-800 font-bold">POST</span>
             <span class="font-medium text-xs text-slate-900">/api/v1/chat/send/</span>
           </div>
-          <span class="text-[10px] text-slate-400 font-mono">JSON</span>
+          <span class="text-xs text-slate-400 font-mono">JSON</span>
         </div>
         <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
           <pre id="dev-curl-chat-send-sample">curl -X POST "https://localhost/api/v1/chat/send/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'</pre>
-          <button type="button" onclick="copyDevCurlChatSendSample()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          <button type="button" onclick="copyDevCurlChatSendSample()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
         </div>
       </div>
 
       <!-- Outbound Call Dial API Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-800 font-bold">POST</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-blue-100 text-blue-800 font-bold">POST</span>
             <span class="font-medium text-xs text-slate-900">/api/v1/calls/dial/</span>
           </div>
-          <span class="text-[10px] text-slate-400 font-mono">JSON</span>
+          <span class="text-xs text-slate-400 font-mono">JSON</span>
         </div>
         <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
           <pre id="dev-curl-dial-sample-2">curl -X POST "https://localhost/api/v1/calls/dial/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'</pre>
-          <button type="button" onclick="copyDevCurlDialSample2()" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          <button type="button" onclick="copyDevCurlDialSample2()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
         </div>
       </div>
 
@@ -213,15 +227,15 @@
 </div>
 
 <!-- Structured Live Context Card -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-[#eaedf0] pb-3">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 pb-3">
     <div>
       <div class="flex items-center gap-2 flex-wrap">
         <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_context_title">الذاكرة المنظمة الحية للنشاط (Structured Live Context)</h4>
-        <span id="live-context-redis-badge" class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+        <span id="live-context-redis-badge" class="px-2 py-0.5 text-xs font-medium rounded-md bg-slate-100 text-slate-700 border border-slate-200">
           <span data-i18n="dev_checking_redis">جاري الفحص...</span>
         </span>
-        <span id="live-context-size-badge" class="px-2 py-0.5 text-[10px] font-medium rounded-md bg-slate-50 text-slate-600 border border-[#eaedf0]" data-i18n="dev_context_size">
+        <span id="live-context-size-badge" class="px-2 py-0.5 text-xs font-medium rounded-md bg-slate-50 text-slate-600 border border-slate-200/80" data-i18n="dev_context_size">
           الحجم: 0 KB / 100 KB
         </span>
       </div>
@@ -231,10 +245,10 @@
     </div>
 
     <div class="flex items-center gap-2 flex-wrap text-xs">
-      <button type="button" onclick="loadRestaurantTemplate()" class="px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
+      <button type="button" onclick="loadRestaurantTemplate()" class="px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
         <span data-i18n="dev_template_restaurant">قالب مطعم</span>
       </button>
-      <button type="button" onclick="formatLiveContextJson()" class="px-3 py-1.5 rounded-lg border border-[#eaedf0] bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
+      <button type="button" onclick="formatLiveContextJson()" class="px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">
         <span data-i18n="dev_format_json">تنسيق الـ JSON</span>
       </button>
       <button type="button" onclick="togglePromptPreview()" id="btn-toggle-prompt-preview" class="px-3 py-1.5 rounded-lg border border-[#b2ddff] bg-[#eff8ff] text-[#1f93ff] font-medium transition shadow-2xs">
@@ -253,7 +267,7 @@
   <div class="space-y-1.5">
     <div class="flex items-center justify-between text-xs text-slate-500">
       <label for="live-context-json-input" class="font-medium text-slate-700" data-i18n="dev_json_editor_label">محرر الـ JSON المنظم:</label>
-      <span id="live-context-last-updated" class="font-mono text-[11px] text-slate-400" data-i18n="dev_last_updated">آخر تحديث: --</span>
+      <span id="live-context-last-updated" class="font-mono text-xs text-slate-400" data-i18n="dev_last_updated">آخر تحديث: --</span>
     </div>
     <textarea id="live-context-json-input" rows="10" dir="ltr"
               class="w-full bg-slate-900 text-emerald-400 font-mono text-xs p-3.5 rounded-lg border border-slate-800 focus:outline-none focus:border-[#1f93ff] leading-relaxed select-all"
@@ -261,16 +275,21 @@
   </div>
 
   <!-- AI Prompt Preview Collapsible Drawer -->
-  <div id="live-context-prompt-preview-box" class="hidden p-4 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2">
+  <div id="live-context-prompt-preview-box" class="hidden p-4 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-[#1f93ff]" data-i18n="dev_prompt_view_title">كيف يقرأ الذكاء الاصطناعي هذا الـ JSON داخل التوجيهات المباشرة:</span>
-      <button type="button" onclick="togglePromptPreview()" class="text-xs text-slate-400 hover:text-slate-700" data-i18n="close">إغلاق ✕</button>
+      <button type="button" onclick="togglePromptPreview()" class="text-xs text-slate-400 hover:text-slate-700 inline-flex items-center gap-1">
+        <span data-i18n="close">إغلاق</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
-    <pre id="live-context-prompt-preview-content" class="bg-white p-3 rounded-lg border border-[#eaedf0] text-xs font-mono text-slate-800 whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed" dir="rtl" data-i18n="dev_loading_prompt">جاري التحميل...</pre>
+    <pre id="live-context-prompt-preview-content" class="bg-white p-3 rounded-lg border border-slate-200/80 text-xs font-mono text-slate-800 whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed" dir="rtl" data-i18n="dev_loading_prompt">جاري التحميل...</pre>
   </div>
 
   <!-- Action Bar & External API Sync Info -->
-  <div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-[#eaedf0]">
+  <div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-slate-200/80">
     <div class="text-xs text-slate-500">
       <span data-i18n="dev_save_info">كل حفظ جديد يستبدل السابق بالكامل في الـ DB وكاش الـ Redis.</span>
     </div>
@@ -281,96 +300,96 @@
   </div>
 
   <!-- Quick cURL for Context API -->
-  <div class="pt-3 border-t border-[#eaedf0]">
+  <div class="pt-3 border-t border-slate-200/80">
     <h5 class="font-medium text-xs text-slate-700 mb-2" data-i18n="dev_curl_pos_title">تحديث البيانات آلياً من نظام الـ POS / الكاشير عبر الـ API:</h5>
     <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
       <pre id="dev-curl-context-sample">curl -X PUT "https://localhost/api/v1/context/" \
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"restaurant_name": "مطعم البرجر", "out_of_stock": ["برجر دبل"], "branches": [{"name": "المعادي", "status": "مفتوح"}]}'</pre>
-      <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-context-sample').innerText); showToast('تم نسخ كود الـ API إلى الحافظة', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-[10px] rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+      <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-context-sample').innerText); showToast('تم نسخ كود الـ API إلى الحافظة', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
     </div>
   </div>
 </div>
 
 <!-- Resources & API Capabilities Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_1_title">1. الحساب والمحفظة</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">GET /account/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">GET /account/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_1_desc">استعلم برمجياً عن رصيد محفظتك المتاح، البروفايل الصوتي النشط، وإحصائيات استخدامك.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_2_title">2. الشخصيات واللهجات</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/profiles/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/profiles/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_2_desc">إنشاء وتعديل وتفعيل شخصيات الذكاء الاصطناعي واللهجات فورياً.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_3_title">3. ذاكرة وسياق العملاء</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/memory/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/memory/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_3_desc">استرجاع وتحديث سجل وسياق المتصل التراكمي برقم هاتفه قبل أو أثناء المحادثة.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_4_title">4. قواعد المعرفة RAG</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/rag/query/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/rag/query/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_4_desc">رفع وفهرسة ملفات PDF ومستندات الشركة والبحث الدلالي بالمتجهات المدمجة مع Gemini.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_5_title">5. خوادم FastMCP والأدوات</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/mcp/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/mcp/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_5_desc">ربط خوادم الأدوات الخارجية عبر SSE ومزامنة دوال الـ AI للاستدعاء أثناء المكالمات.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_6_title">6. بدء مكالمة WebRTC</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">POST /token/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">POST /token/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_6_desc">إصدار توكن LiveKit مؤقت مشفر لبدء مكالمة صوتية حية فائقة السرعة من المتصفح أو التطبيق.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_7_title">7. السنترالات و DIDs</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/telephony/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/telephony/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_7_desc">ربط خطوط السنترال الداخلي وأرقام الاستقبال وتوجيه الاتصالات الهاتفية.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_8_title">8. الموظفون والطوابير</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/employees/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/employees/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_8_desc">إدارة تحويلات الموظفين الداخلية وتوزيع المكالمات واستراتيجيات طوابير الانتظار.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_9_title">9. سجلات المكالمات والويبهوك</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/calls/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/calls/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_9_desc">استعراض تفاصيل المكالمات، التسجيلات، الملخصات الذكية، واستقبال إشعارات انتهاء المكالمات.</p>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-[#eaedf0] shadow-2xs space-y-1.5">
+  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
     <div class="flex items-center justify-between">
       <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_10_title">10. الذاكرة المنظمة اللحظية</span>
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">/context/</span>
+      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/context/</span>
     </div>
     <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_10_desc">حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة لمنع الهلوسة.</p>
   </div>

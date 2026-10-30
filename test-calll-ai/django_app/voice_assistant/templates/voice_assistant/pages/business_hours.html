@@ -6,7 +6,7 @@
 {% block content %}
 <div class="space-y-6">
   <!-- Top Header & Main Toggle Card -->
-  <div class="bg-white p-5 rounded-xl border border-[#eaedf0] shadow-2xs flex flex-wrap items-center justify-between gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-4 pb-1">
     <div class="space-y-1">
       <h2 class="text-base font-semibold text-slate-900" data-i18n="hours_title">مواعيد العمل والخطة البديلة (Business Hours)</h2>
       <p class="text-xs text-slate-500" data-i18n="hours_subtitle">
@@ -15,15 +15,15 @@
     </div>
 
     <!-- Master Switch & Live Status Badge -->
-    <div class="flex items-center gap-4 bg-slate-50 border border-[#eaedf0] px-3.5 py-2 rounded-lg">
+    <div class="flex items-center gap-4 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-lg">
       <div class="text-start">
-        <span class="block text-[10px] text-slate-400 font-medium" data-i18n="hours_status_label">الحالة الآن:</span>
+        <span class="block text-xs text-slate-400 font-medium" data-i18n="hours_status_label">الحالة الآن:</span>
         <span id="current-status-badge" class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
           <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> <span data-i18n="hours_checking_status">جاري التحقق...</span>
         </span>
       </div>
 
-      <div class="h-6 w-px bg-[#eaedf0]"></div>
+      <div class="h-6 w-px bg-slate-200"></div>
 
       <div class="flex items-center gap-2">
         <label class="relative inline-flex items-center cursor-pointer">
@@ -39,14 +39,14 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
     <!-- Column 1: Days of Week Schedule (7 cols) -->
-    <div class="lg:col-span-7 bg-white shadow-2xs border border-[#eaedf0] rounded-xl p-5 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
+    <div class="lg:col-span-7 bg-white shadow-2xs border border-slate-200/80 rounded-xl p-5 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
         <h3 class="text-sm font-semibold text-slate-900" data-i18n="hours_schedule_title">جدول أيام وساعات العمل الأسبوعية</h3>
 
         <!-- Timezone Selector -->
         <div class="flex items-center gap-2 text-xs">
           <label for="field-timezone" class="text-slate-400 font-medium" data-i18n="hours_timezone">المنطقة الزمنية:</label>
-          <select id="field-timezone" onchange="calculateCurrentStatus()" class="px-2.5 py-1.5 bg-white border border-[#eaedf0] rounded-lg text-slate-700 text-xs font-medium focus:outline-none focus:border-[#1f93ff]">
+          <select id="field-timezone" onchange="calculateCurrentStatus()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-700 text-xs font-medium focus:outline-none focus:border-[#1f93ff]">
             <option value="Africa/Cairo" data-i18n="tz_cairo">مصر (Africa/Cairo - GMT+2/3)</option>
             <option value="Asia/Riyadh" data-i18n="tz_riyadh">السعودية (Asia/Riyadh - GMT+3)</option>
             <option value="Asia/Dubai" data-i18n="tz_dubai">الإمارات (Asia/Dubai - GMT+4)</option>
@@ -63,7 +63,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-xs text-start">
           <thead>
-            <tr class="text-slate-500 border-b border-[#eaedf0] bg-slate-50/70">
+            <tr class="text-slate-500 border-b border-slate-100 bg-slate-50/70">
               <th class="py-2 px-3 font-medium text-start" data-i18n="hours_th_day">اليوم</th>
               <th class="py-2 px-3 font-medium text-center" data-i18n="hours_th_type">نوع اليوم</th>
               <th class="py-2 px-3 font-medium text-center" data-i18n="hours_th_start">وقت البدء</th>
@@ -71,13 +71,13 @@
               <th class="py-2 px-3 font-medium text-center" data-i18n="hours_th_status">الحالة</th>
             </tr>
           </thead>
-          <tbody id="days-table-body" class="divide-y divide-[#eaedf0]">
+          <tbody id="days-table-body" class="divide-y divide-slate-100">
             <!-- Generated dynamically via business_hours.js -->
           </tbody>
         </table>
       </div>
 
-      <div class="p-3 bg-slate-50 rounded-lg border border-[#eaedf0] text-xs text-slate-500 flex items-start gap-2">
+      <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs text-slate-500 flex items-start gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -88,8 +88,8 @@
     </div>
 
     <!-- Column 2: Off-Hours Handling Plan (5 cols) -->
-    <div class="lg:col-span-5 bg-white shadow-2xs border border-[#eaedf0] rounded-xl p-5 space-y-4">
-      <div class="pb-3 border-b border-[#eaedf0]">
+    <div class="lg:col-span-5 bg-white shadow-2xs border border-slate-200/80 rounded-xl p-5 space-y-4">
+      <div class="pb-3 border-b border-slate-100">
         <h3 class="text-sm font-semibold text-slate-900" data-i18n="hours_plan_title">خطة التعامل خارج أوقات العمل</h3>
       </div>
 
@@ -98,20 +98,20 @@
         <label class="block text-xs font-medium text-slate-700" data-i18n="hours_choose_action">اختر إجراء الرد على المتصل خارج أوقات العمل:</label>
 
         <!-- Option 1: AI Message -->
-        <label class="relative flex items-start gap-3 p-3 rounded-lg border border-[#eaedf0] bg-white hover:border-[#1f93ff] cursor-pointer transition">
+        <label class="relative flex items-start gap-3 p-3 rounded-lg border border-slate-200/80 bg-white hover:border-[#1f93ff] cursor-pointer transition">
           <input type="radio" name="action_type" value="ai_message" onchange="switchActionType('ai_message')" id="action-ai-message" class="mt-1 text-[#1f93ff] focus:ring-[#1f93ff]" checked>
           <div class="space-y-0.5">
             <span class="block text-xs font-semibold text-slate-900" data-i18n="hours_action_ai">نطق رسالة ذكية بصوت الذكاء الاصطناعي (AI Message)</span>
-            <span class="block text-[11px] text-slate-500" data-i18n="hours_action_ai_desc">ينطق المساعد الصوتي رسالة اعتذار رسمية مخصصة للعميل ثم يغلق المكالمة بلباقة.</span>
+            <span class="block text-xs text-slate-500" data-i18n="hours_action_ai_desc">ينطق المساعد الصوتي رسالة اعتذار رسمية مخصصة للعميل ثم يغلق المكالمة بلباقة.</span>
           </div>
         </label>
 
         <!-- Option 2: Audio File Playback -->
-        <label class="relative flex items-start gap-3 p-3 rounded-lg border border-[#eaedf0] bg-white hover:border-[#1f93ff] cursor-pointer transition">
+        <label class="relative flex items-start gap-3 p-3 rounded-lg border border-slate-200/80 bg-white hover:border-[#1f93ff] cursor-pointer transition">
           <input type="radio" name="action_type" value="audio_file" onchange="switchActionType('audio_file')" id="action-audio-file" class="mt-1 text-[#1f93ff] focus:ring-[#1f93ff]">
           <div class="space-y-0.5">
             <span class="block text-xs font-semibold text-slate-900" data-i18n="hours_action_audio">تشغيل ملف صوتي مسجل مسبقاً (Audio File)</span>
-            <span class="block text-[11px] text-slate-500" data-i18n="hours_action_audio_desc">يتم بث ملف صوتي مرفوع (MP3/WAV) مباشرة للمتصل ثم إنهاء المكالمة.</span>
+            <span class="block text-xs text-slate-500" data-i18n="hours_action_audio_desc">يتم بث ملف صوتي مرفوع (MP3/WAV) مباشرة للمتصل ثم إنهاء المكالمة.</span>
           </div>
         </label>
       </div>
@@ -120,35 +120,35 @@
       <div id="section-ai-message" class="space-y-2 text-xs">
         <div class="flex justify-between items-center">
           <label for="field-ai-message" class="font-medium text-slate-700" data-i18n="hours_ai_msg_label">نص الرسالة المنطوقة للمتصل:</label>
-          <button type="button" onclick="resetDefaultAiMessage()" class="text-[11px] text-[#1f93ff] hover:underline" data-i18n="hours_restore_default">استعادة النص الافتراضي</button>
+          <button type="button" onclick="resetDefaultAiMessage()" class="text-xs text-[#1f93ff] hover:underline" data-i18n="hours_restore_default">استعادة النص الافتراضي</button>
         </div>
-        <textarea id="field-ai-message" rows="4" placeholder="اكتب الرسالة التي سينطقها المساعد الصوتي خارج مواعيد العمل..." data-i18n-placeholder="hours_message_placeholder" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] text-xs leading-relaxed"></textarea>
+        <textarea id="field-ai-message" rows="4" placeholder="اكتب الرسالة التي سينطقها المساعد الصوتي خارج مواعيد العمل..." data-i18n-placeholder="hours_message_placeholder" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] text-xs leading-relaxed"></textarea>
       </div>
 
       <!-- Section B: Audio File Upload -->
       <div id="section-audio-file" class="space-y-3 text-xs hidden">
         <label class="block font-medium text-slate-700" data-i18n="hours_audio_upload_label">رفع ملف صوتي مسجل (MP3 أو WAV):</label>
         
-        <div class="border border-dashed border-[#eaedf0] rounded-lg p-4 text-center bg-slate-50 space-y-2 hover:border-[#1f93ff] transition">
+        <div class="border border-dashed border-slate-200 rounded-lg p-4 text-center bg-slate-50 space-y-2 hover:border-[#1f93ff] transition">
           <input type="file" id="field-audio-file" accept="audio/mp3,audio/wav,audio/ogg,audio/m4a" onchange="handleAudioFileSelect(event)" class="hidden">
-          <button type="button" onclick="document.getElementById('field-audio-file').click()" class="px-3.5 py-1.5 bg-white border border-[#eaedf0] rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition shadow-2xs">
+          <button type="button" onclick="document.getElementById('field-audio-file').click()" class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition shadow-2xs">
             <span data-i18n="hours_btn_choose_audio">اختر ملف صوتي من جهازك</span>
           </button>
-          <p id="audio-file-name" class="text-[11px] text-slate-400" data-i18n="hours_audio_formats">يدعم صيغ MP3 و WAV حتى 10 ميجابايت</p>
+          <p id="audio-file-name" class="text-xs text-slate-400" data-i18n="hours_audio_formats">يدعم صيغ MP3 و WAV حتى 10 ميجابايت</p>
         </div>
 
         <!-- Audio Player Preview Widget -->
-        <div id="audio-preview-container" class="hidden bg-slate-50 border border-[#eaedf0] rounded-lg p-3 space-y-1.5">
-          <div class="flex justify-between items-center text-[11px]">
+        <div id="audio-preview-container" class="hidden bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1.5">
+          <div class="flex justify-between items-center text-xs">
             <span class="font-medium text-slate-700" data-i18n="hours_audio_preview_label">معاينة الملف الصوتي المعتمد:</span>
-            <span id="audio-source-type" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200" data-i18n="hours_ready_to_play">جاهز للتشغيل</span>
+            <span id="audio-source-type" class="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200" data-i18n="hours_ready_to_play">جاهز للتشغيل</span>
           </div>
           <audio id="audio-player-preview" controls class="w-full h-8"></audio>
         </div>
       </div>
 
       <!-- Action Buttons & Save Feedback -->
-      <div class="pt-3 border-t border-[#eaedf0] flex flex-wrap items-center justify-between gap-3">
+      <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div id="save-status-msg" class="text-xs text-slate-500"></div>
         <button type="button" onclick="saveBusinessHoursSchedule()" id="btn-save-schedule" class="px-4 py-2 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-medium shadow-2xs transition flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

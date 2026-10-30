@@ -76,7 +76,7 @@ function populateRolePresetDropdowns() {
 
   if (industryRolesCatalog && industryRolesCatalog.length > 0) {
     industryRolesCatalog.forEach(cat => {
-      optionsHtml += `<optgroup label="🏢 ${cat.category_name}">`;
+      optionsHtml += `<optgroup label="${cat.category_name}">`;
       (cat.roles || []).forEach(r => {
         optionsHtml += `<option value="preset:${r.id}">${r.label}</option>`;
       });
@@ -85,9 +85,9 @@ function populateRolePresetDropdowns() {
   }
 
   if (tenantCustomRoles && tenantCustomRoles.length > 0) {
-    optionsHtml += `<optgroup label="⭐ مكتبة أدوارك المخصصة (${tenantCustomRoles.length})">`;
+    optionsHtml += `<optgroup label="مكتبة أدوارك المخصصة (${tenantCustomRoles.length})">`;
     tenantCustomRoles.forEach(cr => {
-      optionsHtml += `<option value="custom:${cr.id}">⭐ ${cr.name} (${cr.industry || 'مخصص'})</option>`;
+      optionsHtml += `<option value="custom:${cr.id}">${cr.name} (${cr.industry || 'مخصص'})</option>`;
     });
     optionsHtml += '</optgroup>';
   }
@@ -182,7 +182,7 @@ function renderProfileCards() {
 
   if (!userProfiles || userProfiles.length === 0) {
     container.innerHTML = `
-      <div class="col-span-2 text-center py-10 bg-white rounded-xl border border-[#eaedf0] text-slate-400 text-xs">
+      <div class="col-span-2 text-center py-10 bg-white rounded-xl border border-slate-200/80 text-slate-400 text-xs">
         ${window.t ? window.t("personas_empty_catalog", "لا توجد شخصيات مسجلة حالياً. اضغط على \"إنشاء شخصية جديدة\" للبدء.") : "لا توجد شخصيات مسجلة حالياً. اضغط على \"إنشاء شخصية جديدة\" للبدء."}
       </div>
     `;
@@ -192,20 +192,24 @@ function renderProfileCards() {
   container.innerHTML = userProfiles.map(p => {
     const isActive = Boolean(p.is_active);
     const isFemale = p.gender === 'female';
-    const avatarEmoji = isFemale ? '👩🏻‍💼' : '👨🏻‍💼';
+    const avatarSvg = `
+      <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    `;
 
     return `
-      <div class="bg-white rounded-xl p-5 border ${isActive ? 'border-[#1f93ff] ring-1 ring-[#1f93ff]/20 shadow-2xs' : 'border-[#eaedf0] shadow-2xs hover:border-slate-300'} transition-all duration-300 flex flex-col justify-between gap-4">
+      <div class="bg-white rounded-xl p-5 border ${isActive ? 'border-[#1f93ff] ring-1 ring-[#1f93ff]/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'} transition-all duration-300 flex flex-col justify-between gap-4">
         <!-- Card Header -->
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 text-xl flex items-center justify-center border border-slate-200/60 shrink-0">
-              ${avatarEmoji}
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200/60 shrink-0">
+              ${avatarSvg}
             </div>
             <div>
               <h4 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
                 <span>${escapeHtml(p.name)}</span>
-                ${isActive ? '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">معتمد للمكالمات الحية</span>' : ''}
+                ${isActive ? '<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">معتمد للمكالمات الحية</span>' : ''}
               </h4>
               <p class="text-xs text-slate-500 mt-0.5 font-normal">
                 ${escapeHtml(p.role_display || p.role || p.persona_role)} &bull; ${escapeHtml(p.dialect_display || p.dialect)}
@@ -215,10 +219,10 @@ function renderProfileCards() {
         </div>
 
         <!-- Card Voice Timber & Details -->
-        <div class="bg-slate-50/60 p-3 rounded-lg border border-[#eaedf0] text-xs space-y-1.5">
+        <div class="bg-slate-50/60 p-3 rounded-lg border border-slate-100 text-xs space-y-1.5">
           <div class="flex justify-between items-center">
             <span class="text-slate-500">${window.t ? window.t("personas_google_voice_lbl", "صوت Google:") : "صوت Google:"}</span>
-            <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">${escapeHtml(p.voice || p.voice_name)}</span>
+            <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-xs">${escapeHtml(p.voice || p.voice_name)}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-500">${window.t ? window.t("personas_style_lbl", "الأسلوب:") : "الأسلوب:"}</span>
@@ -226,33 +230,34 @@ function renderProfileCards() {
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-500">${window.t ? window.t("personas_greeting_lbl", "الترحيب الافتتاحي:") : "الترحيب الافتتاحي:"}</span>
-            <span class="text-[11px] font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#1f93ff]' : 'text-slate-400'}">
-              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `💬 "${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : (window.t ? window.t('personas_auto_greeting', 'ترحيب تلقائي ذكي') : 'ترحيب تلقائي ذكي')) : (window.t ? window.t('personas_wait_caller', 'انتظار المتصل أولاً') : 'انتظار المتصل أولاً')}
+            <span class="text-xs font-medium ${p.is_welcome_message_enabled !== false ? 'text-[#1f93ff]' : 'text-slate-400'}">
+              ${p.is_welcome_message_enabled !== false ? (p.welcome_message ? `"${escapeHtml(p.welcome_message.substring(0, 30))}${p.welcome_message.length > 30 ? '...' : ''}"` : (window.t ? window.t('personas_auto_greeting', 'ترحيب تلقائي ذكي') : 'ترحيب تلقائي ذكي')) : (window.t ? window.t('personas_wait_caller', 'انتظار المتصل أولاً') : 'انتظار المتصل أولاً')}
             </span>
           </div>
           ${p.off_topic_response ? `
             <div class="flex justify-between items-center">
               <span class="text-slate-500">الرد خارج النطاق:</span>
-              <span class="text-[11px] font-medium text-slate-700 truncate max-w-[200px]" title="${escapeHtml(p.off_topic_response)}">
+              <span class="text-xs font-medium text-slate-700 truncate max-w-[200px]" title="${escapeHtml(p.off_topic_response)}">
                 "${escapeHtml(p.off_topic_response)}"
               </span>
             </div>
           ` : ''}
           ${p.custom_instructions ? `
-            <div class="pt-1.5 border-t border-[#eaedf0] text-[11px] text-slate-500 italic line-clamp-2">
+            <div class="pt-1.5 border-t border-slate-100 text-xs text-slate-500 italic line-clamp-2">
               "${escapeHtml(p.custom_instructions)}"
             </div>
           ` : ''}
         </div>
 
         <!-- Card Actions -->
-        <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#eaedf0]">
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
           <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition flex items-center gap-1">
             <span>${window.t ? window.t("personas_btn_edit_profile", "تعديل التفاصيل") : "تعديل التفاصيل"}</span>
           </button>
           ${isActive ? `
             <span class="text-xs text-emerald-700 font-medium flex items-center gap-1">
-              <span>✓</span> مفعل حالياً
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>مفعل حالياً</span>
             </span>
           ` : `
             <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition shadow-2xs flex items-center gap-1">
@@ -273,7 +278,7 @@ function renderProfileDropdown() {
   }
   profileSelect.innerHTML = userProfiles.map(p => `
     <option value="${p.id}" ${p.is_active ? 'selected' : ''}>
-      ${p.name} ${p.is_active ? '⭐ [نشط للمكالمات]' : ''}
+      ${p.name} ${p.is_active ? '[نشط للمكالمات]' : ''}
     </option>
   `).join('');
 }
@@ -630,25 +635,25 @@ function renderModalCustomRolesList() {
   }
 
   container.innerHTML = tenantCustomRoles.map(cr => `
-    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2">
       <div class="flex items-start justify-between gap-2">
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-900 text-xs">${escapeHtml(cr.name)}</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-50 text-sky-700 border border-sky-100 font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
+            <span class="px-2 py-0.5 rounded-full text-xs bg-sky-50 text-sky-700 border border-sky-100 font-semibold">${escapeHtml(cr.industry || 'مخصص')}</span>
           </div>
-          ${cr.description ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
+          ${cr.description ? `<p class="text-xs text-slate-500 mt-0.5">${escapeHtml(cr.description)}</p>` : ''}
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-[11px] font-medium transition">
+          <button type="button" onclick="applyCustomRoleToActiveProfile(${cr.id})" class="px-2.5 py-1 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition">
             استخدام
           </button>
-          <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-[11px] font-medium transition">
+          <button type="button" onclick="deleteCustomRole(${cr.id})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-xs font-medium transition">
             حذف
           </button>
         </div>
       </div>
-      <div class="bg-slate-50 p-2 rounded-lg text-[10px] text-slate-600 line-clamp-2 italic border border-slate-100">
+      <div class="bg-slate-50 p-2 rounded-lg text-xs text-slate-600 line-clamp-2 italic border border-slate-100">
         "${escapeHtml(cr.role_prompt)}"
       </div>
     </div>
@@ -700,7 +705,7 @@ async function submitNewCustomRoleFromModal() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span>💾</span> حفظ الدور في المكتبة';
+      btn.innerHTML = '<span>حفظ الدور في المكتبة</span>';
     }
   }
 }

@@ -46,11 +46,16 @@ function renderMcpServersGrid(servers) {
     const btnNewLink = window.t ? window.t('store_btn_new_server_link', 'ربط خادم MCP جديد') : 'ربط خادم MCP جديد';
     mcpServersGrid.innerHTML = `
       <div class="col-span-full text-center py-10 px-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 space-y-3">
-        <span class="text-3xl block">⚡</span>
+        <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
         <h4 class="text-sm font-bold text-slate-900">${noServersTitle}</h4>
         <p class="text-xs text-slate-500">${noServersDesc}</p>
         <button type="button" onclick="openMcpModal(null)" class="px-5 py-2 rounded-lg bg-[#1f93ff] hover:bg-sky-600 text-white text-xs font-medium transition inline-flex items-center gap-1.5 shadow-2xs">
-          <span>+</span> <span>${btnNewLink}</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>${btnNewLink}</span>
         </button>
       </div>
     `;
@@ -86,14 +91,14 @@ function renderMcpServersGrid(servers) {
                 <span class="w-2.5 h-2.5 rounded-full ${statusDotClass} shrink-0"></span>
                 <h4 class="font-bold text-xs text-slate-900 truncate" title="${s.name}">${s.name}</h4>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${badgeClass}">${badgeText}</span>
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${badgeClass}">${badgeText}</span>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-mono text-[11px] text-slate-700 truncate" title="${s.server_url}">
-              <span class="text-slate-400 select-none text-[10px]">SSE: </span>${s.server_url}
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-mono text-xs text-slate-700 truncate" title="${s.server_url}">
+              <span class="text-slate-400 select-none text-xs">SSE: </span>${s.server_url}
             </div>
 
-            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+            <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
               <span>${discToolsLabel} <strong class="text-slate-900 font-mono">${toolsCount}</strong></span>
               <span>${s.last_synced_at ? `${syncedLabel} ${s.last_synced_at}` : neverSyncedLabel}</span>
             </div>
@@ -105,13 +110,19 @@ function renderMcpServersGrid(servers) {
             </button>
             <div class="flex items-center gap-1">
               <button type="button" onclick="syncMcpServer(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="${syncHint}">
-                🔄
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
               </button>
               <button type="button" onclick="openMcpModal(${s.id})" class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition" title="${editHint}">
-                ✏️
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
               </button>
               <button type="button" onclick="deleteMcpServer(${s.id})" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="${deleteHint}">
-                🗑️
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
             </div>
           </div>
@@ -122,7 +133,7 @@ function renderMcpServersGrid(servers) {
 
   if (!mcpToolsContainer) return;
   if (allActiveTools.length === 0) {
-    const noToolsMsg = window.t ? window.t('store_no_tools_discovered', 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.') : 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث 🔄 لأي خادم لقراءة دواله.';
+    const noToolsMsg = window.t ? window.t('store_no_tools_discovered', 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث لأي خادم لقراءة دواله.') : 'لا توجد أدوات مكتشفة من الخوادم المفعلة حالياً. اضغط على زر التحديث لأي خادم لقراءة دواله.';
     mcpToolsContainer.innerHTML = `
       <div class="col-span-full text-center py-6 text-slate-500 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
         ${noToolsMsg}
@@ -133,20 +144,22 @@ function renderMcpServersGrid(servers) {
     const paramsLabel = window.t ? window.t('store_params_label', 'المعاملات:') : 'المعاملات:';
     mcpToolsContainer.innerHTML = allActiveTools.map(t => {
       const paramsList = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
-      const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px] font-medium">${p}</span>`).join(' ');
+      const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-xs font-medium">${p}</span>`).join(' ');
       return `
         <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition shadow-2xs space-y-2">
           <div class="flex items-center justify-between gap-2">
             <span class="font-mono font-semibold text-slate-900 text-xs flex items-center gap-1.5 truncate">
-              <span class="text-[10px]">⚡</span>
+              <svg class="w-3.5 h-3.5 text-[#1f93ff] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               ${escapeHtml(t.name)}
             </span>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-medium shrink-0" title="${escapeHtml(t.server_url)}">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-medium shrink-0" title="${escapeHtml(t.server_url)}">
               ${escapeHtml(t.server_name)}
             </span>
           </div>
-          <p class="text-slate-600 text-[11px] leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || noDesc)}</p>
-          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-[10px] text-slate-400">${paramsLabel}</span> ${badges}</div>` : ''}
+          <p class="text-slate-600 text-xs leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || noDesc)}</p>
+          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-xs text-slate-400">${paramsLabel}</span> ${badges}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -240,7 +253,7 @@ async function testMcpConnectionFromModal() {
   if (!server_url) {
     if (connAlert) {
       connAlert.className = 'mt-2.5 p-3 rounded-2xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-      connAlert.innerHTML = '<span>❌ يرجى إدخال رابط الخادم (Server URL) أولاً.</span>';
+      connAlert.innerHTML = '<span>يرجى إدخال رابط الخادم (Server URL) أولاً.</span>';
       connAlert.classList.remove('hidden');
     }
     return;
@@ -250,7 +263,7 @@ async function testMcpConnectionFromModal() {
   if (btnText) btnText.innerText = 'جاري الفحص واكتشاف الأدوات...';
   if (connAlert) {
     connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2';
-    connAlert.innerHTML = '<span>🔄 جاري محاولة الاتصال بنقطة نهاية SSE ومصافحة بروتوكول MCP...</span>';
+    connAlert.innerHTML = '<span>جاري محاولة الاتصال بنقطة نهاية SSE ومصافحة بروتوكول MCP...</span>';
     connAlert.classList.remove('hidden');
   }
   if (latencyBadge) latencyBadge.classList.add('hidden');
@@ -275,16 +288,16 @@ async function testMcpConnectionFromModal() {
         connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1';
         connAlert.innerHTML = `
           <div class="font-bold flex items-center gap-1.5">
-            <span>✅</span> <span>تم الاتصال بالخادم بنجاح!</span>
+            <span>تم الاتصال بالخادم بنجاح!</span>
           </div>
-          <div class="text-[11px] text-emerald-700">
+          <div class="text-xs text-emerald-700">
             تم فحص البروتوكول واكتشاف <strong>${data.tools_count}</strong> أداة جاهزة للاستخدام الصوتي.
           </div>
         `;
       }
       if (latencyBadge) {
         latencyBadge.innerText = `${data.latency_ms} ms`;
-        latencyBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+        latencyBadge.className = 'px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
         latencyBadge.classList.remove('hidden');
       }
 
@@ -295,26 +308,26 @@ async function testMcpConnectionFromModal() {
         connAlert.className = 'mt-2.5 p-3 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-800 space-y-1';
         connAlert.innerHTML = `
           <div class="font-bold flex items-center gap-1.5">
-            <span>❌</span> <span>تعذر الاتصال بخادم MCP:</span>
+            <span>تعذر الاتصال بخادم MCP:</span>
           </div>
-          <div class="text-[11px] text-rose-700">
+          <div class="text-xs text-rose-700">
             ${escapeHtml(data.error_message || 'فشل الاتصال بالخادم.')}
           </div>
-          <div class="text-[10px] text-slate-500 pt-0.5">
+          <div class="text-xs text-slate-500 pt-0.5">
             ملاحظة: يمكنك حفظ الخادم رغم ذلك كـ (معطل) إذا كان قيد الإعداد.
           </div>
         `;
       }
       if (latencyBadge && data.latency_ms) {
         latencyBadge.innerText = `${data.latency_ms} ms`;
-        latencyBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold bg-rose-50 text-rose-800 border border-rose-200';
+        latencyBadge.className = 'px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-rose-50 text-rose-800 border border-rose-200';
         latencyBadge.classList.remove('hidden');
       }
     }
   } catch (err) {
     if (connAlert) {
       connAlert.className = 'mt-2.5 p-3 rounded-2xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-      connAlert.innerHTML = `<span>❌ حدث خطأ في الشبكة أثناء طلب الفحص: ${escapeHtml(err.message || '')}</span>`;
+      connAlert.innerHTML = `<span>حدث خطأ في الشبكة أثناء طلب الفحص: ${escapeHtml(err.message || '')}</span>`;
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -353,8 +366,8 @@ async function testMcpToolFromModal() {
   if (btnText) btnText.innerText = 'جاري التنفيذ...';
   if (resContainer) resContainer.classList.remove('hidden');
   if (execBadge) {
-    execBadge.innerText = '⏳ جاري الاستدعاء...';
-    execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200';
+    execBadge.innerText = 'جاري الاستدعاء...';
+    execBadge.className = 'font-mono text-xs px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200';
   }
   if (resultOutput) resultOutput.innerText = 'جاري انتظار استجابة الخادم...';
 
@@ -377,16 +390,16 @@ async function testMcpToolFromModal() {
 
     if (data.ok) {
       if (execBadge) {
-        execBadge.innerText = `✅ ناجح (${data.execution_time_ms} ms)`;
-        execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+        execBadge.innerText = `ناجح (${data.execution_time_ms} ms)`;
+        execBadge.className = 'font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
       }
       if (resultOutput) {
         resultOutput.innerText = data.result || 'تم التنفيذ بنجاح بدون نص مخرجات.';
       }
     } else {
       if (execBadge) {
-        execBadge.innerText = `❌ فشل (${data.error_type || 'error'}) - ${data.execution_time_ms || 0} ms`;
-        execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-800 border border-rose-200';
+        execBadge.innerText = `فشل (${data.error_type || 'error'}) - ${data.execution_time_ms || 0} ms`;
+        execBadge.className = 'font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-800 border border-rose-200';
       }
       if (resultOutput) {
         resultOutput.innerText = data.error_message || data.result || 'فشل تنفيذ الأداة.';
@@ -394,8 +407,8 @@ async function testMcpToolFromModal() {
     }
   } catch (err) {
     if (execBadge) {
-      execBadge.innerText = '❌ خطأ شبكة';
-      execBadge.className = 'font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-800 border border-rose-200';
+      execBadge.innerText = 'خطأ شبكة';
+      execBadge.className = 'font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-800 border border-rose-200';
     }
     if (resultOutput) {
       resultOutput.innerText = 'حدث خطأ في الاتصال أثناء تنفيذ الأداة: ' + (err.message || '');
@@ -428,7 +441,7 @@ function openMcpModal(serverId = null) {
   if (serverId) {
     const s = userMcpServers.find(x => x.id === serverId);
     if (s) {
-      if (modalTitle) modalTitle.innerHTML = '<span>⚙️</span> إعدادات خادم FastMCP';
+      if (modalTitle) modalTitle.innerHTML = '<svg class="w-4 h-4 text-slate-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> إعدادات خادم FastMCP';
       if (idInput) idInput.value = s.id;
       if (nameInput) nameInput.value = s.name;
       if (urlInput) urlInput.value = s.server_url;
@@ -444,7 +457,7 @@ function openMcpModal(serverId = null) {
       }
     }
   } else {
-    if (modalTitle) modalTitle.innerHTML = '<span>⚡</span> ربط خادم FastMCP خارجي جديد';
+    if (modalTitle) modalTitle.innerHTML = '<svg class="w-4 h-4 text-[#1f93ff] inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> ربط خادم FastMCP خارجي جديد';
     if (idInput) idInput.value = '';
     if (nameInput) nameInput.value = 'خادم FastMCP إضافي';
     if (urlInput) urlInput.value = 'http://';
@@ -504,7 +517,7 @@ async function saveMcpSettings(e) {
 async function syncMcpServer(serverId = null) {
   if (mcpSyncAlert) {
     mcpSyncAlert.className = 'mt-3 p-3.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2';
-    mcpSyncAlert.innerHTML = `<span>🔄 جاري فحص الاتصال وتحديث دوال الخادم...</span>`;
+    mcpSyncAlert.innerHTML = `<span>جاري فحص الاتصال وتحديث دوال الخادم...</span>`;
     mcpSyncAlert.classList.remove('hidden');
   }
 
@@ -522,20 +535,20 @@ async function syncMcpServer(serverId = null) {
       await loadMcpServers();
       if (mcpSyncAlert) {
         mcpSyncAlert.className = 'mt-3 p-3.5 rounded-2xl text-xs bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center gap-2';
-        mcpSyncAlert.innerHTML = `<span>✅ ${data.message}</span>`;
+        mcpSyncAlert.innerHTML = `<span>${data.message}</span>`;
       }
       showToast(data.message, 'success');
     } else {
       if (mcpSyncAlert) {
         mcpSyncAlert.className = 'mt-3 p-3.5 rounded-2xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-        mcpSyncAlert.innerHTML = `<span>❌ ${data.message}</span>`;
+        mcpSyncAlert.innerHTML = `<span>${data.message}</span>`;
       }
       showToast(data.message, 'error');
     }
   } catch (err) {
     if (mcpSyncAlert) {
       mcpSyncAlert.className = 'mt-3 p-3.5 rounded-2xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-      mcpSyncAlert.innerHTML = `<span>❌ تعذر الاتصال بالخادم.</span>`;
+      mcpSyncAlert.innerHTML = `<span>تعذر الاتصال بالخادم.</span>`;
     }
     showToast('تعذر الاتصال بالخادم.', 'error');
   }

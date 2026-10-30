@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- Calls Header Bar -->
-<div class="flex flex-wrap items-center justify-between gap-4 p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+<div class="flex flex-wrap items-center justify-between gap-4 pb-1">
   <div>
     <h3 class="text-base font-semibold text-slate-900 flex items-center gap-2">
       <span data-i18n="calls_title">سجل كافة المكالمات (CDR)</span>
@@ -13,7 +13,7 @@
     <p class="text-xs text-slate-500 mt-0.5" data-i18n="calls_subtitle">عرض شامل لكافة المكالمات الواردة والصادرة مع فلاتر ذكية وإحصائيات الاستهلاك المالي ومشغل التسجيلات</p>
   </div>
   <div class="flex items-center gap-2">
-    <button type="button" onclick="loadCallsList()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#eaedf0] text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
+    <button type="button" onclick="loadCallsList()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-medium transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
@@ -24,32 +24,32 @@
 
 <!-- Filtered Metrics Summary Banner -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_total">إجمالي المكالمات</span>
     <p id="calls-stat-total" class="text-xl font-semibold font-mono text-slate-900 mt-1">0</p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_minutes">الدقائق المحتسبة</span>
     <p id="calls-stat-minutes" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_mins_short">د</span></p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_cost">التكلفة الإجمالية</span>
     <p id="calls-stat-cost" class="text-xl font-semibold font-mono text-emerald-700 mt-1">$0.00</p>
   </div>
-  <div class="p-4 rounded-xl bg-white border border-[#eaedf0] shadow-2xs">
+  <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
     <span class="text-xs text-slate-500 font-medium" data-i18n="calls_stat_seconds">إجمالي الثواني الصوتية</span>
     <p id="calls-stat-seconds" class="text-xl font-semibold font-mono text-slate-900 mt-1">0 <span data-i18n="unit_secs_short">ث</span></p>
   </div>
 </div>
 
 <!-- Advanced Filter Toolbar -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
-  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
     <h4 class="font-semibold text-slate-900 text-xs flex items-center gap-1.5">
       <span data-i18n="calls_filters_title">فلاتر البحث والتصفية المتقدمة (CDR Filters)</span>
     </h4>
     <button type="button" onclick="resetCallsFilter()" class="text-xs text-[#1f93ff] hover:text-[#1570ef] font-medium flex items-center gap-1">
-      <span data-i18n="calls_filters_reset">✕ إعادة تعيين الفلاتر</span>
+      <span data-i18n="calls_filters_reset">إعادة تعيين الفلاتر</span>
     </button>
   </div>
 
@@ -63,14 +63,14 @@
         placeholder="رقم الهاتف، اسم العميل، اسم الغرفة، أو الهدف..." 
         data-i18n-placeholder="calls_filter_search_placeholder"
         oninput="debounceCallsFilter()"
-        class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]"
+        class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1f93ff]"
       />
     </div>
 
     <!-- Direction Filter -->
     <div>
       <label class="block font-medium text-slate-700 mb-1" data-i18n="calls_filter_direction">اتجاه المكالمة</label>
-      <select id="filter-calls-direction" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-calls-direction" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
         <option value="all" data-i18n="calls_dir_all">جميع الاتجاهات</option>
         <option value="inbound" data-i18n="calls_dir_inbound">مكالمة واردة</option>
         <option value="outbound_ai" data-i18n="calls_dir_outbound_ai">صادرة (ذكاء اصطناعي)</option>
@@ -82,7 +82,7 @@
     <!-- Duration Filter -->
     <div>
       <label class="block font-medium text-slate-700 mb-1" data-i18n="calls_filter_duration">مدة المكالمة</label>
-      <select id="filter-calls-duration" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-[#eaedf0] rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
+      <select id="filter-calls-duration" onchange="loadCallsList()" class="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-lg text-slate-700 text-xs focus:outline-none focus:border-[#1f93ff]">
         <option value="all" data-i18n="calls_dur_all">جميع المدد</option>
         <option value="under_1m" data-i18n="calls_dur_under_1m">أقل من دقيقة (&lt; 60ث)</option>
         <option value="1m_to_5m" data-i18n="calls_dur_1m_5m">من 1 إلى 5 دقائق</option>
@@ -92,29 +92,29 @@
   </div>
 
   <!-- Call Type Quick Pills -->
-  <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-[#eaedf0]">
+  <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/80">
     <span class="text-xs font-medium text-slate-500" data-i18n="calls_filter_type_label">تصفية المكالمات:</span>
     <button type="button" onclick="setCallsTypeFilter('all')" id="btn-type-all" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#1f93ff] text-white transition" data-i18n="calls_type_all">الكل</button>
-    <button type="button" onclick="setCallsTypeFilter('ai')" id="btn-type-ai" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-[#eaedf0] text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_ai">مكالمات الذكاء الاصطناعي</button>
-    <button type="button" onclick="setCallsTypeFilter('internal')" id="btn-type-internal" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-[#eaedf0] text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_internal">مكالمات الموظفين الداخلية</button>
+    <button type="button" onclick="setCallsTypeFilter('ai')" id="btn-type-ai" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_ai">مكالمات الذكاء الاصطناعي</button>
+    <button type="button" onclick="setCallsTypeFilter('internal')" id="btn-type-internal" class="call-type-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_type_internal">مكالمات الموظفين الداخلية</button>
   </div>
 
   <!-- Date Preset Quick Pills -->
   <div class="flex flex-wrap items-center gap-2 pt-1">
     <span class="text-xs font-medium text-slate-500" data-i18n="calls_filter_date">النطاق الزمني:</span>
     <button type="button" onclick="setCallsDatePreset('all')" id="btn-preset-all" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-medium bg-[#1f93ff] text-white transition" data-i18n="calls_date_all">الكل</button>
-    <button type="button" onclick="setCallsDatePreset('today')" id="btn-preset-today" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-[#eaedf0] text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_today">اليوم</button>
-    <button type="button" onclick="setCallsDatePreset('last_7_days')" id="btn-preset-last_7_days" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-[#eaedf0] text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_7days">آخر 7 أيام</button>
-    <button type="button" onclick="setCallsDatePreset('this_month')" id="btn-preset-this_month" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-[#eaedf0] text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_month">هذا الشهر</button>
+    <button type="button" onclick="setCallsDatePreset('today')" id="btn-preset-today" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_today">اليوم</button>
+    <button type="button" onclick="setCallsDatePreset('last_7_days')" id="btn-preset-last_7_days" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_7days">آخر 7 أيام</button>
+    <button type="button" onclick="setCallsDatePreset('this_month')" id="btn-preset-this_month" class="preset-date-btn px-2.5 py-1 rounded-md text-xs font-normal bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 transition" data-i18n="calls_date_month">هذا الشهر</button>
   </div>
 </div>
 
 <!-- Calls Data Table -->
-<div class="p-5 rounded-xl bg-white border border-[#eaedf0] shadow-2xs space-y-4">
+<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
   <div class="overflow-x-auto">
     <table class="w-full text-xs text-start">
       <thead>
-        <tr class="border-b border-[#eaedf0] bg-slate-50/70 text-slate-500">
+        <tr class="border-b border-slate-200/80 bg-slate-50/70 text-slate-500">
           <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_time">وقت المكالمة</th>
           <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_direction">الاتجاه</th>
           <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_party">الطرف / العميل</th>
@@ -125,7 +125,7 @@
           <th class="py-2.5 px-3 text-start font-medium" data-i18n="calls_th_actions">الإجراءات</th>
         </tr>
       </thead>
-      <tbody id="calls-table-tbody" class="divide-y divide-[#eaedf0]">
+      <tbody id="calls-table-tbody" class="divide-y divide-slate-200/80">
         <tr>
           <td colspan="8" class="py-8 text-center text-slate-400" data-i18n="calls_loading_logs">
             جاري تحميل سجل المكالمات...
@@ -140,45 +140,49 @@
 {% block modals %}
 <!-- Call Details & Transcript Modal with Audio Player -->
 <div id="call-detail-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-  <div class="bg-white border border-[#eaedf0] rounded-xl max-w-2xl w-full p-5 shadow-md space-y-4 text-xs max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center pb-2.5 border-b border-[#eaedf0] shrink-0">
+  <div class="bg-white border border-slate-200/80 rounded-xl max-w-2xl w-full p-5 shadow-md space-y-4 text-xs max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center pb-2.5 border-b border-slate-200/80 shrink-0">
       <div>
         <h3 id="cdm-title" class="text-sm font-semibold text-slate-900 flex items-center gap-2">
           <span data-i18n="calls_modal_title">تفاصيل المكالمة والملخص الذكي</span>
         </h3>
         <p id="cdm-subtitle" class="text-xs text-slate-400 mt-0.5" data-i18n="calls_modal_subtitle">جلسة المكالمة</p>
       </div>
-      <button type="button" onclick="closeCallDetailModal()" class="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1">✕</button>
+      <button type="button" onclick="closeCallDetailModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition" title="إغلاق">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <div class="overflow-y-auto space-y-4 flex-1 pe-1">
       <!-- Financial & Duration Highlights -->
       <div class="grid grid-cols-4 gap-2 text-center">
-        <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
-          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_duration">المدة الفعلية</span>
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+          <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_duration">المدة الفعلية</span>
           <span id="cdm-duration" class="font-mono font-semibold text-slate-900">00:00</span>
         </div>
-        <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
-          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</span>
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+          <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_billed_mins">الدقائق المحتسبة</span>
           <span id="cdm-billed-mins" class="font-mono font-semibold text-[#1f93ff]">0 <span data-i18n="unit_mins">دقيقة</span></span>
         </div>
-        <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
-          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_cost">التكلفة</span>
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+          <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_cost">التكلفة</span>
           <span id="cdm-cost" class="font-mono font-semibold text-emerald-700">$0.00</span>
         </div>
-        <div class="p-2.5 rounded-lg bg-slate-50 border border-[#eaedf0]">
-          <span class="text-[10px] text-slate-400 block font-medium" data-i18n="calls_th_direction">الاتجاه</span>
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+          <span class="text-xs text-slate-400 block font-medium" data-i18n="calls_th_direction">الاتجاه</span>
           <span id="cdm-direction" class="font-medium text-slate-700" data-i18n="calls_dir_inbound">واردة</span>
         </div>
       </div>
 
       <!-- Call Recording Audio Player (AI Agent) -->
-      <div id="cdm-recording-section" class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2 hidden">
+      <div id="cdm-recording-section" class="p-3 rounded-lg bg-slate-50 border border-slate-100 space-y-2 hidden">
         <div class="flex items-center justify-between">
           <h5 class="font-medium text-slate-700 text-xs flex items-center gap-1.5">
             <span data-i18n="calls_modal_rec_ai">تسجيل محادثة الذكاء الاصطناعي (AI Agent):</span>
           </h5>
-          <a id="cdm-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs">
+          <a id="cdm-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs">
             <span data-i18n="calls_modal_mp3_download">تحميل MP3</span>
           </a>
         </div>
@@ -186,12 +190,12 @@
       </div>
 
       <!-- Transferred Call Recording Audio Player (Human Employee) -->
-      <div id="cdm-transferred-recording-section" class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-2 hidden">
+      <div id="cdm-transferred-recording-section" class="p-3 rounded-lg bg-slate-50 border border-slate-100 space-y-2 hidden">
         <div class="flex items-center justify-between">
           <h5 class="font-medium text-slate-700 text-xs flex items-center gap-1.5">
             <span id="cdm-transferred-title" data-i18n="calls_modal_rec_human">تسجيل محادثة الموظف البشري بعد التحويل:</span>
           </h5>
-          <a id="cdm-transferred-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs">
+          <a id="cdm-transferred-download-btn" href="#" target="_blank" download class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs">
             <span data-i18n="calls_modal_wav_download">تحميل التسجيل (WAV)</span>
           </a>
         </div>
@@ -199,7 +203,7 @@
       </div>
 
       <!-- Call Summary -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-[#eaedf0] space-y-1">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
         <h5 class="font-medium text-slate-700 text-xs">
           <span data-i18n="calls_modal_summary_title">ملخص المكالمة التراكمي (AI Summary):</span>
         </h5>
@@ -213,14 +217,14 @@
         <h5 class="font-medium text-slate-700 text-xs">
           <span data-i18n="calls_modal_transcript_title">نص المحادثة الكامل (Full Transcript):</span>
         </h5>
-        <div id="cdm-transcript" class="p-3 rounded-lg bg-slate-50 border border-[#eaedf0] text-xs leading-relaxed text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans" data-i18n="calls_modal_no_transcript">
+        <div id="cdm-transcript" class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs leading-relaxed text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans" data-i18n="calls_modal_no_transcript">
           لا يوجد نص مفرغ متاح.
         </div>
       </div>
     </div>
 
-    <div class="flex justify-end pt-2.5 border-t border-[#eaedf0] shrink-0">
-      <button type="button" onclick="closeCallDetailModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-[#eaedf0] text-slate-700 font-medium transition shadow-2xs" data-i18n="calls_modal_close">إغلاق</button>
+    <div class="flex justify-end pt-2.5 border-t border-slate-200/80 shrink-0">
+      <button type="button" onclick="closeCallDetailModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 font-medium transition shadow-2xs" data-i18n="calls_modal_close">إغلاق</button>
     </div>
   </div>
 </div>

@@ -99,17 +99,17 @@ function renderTransactionsTable(txs, sym = '$') {
 
     let typeBadge = '';
     if (t.transaction_type === 'topup') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${window.t ? window.t('billing_type_topup', 'شحن رصيد') : 'شحن رصيد'}</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${window.t ? window.t('billing_type_topup', 'شحن رصيد') : 'شحن رصيد'}</span>`;
     } else if (t.transaction_type === 'call_deduction') {
-      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${window.t ? window.t('billing_type_deduction', 'خصم مكالمة') : 'خصم مكالمة'}</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${window.t ? window.t('billing_type_deduction', 'خصم مكالمة') : 'خصم مكالمة'}</span>`;
     } else {
-      typeBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(t.transaction_type_display)}</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(t.transaction_type_display)}</span>`;
     }
 
     const minUnit = window.t ? window.t('minute_short', 'د') : 'د';
     const secUnit = window.t ? window.t('second_short', 'ث') : 'ث';
     const minsDisplay = t.billed_minutes > 0
-      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} ${minUnit}</span> <span class="text-[10px] text-slate-400">(${t.actual_seconds} ${secUnit})</span>`
+      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} ${minUnit}</span> <span class="text-xs text-slate-400">(${t.actual_seconds} ${secUnit})</span>`
       : `<span class="text-slate-400">-</span>`;
 
     const rateDisplay = t.rate_applied > 0
@@ -118,7 +118,7 @@ function renderTransactionsTable(txs, sym = '$') {
 
     return `
       <tr class="hover:bg-slate-50/60 transition">
-        <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">${t.created_at}</td>
+        <td class="py-3 px-4 text-slate-500 font-mono text-xs">${t.created_at}</td>
         <td class="py-3 px-4">${typeBadge}</td>
         <td class="py-3 px-4">${amountBadge}</td>
         <td class="py-3 px-4 font-mono font-medium text-slate-900">${t.balance_after_formatted}</td>

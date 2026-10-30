@@ -118,24 +118,24 @@ async function loadCampaignsList(selectCampaignId = null) {
 
 function getStatusLabel(status) {
   switch (status) {
-    case 'running': return '⚡ قيد التنفيذ';
-    case 'paused': return '⏸️ متوقفة مؤقتاً';
-    case 'completed': return '✅ مكتملة';
-    case 'cancelled': return '⛔ ملغية';
-    default: return '📝 مسودة';
+    case 'running': return 'قيد التنفيذ';
+    case 'paused': return 'متوقفة مؤقتاً';
+    case 'completed': return 'مكتملة';
+    case 'cancelled': return 'ملغية';
+    default: return 'مسودة';
   }
 }
 
 function getStatusBadgeHtml(status) {
   switch (status) {
     case 'running':
-      return '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">⚡ قيد التنفيذ التلقائي</span>';
+      return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">قيد التنفيذ التلقائي</span>';
     case 'paused':
-      return '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300">⏸️ متوقفة مؤقتاً</span>';
+      return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">متوقفة مؤقتاً</span>';
     case 'completed':
-      return '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✅ مكتملة بنجاح</span>';
+      return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">مكتملة بنجاح</span>';
     default:
-      return '<span class="px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">مسودة (جاهزة للإطلاق)</span>';
+      return '<span class="px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">مسودة (جاهزة للإطلاق)</span>';
   }
 }
 
@@ -218,13 +218,13 @@ function renderCampaignHeaderAndStats(camp) {
   const chBadge = document.getElementById('camp-channel-badge');
   if (chBadge) {
     if (camp.channel === 'whatsapp') {
-      chBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-300';
-      chBadge.innerText = '💬 واتساب فقط';
+      chBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800 border border-teal-300';
+      chBadge.innerText = 'واتساب فقط';
     } else if (camp.channel === 'hybrid') {
-      chBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300';
-      chBadge.innerText = '⚡ هجينة (اتصال + واتساب)';
+      chBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300';
+      chBadge.innerText = 'هجينة (اتصال + واتساب)';
     } else {
-      chBadge.className = 'px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200';
+      chBadge.className = 'px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200';
       chBadge.innerText = 'مكالمات فقط';
     }
   }
@@ -322,42 +322,42 @@ function renderCampaignContactsTable(contacts) {
 
   tbody.innerHTML = contacts.map(c => {
     // 1. Call Status Badge
-    let callBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-700">⏳ في الانتظار</span>';
+    let callBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700">في الانتظار</span>';
     if (c.call_status === 'in_progress') {
-      callBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 animate-pulse font-bold">📞 جاري الاتصال</span>';
+      callBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 animate-pulse font-bold">جاري الاتصال</span>';
     } else if (c.call_status === 'answered') {
-      callBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">✅ تم الرد</span>';
+      callBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-800 font-bold">تم الرد</span>';
     } else if (c.call_status === 'failed' || c.call_status === 'no_answer' || c.call_status === 'busy') {
-      callBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 text-rose-800">❌ لم يرد (${c.retries_count} محاولة)</span>`;
+      callBadge = `<span class="px-2 py-0.5 rounded-full text-xs bg-rose-100 text-rose-800">لم يرد (${c.retries_count} محاولة)</span>`;
     }
 
     // 2. WhatsApp Status Badge
-    let waBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">لم يُرسل</span>';
+    let waBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-500">لم يُرسل</span>';
     if (c.whatsapp_status === 'in_progress') {
-      waBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-teal-100 text-teal-800 animate-pulse font-bold">💬 جاري الإرسال</span>';
+      waBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-teal-100 text-teal-800 animate-pulse font-bold">جاري الإرسال</span>';
     } else if (c.whatsapp_status === 'sent' || c.whatsapp_status === 'delivered') {
-      waBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-teal-100 text-teal-900 font-bold">💬 تم الإرسال</span>';
+      waBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-teal-100 text-teal-900 font-bold">تم الإرسال</span>';
     } else if (c.whatsapp_status === 'replied') {
-      waBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-900 font-bold">💬 تم الرد</span>';
+      waBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-900 font-bold">تم الرد</span>';
     } else if (c.whatsapp_status === 'failed') {
-      waBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 text-rose-800 font-semibold" title="${escapeHtml(c.whatsapp_message_text)}">❌ فشل الإرسال</span>`;
+      waBadge = `<span class="px-2 py-0.5 rounded-full text-xs bg-rose-100 text-rose-800 font-semibold" title="${escapeHtml(c.whatsapp_message_text)}">فشل الإرسال</span>`;
     }
 
     // 3. AI Lead Score Badge
-    let aiBadge = '<span class="text-slate-400 text-[10px]">لم يتحدد</span>';
+    let aiBadge = '<span class="text-slate-400 text-xs">لم يتحدد</span>';
     if (c.interest_level === 'hot') {
-      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-sm flex items-center gap-1 w-fit"><span>🔥</span><span>مهتم جداً</span></span>';
+      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-xs flex items-center gap-1 w-fit"><span>مهتم جداً</span></span>';
     } else if (c.interest_level === 'warm') {
-      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 w-fit"><span>🟡</span><span>متابعة</span></span>';
+      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 w-fit"><span>متابعة</span></span>';
     } else if (c.interest_level === 'cold') {
-      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-700 w-fit"><span>❄️</span><span>غير مهتم</span></span>';
+      aiBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 w-fit"><span>غير مهتم</span></span>';
     }
 
     // 4. Attributes Preview
-    let attrsHtml = '<span class="text-slate-400 text-[10px]">-</span>';
+    let attrsHtml = '<span class="text-slate-400 text-xs">-</span>';
     if (c.attributes && typeof c.attributes === 'object' && Object.keys(c.attributes).length > 0) {
       attrsHtml = Object.entries(c.attributes).slice(0, 3).map(([k, v]) => `
-        <span class="inline-block px-1.5 py-0.5 text-[9px] rounded bg-slate-100 border border-slate-200 text-slate-700 mr-1 mb-1">
+        <span class="inline-block px-1.5 py-0.5 text-xs rounded bg-slate-100 border border-slate-200 text-slate-700 mr-1 mb-1">
           <strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(v))}
         </span>
       `).join('');
@@ -366,10 +366,10 @@ function renderCampaignContactsTable(contacts) {
     // 5. Summary / Message Preview
     let summaryHtml = '';
     if (c.call_summary) {
-      summaryHtml = `<div class="truncate text-slate-900" title="${escapeHtml(c.call_summary)}"><strong>📞</strong> ${escapeHtml(c.call_summary)}</div>`;
+      summaryHtml = `<div class="truncate text-slate-900" title="${escapeHtml(c.call_summary)}"><span class="text-slate-500 font-medium">مكالمة:</span> ${escapeHtml(c.call_summary)}</div>`;
     }
     if (c.whatsapp_message_text) {
-      summaryHtml += `<div class="truncate text-teal-800 text-[11px] mt-0.5" title="${escapeHtml(c.whatsapp_message_text)}"><strong>💬</strong> ${escapeHtml(c.whatsapp_message_text)}</div>`;
+      summaryHtml += `<div class="truncate text-teal-800 text-xs mt-0.5" title="${escapeHtml(c.whatsapp_message_text)}"><span class="text-teal-600 font-medium">واتساب:</span> ${escapeHtml(c.whatsapp_message_text)}</div>`;
     }
     if (!summaryHtml) {
       summaryHtml = '<span class="text-slate-400 italic">لا يوجد ملخص أو رسالة بعد</span>';
@@ -379,7 +379,9 @@ function renderCampaignContactsTable(contacts) {
       <tr class="hover:bg-slate-50/60 transition">
         <td class="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-medium border border-slate-200/60">👤</span>
+            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-medium border border-slate-200/60">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
             <span>${escapeHtml(c.customer_name)}</span>
           </div>
         </td>
@@ -395,13 +397,13 @@ function renderCampaignContactsTable(contacts) {
         </td>
         <td class="py-3 px-3 text-center whitespace-nowrap">
           <div class="flex items-center justify-center gap-1.5">
-            <button type="button" onclick="dialSingleContact(${c.id})" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-medium transition" title="إجراء مكالمة هاتفية فورية">
+            <button type="button" onclick="dialSingleContact(${c.id})" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-medium transition" title="إجراء مكالمة هاتفية فورية">
               اتصال
             </button>
-            <button type="button" onclick="sendSingleContactWhatsApp(${c.id})" class="px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-medium transition" title="إرسال رسالة واتساب مخصصة فورية">
+            <button type="button" onclick="sendSingleContactWhatsApp(${c.id})" class="px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-medium transition" title="إرسال رسالة واتساب مخصصة فورية">
               واتساب
             </button>
-            <button type="button" onclick="openContactDetailsModal(${c.id})" class="px-2 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-medium transition" title="عرض التفاصيل الكاملة">
+            <button type="button" onclick="openContactDetailsModal(${c.id})" class="px-2 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition" title="عرض التفاصيل الكاملة">
               تفاصيل
             </button>
           </div>
@@ -581,7 +583,7 @@ async function submitNewCampaign(event) {
 
   if (btnSubmit) {
     btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span>⏳</span><span>جاري رفع وتحليل الملف...</span>';
+    btnSubmit.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg><span>جاري رفع وتحليل الملف...</span>';
   }
 
   try {
@@ -615,7 +617,7 @@ async function submitNewCampaign(event) {
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<span>🚀</span><span>رفع وتنظيم العملاء في الـ CRM</span>';
+      btnSubmit.innerHTML = '<span>رفع وتنظيم العملاء في الـ CRM</span>';
     }
   }
 }
@@ -832,9 +834,9 @@ function openContactDetailsModal(contactId) {
 
   const interestEl = document.getElementById('contact-modal-interest');
   if (interestEl) {
-    if (contact.interest_level === 'hot') interestEl.innerText = '🔥 مهتم جداً';
-    else if (contact.interest_level === 'warm') interestEl.innerText = '🟡 للمتابعة';
-    else if (contact.interest_level === 'cold') interestEl.innerText = '❄️ غير مهتم';
+    if (contact.interest_level === 'hot') interestEl.innerText = 'مهتم جداً';
+    else if (contact.interest_level === 'warm') interestEl.innerText = 'للمتابعة';
+    else if (contact.interest_level === 'cold') interestEl.innerText = 'غير مهتم';
     else interestEl.innerText = 'لم يتحدد بعد';
   }
 
@@ -861,9 +863,9 @@ function openContactDetailsModal(contactId) {
     const ext = contact.extracted_data || {};
     if (ext.customer_intent || ext.key_answers || ext.action_required) {
       insightsEl.innerHTML = `
-        <div><strong>🎯 نية العميل:</strong> ${escapeHtml(ext.customer_intent || '-')}</div>
-        <div><strong>💡 الإجابات الرئيسية:</strong> ${escapeHtml(ext.key_answers || '-')}</div>
-        <div><strong>📌 الإجراء المطلوب:</strong> ${escapeHtml(ext.action_required || '-')}</div>
+        <div><strong>نية العميل:</strong> ${escapeHtml(ext.customer_intent || '-')}</div>
+        <div><strong>الإجابات الرئيسية:</strong> ${escapeHtml(ext.key_answers || '-')}</div>
+        <div><strong>الإجراء المطلوب:</strong> ${escapeHtml(ext.action_required || '-')}</div>
       `;
     } else {
       insightsEl.innerHTML = '<span class="text-slate-400 italic">لا توجد استخلاصات ذكية بعد.</span>';
@@ -875,7 +877,7 @@ function openContactDetailsModal(contactId) {
     const attrs = contact.attributes || {};
     if (Object.keys(attrs).length > 0) {
       attrsEl.innerHTML = `
-        <table class="w-full text-start text-[11px]">
+        <table class="w-full text-start text-xs">
           ${Object.entries(attrs).map(([k, v]) => `
             <tr class="border-b border-slate-100">
               <td class="font-medium py-1 text-slate-900 w-1/3">${escapeHtml(k)}</td>
@@ -963,9 +965,9 @@ async function loadDncList() {
             <td class="py-2.5 px-3 font-mono font-bold text-rose-900">${escapeHtml(e.phone_number)}</td>
             <td class="py-2.5 px-3 text-slate-900 font-medium">${escapeHtml(e.customer_name || '-')}</td>
             <td class="py-2.5 px-3 text-slate-500">${escapeHtml(e.reason || '-')}</td>
-            <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${escapeHtml(e.created_at || '-')}</td>
+            <td class="py-2.5 px-3 text-slate-400 font-mono text-xs">${escapeHtml(e.created_at || '-')}</td>
             <td class="py-2.5 px-3 text-center">
-              <button type="button" onclick="deleteDncNumber(${e.id})" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium border border-rose-200 transition text-[11px]">
+              <button type="button" onclick="deleteDncNumber(${e.id})" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium border border-rose-200 transition text-xs">
                 فك الحظر
               </button>
             </td>

@@ -12,7 +12,7 @@ let dashboardCurrentRoomName = null;
 function switchCallcenterSubtab(sub) {
   document.querySelectorAll('.callcenter-subtab-panel').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.subtab-btn').forEach(btn => {
-    btn.classList.remove('bg-white', 'text-slate-900', 'border', 'border-[#eaedf0]', 'shadow-2xs', 'font-medium', 'text-white', 'shadow-sm');
+    btn.classList.remove('bg-white', 'text-slate-900', 'border', 'border-slate-200/80', 'shadow-2xs', 'font-medium', 'text-white', 'shadow-sm');
     btn.classList.add('text-slate-600', 'hover:text-slate-900', 'font-normal');
   });
   const target = document.getElementById('subtab-content-' + sub);
@@ -20,7 +20,7 @@ function switchCallcenterSubtab(sub) {
   const activeBtn = document.getElementById('subtab-btn-' + sub);
   if (activeBtn) {
     activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900', 'font-normal');
-    activeBtn.classList.add('bg-white', 'text-slate-900', 'border', 'border-[#eaedf0]', 'shadow-2xs', 'font-medium');
+    activeBtn.classList.add('bg-white', 'text-slate-900', 'border', 'border-slate-200/80', 'shadow-2xs', 'font-medium');
   }
   if (sub === 'recordings') {
     loadEmployeeCallLogs();
@@ -58,16 +58,20 @@ async function loadEmployees() {
     const generalDept = window.t ? window.t('general_dept', 'عام') : 'عام';
 
     const statusBadges = {
-      'ready': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${readyText}</span>`,
-      'break': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${breakText}</span>`,
-      'busy': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${busyText}</span>`,
-      'offline': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">${offlineText}</span>`
+      'ready': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${readyText}</span>`,
+      'break': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${breakText}</span>`,
+      'busy': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${busyText}</span>`,
+      'offline': `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">${offlineText}</span>`
     };
 
     tbody.innerHTML = currentEmployees.map(emp => `
       <tr class="hover:bg-slate-50/70 transition">
         <td class="py-3 px-3 font-medium text-slate-900 flex items-center gap-2">
-          <span class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs font-medium shadow-2xs">👤</span>
+          <span class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-medium shadow-2xs">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </span>
           <span>${escapeHtml(emp.display_name)}</span>
         </td>
         <td class="py-3 px-3 text-center">
@@ -80,7 +84,7 @@ async function loadEmployees() {
           ${statusBadges[emp.status] || statusBadges['offline']}
         </td>
         <td class="py-3 px-3">
-          <span class="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-mono font-medium">
+          <span class="inline-flex items-center gap-1 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-mono font-medium">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Wazo PJSIP
           </span>
         </td>
@@ -89,18 +93,21 @@ async function loadEmployees() {
             <button 
               type="button" 
               onclick="openSipCredentialsModal(${emp.id})"
-              class="px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
+              class="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
               title="بيانات اتصال SIP للسوفت فون والهاتف المكتبي"
             >
-              <span>🔑 ${sipDataLabel}</span>
+              <span>${sipDataLabel}</span>
             </button>
             <button 
               type="button" 
               onclick="dialTargetFromDashboard('${escapeHtml(emp.extension)}', '${escapeHtml(emp.display_name)}')"
-              class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
+              class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
               title="اتصال مباشر بالموظف عبر WebRTC"
             >
-              <span>📞 ${dialLabel}</span>
+              <svg class="w-3 h-3 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              <span>${dialLabel}</span>
             </button>
             <button 
               type="button" 
@@ -164,19 +171,19 @@ async function loadQueues() {
               stateLabel = busyState;
             }
             return `
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${badgeColor} border mr-1 mb-1 shadow-2xs">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${badgeColor} border mr-1 mb-1 shadow-2xs">
                 <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
                 <span>${escapeHtml(m.sip_account_name || m.sip_username)}</span>
-                <span class="text-slate-500 font-mono text-[9px] font-medium">[${extPrefix} ${escapeHtml(m.extension || '')}]</span>
-                <span class="opacity-75 font-mono text-[9px]">(${stateLabel})</span>
+                <span class="text-slate-500 font-mono text-xs font-medium">[${extPrefix} ${escapeHtml(m.extension || '')}]</span>
+                <span class="opacity-75 font-mono text-xs">(${stateLabel})</span>
               </span>
             `;
           }).join('')
-        : `<span class="text-slate-400 text-[10px]">${noMembersAssigned}</span>`;
+        : `<span class="text-slate-400 text-xs">${noMembersAssigned}</span>`;
 
       const waitingBadge = q.waiting_calls_count > 0
-        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${q.waiting_calls_count} مكالمة</span>`
-        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">0</span>`;
+        ? `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${q.waiting_calls_count} مكالمة</span>`
+        : `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">0</span>`;
 
       const strategyLabel = q.strategy === 'round_robin' 
         ? `رنين بالتناوب (${q.ring_timeout_seconds || 15}ث)` 
@@ -192,13 +199,12 @@ async function loadQueues() {
           <td class="py-3 px-3">
             <div class="font-semibold text-slate-900 flex items-center gap-1.5">
               <span>${escapeHtml(q.name)}</span>
-              ${q.hold_music_url ? '<span class="text-[10px] text-sky-600" title="موسيقى انتظار مخصصة">🎵</span>' : ''}
             </div>
-            <div class="text-[11px] text-slate-500 font-normal mt-0.5 max-w-xs leading-snug line-clamp-2" title="${escapeHtml(q.description || 'لا يوجد وصف')}">
-              ${q.description ? `<span class="text-sky-700 font-medium">🤖 اختصاص الـ AI:</span> ${escapeHtml(q.description)}` : `<span class="text-slate-400 italic">لم يُحدد وصف لاختصاص الطابور للـ AI</span>`}
+            <div class="text-xs text-slate-500 font-normal mt-0.5 max-w-xs leading-snug line-clamp-2" title="${escapeHtml(q.description || 'لا يوجد وصف')}">
+              ${q.description ? `<span class="text-sky-700 font-medium">اختصاص المساعد:</span> ${escapeHtml(q.description)}` : `<span class="text-slate-400 italic">لم يُحدد وصف لاختصاص الطابور للـ AI</span>`}
             </div>
           </td>
-          <td class="py-3 px-3 text-slate-700 font-mono text-[11px]">${strategyLabel}</td>
+          <td class="py-3 px-3 text-slate-700 font-mono text-xs">${strategyLabel}</td>
           <td class="py-3 px-3">
             <div class="flex flex-wrap items-center">${membersHtml}</div>
           </td>
@@ -208,18 +214,24 @@ async function loadQueues() {
               <button 
                 type="button" 
                 onclick="dialTargetFromDashboard('${escapeHtml(q.code)}', '${escapeHtml(q.name)}')"
-                class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
+                class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
                 title="اتصال وتجربة الطابور عبر WebRTC"
               >
-                <span>📞 اتصال</span>
+                <svg class="w-3 h-3 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                <span>اتصال</span>
               </button>
               <button 
                 type="button" 
                 onclick="openEditQueueModal('${q.id}', '${escapeHtml(q.name)}', '${escapeHtml(q.description || '')}')"
-                class="px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium transition inline-flex items-center gap-1 shadow-2xs"
+                class="px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs"
                 title="تعديل اختصاصات ووصف الطابور للذكاء الاصطناعي"
               >
-                <span>✏️ وصف الـ AI</span>
+                <svg class="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                <span>وصف التوجيه</span>
               </button>
               <button 
                 type="button" 
@@ -300,13 +312,13 @@ function openNewQueueModal() {
       <label class="flex items-center gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-white cursor-pointer transition">
         <input type="checkbox" name="member_employee_ids" value="${emp.id}" class="rounded border-slate-300 text-[#1f93ff] focus:ring-[#1f93ff]">
         <span class="text-slate-800 font-medium">${escapeHtml(emp.display_name)}</span>
-        <span class="font-mono text-slate-600 font-medium text-[11px] mr-1">[تحويلة: ${escapeHtml(emp.extension || '')}]</span>
-        <span class="text-slate-500 text-[10px]">(${escapeHtml(emp.department || '')})</span>
+        <span class="font-mono text-slate-600 font-medium text-xs mr-1">[تحويلة: ${escapeHtml(emp.extension || '')}]</span>
+        <span class="text-slate-500 text-xs">(${escapeHtml(emp.department || '')})</span>
       </label>
     `).join('');
   } else {
     membersListEl.innerHTML = `
-      <span class="text-slate-400 text-[11px]">
+      <span class="text-slate-400 text-xs">
         جاري مزامنة الموظفين من جدول التحويلات...
       </span>
     `;
@@ -525,7 +537,7 @@ async function dialTargetFromDashboard(target, targetName) {
       });
 
       dashboardLivekitRoom.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
-        if (callSub) callSub.innerText = `انضم للمكالمة: ${p.name || p.identity} ✅`;
+        if (callSub) callSub.innerText = `انضم للمكالمة: ${p.name || p.identity}`;
       });
 
       dashboardLivekitRoom.on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => {
@@ -697,10 +709,10 @@ async function loadEmployeeCallLogs() {
     }
 
     const typeBadges = {
-      'inbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><span>📥</span> واردة</span>',
-      'outbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200"><span>📤</span> صادرة</span>',
-      'missed': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200"><span>📵</span> فائتة</span>',
-      'transfer': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200"><span>🔀</span> محولة</span>'
+      'inbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">واردة</span>',
+      'outbound': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">صادرة</span>',
+      'missed': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">فائتة</span>',
+      'transfer': '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">محولة</span>'
     };
 
     tbody.innerHTML = logs.map(log => {
@@ -731,33 +743,39 @@ async function loadEmployeeCallLogs() {
           </div>
         `;
       } else if (log.call_type === 'missed') {
-        recordingCell = '<span class="text-rose-600 text-[11px] font-medium">مكالمة لم يُرد عليها</span>';
+        recordingCell = '<span class="text-rose-600 text-xs font-medium">مكالمة لم يُرد عليها</span>';
       } else {
-        recordingCell = '<span class="text-slate-400 text-[11px]">غير مسجلة</span>';
+        recordingCell = '<span class="text-slate-400 text-xs">غير مسجلة</span>';
       }
 
       return `
         <tr class="hover:bg-slate-50/60 transition">
           <td class="py-3 px-3">
             <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs font-medium shadow-2xs">👤</span>
+              <span class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-medium shadow-2xs">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </span>
               <div>
                 <div class="font-medium text-slate-900">${escapeHtml(log.employee_name || 'موظف')}</div>
-                <div class="text-[10px] text-slate-500 font-mono font-medium">#${escapeHtml(log.employee_ext || '')} ${log.employee_department ? '· ' + escapeHtml(log.employee_department) : ''}</div>
+                <div class="text-xs text-slate-500 font-mono font-medium">#${escapeHtml(log.employee_ext || '')} ${log.employee_department ? '· ' + escapeHtml(log.employee_department) : ''}</div>
               </div>
             </div>
           </td>
           <td class="py-3 px-3 font-medium text-slate-800">
             <div class="flex items-center gap-1.5">
-              <span>📞</span>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
               <span>${escapeHtml(log.other_party || 'غير محدد')}</span>
-              ${log.extension && log.extension !== log.other_party ? `<span class="text-[10px] text-slate-400 font-mono">(${escapeHtml(log.extension)})</span>` : ''}
+              ${log.extension && log.extension !== log.other_party ? `<span class="text-xs text-slate-400 font-mono">(${escapeHtml(log.extension)})</span>` : ''}
             </div>
           </td>
           <td class="py-3 px-3 text-center">
             ${typeBadge}
           </td>
-          <td class="py-3 px-3 text-slate-600 font-mono text-[11px]">
+          <td class="py-3 px-3 text-slate-600 font-mono text-xs">
             ${escapeHtml(log.started_at || '')}
           </td>
           <td class="py-3 px-3 text-center font-mono font-medium text-slate-900">

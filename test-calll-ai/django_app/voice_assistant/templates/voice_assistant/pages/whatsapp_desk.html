@@ -30,15 +30,18 @@
 <div class="space-y-4">
 
   <!-- ==================== Header & Desk Status ==================== -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#eaedf0] rounded-xl p-5 shadow-2xs">
-    <div class="flex items-center gap-3.5">
-      <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xl border border-slate-200/60 shrink-0">
-        🎧
+  <div class="flex flex-wrap items-center justify-between gap-4 pb-1">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200/60 shrink-0">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+        </svg>
       </div>
       <div>
         <div class="flex flex-wrap items-center gap-2">
           <h1 class="text-base font-semibold text-slate-900" data-i18n="desk_page_title">مكتب دعم عملاء الواتساب (الدعم البشري Tier 2)</h1>
-          <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="desk_badge_ring">
+          <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="desk_badge_ring">
             رنين جماعي & استلام فوري
           </span>
         </div>
@@ -70,8 +73,12 @@
         title="كتم/تفعيل صوت الرنين" data-i18n-title="desk_title_toggle_sound"
         data-i18n-title="desk_sound_title"
       >
-        <span id="sound-icon">🔔</span>
-        <span class="hidden sm:inline text-[11px] font-medium" id="sound-text" data-i18n="desk_sound_on">الصوت مفعل</span>
+        <span id="sound-icon" class="inline-flex items-center">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+        </span>
+        <span class="hidden sm:inline text-xs font-medium" id="sound-text" data-i18n="desk_sound_on">الصوت مفعل</span>
       </button>
     </div>
   </div>
@@ -80,13 +87,17 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
 
     <!-- Panel 1: Incoming Broadcast Ringing Queue (Right Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs">
-      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-slate-50/50 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+      <div class="p-3.5 px-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
-          <span class="text-base">🛎️</span>
+          <span class="text-slate-500">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+          </span>
           <div>
             <h3 class="font-medium text-xs text-slate-900" data-i18n="desk_queue_title">طابور الرنين العام</h3>
-            <p class="text-[10px] text-slate-400" data-i18n="desk_queue_subtitle">ترن لدى الجميع (الأسبقية للاستلام)</p>
+            <p class="text-xs text-slate-400" data-i18n="desk_queue_subtitle">ترن لدى الجميع (الأسبقية للاستلام)</p>
           </div>
         </div>
         <span id="broadcast-queue-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 font-mono">
@@ -97,21 +108,27 @@
       <!-- Queue Cards Container -->
       <div id="broadcast-queue-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 chat-scroll bg-slate-50/30">
         <div class="p-8 text-center text-slate-400 text-xs space-y-2">
-          <div class="text-2xl">☕</div>
+          <div class="w-8 h-8 mx-auto flex items-center justify-center text-slate-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7Z"/><path d="M5.45 5.11 2 12v0h20v0l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          </div>
           <p class="font-medium text-slate-600" data-i18n="desk_queue_empty">لا توجد محادثات معلقة في الطابور حالياً.</p>
-          <p class="text-[10px] text-slate-400" data-i18n="desk_queue_empty_desc">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
+          <p class="text-xs text-slate-400" data-i18n="desk_queue_empty_desc">عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.</p>
         </div>
       </div>
     </div>
 
     <!-- Panel 2: My Active Claimed Chats (Middle Panel, 3 cols) -->
-    <div class="lg:col-span-3 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs">
-      <div class="p-3.5 px-4 border-b border-[#eaedf0] bg-slate-50/50 flex items-center justify-between shrink-0">
+    <div class="lg:col-span-3 flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+      <div class="p-3.5 px-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
-          <span class="text-base">👤</span>
+          <span class="text-slate-500">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
           <div>
             <h3 class="font-medium text-xs text-slate-900" data-i18n="desk_my_chats_title">محادثاتي المستلمة</h3>
-            <p class="text-[10px] text-slate-400" data-i18n="desk_my_chats_subtitle">محادثات قيد الدعم المباشر</p>
+            <p class="text-xs text-slate-400" data-i18n="desk_my_chats_subtitle">محادثات قيد الدعم المباشر</p>
           </div>
         </div>
         <span id="my-chats-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-[#eff8ff] text-[#1f93ff] border border-[#b2ddff]/70 font-mono">
@@ -120,7 +137,7 @@
       </div>
 
       <!-- Active Claimed Chats List -->
-      <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-[#eaedf0] chat-scroll">
+      <div id="my-claimed-chats-list" class="flex-1 overflow-y-auto divide-y divide-slate-100 chat-scroll">
         <div class="p-8 text-center text-slate-400 text-xs" data-i18n="desk_my_chats_empty">
           لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.
         </div>
@@ -128,12 +145,14 @@
     </div>
 
     <!-- Panel 3: Live Chat Thread & Cockpit (Left Main Panel, 6 cols) -->
-    <div class="lg:col-span-6 flex flex-col bg-white border border-[#eaedf0] rounded-xl overflow-hidden shadow-2xs relative">
+    <div class="lg:col-span-6 flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs relative">
 
       <!-- Empty State (No chat active) -->
       <div id="desk-empty-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-600 border border-slate-200/60 flex items-center justify-center text-2xl shadow-2xs">
-          💬
+        <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 border border-slate-200/60 flex items-center justify-center shadow-2xs">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
         </div>
         <h3 class="text-sm font-semibold text-slate-900" data-i18n="desk_empty_title">اختر محادثة من قائمة «محادثاتي المستلمة»</h3>
         <p class="text-xs text-slate-500 max-w-sm leading-relaxed" data-i18n="desk_empty_desc">
@@ -145,7 +164,7 @@
       <div id="desk-active-view" class="hidden flex-1 flex-col min-h-0">
         
         <!-- Header -->
-        <div class="p-3.5 px-5 border-b border-[#eaedf0] bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="p-3.5 px-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div class="flex items-center gap-3">
             <div id="desk-chat-avatar" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-xs border border-slate-200/60 shrink-0">
               U
@@ -155,7 +174,7 @@
                 <h3 id="desk-chat-name" class="font-semibold text-sm text-slate-900">-</h3>
                 <span id="desk-chat-phone" class="font-mono text-xs text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 dir-ltr">-</span>
               </div>
-              <span class="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+              <span class="text-xs text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                 <span data-i18n="desk_active_badge">قيد الدعم البشري المباشر</span>
               </span>
@@ -189,16 +208,16 @@
         <div id="desk-brief-banner" class="px-5 py-3 bg-amber-50/80 border-b border-amber-200 text-xs text-slate-700 shrink-0">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" data-i18n="desk_brief_escalation">شكوى / تصعيد</span>
+              <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200" data-i18n="desk_brief_escalation">شكوى / تصعيد</span>
               <span class="font-medium text-slate-900" id="desk-brief-reason" data-i18n="desk_brief_reason">سبب التصعيد: -</span>
             </div>
             <!-- 5-Minute Countdown Badge -->
-            <div class="flex items-center gap-1.5 font-mono text-[11px] font-medium px-2.5 py-0.5 rounded-md border bg-white shadow-2xs" id="sla-timer-container">
+            <div class="flex items-center gap-1.5 font-mono text-xs font-medium px-2.5 py-0.5 rounded-md border bg-white shadow-2xs" id="sla-timer-container">
               <span data-i18n="desk_brief_sla">مهلة الرد:</span>
               <span id="sla-countdown-text">05:00</span>
             </div>
           </div>
-          <p id="desk-brief-summary" class="text-[11px] text-slate-700 mt-1.5 bg-white p-2.5 rounded-lg border border-amber-200 leading-relaxed font-sans shadow-2xs">
+          <p id="desk-brief-summary" class="text-xs text-slate-700 mt-1.5 bg-white p-2.5 rounded-lg border border-amber-200 leading-relaxed font-sans shadow-2xs">
             -
           </p>
         </div>
@@ -209,7 +228,7 @@
         </div>
 
         <!-- Quick Reply Composer -->
-        <div class="p-3.5 px-5 border-t border-[#eaedf0] bg-white shrink-0">
+        <div class="p-3.5 px-5 border-t border-slate-100 bg-white shrink-0">
           <form id="desk-reply-form" onsubmit="sendDeskReply(event)" class="space-y-2">
             <div class="flex items-center gap-2">
               <input 
@@ -326,7 +345,9 @@
 
   function toggleSoundMute() {
     isSoundMuted = !isSoundMuted;
-    document.getElementById('sound-icon').textContent = isSoundMuted ? '🔇' : '🔔';
+    document.getElementById('sound-icon').innerHTML = isSoundMuted 
+      ? '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>'
+      : '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
     document.getElementById('sound-text').textContent = isSoundMuted ? window.t('desk_sound_off', 'الصوت مكتوم') : window.t('desk_sound_on', 'الصوت مفعل');
     if (isSoundMuted && chimeAudioIntervalId) {
       clearInterval(chimeAudioIntervalId);
@@ -339,10 +360,10 @@
     const btn = document.getElementById('btn-agent-presence');
     const text = document.getElementById('presence-text');
     if (isAgentOnline) {
-      btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs';
+      btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs';
       text.textContent = window.t('desk_presence_online', 'حالتي: متصل ومستعد للاستلام');
     } else {
-      btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-amber-50 text-amber-800 border border-amber-300 shadow-xs';
+      btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs';
       text.textContent = window.t('desk_presence_break', 'حالتي: في استراحة (الصوت متوقف)');
       if (chimeAudioIntervalId) {
         clearInterval(chimeAudioIntervalId);
@@ -392,10 +413,12 @@
     const container = document.getElementById('broadcast-queue-list');
     if (!queue || queue.length === 0) {
       container.innerHTML = `
-        <div class="p-8 text-center text-[#94a3b8] text-xs space-y-2">
-          <div class="text-2xl">☕</div>
-          <p class="font-medium">${window.t('desk_queue_empty', 'لا توجد محادثات معلقة في الطابور حالياً.')}</p>
-          <p class="text-[10px] text-[#A8A199]">${window.t('desk_queue_empty_desc', 'عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.')}</p>
+        <div class="p-8 text-center text-slate-400 text-xs space-y-2">
+          <div class="w-8 h-8 mx-auto flex items-center justify-center text-slate-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7Z"/><path d="M5.45 5.11 2 12v0h20v0l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          </div>
+          <p class="font-medium text-slate-600">${window.t('desk_queue_empty', 'لا توجد محادثات معلقة في الطابور حالياً.')}</p>
+          <p class="text-xs text-slate-400">${window.t('desk_queue_empty_desc', 'عند حدوث أي شكوى أو طلب تحويل، سترن المحادثة هنا فوراً.')}</p>
         </div>
       `;
       return;
@@ -409,29 +432,29 @@
       const isUrgent = (c.escalation_urgency === 'urgent');
 
       return `
-        <div class="p-3.5 bg-white rounded-2xl border ${isUrgent ? 'border-rose-400 ring-alert shadow-md' : 'border-amber-300 shadow-xs'} space-y-2.5 transition">
+        <div class="p-3.5 bg-white rounded-xl border ${isUrgent ? 'border-rose-300 ring-alert shadow-xs' : 'border-amber-200 shadow-2xs'} space-y-2.5 transition">
           <div class="flex items-start justify-between gap-1">
             <div class="flex items-center gap-2 min-w-0">
-              <span class="text-base shrink-0">${isUrgent ? '🚨' : '🔔'}</span>
+              <span class="w-2 h-2 rounded-full ${isUrgent ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'} shrink-0"></span>
               <div class="min-w-0">
-                <h4 class="font-bold text-xs text-[#0f172a] truncate">${escapeHtml(name)}</h4>
-                <p class="text-[10px] text-[#64748b] font-mono dir-ltr text-right truncate">${escapeHtml(phone)}</p>
+                <h4 class="font-semibold text-xs text-slate-900 truncate">${escapeHtml(name)}</h4>
+                <p class="text-xs text-slate-400 font-mono dir-ltr text-right truncate">${escapeHtml(phone)}</p>
               </div>
             </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isUrgent ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'} shrink-0">
-              ${isUrgent ? window.t('desk_badge_urgent', 'عاجل جداً') : window.t('desk_badge_support', 'طلب دعم')}
+            <span class="px-2 py-0.5 rounded-md text-xs font-semibold ${isUrgent ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'} shrink-0">
+              ${isUrgent ? window.t('desk_badge_urgent', 'عاجل') : window.t('desk_badge_support', 'طلب دعم')}
             </span>
           </div>
 
-          <div class="text-[11px] text-[#334155] bg-[#f8fafc] p-2 rounded-xl border border-[#eaedf0] leading-tight space-y-1">
-            <p class="font-bold text-[#1570ef] truncate">📌 ${escapeHtml(reason)}</p>
-            <p class="text-[#64748b] text-[10px] line-clamp-2">${escapeHtml(summary)}</p>
+          <div class="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-tight space-y-1">
+            <p class="font-medium text-[#1f93ff] truncate">${escapeHtml(reason)}</p>
+            <p class="text-slate-500 text-xs line-clamp-2">${escapeHtml(summary)}</p>
           </div>
 
           <button 
             type="button" 
             onclick="claimChat('${escapeHtml(c.phone_number)}')"
-            class="w-full py-2 px-3 rounded-xl bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+            class="w-full py-1.5 px-3 rounded-lg bg-[#1f93ff] hover:bg-[#1570ef] text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs"
           >
             <span>${window.t('desk_btn_claim', 'استلام المحادثة')}</span>
           </button>
@@ -444,7 +467,7 @@
     const container = document.getElementById('my-claimed-chats-list');
     if (!chats || chats.length === 0) {
       container.innerHTML = `
-        <div class="p-8 text-center text-[#94a3b8] text-xs">
+        <div class="p-8 text-center text-slate-400 text-xs">
           ${window.t('desk_my_chats_empty', 'لم تستلم أي محادثة بعد. اضغط «استلام» على أي محادثة واردة من الطابور لبدء خدمتها.')}
         </div>
       `;
@@ -461,18 +484,18 @@
       return `
         <div 
           onclick="selectClaimedChat('${escapeHtml(c.phone_number)}')" 
-          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-rose-50/70 border-r-4 border-r-[#1f93ff]' : 'hover:bg-[#f8fafc]'}"
+          class="p-3.5 cursor-pointer transition flex items-start gap-3 ${isSelected ? 'bg-slate-50 border-r-4 border-r-[#1f93ff]' : 'hover:bg-slate-50/60'}"
         >
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${isSelected ? 'from-[#1f93ff] to-[#1570ef] text-white' : 'from-[#eaedf0] to-[#cbd5e1] text-[#334155]'} font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-tr ${isSelected ? 'from-[#1f93ff] to-[#1570ef] text-white' : 'from-slate-100 to-slate-200 text-slate-700'} font-semibold flex items-center justify-center text-xs shrink-0 shadow-2xs">
             ${escapeHtml(initial)}
           </div>
           <div class="flex-1 min-w-0 space-y-0.5">
             <div class="flex items-center justify-between gap-1">
-              <h4 class="font-bold text-xs text-[#0f172a] truncate">${escapeHtml(name)}</h4>
-              <span class="text-[9px] text-[#94a3b8] font-mono">${escapeHtml(lastMsg.created_at_time || '')}</span>
+              <h4 class="font-semibold text-xs text-slate-900 truncate">${escapeHtml(name)}</h4>
+              <span class="text-xs text-slate-400 font-mono">${escapeHtml(lastMsg.created_at_time || '')}</span>
             </div>
-            <p class="text-[10px] text-[#64748b] font-mono dir-ltr text-right">${escapeHtml(phone)}</p>
-            <p class="text-[11px] text-[#334155] truncate">${escapeHtml(lastMsg.text || window.t('whatsapp_active_conv', 'محادثة نشطة'))}</p>
+            <p class="text-xs text-slate-400 font-mono dir-ltr text-right">${escapeHtml(phone)}</p>
+            <p class="text-xs text-slate-600 truncate">${escapeHtml(lastMsg.text || window.t('whatsapp_active_conv', 'محادثة نشطة'))}</p>
           </div>
         </div>
       `;
@@ -581,13 +604,13 @@
     document.getElementById('desk-chat-avatar').textContent = (data.customer_name || 'U').trim().charAt(0).toUpperCase();
 
     document.getElementById('desk-brief-reason').textContent = window.t('whatsapp_escalation_reason', 'سبب التصعيد:') + ' ' + (data.escalation_reason || window.t('whatsapp_escalation_fallback', 'طلب دعم بشري / شكوى'));
-    document.getElementById('desk-brief-summary').textContent = window.t('whatsapp_ai_summary_prefix', '📌 ملخص الذكاء الاصطناعي: ') + (data.escalation_summary || window.t('desk_summary_fallback', 'العميل بانتظار استجابتك ومساعدتك.'));
+    document.getElementById('desk-brief-summary').textContent = window.t('whatsapp_ai_summary_prefix', 'ملخص الذكاء الاصطناعي: ') + (data.escalation_summary || window.t('desk_summary_fallback', 'العميل بانتظار استجابتك ومساعدتك.'));
   }
 
   function renderMessagesStream(messages, scrollToBottom = false) {
     const stream = document.getElementById('desk-messages-stream');
     if (!messages || messages.length === 0) {
-      stream.innerHTML = `<div class="p-8 text-center text-[#94a3b8] text-xs">${window.t('whatsapp_no_messages', 'لا توجد رسائل سابقة بعد.')}</div>`;
+      stream.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">${window.t('whatsapp_no_messages', 'لا توجد رسائل سابقة بعد.')}</div>`;
       return;
     }
 
@@ -599,20 +622,20 @@
       if (isCustomer) {
         return `
           <div class="flex justify-start">
-            <div class="max-w-[78%] bg-white border border-[#e2e8f0] rounded-2xl rounded-tr-xs p-3 shadow-2xs space-y-1">
-              <span class="text-[9px] font-bold text-[#94a3b8]">${window.t('desk_bubble_customer', '👤 العميل')}</span>
-              <p class="text-xs text-[#0f172a] leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
-              <div class="text-[9px] text-[#A8A199] text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+            <div class="max-w-[78%] bg-white border border-slate-200/80 rounded-2xl rounded-tr-xs p-3 shadow-2xs space-y-1">
+              <span class="text-xs font-semibold text-slate-500">${window.t('desk_bubble_customer', 'العميل')}</span>
+              <p class="text-xs text-slate-900 leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
+              <div class="text-xs text-slate-400 text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
             </div>
           </div>
         `;
       } else {
         return `
           <div class="flex justify-end">
-            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white' : 'bg-emerald-50 border border-emerald-200 text-[#0f172a]'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
-              <span class="text-[9px] font-bold ${isHuman ? 'text-rose-200' : 'text-emerald-700'}">${isHuman ? window.t('desk_bubble_agent', '👨‍💻 أنت (الموظف البشري)') : window.t('desk_bubble_ai', '🤖 الذكاء الاصطناعي')}</span>
+            <div class="max-w-[78%] ${isHuman ? 'bg-gradient-to-tr from-[#1f93ff] to-[#1570ef] text-white' : 'bg-emerald-50 border border-emerald-200 text-slate-900'} rounded-2xl rounded-tl-xs p-3 shadow-2xs space-y-1 text-right">
+              <span class="text-xs font-semibold ${isHuman ? 'text-blue-100' : 'text-emerald-700'}">${isHuman ? window.t('desk_bubble_agent', 'أنت (الموظف)') : window.t('desk_bubble_ai', 'الذكاء الاصطناعي')}</span>
               <p class="text-xs leading-relaxed select-text">${escapeHtml(m.message_text)}</p>
-              <div class="text-[9px] ${isHuman ? 'text-rose-200' : 'text-[#94a3b8]'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
+              <div class="text-xs ${isHuman ? 'text-blue-100' : 'text-slate-400'} text-left font-mono">${escapeHtml(m.created_at_time || m.created_at || '')}</div>
             </div>
           </div>
         `;
@@ -646,9 +669,9 @@
 
       if (boxEl) {
         if (remainingSec <= 60) {
-          boxEl.className = 'flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-rose-100 text-rose-800 border-rose-300 animate-pulse';
+          boxEl.className = 'flex items-center gap-1.5 font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-rose-100 text-rose-800 border-rose-300 animate-pulse';
         } else {
-          boxEl.className = 'flex items-center gap-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg border bg-white text-amber-900 border-amber-300 shadow-xs';
+          boxEl.className = 'flex items-center gap-1.5 font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-white text-amber-900 border-amber-300 shadow-xs';
         }
       }
     }

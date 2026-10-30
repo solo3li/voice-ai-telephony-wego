@@ -59,11 +59,11 @@ function renderDocuments(docs) {
   docsTbody.innerHTML = docs.map(d => {
     let statusBadge = '';
     if (d.status === 'pending') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${pendingText}</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">${pendingText}</span>`;
     } else if (d.status === 'failed') {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(d.error_message || '')}">${failedText}</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200" title="${escapeHtml(d.error_message || '')}">${failedText}</span>`;
     } else {
-      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${readyText}</span>`;
+      statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${readyText}</span>`;
     }
 
     return `
@@ -81,7 +81,7 @@ function renderDocuments(docs) {
           ${statusBadge}
         </div>
       </td>
-      <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">${escapeHtml(d.created_at)}</td>
+      <td class="py-3 px-3 text-slate-500 font-mono text-xs">${escapeHtml(d.created_at)}</td>
       <td class="py-3 px-3 text-center">
         <button onclick="deleteDocument(${d.id})" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition" title="${deleteTitle}">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,7 +133,7 @@ async function uploadDocument(e) {
     if (result.status === 'success') {
       if (uploadStatus) {
         uploadStatus.className = 'mt-4 p-3 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2';
-        uploadStatus.innerHTML = '✅ ' + escapeHtml(result.message);
+        uploadStatus.innerHTML = escapeHtml(result.message);
       }
       fileInput.value = '';
       if (uploadLabel) uploadLabel.innerText = chooseFileText;
@@ -142,14 +142,14 @@ async function uploadDocument(e) {
     } else {
       if (uploadStatus) {
         uploadStatus.className = 'mt-4 p-3 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-        uploadStatus.innerHTML = '❌ فشل الرفع: ' + escapeHtml(result.message || 'خطأ غير معروف');
+        uploadStatus.innerHTML = 'فشل الرفع: ' + escapeHtml(result.message || 'خطأ غير معروف');
       }
       showToast(result.message || 'فشل الرفع', 'error');
     }
   } catch (err) {
     if (uploadStatus) {
       uploadStatus.className = 'mt-4 p-3 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
-      uploadStatus.innerHTML = '❌ خطأ في الاتصال بالخادم أثناء الرفع.';
+      uploadStatus.innerHTML = 'خطأ في الاتصال بالخادم أثناء الرفع.';
     }
     showToast('خطأ في الاتصال بالخادم أثناء الرفع.', 'error');
   } finally {

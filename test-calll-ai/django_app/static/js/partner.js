@@ -20,7 +20,7 @@ async function checkPartnerStatusOnLoad() {
           banner.className = 'p-4 rounded-2xl text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200 flex items-center justify-between gap-3';
           banner.innerHTML = `
             <div class="flex items-center gap-2">
-              <span>⏳</span>
+              <svg class="w-4 h-4 text-amber-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span>طلب الانضمام كشريك قيد المراجعة الإدارية. بمجرد الاعتماد ستتفعل مفاتيح الربط البرمجي وتسعير الجملة.</span>
             </div>
             <button type="button" onclick="openPartnerApplyModal(currentPartnerData)" class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition">
@@ -31,7 +31,7 @@ async function checkPartnerStatusOnLoad() {
           banner.className = 'p-4 rounded-2xl text-xs font-semibold bg-rose-50 text-rose-900 border border-rose-200 flex items-center justify-between gap-3';
           banner.innerHTML = `
             <div class="flex items-center gap-2">
-              <span>❌</span>
+              <svg class="w-4 h-4 text-rose-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               <span>تم رفض طلب الشراكة. يمكنك مراجعة البيانات وإعادة التقديم.</span>
             </div>
             <button type="button" onclick="openPartnerApplyModal(currentPartnerData)" class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-900 text-xs font-bold transition">
@@ -133,7 +133,7 @@ async function loadPartnerDashboard() {
         cTbody.innerHTML = clients.map(c => `
           <tr class="hover:bg-slate-50/60 transition">
             <td class="py-3 px-4 font-mono font-medium text-[#1f93ff]">${c.client_id}</td>
-            <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.name)} <span class="text-[10px] text-slate-400 block font-mono">${escapeHtml(c.email || '')}</span></td>
+            <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.name)} <span class="text-xs text-slate-400 block font-mono">${escapeHtml(c.email || '')}</span></td>
             <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(c.external_reference || '-')}</td>
             <td class="py-3 px-4 text-slate-400">${escapeHtml(c.created_at || '')}</td>
             <td class="py-3 px-4 font-mono font-medium text-slate-900">${c.total_minutes} د</td>
@@ -143,7 +143,7 @@ async function loadPartnerDashboard() {
               ${c.minute_cap ? '(' + c.minute_cap + 'د)' : ''}
             </td>
             <td class="py-3 px-4">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-medium ${c.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+              <span class="px-2 py-0.5 rounded-md text-xs font-medium ${c.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
                 ${c.is_active ? 'مفعل' : 'موقوف'}
               </span>
             </td>
@@ -166,7 +166,7 @@ async function loadPartnerDashboard() {
         callsTbody.innerHTML = calls.map(cl => `
           <tr class="hover:bg-slate-50/60 transition">
             <td class="py-3 px-4 text-slate-400">${escapeHtml(cl.started_at || '')}</td>
-            <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(cl.client_name)} <span class="text-[10px] text-slate-500 block font-mono">ID: ${cl.client_id}</span></td>
+            <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(cl.client_name)} <span class="text-xs text-slate-500 block font-mono">ID: ${cl.client_id}</span></td>
             <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(cl.caller_phone || '-')}</td>
             <td class="py-3 px-4 font-mono text-slate-700">${cl.duration_seconds} ث</td>
             <td class="py-3 px-4 font-mono font-medium text-slate-900">${cl.billed_minutes} د</td>
@@ -343,10 +343,10 @@ function openPartnerApplyModal(existing) {
   if (alertBox) {
     if (existing && existing.status === 'pending') {
       alertBox.className = 'p-3 rounded-xl text-xs bg-amber-50 text-amber-900 border border-amber-200 block';
-      alertBox.innerHTML = `⚠️ <strong>طلبك قيد المراجعة:</strong> تم استلام طلبك لشركة <strong>${escapeHtml(existing.company_name)}</strong> وجاري مراجعته من الإدارة لتفعيل تسعير الجملة والمفاتيح.`;
+      alertBox.innerHTML = `<strong>طلبك قيد المراجعة:</strong> تم استلام طلبك لشركة <strong>${escapeHtml(existing.company_name)}</strong> وجاري مراجعته من الإدارة لتفعيل تسعير الجملة والمفاتيح.`;
     } else if (existing && existing.status === 'rejected') {
       alertBox.className = 'p-3 rounded-xl text-xs bg-rose-50 text-rose-900 border border-rose-200 block';
-      alertBox.innerHTML = `❌ تم رفض الطلب السابق. يمكنك إعادة التقديم أدناه.`;
+      alertBox.innerHTML = `تم رفض الطلب السابق. يمكنك إعادة التقديم أدناه.`;
     } else {
       alertBox.className = 'hidden';
     }

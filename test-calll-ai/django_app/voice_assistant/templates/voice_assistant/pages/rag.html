@@ -5,8 +5,8 @@
 
 {% block content %}
 <!-- Documents Knowledge Base Section -->
-<section class="bg-white border border-[#eaedf0] rounded-xl p-6 shadow-2xs space-y-4">
-  <div class="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#eaedf0]">
+<section class="space-y-4">
+  <div class="flex flex-wrap justify-between items-center gap-4 pb-1">
     <div>
       <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -22,7 +22,7 @@
     <!-- Upload Form -->
     <form id="upload-form" onsubmit="uploadDocument(event)" class="flex items-center gap-2">
       {% csrf_token %}
-      <label class="cursor-pointer px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 flex items-center gap-2 transition shadow-2xs">
+      <label class="cursor-pointer px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 transition flex items-center gap-2 shadow-2xs">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#1f93ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
@@ -44,10 +44,10 @@
   <div id="upload-status" class="mt-4 hidden p-3 rounded-lg text-xs flex items-center gap-2"></div>
 
   <!-- Documents List Table -->
-  <div class="mt-4 overflow-x-auto">
+  <div class="mt-4 overflow-x-auto bg-white border border-slate-200/80 rounded-xl shadow-2xs">
     <table class="w-full text-right text-xs">
       <thead>
-        <tr class="text-slate-500 bg-slate-50/75 border-b border-[#eaedf0]">
+        <tr class="text-slate-500 bg-slate-50/75 border-b border-slate-100">
           <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_name">اسم المستند</th>
           <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_type">النوع</th>
           <th class="py-2.5 px-3 font-medium text-start" data-i18n="rag_th_chunks">المقاطع الدلالية (Chunks)</th>
@@ -55,7 +55,7 @@
           <th class="py-2.5 px-3 font-medium text-center" data-i18n="rag_th_actions">إجراءات</th>
         </tr>
       </thead>
-      <tbody id="docs-tbody" class="divide-y divide-[#eaedf0]">
+      <tbody id="docs-tbody" class="divide-y divide-slate-100">
         <tr>
           <td colspan="5" class="text-center py-6 text-slate-400" data-i18n="rag_empty">جاري تحميل المستندات...</td>
         </tr>

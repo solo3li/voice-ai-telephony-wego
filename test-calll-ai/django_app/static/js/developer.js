@@ -96,11 +96,11 @@ function updateLiveContextBadges(cachedInRedis, sizeBytes, updatedAt) {
 
   if (redisBadge) {
     if (cachedInRedis) {
-      redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1';
-      redisBadge.innerHTML = '<span>🟢</span> <span>' + (window.t ? window.t('dev_redis_active', 'متزامن في الذاكرة (Redis Active)') : 'متزامن في الذاكرة (Redis Active)') + '</span>';
+      redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5';
+      redisBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>' + (window.t ? window.t('dev_redis_active', 'متزامن في الذاكرة (Redis Active)') : 'متزامن في الذاكرة (Redis Active)') + '</span>';
     } else {
-      redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1';
-      redisBadge.innerHTML = '<span>⚪</span> <span>' + (window.t ? window.t('dev_redis_empty', 'فارغ / غير محمل') : 'فارغ / غير محمل') + '</span>';
+      redisBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1.5';
+      redisBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>' + (window.t ? window.t('dev_redis_empty', 'فارغ / غير محمل') : 'فارغ / غير محمل') + '</span>';
     }
   }
 
@@ -221,7 +221,7 @@ async function saveLiveContext() {
   try {
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span>⏳</span> <span>جاري الحفظ والمزامنة...</span>';
+      btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg> <span>جاري الحفظ والمزامنة...</span>';
     }
 
     const res = await fetch('/api/agents/context/', {
@@ -235,7 +235,7 @@ async function saveLiveContext() {
 
     const data = await res.json();
     if (data.status === 'success') {
-      showToast('تم حفظ واستبدال الذاكرة المنظمة ومزامنتها مع كاش Redis بنجاح! 🚀', 'success');
+      showToast('تم حفظ واستبدال الذاكرة المنظمة ومزامنتها مع كاش Redis بنجاح!', 'success');
       const ctx = data.context || {};
       updateLiveContextBadges(true, ctx.size_bytes || 0, ctx.updated_at);
     } else {
@@ -247,7 +247,7 @@ async function saveLiveContext() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span>💾</span> <span>حفظ واستبدال فوري (Save &amp; Push to Redis)</span>';
+      btn.innerHTML = '<span>حفظ واستبدال فوري (Save &amp; Push to Redis)</span>';
     }
   }
 }
@@ -299,7 +299,7 @@ async function togglePromptPreview() {
     try {
       payload = JSON.parse(jsonInput.value.trim());
     } catch (e) {
-      content.innerText = '⚠️ الـ JSON الحالي غير صالح، لا يمكن توليد المعاينة: ' + e.message;
+      content.innerText = 'الـ JSON الحالي غير صالح، لا يمكن توليد المعاينة: ' + e.message;
       return;
     }
   }
@@ -333,10 +333,10 @@ function toggleDevKeyVisibility() {
   if (!inp || !btn) return;
   if (inp.type === 'password') {
     inp.type = 'text';
-    btn.innerText = '🙈';
+    btn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
   } else {
     inp.type = 'password';
-    btn.innerText = '👁️';
+    btn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   }
 }
 

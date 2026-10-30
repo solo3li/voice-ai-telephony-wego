@@ -9,13 +9,13 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
     body {
-      font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Tahoma, Arial, sans-serif !important;
+      font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -40,10 +40,10 @@
 <body class="w-full h-full bg-[#fafbfc] text-slate-800 flex items-center justify-center p-3 select-none">
 
   <!-- Main Container -->
-  <div class="w-full max-w-sm bg-white rounded-2xl border border-[#eaedf0] shadow-sm p-5 flex flex-col justify-between" style="min-height: 520px;">
+  <div class="w-full max-w-sm bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between" style="min-height: 520px;">
     
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-[#eaedf0] pb-3">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-lg bg-[#1f93ff] text-white flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -54,12 +54,12 @@
         </div>
         <div>
           <h2 class="text-xs font-semibold text-slate-900 leading-tight">قمرة الاتصال الصوتي</h2>
-          <span class="text-[10px] text-slate-400">Enterprise Voice AI</span>
+          <span class="text-xs text-slate-400">Enterprise Voice AI</span>
         </div>
       </div>
       <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span id="call-status-badge" class="text-[10px] font-medium text-emerald-700">جاهز</span>
+        <span id="call-status-badge" class="text-xs font-medium text-emerald-700">جاهز</span>
       </div>
     </div>
 
@@ -73,7 +73,7 @@
 
       <div class="text-center">
         <p id="call-timer" class="font-mono text-sm font-semibold text-slate-700">00:00</p>
-        <p id="call-subtitle" class="text-[11px] text-slate-400 mt-0.5">انقر لبدء محادثة ذكية فورية مع المساعد</p>
+        <p id="call-subtitle" class="text-xs text-slate-400 mt-0.5">انقر لبدء محادثة ذكية فورية مع المساعد</p>
       </div>
     </div>
 
@@ -85,27 +85,27 @@
           type="text" 
           id="phone-number-input" 
           placeholder="أدخل رقم هاتف للاتصال به..." 
-          class="w-full bg-slate-50 border border-[#eaedf0] rounded-xl px-3.5 py-2 text-xs font-mono text-center text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#1f93ff] transition"
+          class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-mono text-center text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#1f93ff] transition"
         />
-        <button type="button" onclick="clearPhoneInput()" class="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-          ✕
+        <button type="button" onclick="clearPhoneInput()" class="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
       <!-- Compact Dialpad Grid -->
       <div class="grid grid-cols-3 gap-1.5 text-center">
-        <button type="button" onclick="pressDigit('1')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">1</button>
-        <button type="button" onclick="pressDigit('2')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">2</button>
-        <button type="button" onclick="pressDigit('3')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">3</button>
-        <button type="button" onclick="pressDigit('4')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">4</button>
-        <button type="button" onclick="pressDigit('5')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">5</button>
-        <button type="button" onclick="pressDigit('6')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">6</button>
-        <button type="button" onclick="pressDigit('7')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">7</button>
-        <button type="button" onclick="pressDigit('8')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">8</button>
-        <button type="button" onclick="pressDigit('9')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">9</button>
-        <button type="button" onclick="pressDigit('*')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">*</button>
-        <button type="button" onclick="pressDigit('0')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">0</button>
-        <button type="button" onclick="pressDigit('#')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#eaedf0] font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">#</button>
+        <button type="button" onclick="pressDigit('1')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">1</button>
+        <button type="button" onclick="pressDigit('2')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">2</button>
+        <button type="button" onclick="pressDigit('3')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">3</button>
+        <button type="button" onclick="pressDigit('4')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">4</button>
+        <button type="button" onclick="pressDigit('5')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">5</button>
+        <button type="button" onclick="pressDigit('6')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">6</button>
+        <button type="button" onclick="pressDigit('7')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">7</button>
+        <button type="button" onclick="pressDigit('8')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">8</button>
+        <button type="button" onclick="pressDigit('9')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">9</button>
+        <button type="button" onclick="pressDigit('*')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">*</button>
+        <button type="button" onclick="pressDigit('0')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">0</button>
+        <button type="button" onclick="pressDigit('#')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 font-mono font-semibold text-xs text-slate-700 active:scale-95 transition">#</button>
       </div>
 
       <!-- Action Button -->
@@ -157,7 +157,7 @@
       const subtitle = document.getElementById('call-subtitle');
 
       badge.textContent = 'جاري الاتصال...';
-      badge.className = 'text-[10px] font-medium text-amber-700';
+      badge.className = 'text-xs font-medium text-amber-700';
       badge.parentElement.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200';
 
       orb.classList.remove('orb-pulse');
@@ -202,7 +202,7 @@
       const subtitle = document.getElementById('call-subtitle');
 
       badge.textContent = 'جاهز';
-      badge.className = 'text-[10px] font-medium text-emerald-700';
+      badge.className = 'text-xs font-medium text-emerald-700';
       badge.parentElement.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200';
 
       orb.classList.remove('orb-talking');

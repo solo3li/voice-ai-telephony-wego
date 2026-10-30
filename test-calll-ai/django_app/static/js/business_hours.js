@@ -101,12 +101,12 @@ function updateStatusBadge(isEnabled, isOpenNow) {
   if (isOpenNow) {
     badge.innerHTML = `
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span class="text-emerald-700">مفتوح الآن لاستقبال المكالمات 🟢</span>
+      <span class="text-emerald-700">مفتوح الآن لاستقبال المكالمات</span>
     `;
   } else {
     badge.innerHTML = `
       <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-      <span class="text-rose-700">مغلق حالياً (الرد الآلي مفعل) 🔴</span>
+      <span class="text-rose-700">مغلق حالياً (الرد الآلي مفعل)</span>
     `;
   }
 }
@@ -144,7 +144,7 @@ function renderDaysTable(config) {
           <input type="time" id="end-time-${d.key}" value="${endVal}" ${!isWorkday ? 'disabled' : ''} class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-[#1f93ff] disabled:opacity-40 disabled:bg-slate-50">
         </td>
         <td class="py-2.5 text-center">
-          <span id="badge-day-${d.key}" class="px-2 py-0.5 rounded-md text-[10px] font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+          <span id="badge-day-${d.key}" class="px-2 py-0.5 rounded-md text-xs font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
             ${isWorkday ? 'دوام رسمي' : 'عطلة رسمية'}
           </span>
         </td>
@@ -172,7 +172,7 @@ function toggleDayWorkday(dayKey) {
 
   if (badge) {
     badge.innerText = isWorkday ? 'دوام رسمي' : 'عطلة رسمية';
-    badge.className = `px-2 py-0.5 rounded-md text-[10px] font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`;
+    badge.className = `px-2 py-0.5 rounded-md text-xs font-medium ${isWorkday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`;
   }
 }
 

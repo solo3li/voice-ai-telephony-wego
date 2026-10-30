@@ -1,6 +1,6 @@
 {% load static %}
 <!-- ==================== Minimalist Sidebar (5 Dedicated Core Portals) ==================== -->
-<aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-[#eaedf0] md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
+<aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-slate-200/80 md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
   
   <style>
     /* Minimalist text-only sidebar dimensions */
@@ -30,7 +30,7 @@
   </style>
 
   <!-- Top Brand (Pinned) -->
-  <div class="h-14 px-4 flex items-center justify-between border-b border-[#eaedf0] shrink-0 bg-white">
+  <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200/80 shrink-0 bg-white">
     <a href="{% url 'voice_assistant:room' %}" class="flex items-center gap-2.5 overflow-hidden cursor-pointer group">
       <div class="w-7 h-7 rounded-lg bg-[#1f93ff] text-white flex items-center justify-center shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,7 +41,7 @@
       </div>
       <div class="brand-text">
         <h1 class="text-xs font-semibold text-slate-900 tracking-tight" data-i18n="app_title">المساعد الصوتي الذكي</h1>
-        <p class="text-[10px] text-slate-400 font-mono" data-i18n="app_subtitle">Enterprise Voice AI</p>
+        <p class="text-xs text-slate-400 font-mono" data-i18n="app_subtitle">Enterprise Voice AI</p>
       </div>
     </a>
     
@@ -57,7 +57,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
       </svg>
-      <span id="sidebar-top-lang-text" class="text-[10px] font-bold font-mono">English</span>
+      <span id="sidebar-top-lang-text" class="text-xs font-semibold font-mono">English</span>
     </button>
     
     <!-- Hidden element to preserve JS compatibility if queried -->
@@ -95,15 +95,15 @@
   </nav>
 
   <!-- Bottom User Profile (Minimalist & Quiet) -->
-  <div class="p-3 border-t border-[#eaedf0] shrink-0 bg-white">
+  <div class="p-3 border-t border-slate-200/80 shrink-0 bg-white">
     <div class="flex items-center justify-between gap-2 px-1">
       <div class="flex items-center gap-2.5 overflow-hidden">
-        <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-[11px] shrink-0">
+        <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-xs shrink-0">
           {{ request.user.username|slice:":2"|upper }}
         </div>
         <div class="brand-text overflow-hidden text-xs leading-tight">
           <p class="font-medium text-slate-800 truncate">{{ request.user.username }}</p>
-          <span class="text-[10px] text-slate-400" data-i18n="role_admin">مدير النظام</span>
+          <span class="text-xs text-slate-400" data-i18n="role_admin">مدير النظام</span>
         </div>
       </div>
       <div class="flex items-center gap-1 shrink-0">
@@ -119,7 +119,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
           </svg>
-          <span id="sidebar-bottom-lang-text" class="text-[10px] font-bold font-mono">EN</span>
+          <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono">EN</span>
         </button>
 
         <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50/50 transition" title="تسجيل الخروج" data-i18n-title="btn_logout">
