@@ -3306,6 +3306,12 @@
         </div>
 
         <div class="bg-white rounded-xl border border-[#eaedf0] overflow-hidden shadow-2xs relative" style="height: calc(100vh - 220px); min-height: 620px;">
+          <!-- Loading overlay for Room Chatwoot frame -->
+          <div id="room-chat-frame-loader" class="absolute inset-0 bg-[#f8fafc]/95 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+            <div class="w-8 h-8 border-2 border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
+            <p class="text-xs font-medium text-slate-500 font-sans" data-i18n="chat_loading">جاري تحميل منصة المحادثات مع تسجيل الدخول التلقائي...</p>
+          </div>
+
           <iframe 
             id="room-chatwoot-frame"
             src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2?theme=light&color_scheme=light' }}"
@@ -3537,13 +3543,32 @@
             body: JSON.stringify({ locale: currentLanguage })
           })
           .then(res => res.json())
-          .then(data => { if (data && data.sso_url) roomFrame.src = data.sso_url; })
+          .then(data => {
+            if (data && data.sso_url && roomFrame) {
+              const loader = document.getElementById('room-chat-frame-loader');
+              if (loader) {
+                loader.style.display = 'flex';
+                loader.classList.remove('opacity-0', 'pointer-events-none');
+              }
+              roomChatDismissed = false;
+              roomFrame.src = data.sso_url;
+            }
+          })
           .catch(err => console.debug('Room chatwoot sync error:', err));
         }
       }
     });
 
-    function onRoomChatLoaded() {
+    let roomChatDismissed = false;
+
+    function dismissRoomChatLoader() {
+      if (roomChatDismissed) return;
+      roomChatDismissed = true;
+      const loader = document.getElementById('room-chat-frame-loader');
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => { loader.style.display = 'none'; }, 350);
+      }
       const roomFrame = document.getElementById('room-chatwoot-frame');
       if (roomFrame && roomFrame.contentWindow) {
         try {
@@ -3551,6 +3576,18 @@
         } catch(e) {}
       }
     }
+
+    function onRoomChatLoaded() {
+      setTimeout(() => {
+        dismissRoomChatLoader();
+      }, 2800);
+    }
+
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'chatwoot:ready') {
+        dismissRoomChatLoader();
+      }
+    });
 
     function updateHeaderTitle() {
       const titleEl = document.querySelector('#current-section-title span');

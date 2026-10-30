@@ -790,7 +790,11 @@
   let channelsCache = [];
   let groupedCache = {};
 
-  function onChatFrameLoaded() {
+  let chatLoaderDismissed = false;
+
+  function dismissChatLoader() {
+    if (chatLoaderDismissed) return;
+    chatLoaderDismissed = true;
     const loader = document.getElementById('chat-frame-loader');
     if (loader) {
       loader.classList.add('opacity-0', 'pointer-events-none');
@@ -805,6 +809,19 @@
       } catch(e) {}
     }
   }
+
+  function onChatFrameLoaded() {
+    // Wait for chatwoot:ready postMessage from dashboard, with 2800ms safety fallback
+    setTimeout(() => {
+      dismissChatLoader();
+    }, 2800);
+  }
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'chatwoot:ready') {
+      dismissChatLoader();
+    }
+  });
 
   function switchChatSubTab(tab) {
     const liveBtn = document.getElementById('chat-tab-live-btn');
@@ -897,6 +914,7 @@
       });
       const data = await res.json();
       if (data && data.sso_url && frame) {
+        chatLoaderDismissed = false;
         frame.src = data.sso_url;
       }
     } catch (err) {
