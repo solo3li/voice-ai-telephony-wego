@@ -5,13 +5,13 @@
 
 {% block content %}
 <!-- Header & Action Ribbon -->
-<div class="flex flex-wrap items-center justify-between gap-4 pb-1">
+<div class="flex flex-wrap items-center justify-between gap-4 pb-2">
   <div>
     <div class="flex items-center gap-2">
       <h3 class="text-base font-bold text-slate-900" data-i18n="dev_title">واجهات المطورين المباشرة (Direct Developer API &amp; Keys)</h3>
       <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">v1 Active</span>
     </div>
-    <p class="text-xs text-slate-500 font-light mt-0.5 max-w-2xl leading-relaxed" data-i18n="dev_subtitle">
+    <p class="text-xs text-slate-500 font-light mt-0.5 max-w-3xl leading-relaxed" data-i18n="dev_subtitle">
       ادمج المساعد الصوتي والذكاء الاصطناعي وخوادم FastMCP وبدء مكالمات WebRTC مباشرة في موقعك أو تطبيقاتك الخاصة باستخدام مفتاح الـ API الشخصي لحسابك (<code class="bg-slate-100 px-1 py-0.5 rounded text-[#7c3aed] font-mono">X-API-Key</code>).
     </p>
   </div>
@@ -23,6 +23,12 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
       </svg>
     </a>
+    <a href="/api/partner/v1/docs/" target="_blank" class="px-3.5 py-1.5 rounded-lg border border-[#ddd6fe] bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#7c3aed] text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+      <span>توثيق الشركاء (Partner API)</span>
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    </a>
     <button type="button" onclick="loadDeveloperKeys()" class="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition flex items-center gap-1.5 shadow-2xs">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -32,10 +38,41 @@
   </div>
 </div>
 
-<!-- API Key Management Card -->
-<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+<!-- Section Quick Navigation Pills -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+  <a href="#section-keys" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>🔑</span> <span data-i18n="dev_tab_keys">مفاتيح الـ API</span>
+  </a>
+  <a href="#section-embeds" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>🖼️</span> <span data-i18n="dev_tab_embeds">قوالب التضمين وIframes</span>
+  </a>
+  <a href="#section-webrtc" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>🎙️</span> <span data-i18n="dev_tab_webrtc">مكالمات WebRTC الصوتية</span>
+  </a>
+  <a href="#section-webhooks" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>🔔</span> <span data-i18n="dev_tab_webhooks">الويبهوك والأحداث</span>
+  </a>
+  <a href="#section-whatsapp" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>💬</span> <span data-i18n="dev_tab_whatsapp">الواتساب والمراسلة</span>
+  </a>
+  <a href="#section-partner" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>🏢</span> <span data-i18n="dev_tab_partner">واجهات الشركاء Headless</span>
+  </a>
+  <a href="#section-context" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>⚡</span> <span data-i18n="dev_tab_context">الذاكرة المنظمة الحية</span>
+  </a>
+  <a href="#section-catalog" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>📚</span> <span data-i18n="dev_tab_catalog">دليل جميع الـ APIs</span>
+  </a>
+</div>
+
+<!-- ==================== 1. API Key Management Card ==================== -->
+<div id="section-keys" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/80 pb-3">
-    <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_key_title">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-[#7c3aed]"></span>
+      <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_key_title">مفتاح الـ API النشط للتطبيقات (Personal Live API Key)</h4>
+    </div>
     <button type="button" onclick="rotateDeveloperKeyPrompt()" class="px-3 py-1 rounded-md border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-medium transition flex items-center gap-1">
       <span data-i18n="dev_btn_rotate">تدوير المفتاح (Regenerate Key)</span>
     </button>
@@ -93,99 +130,303 @@
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'</pre>
-        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-dial-sample').innerText); showToast('تم نسخ كود المكالمة الصادرة بنجاح', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <button type="button" onclick="copySnippet('dev-curl-dial-sample', 'تم نسخ كود المكالمة الصادرة بنجاح')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Smart Hybrid Integration Card (Scenario 3: Zero-Code Embeds & Automation APIs) -->
-<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
+<!-- ==================== 2. Zero-Code Embeds & Iframes ==================== -->
+<div id="section-embeds" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
   <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
     <div class="flex items-center gap-2.5 flex-wrap">
-      <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs">
-        <svg class="w-4 h-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
         </svg>
       </div>
       <div>
-        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_hybrid_title">السيناريو الهجين الذكي (Smart Hybrid Integration)</h4>
-        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_hybrid_desc">أسهل وأسرع طريقة لدمج منصة المحادثات والمساعد الصوتي في موقعك أو نظامك بدون كتابة واجهات معقدة</p>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_embed_col_title">قوالب التضمين المباشر (Zero-Code Iframes &amp; Widgets)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_embed_col_desc">انسخ كود الـ Iframe أو مكون React وضعه مباشرة في موقعك أو لوحة التحكم للظهور بكامل الوظائف وبدون تعقيد برمجي.</p>
       </div>
     </div>
-    <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-violet-50 text-[#7c3aed] border border-violet-200">
-      Zero-Code Iframe + Automation APIs
+    <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+      Zero-Code Embeds
     </span>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-    
-    <!-- Left Column: Zero-Code Iframe Embeds -->
-    <div class="space-y-4">
-      <div class="flex items-center gap-2">
-        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">1</span>
-        <h5 class="font-semibold text-xs text-slate-800" data-i18n="dev_embed_col_title">قوالب التضمين المباشر (Zero-Code Iframes)</h5>
-      </div>
-      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_embed_col_desc">
-        انسخ كود الـ Iframe وضعه مباشرة في صفحة العميل أو لوحة التحكم الخارجية لتظهر المنصة بكامل وظائفها بشكل مدمج وآمن.
-      </p>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <!-- Chat Iframe Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_chat_title">صندوق المحادثات الشامل المضمن (Chatwoot Inbox)</span>
-          </div>
-          <a id="dev-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium flex items-center gap-1">
-            <span data-i18n="dev_preview_live">معاينة حية</span>
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-          </a>
-        </div>
-        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
-          <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"&gt;&lt;/iframe&gt;</pre>
-          <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
-        </div>
-      </div>
-
-      <!-- Voice Assistant Iframe Box -->
-      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Voice Webphone Embed Card -->
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-[#7c3aed]/10 text-[#7c3aed] flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
-            <span class="font-medium text-xs text-slate-900" data-i18n="dev_embed_voice_title">قمرة الاتصال والمساعد الصوتي (Voice Webphone)</span>
+          </span>
+          <div>
+            <h5 class="font-semibold text-xs text-slate-900" data-i18n="dev_embed_voice_title">قمرة الاتصال والمساعد الصوتي (Voice Webphone)</h5>
+            <span class="text-xs text-slate-400 font-mono">/embed/voice/?token={API_KEY}&amp;locale={ar|en}</span>
           </div>
-          <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium flex items-center gap-1">
-            <span data-i18n="dev_preview_live">معاينة حية</span>
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-          </a>
         </div>
-        <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
-          <pre id="dev-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;"&gt;&lt;/iframe&gt;</pre>
-          <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-semibold flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Voice Tabs -->
+      <div id="voice-embed-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2">
+        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-html-pane')" data-tab-target="voice-html-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">HTML Iframe</button>
+        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-react-pane')" data-tab-target="voice-react-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">React Component</button>
+        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-css-pane')" data-tab-target="voice-css-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">Responsive CSS</button>
+        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-pm-pane')" data-tab-target="voice-pm-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">postMessage</button>
+      </div>
+
+      <div id="voice-embed-tabs-panes">
+        <!-- HTML Pane -->
+        <div data-tab-pane="voice-html-pane" class="space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);"&gt;&lt;/iframe&gt;</pre>
+            <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">يتطلب الإذن <code class="font-mono text-slate-700">allow="microphone;"</code> للوصول إلى ميكروفون المستخدم لإجراء المكالمات الصوتية.</p>
+        </div>
+
+        <!-- React Pane -->
+        <div data-tab-pane="voice-react-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-56" dir="ltr">
+            <pre id="dev-voice-widget-react-snippet">{% verbatim %}import React, { useState, useEffect, useRef } from 'react';
+
+export default function VoiceAIWidget({ apiKey = "<YOUR_API_KEY>", locale = "ar" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCalling, setIsCalling] = useState(false);
+  const iframeRef = useRef(null);
+
+  useEffect(() => {
+    const handleMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'VOICE_CALL_STARTED') setIsCalling(true);
+      if (e.data.type === 'VOICE_CALL_ENDED') setIsCalling(false);
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', bottom: '24px', left: locale === 'ar' ? '24px' : 'auto', right: locale === 'ar' ? 'auto' : '24px', zIndex: 9999 }}>
+      {isOpen && (
+        <iframe
+          ref={iframeRef}
+          src={`https://localhost/embed/voice/?token=${apiKey}&locale=${locale}`}
+          width="380"
+          height="540"
+          frameBorder="0"
+          allow="microphone;"
+          title="Voice AI"
+        />
+      )}
+      <button onClick={() => setIsOpen(!isOpen)}>{isOpen ? '✕' : '🎙️'}</button>
+    </div>
+  );
+}{% endverbatim %}</pre>
+            <button type="button" onclick="copySnippet('dev-voice-widget-react-snippet', 'تم نسخ مكون React بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- CSS Pane -->
+        <div data-tab-pane="voice-css-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left max-h-56" dir="ltr">
+            <pre id="dev-voice-widget-css-snippet">/* Floating Responsive Voice AI Widget */
+.voice-widget-dock {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+.voice-widget-frame {
+  width: 380px;
+  height: 540px;
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  margin-bottom: 12px;
+}
+@media (max-width: 640px) {
+  .voice-widget-dock {
+    left: 0; right: 0; bottom: 0; width: 100%;
+  }
+  .voice-widget-frame {
+    width: 100vw; height: 85vh; border-radius: 20px 20px 0 0;
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-voice-widget-css-snippet', 'تم نسخ أكواد الـ CSS بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- postMessage Pane -->
+        <div data-tab-pane="voice-pm-pane" class="hidden space-y-2 text-xs">
+          <div class="bg-white rounded-lg p-3 border border-slate-200/80 space-y-2">
+            <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>الأحداث الصادرة من الـ Iframe للموقع المضيف:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
+              <li><code>VOICE_CALL_STARTED</code>: ترسل عند بدء المكالمة مع رقم هاتف المتصل.</li>
+              <li><code>VOICE_CALL_ENDED</code>: ترسل عند إنهاء المكالمة مع مدتها بالثواني.</li>
+            </ul>
+            <div class="flex items-center gap-1.5 font-semibold text-slate-800 pt-1">
+              <span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span>
+              <span>الأوامر المستقبلة من الموقع المضيف:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
+              <li><code>{ type: "VOICE_DIAL", phone: "+2010..." }</code>: بدء اتصال آلي فوري.</li>
+              <li><code>{ type: "VOICE_HANGUP" }</code>: إنهاء المكالمة الحالية فوراً.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Column: Lightweight Automation APIs -->
-    <div class="space-y-4">
-      <div class="flex items-center gap-2">
-        <span class="w-6 h-6 rounded-full bg-violet-100 text-[#7c3aed] flex items-center justify-center text-xs font-bold">2</span>
-        <h5 class="font-semibold text-xs text-slate-800" data-i18n="dev_api_col_title">واجهات الأتمتة الخفيفة (Lightweight Automation APIs)</h5>
+    <!-- Chat Inbox Embed Card -->
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </span>
+          <div>
+            <h5 class="font-semibold text-xs text-slate-900" data-i18n="dev_embed_chat_title">صندوق المحادثات الشامل المضمن (Chatwoot Inbox)</h5>
+            <span class="text-xs text-slate-400 font-mono">/embed/chat/?token={API_KEY}&amp;locale={ar|en}</span>
+          </div>
+        </div>
+        <a id="dev-embed-chat-preview-btn" href="/embed/chat/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-semibold flex items-center gap-1">
+          <span data-i18n="dev_preview_live">معاينة حية</span>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
       </div>
-      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_api_col_desc">
-        استدعاء برمجي بسيط وسريع لإرسال الرسائل الفورية أو بدء المكالمات الآلية من نظامك الخلفي.
-      </p>
 
-      <!-- Chat Send API Box -->
+      <!-- Chat Tabs -->
+      <div id="chat-embed-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2">
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-html-pane')" data-tab-target="chat-html-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">HTML Iframe</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-react-pane')" data-tab-target="chat-react-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">React Component</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-css-pane')" data-tab-target="chat-css-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">Responsive CSS</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-pm-pane')" data-tab-target="chat-pm-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">postMessage</button>
+      </div>
+
+      <div id="chat-embed-tabs-panes">
+        <!-- HTML Pane -->
+        <div data-tab-pane="chat-html-pane" class="space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0;"&gt;&lt;/iframe&gt;</pre>
+            <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">منصة الشات متجاوبة بالكامل وتدعم المرفقات، الرسائل الصوتية، وتحويل المحادثات فورياً.</p>
+        </div>
+
+        <!-- React Pane -->
+        <div data-tab-pane="chat-react-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-56" dir="ltr">
+            <pre id="dev-chat-widget-react-snippet">{% verbatim %}import React, { useState, useEffect } from 'react';
+
+export default function OmnichannelChatWidget({ apiKey = "<YOUR_API_KEY>", locale = "ar" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const handleMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.event === 'unread_message_count') setUnreadCount(e.data.count || 0);
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', bottom: '24px', right: locale === 'ar' ? 'auto' : '24px', left: locale === 'ar' ? '24px' : 'auto', zIndex: 9999 }}>
+      {isOpen && (
+        <iframe
+          src={`https://localhost/embed/chat/?token=${apiKey}&locale=${locale}`}
+          width="420"
+          height="620"
+          frameBorder="0"
+          allow="camera; microphone; clipboard-read; clipboard-write;"
+          title="Chatwoot Omnichannel Inbox"
+        />
+      )}
+      <button onClick={() => setIsOpen(!isOpen)}>{isOpen ? '✕' : '💬'}</button>
+    </div>
+  );
+}{% endverbatim %}</pre>
+            <button type="button" onclick="copySnippet('dev-chat-widget-react-snippet', 'تم نسخ مكون React للشات بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- CSS Pane -->
+        <div data-tab-pane="chat-css-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-300 overflow-x-auto text-left max-h-56" dir="ltr">
+            <pre id="dev-chat-widget-css-snippet">/* Floating Responsive Chat Widget */
+.chat-widget-dock {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+.chat-widget-frame {
+  width: 420px;
+  height: 620px;
+  border-radius: 18px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+@media (max-width: 640px) {
+  .chat-widget-dock {
+    left: 0; right: 0; bottom: 0; width: 100%;
+  }
+  .chat-widget-frame {
+    width: 100vw; height: 90vh; border-radius: 20px 20px 0 0;
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-chat-widget-css-snippet', 'تم نسخ كود الـ CSS بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- postMessage Pane -->
+        <div data-tab-pane="chat-pm-pane" class="hidden space-y-2 text-xs">
+          <div class="bg-white rounded-lg p-3 border border-slate-200/80 space-y-2">
+            <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>أحداث الشات المتبادلة مع الموقع المضيف:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
+              <li><code>CHAT_READY</code>: ترسل فور اكتمال تحميل منصة المحادثات.</li>
+              <li><code>unread_message_count</code>: ترسل مع عدد الرسائل غير المقروءة لتحديث بادج التنبيه.</li>
+              <li><code>{ type: "SET_THEME", theme: "light"|"dark" }</code>: أمر من المضيف لتبديل ثيم الشات.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Automation REST APIs -->
+  <div class="pt-3 border-t border-slate-100">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-6 h-6 rounded-full bg-violet-100 text-[#7c3aed] flex items-center justify-center text-xs font-bold">2</span>
+      <h5 class="font-semibold text-xs text-slate-800" data-i18n="dev_api_col_title">واجهات الأتمتة الخفيفة (Lightweight Automation APIs)</h5>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
@@ -203,7 +444,6 @@
         </div>
       </div>
 
-      <!-- Outbound Call Dial API Box -->
       <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
@@ -220,14 +460,564 @@
           <button type="button" onclick="copyDevCurlDialSample2()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
         </div>
       </div>
-
     </div>
-
   </div>
 </div>
 
-<!-- Structured Live Context Card -->
-<div class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+<!-- ==================== 3. Realtime WebRTC Token & Voice SDK ==================== -->
+<div id="section-webrtc" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-violet-50 border border-violet-200 text-[#7c3aed] flex items-center justify-center font-bold text-sm shadow-xs">
+        🎙️
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_webrtc_title">مكالمات WebRTC الصوتية الحية (Realtime Voice Calling SDK)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_webrtc_desc">اتصال صوتي فائق السرعة بزمن استجابة أقل من 150ms مع المساعد الذكي مع دعم المقاطعة الحية وتوليد توكنات LiveKit مشفرة.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 text-xs font-mono bg-violet-100 text-[#7c3aed] rounded-md font-bold">Latency &lt; 150ms</span>
+      <span class="px-2 py-0.5 text-xs font-mono bg-emerald-100 text-emerald-800 rounded-md font-bold">Barge-in Enabled</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- Left: Explanation & Endpoints -->
+    <div class="lg:col-span-5 space-y-3 text-xs text-slate-600">
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <h5 class="font-semibold text-slate-800">نقاط النهاية لاستخراج توكن المكالمة (LiveKit JWT):</h5>
+        <div class="space-y-1.5 font-mono">
+          <div class="p-2 bg-white rounded border border-slate-200">
+            <span class="text-emerald-600 font-bold">POST</span> /api/v1/calls/webrtc/
+            <p class="text-slate-500 font-sans mt-0.5 text-xs">إصدار توكن شخصي محدد ببروفايل صوتي مخصص ورسالة ترحيبية.</p>
+          </div>
+          <div class="p-2 bg-white rounded border border-slate-200">
+            <span class="text-emerald-600 font-bold">POST / GET</span> /api/token/
+            <p class="text-slate-500 font-sans mt-0.5 text-xs">إصدار توكن جلسة سريع باسم الغرفة وهوية المتصل عبر الجلسة أو مفتاح الـ API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1">
+        <span class="font-semibold block">الميزات المدمجة تلقائياً:</span>
+        <ul class="list-disc list-inside space-y-0.5">
+          <li>كشف الصوت التلقائي (Silero VAD) وإلغاء الصدى الصوتي (AEC).</li>
+          <li>تسجيل المكالمة المزدوج وتخزينه في MinIO مع رابط تنزيل مباشر.</li>
+          <li>توليد ملخص المكالمة الذكي وتحليل المشاعر فور انتهاء الجلسة.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Right: Code Snippets & Language Tabs -->
+    <div class="lg:col-span-7 space-y-2">
+      <div id="webrtc-code-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2">
+        <button type="button" onclick="switchDevTab('webrtc-code-tabs', 'webrtc-curl-pane')" data-tab-target="webrtc-curl-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">cURL Request</button>
+        <button type="button" onclick="switchDevTab('webrtc-code-tabs', 'webrtc-js-pane')" data-tab-target="webrtc-js-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">LiveKit JavaScript SDK</button>
+        <button type="button" onclick="switchDevTab('webrtc-code-tabs', 'webrtc-react-pane')" data-tab-target="webrtc-react-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">React Hook (useVoiceAI)</button>
+        <button type="button" onclick="switchDevTab('webrtc-code-tabs', 'webrtc-resp-pane')" data-tab-target="webrtc-resp-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">Response JSON</button>
+      </div>
+
+      <div id="webrtc-code-tabs-panes">
+        <!-- cURL Pane -->
+        <div data-tab-pane="webrtc-curl-pane" class="space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webrtc-curl-sample">curl -X POST "https://localhost/api/v1/calls/webrtc/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_name": "أحمد عبد الله",
+    "phone_number": "+201012345678",
+    "profile_id": 1,
+    "custom_welcome_message": "أهلاً بك يا أحمد في متجرنا! كيف أقدر أساعدك اليوم؟"
+  }'</pre>
+            <button type="button" onclick="copySnippet('dev-webrtc-curl-sample', 'تم نسخ أمر cURL بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left mt-2" dir="ltr">
+            <pre id="dev-token-curl-sample">curl -X POST "https://localhost/api/token/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"room": "room_support_usr", "identity": "client_web"}'</pre>
+            <button type="button" onclick="copySnippet('dev-token-curl-sample', 'تم نسخ كود الـ Token بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- JS LiveKit SDK Pane -->
+        <div data-tab-pane="webrtc-js-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-64" dir="ltr">
+            <pre id="dev-webrtc-js-sample">import { Room, RoomEvent } from "livekit-client";
+
+async function connectToVoiceAI() {
+  // 1. Fetch live token from backend API
+  const res = await fetch("/api/v1/calls/webrtc/", {
+    method: "POST",
+    headers: { "X-API-Key": "&lt;YOUR_API_KEY&gt;", "Content-Type": "application/json" },
+    body: JSON.stringify({ customer_name: "زائر الموقع" })
+  });
+  const data = await res.json();
+  const { token, livekit_url, room_name } = data;
+
+  // 2. Connect to LiveKit Room
+  const room = new Room({ adaptiveStream: true, dynacast: true });
+  await room.connect(livekit_url, token);
+  console.log("Connected to Voice AI room:", room_name);
+
+  // 3. Enable user microphone
+  await room.localParticipant.setMicrophoneEnabled(true);
+
+  // 4. Attach remote AI Agent audio track
+  room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+    if (track.kind === "audio") {
+      const el = track.attach();
+      document.body.appendChild(el);
+    }
+  });
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webrtc-js-sample', 'تم نسخ كود الـ SDK بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- React Hook Pane -->
+        <div data-tab-pane="webrtc-react-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left max-h-64" dir="ltr">
+            <pre id="dev-webrtc-react-sample">import { useState, useCallback } from 'react';
+import { Room, RoomEvent } from 'livekit-client';
+
+export function useVoiceAI({ apiKey }) {
+  const [room, setRoom] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const startCall = useCallback(async (params = {}) => {
+    const res = await fetch('/api/v1/calls/webrtc/', {
+      method: 'POST',
+      headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    const { token, livekit_url } = await res.json();
+    const newRoom = new Room();
+    await newRoom.connect(livekit_url, token);
+    await newRoom.localParticipant.setMicrophoneEnabled(true);
+    newRoom.on(RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind === 'audio') track.attach();
+    });
+    setRoom(newRoom);
+    setIsConnected(true);
+  }, [apiKey]);
+
+  const endCall = useCallback(async () => {
+    if (room) {
+      await room.disconnect();
+      setRoom(null);
+      setIsConnected(false);
+    }
+  }, [room]);
+
+  return { startCall, endCall, isConnected };
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webrtc-react-sample', 'تم نسخ هوك React بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- Response JSON Pane -->
+        <div data-tab-pane="webrtc-resp-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webrtc-response-sample">{
+  "status": "success",
+  "call_id": 969,
+  "room_name": "room_webrtc_dev_523_00aadd42",
+  "livekit_url": "wss://livekit.yourdomain.com",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "WebRTC voice session initiated successfully"
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webrtc-response-sample', 'تم نسخ الـ JSON بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 4. Webhooks & Event Signatures ==================== -->
+<div id="section-webhooks" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        🔔
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_webhook_title">إشعارات الويبهوك وتوقيع الأحداث (Outbound Webhooks &amp; HMAC Signature)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_webhook_desc">استقبل إشعارات فورية وموقعة بشفرة HMAC-SHA256 عند انتهاء المكالمات، تجهيز التسجيلات، أو تصعيد محادثات الواتساب.</p>
+      </div>
+    </div>
+    <span class="px-2.5 py-1 text-xs font-mono rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
+      X-Signature: sha256=&lt;hash&gt;
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <!-- Webhook Setup & Security -->
+    <div class="lg:col-span-5 space-y-3 text-xs">
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <h5 class="font-semibold text-slate-900">ضبط رابط الويبهوك (Configure Webhook Endpoint):</h5>
+        <div class="relative bg-slate-900 rounded-lg p-3 font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-webhook-config-sample">curl -X POST "https://localhost/api/v1/webhooks/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "https://your-crm.com/api/webhooks/voice-ai/",
+    "webhook_secret": "whsec_your_custom_secret_key",
+    "is_active": true
+  }'</pre>
+          <button type="button" onclick="copySnippet('dev-webhook-config-sample', 'تم نسخ إعداد الويبهوك بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <!-- HMAC Signature Code Tabs -->
+      <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
+          <span class="font-semibold text-slate-900">التحقق من التوقيع (HMAC-SHA256):</span>
+          <div id="webhook-verify-tabs-nav" class="flex items-center gap-1">
+            <button type="button" onclick="switchDevTab('webhook-verify-tabs', 'verify-python-pane')" data-tab-target="verify-python-pane" class="px-2 py-0.5 rounded bg-[#7c3aed] text-white text-xs font-mono">Python</button>
+            <button type="button" onclick="switchDevTab('webhook-verify-tabs', 'verify-node-pane')" data-tab-target="verify-node-pane" class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">Node.js</button>
+          </div>
+        </div>
+
+        <div id="webhook-verify-tabs-panes">
+          <div data-tab-pane="verify-python-pane" class="relative bg-slate-900 rounded p-2.5 font-mono text-cyan-300 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-verify-python">import hmac, hashlib
+
+def verify_webhook(raw_body: bytes, sig_header: str, secret: str) -&gt; bool:
+    expected = f"sha256={hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()}"
+    return hmac.compare_digest(expected, sig_header)</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-verify-python', 'تم نسخ كود التحقق!')" class="absolute top-1.5 right-1.5 px-1.5 py-0.5 text-xs rounded bg-white/10 text-white"><span data-i18n="copy">نسخ</span></button>
+          </div>
+
+          <div data-tab-pane="verify-node-pane" class="hidden relative bg-slate-900 rounded p-2.5 font-mono text-amber-300 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-verify-node">const crypto = require('crypto');
+
+function verifyWebhook(rawBody, sigHeader, secret) {
+  const hash = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  return `sha256=${hash}` === sigHeader;
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-verify-node', 'تم نسخ كود التحقق!')" class="absolute top-1.5 right-1.5 px-1.5 py-0.5 text-xs rounded bg-white/10 text-white"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhook Event Payloads -->
+    <div class="lg:col-span-7 space-y-2">
+      <div id="webhook-events-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar">
+        <button type="button" onclick="switchDevTab('webhook-events-tabs', 'event-call-pane')" data-tab-target="event-call-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs whitespace-nowrap transition">call.completed</button>
+        <button type="button" onclick="switchDevTab('webhook-events-tabs', 'event-recording-pane')" data-tab-target="event-recording-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs whitespace-nowrap transition">recording_ready</button>
+        <button type="button" onclick="switchDevTab('webhook-events-tabs', 'event-ticket-pane')" data-tab-target="event-ticket-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs whitespace-nowrap transition">whatsapp.ticket_created</button>
+        <button type="button" onclick="switchDevTab('webhook-events-tabs', 'event-escalation-pane')" data-tab-target="event-escalation-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs whitespace-nowrap transition">whatsapp.escalation_assigned</button>
+      </div>
+
+      <div id="webhook-events-tabs-panes">
+        <!-- call.completed -->
+        <div data-tab-pane="event-call-pane" class="space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-payload-call">{
+  "event": "call.completed",
+  "timestamp": "2026-10-30T17:15:00Z",
+  "user_id": 1,
+  "data": {
+    "call_id": "969",
+    "room_name": "room_webrtc_dev_523_00aadd42",
+    "caller_phone": "+201012345678",
+    "duration_seconds": 142,
+    "billed_minutes": 3,
+    "call_cost": "0.15",
+    "recording_url": "/api/calls/recordings/room_webrtc_dev_523_00aadd42.mp4",
+    "summary": "استفسر العميل عن تفاصيل العرض وتم تأكيد الطلب بنجاح.",
+    "sentiment": "positive",
+    "status": "completed"
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-payload-call', 'تم نسخ نموذج الـ Payload!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- recording_ready -->
+        <div data-tab-pane="event-recording-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-payload-rec">{
+  "event": "recording_ready",
+  "timestamp": "2026-10-30T17:15:30Z",
+  "user_id": 1,
+  "data": {
+    "room_name": "room_webrtc_dev_523_00aadd42",
+    "recording_url": "/api/calls/recordings/room_webrtc_dev_523_00aadd42.mp4",
+    "duration_seconds": 142,
+    "file_size": 2450800
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-payload-rec', 'تم نسخ نموذج الـ Payload!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- whatsapp.ticket_created -->
+        <div data-tab-pane="event-ticket-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-payload-ticket">{
+  "event": "whatsapp.ticket_created",
+  "timestamp": "2026-10-30T17:16:00Z",
+  "user_id": 1,
+  "data": {
+    "ticket_number": "TCK-20261030-0269A7",
+    "customer_phone": "+201012345678",
+    "reason": "customer_requested_agent",
+    "urgency": "high",
+    "state": "PENDING_AGENT_REPLY"
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-payload-ticket', 'تم نسخ نموذج الـ Payload!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+
+        <!-- whatsapp.escalation_assigned -->
+        <div data-tab-pane="event-escalation-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-purple-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-webhook-payload-assign">{
+  "event": "whatsapp.escalation_assigned",
+  "timestamp": "2026-10-30T17:16:30Z",
+  "user_id": 1,
+  "data": {
+    "ticket_number": "TCK-20261030-0269A7",
+    "customer_phone": "+201012345678",
+    "assigned_agent": "سارة أحمد",
+    "state": "ACTIVE_SUPPORT"
+  }
+}</pre>
+            <button type="button" onclick="copySnippet('dev-webhook-payload-assign', 'تم نسخ نموذج الـ Payload!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 5. WhatsApp & Omnichannel Desk ==================== -->
+<div id="section-whatsapp" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        💬
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_whatsapp_title">واجهات الواتساب وتصعيد خدمة العملاء (WhatsApp Omnichannel &amp; Human Desk)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_whatsapp_desc">إرسال رسائل مباشرة، إطلاق رسائل المتابعة، وإدارة تذاكر التصعيد بين الذكاء الاصطناعي والموظف البشري برمجياً.</p>
+      </div>
+    </div>
+    <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+      Human Escalation Desk
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Direct WhatsApp & Campaign Send -->
+    <div class="space-y-3">
+      <h5 class="font-semibold text-xs text-slate-800">1. إرسال الرسائل الفورية ومتابعات الحملات:</h5>
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-mono font-bold text-emerald-700">POST /api/v1/whatsapp/send/</span>
+          <span class="text-slate-400">إرسال مباشر للعميل</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-emerald-400 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-whatsapp-direct-sample">curl -X POST "https://localhost/api/v1/whatsapp/send/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"to": "+201012345678", "message": "عزيزي العميل، تم تجهيز طلبك رقم 1005 وهو في طريقه إليك الآن!"}'</pre>
+          <button type="button" onclick="copySnippet('dev-whatsapp-direct-sample', 'تم نسخ كود إرسال الواتساب!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-mono font-bold text-purple-700">POST /api/agents/internal/whatsapp/send/</span>
+          <span class="text-slate-400">إرسال آلي داخلي للـ AI</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-cyan-300 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-whatsapp-internal-sample">curl -X POST "https://localhost/api/agents/internal/whatsapp/send/" \
+  -H "Content-Type: application/json" \
+  -d '{"to": "+201012345678", "message": "تنبيه آلي من المساعد الصوتي: تم تسجيل حجزك بنجاح.", "user_id": 1}'</pre>
+          <button type="button" onclick="copySnippet('dev-whatsapp-internal-sample', 'تم نسخ كود الإرسال الداخلي!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-mono font-bold text-blue-700">POST /api/v1/whatsapp/followup/</span>
+          <span class="text-slate-400">متابعة الحملات بعد الاتصال</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-amber-300 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-whatsapp-followup-sample">curl -X POST "https://localhost/api/v1/whatsapp/followup/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+201012345678", "message": "شكراً لاتصالك! إليك رابط تأكيد التفاصيل: https://example.com/order"}'</pre>
+          <button type="button" onclick="copySnippet('dev-whatsapp-followup-sample', 'تم نسخ كود متابعة الحملة!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Human Agent Takeover Workflow -->
+    <div class="space-y-3">
+      <h5 class="font-semibold text-xs text-slate-800">2. دورة تصعيد واستلام المحادثات البشرية (Desk Lifecycle):</h5>
+      <div id="whatsapp-desk-tabs-nav" class="flex items-center gap-1 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar">
+        <button type="button" onclick="switchDevTab('whatsapp-desk-tabs', 'desk-escalate-pane')" data-tab-target="desk-escalate-pane" class="px-2.5 py-1 rounded bg-[#7c3aed] text-white text-xs font-medium">تصعيد (Escalate)</button>
+        <button type="button" onclick="switchDevTab('whatsapp-desk-tabs', 'desk-claim-pane')" data-tab-target="desk-claim-pane" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium">استلام (Claim)</button>
+        <button type="button" onclick="switchDevTab('whatsapp-desk-tabs', 'desk-reply-pane')" data-tab-target="desk-reply-pane" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium">رد الموظف (Reply)</button>
+        <button type="button" onclick="switchDevTab('whatsapp-desk-tabs', 'desk-resolve-pane')" data-tab-target="desk-resolve-pane" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium">إغلاق وإعادة الـ AI</button>
+      </div>
+
+      <div id="whatsapp-desk-tabs-panes">
+        <!-- Escalate -->
+        <div data-tab-pane="desk-escalate-pane" class="space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-amber-300 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-whatsapp-escalate-sample">curl -X POST "https://localhost/api/v1/whatsapp/conversations/+201012345678/escalate/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "العميل طلب التحدث مع مسؤول الحسابات", "urgency": "high"}'</pre>
+            <button type="button" onclick="copySnippet('dev-whatsapp-escalate-sample', 'تم نسخ كود التصعيد!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">يتم إيقاف الرد الآلي للذكاء الاصطناعي وإنشاء تذكرة دعم للموظف.</p>
+        </div>
+
+        <!-- Claim -->
+        <div data-tab-pane="desk-claim-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-cyan-300 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-whatsapp-claim-sample">curl -X POST "https://localhost/api/v1/whatsapp/conversations/+201012345678/claim/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_name": "سارة أحمد"}'</pre>
+            <button type="button" onclick="copySnippet('dev-whatsapp-claim-sample', 'تم نسخ كود الاستلام!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">يتم تعيين التذكرة للموظف وتغيير الحالة إلى ACTIVE_SUPPORT.</p>
+        </div>
+
+        <!-- Reply -->
+        <div data-tab-pane="desk-reply-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-emerald-400 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-whatsapp-reply-sample">curl -X POST "https://localhost/api/v1/whatsapp/conversations/+201012345678/reply/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "أهلاً بك يا فندم، أنا سارة من خدمة العملاء وسأقوم بمساعدتك الآن."}'</pre>
+            <button type="button" onclick="copySnippet('dev-whatsapp-reply-sample', 'تم نسخ كود الرد!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">إرسال رسالة يدوية من الموظف وإعادة ضبط مؤقت الـ SLA.</p>
+        </div>
+
+        <!-- Resolve -->
+        <div data-tab-pane="desk-resolve-pane" class="hidden space-y-1">
+          <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-purple-300 text-xs overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-whatsapp-resolve-sample">curl -X POST "https://localhost/api/v1/whatsapp/conversations/+201012345678/resolve/" \
+  -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"resolution_notes": "تم حل مشكلة الفاتورة وتأكيد الدفع", "resume_ai": true}'</pre>
+            <button type="button" onclick="copySnippet('dev-whatsapp-resolve-sample', 'تم نسخ كود الإغلاق!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">إغلاق التذكرة وتفعيل الرد الآلي للذكاء الاصطناعي مجدداً للرسائل اللاحقة.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 6. Partner Headless SaaS APIs ==================== -->
+<div id="section-partner" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-sm shadow-xs">
+        🏢
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm text-slate-900" data-i18n="dev_partner_docs_title">واجهات الشركاء وإدارة العملاء (Headless Partner SaaS Provisioning)</h4>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="dev_partner_docs_desc">تسجيل عملاء جدد، تحديد سقف الاستهلاك (Spending Cap)، واستدعاء المكالمات والرسائل نيابة عن العملاء عبر X-Partner-Key.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/partner/" class="px-2.5 py-1 text-xs font-medium rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition">
+        لوحة تحكم الشريك
+      </a>
+      <a href="/api/partner/v1/docs/" target="_blank" class="px-2.5 py-1 text-xs font-medium rounded-md bg-[#7c3aed] text-white hover:bg-[#6d28d9] transition">
+        Scalar Partner Docs
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Partner Authentication & Provisioning -->
+    <div class="space-y-3">
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800">1. تسجيل عميل ساس جديد (Register Sub-Client):</span>
+          <span class="font-mono text-xs bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">POST</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-cyan-300 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-partner-reg-sample">curl -X POST "https://localhost/api/partner/v1/clients/register/" \
+  -H "X-Partner-Key: prt_live_&lt;PARTNER_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_name": "شركة النور للمقاولات",
+    "admin_email": "admin@alnoor.com",
+    "external_reference": "CRM_CLIENT_108",
+    "spending_cap": 150.00
+  }'</pre>
+          <button type="button" onclick="copySnippet('dev-partner-reg-sample', 'تم نسخ كود تسجيل العميل!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800">2. ضبط سقف الإنفاق الشهري (Spending Cap):</span>
+          <span class="font-mono text-xs bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">POST</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-emerald-400 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-partner-cap-sample">curl -X POST "https://localhost/api/partner/v1/clients/64/cap/" \
+  -H "X-Partner-Key: prt_live_&lt;PARTNER_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"spending_cap": 250.00, "is_hard_cap": true}'</pre>
+          <button type="button" onclick="copySnippet('dev-partner-cap-sample', 'تم نسخ كود سقف الاستهلاك!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partner Headless Calling & Messaging -->
+    <div class="space-y-3">
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800">3. بدء مكالمة WebRTC أو هاتفية للعميل:</span>
+          <span class="font-mono text-xs bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">POST</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-amber-300 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-partner-webrtc-sample">curl -X POST "https://localhost/api/partner/v1/clients/64/calls/webrtc/" \
+  -H "X-Partner-Key: prt_live_&lt;PARTNER_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"customer_name": "سعد الغامدي", "phone_number": "+966501234567"}'</pre>
+          <button type="button" onclick="copySnippet('dev-partner-webrtc-sample', 'تم نسخ كود المكالمة!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800">4. إرسال رسالة واتساب باسم العميل:</span>
+          <span class="font-mono text-xs bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">POST</span>
+        </div>
+        <div class="relative bg-slate-900 rounded-lg p-2.5 font-mono text-purple-300 text-xs overflow-x-auto text-left" dir="ltr">
+          <pre id="dev-partner-msg-sample">curl -X POST "https://localhost/api/partner/v1/clients/64/whatsapp/send/" \
+  -H "X-Partner-Key: prt_live_&lt;PARTNER_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"to": "+966501234567", "message": "أهلاً بك! تم تأكيد موعد الصيانة الخاص بك غداً الساعة 2 ظهراً."}'</pre>
+          <button type="button" onclick="copySnippet('dev-partner-msg-sample', 'تم نسخ كود إرسال الرسالة!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans"><span data-i18n="copy">نسخ</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 7. Structured Live Context Card ==================== -->
+<div id="section-context" class="p-5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 pb-3">
     <div>
       <div class="flex items-center gap-2 flex-wrap">
@@ -307,91 +1097,162 @@
   -H "X-API-Key: &lt;YOUR_API_KEY&gt;" \
   -H "Content-Type: application/json" \
   -d '{"restaurant_name": "مطعم البرجر", "out_of_stock": ["برجر دبل"], "branches": [{"name": "المعادي", "status": "مفتوح"}]}'</pre>
-      <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('dev-curl-context-sample').innerText); showToast('تم نسخ كود الـ API إلى الحافظة', 'success');" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+      <button type="button" onclick="copySnippet('dev-curl-context-sample', 'تم نسخ كود الـ API إلى الحافظة!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
     </div>
   </div>
 </div>
 
-<!-- Resources & API Capabilities Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_1_title">1. الحساب والمحفظة</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">GET /account/</span>
-    </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_1_desc">استعلم برمجياً عن رصيد محفظتك المتاح، البروفايل الصوتي النشط، وإحصائيات استخدامك.</p>
+<!-- ==================== 8. Resources & API Capabilities Grid ==================== -->
+<div id="section-catalog" class="space-y-3">
+  <div class="flex items-center justify-between">
+    <h4 class="font-semibold text-sm text-slate-900">دليل مجالات واجهات الـ REST API المتوفرة (API Domains Catalog):</h4>
+    <span class="text-xs text-slate-400 font-mono">18 Functional Domains</span>
   </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_2_title">2. الشخصيات واللهجات</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/profiles/</span>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_1_title">1. الحساب والمحفظة</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">GET /account/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_1_desc">استعلم برمجياً عن رصيد محفظتك المتاح، البروفايل الصوتي النشط، وإحصائيات استخدامك.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_2_desc">إنشاء وتعديل وتفعيل شخصيات الذكاء الاصطناعي واللهجات فورياً.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_3_title">3. ذاكرة وسياق العملاء</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/memory/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_2_title">2. الشخصيات واللهجات</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/profiles/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_2_desc">إنشاء وتعديل وتفعيل شخصيات الذكاء الاصطناعي واللهجات فورياً.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_3_desc">استرجاع وتحديث سجل وسياق المتصل التراكمي برقم هاتفه قبل أو أثناء المحادثة.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_4_title">4. قواعد المعرفة RAG</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/rag/query/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_3_title">3. ذاكرة وسياق العملاء</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/memory/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_3_desc">استرجاع وتحديث سجل وسياق المتصل التراكمي برقم هاتفه قبل أو أثناء المحادثة.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_4_desc">رفع وفهرسة ملفات PDF ومستندات الشركة والبحث الدلالي بالمتجهات المدمجة مع Gemini.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_5_title">5. خوادم FastMCP والأدوات</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/mcp/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_4_title">4. قواعد المعرفة RAG</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/rag/query/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_4_desc">رفع وفهرسة ملفات PDF ومستندات الشركة والبحث الدلالي بالمتجهات المدمجة مع Gemini.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_5_desc">ربط خوادم الأدوات الخارجية عبر SSE ومزامنة دوال الـ AI للاستدعاء أثناء المكالمات.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_6_title">6. بدء مكالمة WebRTC</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">POST /token/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_5_title">5. خوادم FastMCP والأدوات</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/mcp/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_5_desc">ربط خوادم الأدوات الخارجية عبر SSE ومزامنة دوال الـ AI للاستدعاء أثناء المكالمات.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_6_desc">إصدار توكن LiveKit مؤقت مشفر لبدء مكالمة صوتية حية فائقة السرعة من المتصفح أو التطبيق.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_7_title">7. السنترالات و DIDs</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/telephony/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_6_title">6. بدء مكالمة WebRTC</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">POST /calls/webrtc/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_6_desc">إصدار توكن LiveKit مؤقت مشفر لبدء مكالمة صوتية حية فائقة السرعة من المتصفح أو التطبيق.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_7_desc">ربط خطوط السنترال الداخلي وأرقام الاستقبال وتوجيه الاتصالات الهاتفية.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_8_title">8. الموظفون والطوابير</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/employees/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_7_title">7. السنترالات و DIDs</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/telephony/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_7_desc">ربط خطوط السنترال الداخلي وأرقام الاستقبال وتوجيه الاتصالات الهاتفية.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_8_desc">إدارة تحويلات الموظفين الداخلية وتوزيع المكالمات واستراتيجيات طوابير الانتظار.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_9_title">9. سجلات المكالمات والويبهوك</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/calls/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_8_title">8. الموظفون والطوابير</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/employees/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_8_desc">إدارة تحويلات الموظفين الداخلية وتوزيع المكالمات واستراتيجيات طوابير الانتظار.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_9_desc">استعراض تفاصيل المكالمات، التسجيلات، الملخصات الذكية، واستقبال إشعارات انتهاء المكالمات.</p>
-  </div>
 
-  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center justify-between">
-      <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_10_title">10. الذاكرة المنظمة اللحظية</span>
-      <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/context/</span>
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_9_title">9. سجلات المكالمات والويبهوك</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/calls/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_9_desc">استعراض تفاصيل المكالمات، التسجيلات، الملخصات الذكية، واستقبال إشعارات انتهاء المكالمات.</p>
     </div>
-    <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_10_desc">حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة لمنع الهلوسة.</p>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900" data-i18n="dev_res_10_title">10. الذاكرة المنظمة اللحظية</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/context/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed" data-i18n="dev_res_10_desc">حقن واستبدال فوري لبيانات المطاعم والمنيو والفروع في كاش Redis فائق السرعة لمنع الهلوسة.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">11. الأدوار الوظيفية AI</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/roles/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">كتالوج الأدوار المحددة مسبقاً (خدمة عملاء، مبيعات، طبي)، وإنشاء أدوار مخصصة.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">12. حملات الاتصال الآلي</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/campaigns/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">رفع قوائم الاتصال وإطلاق حملات الاتصال الجماعية التلقائية المدعومة بـ Inngest.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">13. قائمة منع الاتصال DNC</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/dnc/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">فحص الأرقام واستبعاد الأرقام المحظورة لضمان الامتثال وعدم الإزعاج.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">14. محادثات الواتساب وتذاكر الدعم</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/whatsapp/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">إدارة تذاكر التصعيد، تبادل الرسائل، واستلام المحادثات البشرية بدقة وسلاسة.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">15. مواعيد العمل وجدول الإغلاق</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/business-hours/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">تحديد ساعات العمل الرسمية وسلوك المساعد الذكي خارج أوقات الدوام الرسمي.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">16. واجهات الشركاء Headless SaaS</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/api/partner/v1/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">تكامل B2B كامل لإدارة العملاء الفرعيين، سقوف الاستهلاك، وإصدار المكالمات والرسائل.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">17. مؤشرات السنترال وجودة الاتصال</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/api/telephony/metrics/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">استعلام إحصائيات السنترال اللحظية، نسبة فقد الحزم، والـ MOS ومعدلات الاستجابة.</p>
+    </div>
+
+    <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-xs text-slate-900">18. قوالب التضمين وIframes</span>
+        <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-600">/embed/</span>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">ودجات جاهزة للتضمين الفوري للمحادثات وقمرة الاتصال الصوتي مع دعم postMessage كامل.</p>
+    </div>
   </div>
 </div>
 {% endblock %}

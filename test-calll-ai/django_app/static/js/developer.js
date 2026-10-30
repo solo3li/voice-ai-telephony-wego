@@ -1,6 +1,7 @@
 /**
  * Developer API Portal JavaScript
- * Handles live API key retrieval, rotation, visibility toggling, and code samples.
+ * Handles live API key retrieval, rotation, visibility toggling, code samples,
+ * tab switching, and structured live context synchronisation.
  */
 
 let currentDeveloperKey = '';
@@ -13,6 +14,8 @@ async function loadDeveloperKeys() {
     if (data.status === 'success' && data.keys && data.keys.length > 0) {
       const keyObj = data.keys[0];
       currentDeveloperKey = keyObj.key || keyObj.prefix;
+      const origin = window.location.origin;
+
       const keyInput = document.getElementById('dev-api-key-input');
       const createdEl = document.getElementById('dev-key-created-at');
       const usedEl = document.getElementById('dev-key-last-used');
@@ -24,17 +27,17 @@ async function loadDeveloperKeys() {
       if (usedEl) usedEl.innerText = keyObj.last_used_at || (window.t ? window.t('dev_never_used', 'لم يُستخدم بعد') : 'لم يُستخدم بعد');
 
       if (curlSample) {
-        curlSample.innerText = `curl -X GET "${window.location.origin}/api/v1/account/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Accept: application/json"`;
+        curlSample.innerText = `curl -X GET "${origin}/api/v1/account/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Accept: application/json"`;
       }
       if (curlDialSample) {
-        curlDialSample.innerText = `curl -X POST "${window.location.origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
+        curlDialSample.innerText = `curl -X POST "${origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
       }
       const curlCtxSample = document.getElementById('dev-curl-context-sample');
       if (curlCtxSample) {
-        curlCtxSample.innerText = `curl -X PUT "${window.location.origin}/api/v1/context/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"restaurant_name": "مطعم البرجر الذهبي", "out_of_stock": ["برجر دبل بيف"], "branches": [{"name": "المعادي", "status": "مفتوح", "hours": "12 م - 2 ص"}]}'`;
+        curlCtxSample.innerText = `curl -X PUT "${origin}/api/v1/context/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"restaurant_name": "مطعم البرجر الذهبي", "out_of_stock": ["برجر دبل بيف"], "branches": [{"name": "المعادي", "status": "مفتوح", "hours": "12 م - 2 ص"}]}'`;
       }
 
-      // Scenario 3: Smart Hybrid Embeds & Automation APIs
+      // Zero-Code Iframes & Automation APIs
       const embedChatSnippet = document.getElementById('dev-embed-chat-snippet');
       const embedVoiceSnippet = document.getElementById('dev-embed-voice-snippet');
       const curlChatSend = document.getElementById('dev-curl-chat-send-sample');
@@ -43,16 +46,16 @@ async function loadDeveloperKeys() {
       const previewVoice = document.getElementById('dev-embed-voice-preview-btn');
 
       if (embedChatSnippet) {
-        embedChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat/?token=${currentDeveloperKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"></iframe>`;
+        embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat/?token=${currentDeveloperKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0;"></iframe>`;
       }
       if (embedVoiceSnippet) {
-        embedVoiceSnippet.innerText = `<iframe src="${window.location.origin}/embed/voice/?token=${currentDeveloperKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;"></iframe>`;
+        embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/voice/?token=${currentDeveloperKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);"></iframe>`;
       }
       if (curlChatSend) {
-        curlChatSend.innerText = `curl -X POST "${window.location.origin}/api/v1/chat/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'`;
+        curlChatSend.innerText = `curl -X POST "${origin}/api/v1/chat/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'`;
       }
       if (curlDial2) {
-        curlDial2.innerText = `curl -X POST "${window.location.origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
+        curlDial2.innerText = `curl -X POST "${origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
       }
       if (previewChat) {
         previewChat.href = `/embed/chat/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
@@ -60,10 +63,246 @@ async function loadDeveloperKeys() {
       if (previewVoice) {
         previewVoice.href = `/embed/voice/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
       }
+
+      // Dynamic update of advanced snippet cards
+      const webrtcCurl = document.getElementById('dev-webrtc-curl-sample');
+      if (webrtcCurl) {
+        webrtcCurl.innerText = `curl -X POST "${origin}/api/v1/calls/webrtc/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "customer_name": "أحمد عبد الله",\n    "phone_number": "+201012345678",\n    "profile_id": 1,\n    "custom_welcome_message": "أهلاً بك يا أحمد في متجرنا! كيف أقدر أساعدك اليوم؟"\n  }'`;
+      }
+
+      const tokenCurl = document.getElementById('dev-token-curl-sample');
+      if (tokenCurl) {
+        tokenCurl.innerText = `curl -X POST "${origin}/api/token/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"room": "room_support_${keyObj.prefix || 'usr'}", "identity": "client_web"}'`;
+      }
+
+      const webhookCurl = document.getElementById('dev-webhook-config-sample');
+      if (webhookCurl) {
+        webhookCurl.innerText = `curl -X POST "${origin}/api/v1/webhooks/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "webhook_url": "https://your-crm.com/api/webhooks/voice-ai/",\n    "webhook_secret": "whsec_your_custom_secret_key",\n    "is_active": true\n  }'`;
+      }
+
+      const whatsappDirect = document.getElementById('dev-whatsapp-direct-sample');
+      if (whatsappDirect) {
+        whatsappDirect.innerText = `curl -X POST "${origin}/api/v1/whatsapp/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "to": "+201012345678",\n    "message": "عزيزي العميل، تم تجهيز طلبك رقم 1005 وهو في طريقه إليك الآن!"\n  }'`;
+      }
+
+      const whatsappInternal = document.getElementById('dev-whatsapp-internal-sample');
+      if (whatsappInternal) {
+        whatsappInternal.innerText = `curl -X POST "${origin}/api/agents/internal/whatsapp/send/" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "to": "+201012345678",\n    "message": "تنبيه آلي من المساعد الصوتي: تم تسجيل حجزك بنجاح.",\n    "user_id": 1\n  }'`;
+      }
+
+      const whatsappFollowup = document.getElementById('dev-whatsapp-followup-sample');
+      if (whatsappFollowup) {
+        whatsappFollowup.innerText = `curl -X POST "${origin}/api/v1/whatsapp/followup/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "phone_number": "+201012345678",\n    "message": "شكراً لاتصالك! إليك رابط تأكيد التفاصيل: https://example.com/order"\n  }'`;
+      }
+
+      const whatsappEscalate = document.getElementById('dev-whatsapp-escalate-sample');
+      if (whatsappEscalate) {
+        whatsappEscalate.innerText = `curl -X POST "${origin}/api/v1/whatsapp/conversations/+201012345678/escalate/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"reason": "العميل طلب التحدث مع مسؤول الحسابات", "urgency": "high"}'`;
+      }
+
+      const whatsappClaim = document.getElementById('dev-whatsapp-claim-sample');
+      if (whatsappClaim) {
+        whatsappClaim.innerText = `curl -X POST "${origin}/api/v1/whatsapp/conversations/+201012345678/claim/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"agent_name": "سارة أحمد"}'`;
+      }
+
+      const whatsappReply = document.getElementById('dev-whatsapp-reply-sample');
+      if (whatsappReply) {
+        whatsappReply.innerText = `curl -X POST "${origin}/api/v1/whatsapp/conversations/+201012345678/reply/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"message": "أهلاً بك يا فندم، أنا سارة من خدمة العملاء وسأقوم بمساعدتك الآن."}'`;
+      }
+
+      const whatsappResolve = document.getElementById('dev-whatsapp-resolve-sample');
+      if (whatsappResolve) {
+        whatsappResolve.innerText = `curl -X POST "${origin}/api/v1/whatsapp/conversations/+201012345678/resolve/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"resolution_notes": "تم حل مشكلة الفاتورة وتأكيد الدفع", "resume_ai": true}'`;
+      }
+
+      // Update React snippets with real API key
+      const voiceReact = document.getElementById('dev-voice-widget-react-snippet');
+      if (voiceReact) {
+        voiceReact.innerText = `import React, { useState, useEffect, useRef } from 'react';
+
+export default function VoiceAIWidget({ apiKey = "${currentDeveloperKey}", locale = "ar" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCalling, setIsCalling] = useState(false);
+  const iframeRef = useRef(null);
+
+  useEffect(() => {
+    const handleMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'VOICE_CALL_STARTED') {
+        setIsCalling(true);
+        console.log('Voice call started for:', e.data.phone);
+      } else if (e.data.type === 'VOICE_CALL_ENDED') {
+        setIsCalling(false);
+        console.log('Voice call ended. Duration seconds:', e.data.duration_seconds);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const triggerDial = (phone) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'VOICE_DIAL', phone }, '*');
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', bottom: '24px', left: locale === 'ar' ? '24px' : 'auto', right: locale === 'ar' ? 'auto' : '24px', zIndex: 9999 }}>
+      {isOpen && (
+        <div style={{ marginBottom: '12px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+          <iframe
+            ref={iframeRef}
+            src={\`${origin}/embed/voice/?token=\${apiKey}&locale=\${locale}\`}
+            width="380"
+            height="540"
+            frameBorder="0"
+            allow="microphone;"
+            title="Voice AI Assistant"
+          />
+        </div>
+      )}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '56px', height: '56px', borderRadius: '50%',
+          backgroundColor: '#7c3aed', color: '#fff', border: 'none',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 8px 20px rgba(124,58,237,0.4)', fontSize: '24px'
+        }}
+      >
+        {isOpen ? '✕' : '🎙️'}
+      </button>
+    </div>
+  );
+}`;
+      }
+
+      const chatReact = document.getElementById('dev-chat-widget-react-snippet');
+      if (chatReact) {
+        chatReact.innerText = `import React, { useState, useEffect } from 'react';
+
+export default function OmnichannelChatWidget({ apiKey = "${currentDeveloperKey}", locale = "ar" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const handleMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.event === 'unread_message_count') {
+        setUnreadCount(e.data.count || 0);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', bottom: '24px', right: locale === 'ar' ? 'auto' : '24px', left: locale === 'ar' ? '24px' : 'auto', zIndex: 9999 }}>
+      {isOpen && (
+        <div style={{ marginBottom: '12px', width: '420px', height: '620px', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' }}>
+          <iframe
+            src={\`${origin}/embed/chat/?token=\${apiKey}&locale=\${locale}\`}
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            allow="camera; microphone; clipboard-read; clipboard-write;"
+            title="Chatwoot Omnichannel Inbox"
+          />
+        </div>
+      )}
+      <button
+        onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
+        style={{
+          position: 'relative', width: '56px', height: '56px', borderRadius: '50%',
+          backgroundColor: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 8px 20px rgba(124,58,237,0.4)', fontSize: '24px'
+        }}
+      >
+        {isOpen ? '✕' : '💬'}
+        {unreadCount > 0 && !isOpen && (
+          <span style={{
+            position: 'absolute', top: '-4px', right: '-4px', backgroundColor: '#ef4444',
+            color: '#fff', borderRadius: '9999px', fontSize: '11px', fontWeight: 'bold',
+            padding: '2px 6px', border: '2px solid #fff'
+          }}>
+            {unreadCount}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}`;
+      }
     }
   } catch (e) {
     console.error('Error loading developer keys:', e);
   }
+}
+
+// ==================== Tab Switching Helper ====================
+
+function switchDevTab(tabGroupId, targetTabId) {
+  const navContainer = document.getElementById(tabGroupId + '-nav');
+  const panesContainer = document.getElementById(tabGroupId + '-panes');
+  if (!navContainer || !panesContainer) return;
+
+  // Update nav buttons: toggle active color classes while preserving custom sizing/font
+  const buttons = navContainer.querySelectorAll('[data-tab-target]');
+  buttons.forEach(btn => {
+    const isTarget = btn.getAttribute('data-tab-target') === targetTabId;
+    if (isTarget) {
+      btn.classList.remove('bg-slate-100', 'bg-slate-200', 'hover:bg-slate-200', 'text-slate-700');
+      btn.classList.add('bg-[#7c3aed]', 'text-white', 'shadow-2xs');
+    } else {
+      btn.classList.remove('bg-[#7c3aed]', 'text-white', 'shadow-2xs');
+      btn.classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+    }
+  });
+
+  // Update panes
+  const panes = panesContainer.querySelectorAll('[data-tab-pane]');
+  panes.forEach(pane => {
+    if (pane.getAttribute('data-tab-pane') === targetTabId) {
+      pane.classList.remove('hidden');
+    } else {
+      pane.classList.add('hidden');
+    }
+  });
+}
+
+// ==================== Snippet Copy Helper ====================
+
+function copySnippet(elementId, successMsg) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? el.value : (el.innerText || el.textContent);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(successMsg || 'تم نسخ الكود بنجاح إلى الحافظة!', 'success');
+    }).catch(() => {
+      fallbackCopy(text, successMsg);
+    });
+  } else {
+    fallbackCopy(text, successMsg);
+  }
+}
+
+function fallbackCopy(text, successMsg) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast(successMsg || 'تم نسخ الكود بنجاح!', 'success');
+  } catch(e) {
+    showToast('تعذر نسخ الكود تلقائياً', 'error');
+  }
+  document.body.removeChild(ta);
 }
 
 // ==================== Structured Live Context Functions ====================
@@ -247,7 +486,7 @@ async function saveLiveContext() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span>حفظ واستبدال فوري (Save &amp; Push to Redis)</span>';
+      btn.innerHTML = '<span>حفظ واستبدال فوري</span>';
     }
   }
 }
@@ -327,7 +566,6 @@ async function togglePromptPreview() {
 // ==================== End Live Context ====================
 
 function toggleDevKeyVisibility() {
-
   const inp = document.getElementById('dev-api-key-input');
   const btn = document.getElementById('btn-toggle-dev-key');
   if (!inp || !btn) return;
@@ -341,51 +579,27 @@ function toggleDevKeyVisibility() {
 }
 
 function copyDevApiKey() {
-  const inp = document.getElementById('dev-api-key-input');
-  if (inp) {
-    navigator.clipboard.writeText(inp.value);
-    showToast('تم نسخ مفتاح API بنجاح لاستخدامه في تطبيقاتك!', 'success');
-  }
+  copySnippet('dev-api-key-input', window.t ? window.t('dev_key_copied', 'تم نسخ مفتاح الـ API بنجاح لاستخدامه في تطبيقاتك!') : 'تم نسخ مفتاح الـ API بنجاح لاستخدامه في تطبيقاتك!');
 }
 
 function copyDevCurlSample() {
-  const sample = document.getElementById('dev-curl-sample');
-  if (sample) {
-    navigator.clipboard.writeText(sample.innerText);
-    showToast('تم نسخ مثال cURL إلى الحافظة!', 'success');
-  }
+  copySnippet('dev-curl-sample', window.t ? window.t('dev_curl_copied', 'تم نسخ مثال cURL إلى الحافظة!') : 'تم نسخ مثال cURL إلى الحافظة!');
 }
 
 function copyEmbedChatSnippet() {
-  const el = document.getElementById('dev-embed-chat-snippet');
-  if (el) {
-    navigator.clipboard.writeText(el.innerText);
-    showToast(window.t ? window.t('dev_embed_chat_copied', 'تم نسخ كود تضمين الشات بنجاح') : 'تم نسخ كود تضمين الشات بنجاح', 'success');
-  }
+  copySnippet('dev-embed-chat-snippet', window.t ? window.t('dev_embed_chat_copied', 'تم نسخ كود تضمين الشات بنجاح') : 'تم نسخ كود تضمين الشات بنجاح');
 }
 
 function copyEmbedVoiceSnippet() {
-  const el = document.getElementById('dev-embed-voice-snippet');
-  if (el) {
-    navigator.clipboard.writeText(el.innerText);
-    showToast(window.t ? window.t('dev_embed_voice_copied', 'تم نسخ كود تضمين المساعد الصوتي بنجاح') : 'تم نسخ كود تضمين المساعد الصوتي بنجاح', 'success');
-  }
+  copySnippet('dev-embed-voice-snippet', window.t ? window.t('dev_embed_voice_copied', 'تم نسخ كود تضمين المساعد الصوتي بنجاح') : 'تم نسخ كود تضمين المساعد الصوتي بنجاح');
 }
 
 function copyDevCurlChatSendSample() {
-  const el = document.getElementById('dev-curl-chat-send-sample');
-  if (el) {
-    navigator.clipboard.writeText(el.innerText);
-    showToast(window.t ? window.t('dev_curl_chat_copied', 'تم نسخ كود إرسال الرسالة بنجاح') : 'تم نسخ كود إرسال الرسالة بنجاح', 'success');
-  }
+  copySnippet('dev-curl-chat-send-sample', window.t ? window.t('dev_curl_chat_copied', 'تم نسخ كود إرسال الرسالة بنجاح') : 'تم نسخ كود إرسال الرسالة بنجاح');
 }
 
 function copyDevCurlDialSample2() {
-  const el = document.getElementById('dev-curl-dial-sample-2');
-  if (el) {
-    navigator.clipboard.writeText(el.innerText);
-    showToast(window.t ? window.t('dev_curl_dial_copied', 'تم نسخ كود المكالمة بنجاح') : 'تم نسخ كود المكالمة بنجاح', 'success');
-  }
+  copySnippet('dev-curl-dial-sample-2', window.t ? window.t('dev_curl_dial_copied', 'تم نسخ كود المكالمة بنجاح') : 'تم نسخ كود المكالمة بنجاح');
 }
 
 async function rotateDeveloperKeyPrompt() {
@@ -418,7 +632,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDeveloperKeys();
   loadLiveContext();
 });
-
 
 // Re-render developer live context on language toggle
 window.addEventListener('appLanguageChanged', () => {

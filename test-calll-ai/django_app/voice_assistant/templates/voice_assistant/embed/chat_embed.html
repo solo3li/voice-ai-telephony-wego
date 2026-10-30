@@ -100,8 +100,31 @@
     }
 
     window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'chatwoot:ready') {
+      if (!event.data) return;
+      if (event.data.type === 'chatwoot:ready' || event.data.event === 'chatwoot:ready') {
         dismissEmbedLoader();
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'CHAT_READY', timestamp: new Date().toISOString() }, '*');
+          } catch(e) {}
+        }
+      }
+      // Forward unread count or chat messages to parent window
+      if (window.parent && window.parent !== window && typeof event.data === 'object') {
+        if (event.data.event === 'unread_message_count' || event.data.type === 'chatwoot:on-message') {
+          try {
+            window.parent.postMessage(event.data, '*');
+          } catch(e) {}
+        }
+      }
+      // Listen for commands from parent window to forward to chatwoot iframe
+      if (event.data.type === 'SET_THEME' || event.data.type === 'SET_LOCALE' || event.data.type === 'TOGGLE_CHAT') {
+        const frame = document.getElementById('embed-chatwoot-frame');
+        if (frame && frame.contentWindow) {
+          try {
+            frame.contentWindow.postMessage(event.data, '*');
+          } catch(e) {}
+        }
       }
     });
   </script>

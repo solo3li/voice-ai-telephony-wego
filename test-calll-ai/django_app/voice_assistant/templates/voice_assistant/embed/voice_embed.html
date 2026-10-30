@@ -203,21 +203,49 @@
         document.getElementById('call-timer').textContent = `${mins}:${secs}`;
       }, 1000);
 
-      // Trigger call API if phone number is provided
+      // Trigger call API
+      const embedToken = "{{ token|default:'' }}" || new URLSearchParams(window.location.search).get('token') || new URLSearchParams(window.location.search).get('key') || '';
+      const callHeaders = { 'Content-Type': 'application/json' };
+      if (embedToken) {
+        callHeaders['X-API-Key'] = embedToken;
+      }
+
       if (phone) {
         try {
           await fetch('/api/v1/calls/dial/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: callHeaders,
             body: JSON.stringify({ phone_number: phone, call_goal: 'مكالمة من قمرة الويب المضمنة' })
           });
         } catch(e) {
-          console.debug('Outbound trigger:', e);
+          console.debug('Outbound trigger error:', e);
         }
+      } else {
+        try {
+          await fetch('/api/v1/calls/webrtc/', {
+            method: 'POST',
+            headers: callHeaders,
+            body: JSON.stringify({ customer_name: 'زائر الويب المضمن' })
+          });
+        } catch(e) {
+          console.debug('WebRTC trigger error:', e);
+        }
+      }
+
+      // Notify parent window via postMessage
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({
+            type: 'VOICE_CALL_STARTED',
+            phone: phone || null,
+            timestamp: new Date().toISOString()
+          }, '*');
+        } catch (pe) {}
       }
     }
 
     function endCall() {
+      const finalDuration = callSeconds;
       isCalling = false;
       clearInterval(timerInterval);
       
@@ -238,7 +266,32 @@
       btnText.textContent = 'بدء المكالمة الآن';
       subtitle.textContent = 'تم إنهاء المكالمة بنجاح';
       document.getElementById('call-timer').textContent = '00:00';
+
+      // Notify parent window via postMessage
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({
+            type: 'VOICE_CALL_ENDED',
+            duration_seconds: finalDuration,
+            timestamp: new Date().toISOString()
+          }, '*');
+        } catch (pe) {}
+      }
     }
+
+    // Bidirectional postMessage listener for host commands
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'START_CALL' || e.data.type === 'VOICE_DIAL') {
+        if (e.data.phone) {
+          const input = document.getElementById('phone-number-input');
+          if (input) input.value = e.data.phone;
+        }
+        if (!isCalling) startCall();
+      } else if (e.data.type === 'END_CALL' || e.data.type === 'VOICE_HANGUP') {
+        if (isCalling) endCall();
+      }
+    });
   </script>
 </body>
 </html>

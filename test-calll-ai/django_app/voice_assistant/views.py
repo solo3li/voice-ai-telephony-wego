@@ -155,17 +155,58 @@ def room_view(request):
     }
     return render(request, 'voice_assistant/room.html', context)
 
-@login_required(login_url='/login/')
+@csrf_exempt
 def get_tokens(request):
     """
-    Generate authentication tokens for LiveKit and Centrifugo for the authenticated user.
+    Generate authentication tokens for LiveKit and Centrifugo.
+    Supports authenticated web sessions and Developer API Key (X-API-Key / Bearer token).
+    Accepts both GET query parameters and POST JSON payloads.
     """
+    user = None
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        api_key = request.headers.get('X-API-Key') or request.headers.get('X-Partner-Key')
+        if not api_key:
+            auth_header = request.headers.get('Authorization', '')
+            if auth_header.startswith('Bearer '):
+                api_key = auth_header.split(' ', 1)[1].strip()
+        if not api_key:
+            api_key = request.GET.get('token') or request.GET.get('key')
+
+        if api_key:
+            from developer.models import UserApiKey
+            from partners.models import PartnerProfile
+            key_obj = UserApiKey.objects.filter(key=api_key, is_active=True).select_related('user').first()
+            if key_obj:
+                user = key_obj.user
+            else:
+                partner = PartnerProfile.objects.filter(api_key=api_key).select_related('user').first()
+                if partner:
+                    user = partner.user
+
+    if not user:
+        is_api = (
+            bool(request.headers.get('X-API-Key')) or
+            bool(request.headers.get('Authorization')) or
+            request.headers.get('Accept') == 'application/json' or
+            request.content_type == 'application/json' or
+            request.method == 'POST'
+        )
+        if is_api:
+            return JsonResponse({
+                "status": "error",
+                "message": "Authentication required: missing or invalid API key or session (use X-API-Key or Bearer token)"
+            }, status=401)
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path(), '/login/')
+
     # Pre-call Wallet Balance Verification (OpenRouter prepaid model)
     try:
         from billing.models import BillingConfig, UserWallet
         billing_cfg = BillingConfig.get_config()
         wallet, _ = UserWallet.objects.get_or_create(
-            user=request.user,
+            user=user,
             defaults={
                 'balance': billing_cfg.initial_welcome_credit,
                 'currency': billing_cfg.currency,
@@ -186,14 +227,32 @@ def get_tokens(request):
     except Exception as b_chk_err:
         logger.warning(f"Failed to check wallet balance before call: {b_chk_err}")
 
-    room_name = request.GET.get('room') or f"room_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
-    user_identity = f"user_{request.user.id}_{request.user.username}"
+    # Parse parameters from GET or POST JSON body
+    body_data = {}
+    if request.method == 'POST' and request.body:
+        try:
+            body_data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            body_data = {}
+
+    room_name = (
+        body_data.get('room') or
+        body_data.get('room_name') or
+        request.GET.get('room') or
+        f"room_user_{user.id}_{uuid.uuid4().hex[:6]}"
+    )
+    user_identity = (
+        body_data.get('identity') or
+        body_data.get('user_identity') or
+        request.GET.get('identity') or
+        f"user_{user.id}_{user.username}"
+    )
     channel_name = f"rooms:{room_name}"
 
-    active_profile = AgentProfile.objects.filter(user=request.user, is_active=True).first()
+    active_profile = AgentProfile.objects.filter(user=user, is_active=True).first()
     if not active_profile:
         active_profile = AgentProfile.objects.create(
-            user=request.user,
+            user=user,
             name="نورهان - خدمة عملاء مصرية",
             voice_name="Aoede",
             gender="female",
@@ -203,10 +262,18 @@ def get_tokens(request):
             is_active=True
         )
 
-    custom_phone = str(request.GET.get('caller_phone') or request.GET.get('phone') or request.GET.get('customer_phone') or '').strip()
+    custom_phone = str(
+        body_data.get('caller_phone') or
+        body_data.get('phone') or
+        request.GET.get('caller_phone') or
+        request.GET.get('phone') or
+        request.GET.get('customer_phone') or
+        ''
+    ).strip()
+
     meta_dict = {
-        "user_id": request.user.id,
-        "username": request.user.username,
+        "user_id": user.id,
+        "username": user.username,
         "profile": active_profile.to_dict()
     }
     if custom_phone:
@@ -215,7 +282,7 @@ def get_tokens(request):
 
     token = api.AccessToken(settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET) \
         .with_identity(user_identity) \
-        .with_name(request.user.username) \
+        .with_name(user.username) \
         .with_metadata(metadata) \
         .with_grants(api.VideoGrants(
             room_join=True,
@@ -238,12 +305,15 @@ def get_tokens(request):
         algorithm="HS256"
     )
 
-    should_dispatch = request.GET.get('dispatch') in ('1', 'true', 'yes')
+    should_dispatch = (
+        body_data.get('dispatch') in (True, '1', 'true', 'yes') or
+        request.GET.get('dispatch') in ('1', 'true', 'yes')
+    )
     if should_dispatch:
         try:
             job_payload = {
                 "room_name": room_name,
-                "user_id": request.user.id,
+                "user_id": user.id,
                 "caller_phone": custom_phone or 'web_dashboard',
                 "profile": active_profile.to_dict(),
                 "is_queue": False,
@@ -254,7 +324,7 @@ def get_tokens(request):
                 "off_hours_data": None,
             }
             dispatch_agent_to_room(room_name, job_payload)
-            logger.info(f"[GET_TOKENS] Proactively dispatched LiveKit Agent to room '{room_name}' for user #{request.user.id}")
+            logger.info(f"[GET_TOKENS] Proactively dispatched LiveKit Agent to room '{room_name}' for user #{user.id}")
         except Exception as d_err:
             logger.warning(f"[GET_TOKENS] Proactive agent dispatch error for room '{room_name}': {d_err}")
 
@@ -265,7 +335,7 @@ def get_tokens(request):
         CallSession.objects.get_or_create(
             room_name=room_name,
             defaults={
-                "user": request.user,
+                "user": user,
                 "direction": "inbound",
                 "caller_phone": custom_phone or 'web_dashboard',
                 "started_at": timezone.now(),
@@ -283,6 +353,7 @@ def get_tokens(request):
         "user_identity": user_identity,
         "livekit_url": settings.LIVEKIT_URL,
         "livekit_token": livekit_jwt,
+        "token": livekit_jwt,
         "centrifugo_ws_url": settings.CENTRIFUGO_WS_URL,
         "centrifugo_token": centrifugo_jwt,
         "active_profile": active_profile.to_dict(),
@@ -1387,11 +1458,13 @@ def embed_voice_view(request):
         user = User.objects.filter(is_superuser=True).first() or User.objects.first()
 
     req_locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    token_val = str(request.GET.get('token') or request.GET.get('key') or '').strip()
     context = {
         'locale': req_locale,
         'user_id': user.id if user else 1,
         'username': user.username if user else 'Guest',
         'page_title': 'المساعد الصوتي وقمرة الاتصال المضمنة',
+        'token': token_val,
     }
     response = render(request, 'voice_assistant/embed/voice_embed.html', context)
     response['Content-Security-Policy'] = "frame-ancestors *"
