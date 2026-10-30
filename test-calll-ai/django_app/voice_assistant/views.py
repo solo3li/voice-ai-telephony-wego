@@ -904,14 +904,53 @@ def crm_page_view(request):
 
 @login_required
 def chat_page_view(request):
-    """Render dedicated Chatwoot Omnichannel Chat page."""
+    """Render dedicated Chatwoot Omnichannel Chat page with silent SSO & AI Settings."""
+    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings
+    sso_url = generate_chatwoot_sso_url(user=request.user)
+    captain_settings = get_captain_settings() or {}
     context = {
         'page_title': 'شات',
         'page_icon': '',
         'active_nav': 'chat',
-        'chatwoot_url': 'https://chatwoot.169.58.32.179.nip.io/app/accounts/2',
+        'chatwoot_url': sso_url,
+        'captain_settings': captain_settings,
+        'captain_settings_json': json.dumps(captain_settings, ensure_ascii=False),
     }
     return render(request, 'voice_assistant/pages/chat.html', context)
+
+
+@login_required
+def api_chatwoot_sso_url(request):
+    """GET /api/chat/sso-url/ - Generate a fresh silent SSO URL for Chatwoot."""
+    from .chatwoot_service import generate_chatwoot_sso_url
+    url = generate_chatwoot_sso_url(user=request.user)
+    return JsonResponse({"status": "success", "sso_url": url})
+
+
+@csrf_exempt
+@login_required
+def api_captain_settings(request):
+    """GET / POST /api/chat/assistant/settings/ - Retrieve or update Captain AI assistant settings."""
+    from .chatwoot_service import get_captain_settings, update_captain_settings
+    if request.method == 'GET':
+        settings_data = get_captain_settings()
+        if not settings_data:
+            return JsonResponse({"status": "error", "message": "لم يتم العثور على إعدادات المساعد الذكي"}, status=404)
+        return JsonResponse({"status": "success", "settings": settings_data})
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            data = request.POST.dict()
+
+        success, msg = update_captain_settings(data)
+        if success:
+            updated = get_captain_settings()
+            return JsonResponse({"status": "success", "message": msg, "settings": updated})
+        return JsonResponse({"status": "error", "message": msg}, status=400)
+
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
 @login_required

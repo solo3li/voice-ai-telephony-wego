@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-  /* Full-bleed seamless container for Chatwoot: hide app header & use full viewport */
+  /* Header in base.html hidden to allow dedicated minimalist dual-tab strip */
   header {
     display: none !important;
   }
@@ -20,35 +20,381 @@
     height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 </style>
 
-<div class="relative w-full h-screen bg-white overflow-hidden">
+<!-- Top Dual-Tab Bar (Minimalist Quiet Design) -->
+<div class="h-14 bg-white border-b border-[#eaedf0] px-4 sm:px-6 flex items-center justify-between shrink-0 select-none z-20">
+  <div class="flex items-center gap-2">
+    <!-- Tab 1: Live Chat -->
+    <button 
+      type="button" 
+      id="chat-tab-live-btn"
+      onclick="switchChatSubTab('live')"
+      class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 bg-[#eff8ff] text-[#1f93ff] border border-[#1f93ff]/20"
+    >
+      <span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span>
+      <span data-i18n="chat_tab_live">المحادثات المباشرة</span>
+    </button>
+
+    <!-- Tab 2: AI Settings -->
+    <button 
+      type="button" 
+      id="chat-tab-settings-btn"
+      onclick="switchChatSubTab('settings')"
+      class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent"
+    >
+      <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+      <span data-i18n="chat_tab_settings">إعدادات الذكاء الاصطناعي</span>
+    </button>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <!-- Active AI Model Badge -->
+    <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-[11px] font-medium font-sans">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span data-i18n="chat_ai_status_active">الكابتن AI متصل (GPT-4o Mini)</span>
+    </div>
+
+    <!-- Reload Button -->
+    <button 
+      type="button" 
+      onclick="refreshChatwootFrame()" 
+      title="تحديث نافذة الشات"
+      data-i18n-title="chat_refresh_tooltip"
+      class="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition text-xs border border-slate-200 flex items-center gap-1"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      <span class="hidden md:inline text-[11px]" data-i18n="chat_reload_btn">تحديث الشات</span>
+    </button>
+  </div>
+</div>
+
+<!-- ==================== TAB 1: Live Chatwoot Iframe ==================== -->
+<div id="tab-panel-live" class="relative w-full flex-1 bg-white overflow-hidden">
   <!-- Loading Spinner Overlay -->
   <div id="chat-frame-loader" class="absolute inset-0 bg-[#f8fafc]/95 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
     <div class="w-8 h-8 border-2 border-[#1f93ff]/20 border-t-[#1f93ff] rounded-full animate-spin"></div>
-    <p class="text-xs font-medium text-slate-500 font-sans" data-i18n="chat_loading">جاري تحميل منصة المحادثات...</p>
+    <p class="text-xs font-medium text-slate-500 font-sans" data-i18n="chat_loading">جاري تحميل منصة المحادثات مع تسجيل الدخول التلقائي...</p>
   </div>
 
-  <!-- Embedded Chatwoot Iframe -->
+  <!-- Embedded Chatwoot Iframe with Silent SSO -->
   <iframe 
     id="chatwoot-frame"
-    src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2' }}"
+    src="{{ chatwoot_url }}"
     class="w-full h-full border-0 block"
     allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
     onload="onChatFrameLoaded()"
   ></iframe>
 </div>
+
+<!-- ==================== TAB 2: AI Settings Minimalist Cards ==================== -->
+<div id="tab-panel-settings" class="hidden w-full flex-1 bg-[#fafbfc] overflow-y-auto p-4 sm:p-8">
+  <div class="max-w-4xl mx-auto space-y-6 pb-16">
+
+    <!-- Header info banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#eaedf0]">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900" data-i18n="chat_settings_heading">إعدادات المساعد الذكي (Captain AI)</h2>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="chat_settings_subheading">تخصيص دور الذكاء الاصطناعي، تعليمات المحادثة، وإرشادات الردود عبر جميع القنوات.</p>
+      </div>
+      <div id="settings-save-status" class="hidden text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+        ✓ <span data-i18n="chat_saved_msg">تم حفظ التغييرات بنجاح</span>
+      </div>
+    </div>
+
+    <!-- Card 1: Identity & Brand Name -->
+    <div class="bg-white rounded-xl border border-[#eaedf0] p-5 shadow-2xs space-y-4">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+        <span class="w-2 h-2 rounded-full bg-[#1f93ff]"></span>
+        <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider" data-i18n="card_identity_title">هوية المساعد واسم النشاط</h3>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="field_assistant_name">اسم المساعد الذكي</label>
+          <input 
+            type="text" 
+            id="cfg-assistant-name" 
+            value="{{ captain_settings.name|default:'المساعد الذكي' }}" 
+            placeholder="مثال: سارة، كابتن كورا" 
+            data-i18n-placeholder="placeholder_assistant_name"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] bg-white text-slate-900 transition"
+          >
+          <span class="text-[11px] text-slate-400 mt-1 block" data-i18n="hint_assistant_name">الاسم الذي يظهر للعميل في المحادثات.</span>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="field_product_name">اسم المتجر أو المنشأة</label>
+          <input 
+            type="text" 
+            id="cfg-product-name" 
+            value="{{ captain_settings.product_name|default:'' }}" 
+            placeholder="مثال: سلسلة مطاعم كُـورَا" 
+            data-i18n-placeholder="placeholder_product_name"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] bg-white text-slate-900 transition"
+          >
+          <span class="text-[11px] text-slate-400 mt-1 block" data-i18n="hint_product_name">الكيان التجاري الذي يمثله المساعد ويتحدث باسمه.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: AI Role & System Instructions -->
+    <div class="bg-white rounded-xl border border-[#eaedf0] p-5 shadow-2xs space-y-4">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+        <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider" data-i18n="card_role_title">دور الذكاء الاصطناعي والتعليمات الأساسية (System Prompt)</h3>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="field_description">توجيهات الدور والمهام (System Instructions)</label>
+        <textarea 
+          id="cfg-description" 
+          rows="5" 
+          placeholder="أنت المساعد الذكي لمطاعم كورا، مهمتك الترحيب بالعملاء، إجابتهم عن قائمة الطعام، مساعدتهم في حجز الطاولات، والتأكيد على أوقات العمل بدقة ولطف..."
+          data-i18n-placeholder="placeholder_description"
+          class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] bg-white text-slate-900 transition resize-y font-sans leading-relaxed"
+        >{{ captain_settings.description|default:'' }}</textarea>
+        <span class="text-[11px] text-slate-400 mt-1 block" data-i18n="hint_description">هذه التوجيهات هي النواة الأساسية التي توجه طريقة تفكير المساعد وسلوكه في الردود.</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Guidelines & Guardrails -->
+    <div class="bg-white rounded-xl border border-[#eaedf0] p-5 shadow-2xs space-y-4">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+        <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider" data-i18n="card_rules_title">إرشادات الردود والممنوعات (Guidelines & Guardrails)</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="field_guidelines">إرشادات الرد وطريقة التحدث (قاعدة بكل سطر)</label>
+          <textarea 
+            id="cfg-guidelines" 
+            rows="6" 
+            placeholder="تحدث بلهجة ودودة ومهذبة
+أجب باختصار ولا تطل الشرح إلا عند الطلب
+رحب بالعميل باسمه إذا كان معروفاً
+اعتمد على قاعدة المعرفة للإجابة عن الأسئلة الفنية"
+            data-i18n-placeholder="placeholder_guidelines"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] bg-white text-slate-900 transition resize-y font-sans leading-relaxed"
+          >{% for g in captain_settings.response_guidelines %}{{ g }}
+{% endfor %}</textarea>
+          <span class="text-[11px] text-slate-400 mt-1 block" data-i18n="hint_guidelines">اكتب كل قاعدة أو سلوك مفضل في سطر مستقل.</span>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="field_guardrails">الممنوعات والحدود (ممنوع بكل سطر)</label>
+          <textarea 
+            id="cfg-guardrails" 
+            rows="6" 
+            placeholder="لا تعد بأي خصومات أو عروض غير معلنة في قاعدة المعرفة
+لا تشارك أرقام هواتف أو بيانات شخصية لفريق العمل
+لا تتحدث في أمور سياسية أو خارج نطاق الخدمة
+لا تعطي معلومات غير موثقة"
+            data-i18n-placeholder="placeholder_guardrails"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1f93ff] focus:ring-1 focus:ring-[#1f93ff] bg-white text-slate-900 transition resize-y font-sans leading-relaxed"
+          >{% for gr in captain_settings.guardrails %}{{ gr }}
+{% endfor %}</textarea>
+          <span class="text-[11px] text-slate-400 mt-1 block" data-i18n="hint_guardrails">المواضيع التي يمتنع المساعد تماماً عن الخوض فيها.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Model Parameters, RAG & Connected Channels -->
+    <div class="bg-white rounded-xl border border-[#eaedf0] p-5 shadow-2xs space-y-5">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider" data-i18n="card_runtime_title">خيارات النموذج والقنوات المرتبطة</h3>
+      </div>
+
+      <!-- Temperature Slider -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-medium text-slate-700" data-i18n="field_temperature">درجة الإبداع والحرارة (Temperature)</label>
+          <span id="temp-val-display" class="text-xs font-semibold text-[#1f93ff] bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 font-sans">{{ captain_settings.temperature|default:'0.5' }}</span>
+        </div>
+        <input 
+          type="range" 
+          id="cfg-temperature" 
+          min="0.0" 
+          max="1.0" 
+          step="0.1" 
+          value="{{ captain_settings.temperature|default:'0.5' }}" 
+          oninput="document.getElementById('temp-val-display').innerText = this.value"
+          class="w-full accent-[#1f93ff] cursor-pointer"
+        >
+        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+          <span data-i18n="temp_precise">0.0 (دقيق ومحدد جداً)</span>
+          <span data-i18n="temp_balanced">0.5 (متوازن - موصى به)</span>
+          <span data-i18n="temp_creative">1.0 (إبداعي ومرن)</span>
+        </div>
+      </div>
+
+      <!-- RAG / FAQ Knowledge Base Toggle -->
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <label class="text-xs font-medium text-slate-900 block" data-i18n="field_feature_faq">تفعيل البحث في قاعدة المعرفة RAG</label>
+          <span class="text-[11px] text-slate-500" data-i18n="hint_feature_faq">استرجاع المعلومات من ملفات ومستندات قاعدة المعرفة للرد على استفسارات العملاء بدقة.</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="cfg-feature-faq" class="sr-only peer" {% if captain_settings.feature_faq %}checked{% endif %}>
+          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1f93ff]"></div>
+        </label>
+      </div>
+
+      <!-- Connected Inboxes Channels -->
+      <div class="pt-3 border-t border-slate-100">
+        <label class="block text-xs font-medium text-slate-900 mb-2" data-i18n="field_channels">القنوات المرتبطة بالذكاء الاصطناعي</label>
+        <span class="text-[11px] text-slate-500 block mb-3" data-i18n="hint_channels">اختر القنوات التي يُسمح للمساعد الذكي بالرد على رسائلها تلقائياً:</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {% for inbox in captain_settings.inboxes %}
+          <label class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition select-none">
+            <input 
+              type="checkbox" 
+              name="inbox_ids" 
+              value="{{ inbox.id }}" 
+              class="w-4 h-4 text-[#1f93ff] rounded border-slate-300 focus:ring-0 accent-[#1f93ff]"
+              {% if inbox.is_linked %}checked{% endif %}
+            >
+            <div class="overflow-hidden">
+              <span class="text-xs font-semibold text-slate-800 block truncate">{{ inbox.name }}</span>
+              <span class="text-[10px] text-slate-400 font-sans block truncate">{{ inbox.channel_type }}</span>
+            </div>
+          </label>
+          {% empty %}
+          <p class="text-xs text-slate-400 italic" data-i18n="no_inboxes">لا توجد قنوات شات مسجلة حالياً.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Action Bar -->
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button 
+        type="button" 
+        id="save-settings-btn"
+        onclick="saveAssistantSettings()"
+        class="px-5 py-2.5 rounded-lg bg-[#1f93ff] hover:bg-[#1a7fd9] text-white text-xs font-medium transition shadow-2xs flex items-center gap-2"
+      >
+        <svg id="save-spinner" class="hidden w-3.5 h-3.5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+        <span data-i18n="btn_save_settings">حفظ التغييرات</span>
+      </button>
+    </div>
+
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+  let currentActiveTab = 'live';
+
   function onChatFrameLoaded() {
     const loader = document.getElementById('chat-frame-loader');
     if (loader) {
       loader.classList.add('opacity-0', 'pointer-events-none');
       setTimeout(() => loader.style.display = 'none', 300);
     }
+  }
+
+  function switchChatSubTab(tab) {
+    currentActiveTab = tab;
+    const liveBtn = document.getElementById('chat-tab-live-btn');
+    const settingsBtn = document.getElementById('chat-tab-settings-btn');
+    const livePanel = document.getElementById('tab-panel-live');
+    const settingsPanel = document.getElementById('tab-panel-settings');
+
+    if (tab === 'live') {
+      liveBtn.className = "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 bg-[#eff8ff] text-[#1f93ff] border border-[#1f93ff]/20";
+      settingsBtn.className = "px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent";
+      livePanel.classList.remove('hidden');
+      settingsPanel.classList.add('hidden');
+    } else {
+      settingsBtn.className = "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 bg-[#eff8ff] text-[#1f93ff] border border-[#1f93ff]/20";
+      liveBtn.className = "px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent";
+      settingsPanel.classList.remove('hidden');
+      livePanel.classList.add('hidden');
+    }
+  }
+
+  function refreshChatwootFrame() {
+    const loader = document.getElementById('chat-frame-loader');
+    const frame = document.getElementById('chatwoot-frame');
+    if (loader) {
+      loader.style.display = 'flex';
+      loader.classList.remove('opacity-0', 'pointer-events-none');
+    }
+    
+    // Fetch fresh SSO link
+    fetch('/api/chat/sso-url/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && data.sso_url) {
+          frame.src = data.sso_url;
+        } else {
+          frame.contentWindow.location.reload();
+        }
+      })
+      .catch(() => {
+        frame.contentWindow.location.reload();
+      });
+  }
+
+  function saveAssistantSettings() {
+    const saveBtn = document.getElementById('save-settings-btn');
+    const spinner = document.getElementById('save-spinner');
+    const statusBanner = document.getElementById('settings-save-status');
+
+    saveBtn.disabled = true;
+    spinner.classList.remove('hidden');
+
+    const name = document.getElementById('cfg-assistant-name').value;
+    const productName = document.getElementById('cfg-product-name').value;
+    const description = document.getElementById('cfg-description').value;
+    const guidelines = document.getElementById('cfg-guidelines').value;
+    const guardrails = document.getElementById('cfg-guardrails').value;
+    const temperature = document.getElementById('cfg-temperature').value;
+    const featureFaq = document.getElementById('cfg-feature-faq').checked;
+
+    const checkedInboxes = [];
+    document.querySelectorAll('input[name="inbox_ids"]:checked').forEach(cb => {
+      checkedInboxes.push(parseInt(cb.value));
+    });
+
+    const payload = {
+      name: name,
+      product_name: productName,
+      description: description,
+      response_guidelines: guidelines,
+      guardrails: guardrails,
+      temperature: parseFloat(temperature),
+      feature_faq: featureFaq,
+      inbox_ids: checkedInboxes
+    };
+
+    fetch('/api/chat/assistant/settings/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      saveBtn.disabled = false;
+      spinner.classList.add('hidden');
+      if (data.status === 'success') {
+        statusBanner.classList.remove('hidden');
+        setTimeout(() => {
+          statusBanner.classList.add('hidden');
+        }, 4000);
+      } else {
+        alert(data.message || 'حدث خطأ أثناء الحفظ');
+      }
+    })
+    .catch(err => {
+      saveBtn.disabled = false;
+      spinner.classList.add('hidden');
+      alert('خطأ في الاتصال بالخادم: ' + err);
+    });
   }
 </script>
 {% endblock %}

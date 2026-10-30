@@ -93,6 +93,8 @@ urlpatterns = [
     path('telephony/', views.telephony_page_view, name='telephony_page'),
     path('partner/', views.partner_page_view, name='partner_page'),
     path('chat/', views.chat_page_view, name='chat_page'),
+    path('api/chat/sso-url/', views.api_chatwoot_sso_url, name='chatwoot_sso_url'),
+    path('api/chat/assistant/settings/', views.api_captain_settings, name='captain_settings'),
     path('whatsapp/', views.whatsapp_page_view, name='whatsapp_page'),
     path('desk/whatsapp/', views.whatsapp_desk_page_view, name='whatsapp_desk_page'),
 ]
