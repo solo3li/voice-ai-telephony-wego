@@ -241,7 +241,7 @@ EVOLUTION_API_KEY = "evolution_secret_key_123"
 def get_all_channels_detailed(account_id=2, assistant_id=1):
     """
     Retrieve all inboxes/channels with their live status, configuration,
-    and whether Captain AI auto-reply is active.
+    grouped by platform, and whether Captain AI auto-reply is active.
     """
     try:
         conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
@@ -264,6 +264,18 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
         """, (assistant_id, account_id))
         inboxes = cur.fetchall()
 
+        # Fetch all Evolution instances for real-time status mapping
+        evolution_instances_map = {}
+        try:
+            import urllib.request
+            req = urllib.request.Request(f"{EVOLUTION_API_URL}/instance/fetchInstances", headers={"apikey": EVOLUTION_API_KEY})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                inst_list = json.loads(resp.read().decode())
+                for inst in inst_list:
+                    evolution_instances_map[inst.get('name')] = inst
+        except Exception as e:
+            logger.warning(f"[EvolutionAPI] Failed to fetch instances: {e}")
+
         channels_list = []
         for ibx in inboxes:
             c_type = ibx['channel_type']
@@ -272,14 +284,17 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                 "id": ibx['id'],
                 "name": ibx['name'],
                 "channel_type": c_type,
+                "platform": "api",
                 "is_captain_enabled": ibx['is_captain_enabled'],
                 "created_at": ibx['created_at'].strftime("%Y-%m-%d %H:%M") if ibx.get('created_at') else "",
                 "status": "connected",
                 "identifier": "",
+                "instance_name": None,
                 "extra": {}
             }
 
             if c_type == 'Channel::Telegram':
+                details['platform'] = 'telegram'
                 cur.execute("SELECT bot_name, bot_token FROM channel_telegram WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -287,6 +302,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                     details['status'] = "connected" if row.get('bot_token') else "disconnected"
 
             elif c_type == 'Channel::Whatsapp':
+                details['platform'] = 'whatsapp_cloud'
                 cur.execute("SELECT phone_number, provider, provider_config FROM channel_whatsapp WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -297,14 +313,39 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
             elif c_type == 'Channel::Api':
                 cur.execute("SELECT webhook_url, identifier FROM channel_api WHERE id = %s", (c_id,))
                 row = cur.fetchone()
-                if row:
-                    details['identifier'] = row.get('identifier') or "API Channel"
-                    details['extra']['webhook_url'] = row.get('webhook_url')
-                    # If this is Evolution API WhatsApp
-                    if 'whatsapp' in ibx['name'].lower() or 'evolution' in (row.get('webhook_url') or ''):
-                        details['channel_subtype'] = 'whatsapp_evolution'
+                webhook_url = row.get('webhook_url') if row else ""
+                details['identifier'] = row.get('identifier') or "API Channel"
+                details['extra']['webhook_url'] = webhook_url
+
+                # Check if this is an Evolution API WhatsApp instance
+                if webhook_url and '/chatwoot/webhook/' in webhook_url:
+                    details['platform'] = 'whatsapp_qr'
+                    inst_name = webhook_url.split('/chatwoot/webhook/')[-1].strip('/')
+                    details['instance_name'] = inst_name
+                    details['channel_subtype'] = 'whatsapp_evolution'
+
+                    # Map live status from Evolution
+                    evo = evolution_instances_map.get(inst_name)
+                    if evo:
+                        details['status'] = evo.get('connectionStatus') or 'connecting'
+                        if evo.get('ownerJid'):
+                            details['identifier'] = evo.get('ownerJid').replace('@s.whatsapp.net', '')
+                            details['extra']['phone'] = details['identifier']
+                            details['extra']['profile_name'] = evo.get('profileName')
+                        else:
+                            details['identifier'] = inst_name
+                    else:
+                        details['status'] = 'disconnected'
+                        details['identifier'] = inst_name
+                elif 'whatsapp' in ibx['name'].lower():
+                    details['platform'] = 'whatsapp_qr'
+                    details['instance_name'] = ibx['name']
+                    details['identifier'] = ibx['name']
+                else:
+                    details['platform'] = 'api'
 
             elif c_type == 'Channel::WebWidget':
+                details['platform'] = 'web_widget'
                 cur.execute("SELECT website_url, website_token, widget_color, welcome_title, welcome_tagline FROM channel_web_widgets WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -332,6 +373,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                     }
 
             elif c_type == 'Channel::FacebookPage':
+                details['platform'] = 'facebook'
                 cur.execute("SELECT page_id FROM channel_facebook_pages WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -339,6 +381,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                     details['status'] = "connected"
 
             elif c_type == 'Channel::Instagram':
+                details['platform'] = 'instagram'
                 cur.execute("SELECT instagram_id FROM channel_instagram WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -346,6 +389,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                     details['status'] = "connected"
 
             elif c_type == 'Channel::Email':
+                details['platform'] = 'email'
                 cur.execute("SELECT email, imap_enabled, smtp_enabled FROM channel_email WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -353,6 +397,7 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                     details['status'] = "connected"
 
             elif c_type in ('Channel::Sms', 'Channel::TwilioSms'):
+                details['platform'] = 'sms'
                 cur.execute("SELECT phone_number FROM channel_twilio_sms WHERE id = %s", (c_id,))
                 row = cur.fetchone()
                 if row:
@@ -363,17 +408,39 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
 
         conn.close()
 
-        # Check Evolution API status for WhatsApp QR
+        # Group channels by platform for the UI
+        grouped = {
+            "whatsapp_qr": [],
+            "whatsapp_cloud": [],
+            "telegram": [],
+            "facebook": [],
+            "instagram": [],
+            "web_widget": [],
+            "email": [],
+            "sms": [],
+            "api": []
+        }
+
+        for ch in channels_list:
+            plt = ch.get('platform', 'api')
+            if plt in grouped:
+                grouped[plt].append(ch)
+            else:
+                grouped['api'].append(ch)
+
+        # Primary Evolution status for fallback
         evolution_status = get_evolution_instance_status('whatsapp_main')
 
         return {
             "ok": True,
             "channels": channels_list,
-            "evolution": evolution_status
+            "grouped": grouped,
+            "evolution": evolution_status,
+            "evolution_instances": list(evolution_instances_map.values())
         }
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error listing channels: {e}", exc_info=True)
-        return {"ok": False, "error": str(e), "channels": []}
+        return {"ok": False, "error": str(e), "channels": [], "grouped": {}}
 
 
 def toggle_channel_ai(inbox_id, enable=True, assistant_id=1):
@@ -404,37 +471,94 @@ def toggle_channel_ai(inbox_id, enable=True, assistant_id=1):
         return False, f"فشل تحديث حالة الذكاء الاصطناعي: {str(e)}"
 
 
+def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
+    """
+    Update channel inbox details (name, AI toggle, etc.).
+    """
+    try:
+        conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
+        cur = conn.cursor()
+
+        new_name = data.get('name')
+        if new_name:
+            cur.execute("""
+                UPDATE inboxes
+                SET name = %s, updated_at = NOW()
+                WHERE id = %s AND account_id = %s
+            """, (new_name.strip(), inbox_id, account_id))
+
+        if 'enable_ai' in data:
+            enable = bool(data.get('enable_ai'))
+            if enable:
+                cur.execute("""
+                    INSERT INTO captain_inboxes (captain_assistant_id, inbox_id, created_at, updated_at)
+                    VALUES (%s, %s, NOW(), NOW())
+                    ON CONFLICT (captain_assistant_id, inbox_id) DO NOTHING
+                """, (assistant_id, inbox_id))
+            else:
+                cur.execute("""
+                    DELETE FROM captain_inboxes
+                    WHERE captain_assistant_id = %s AND inbox_id = %s
+                """, (assistant_id, inbox_id))
+
+        conn.commit()
+        conn.close()
+        return True, "تم تحديث بيانات القناة بنجاح"
+    except Exception as e:
+        logger.error(f"[ChatwootChannels] Error updating inbox {inbox_id}: {e}", exc_info=True)
+        return False, f"فشل تحديث القناة: {str(e)}"
+
+
 def delete_channel_inbox(inbox_id, account_id=2):
     """
-    Delete an inbox from Chatwoot.
+    Delete an inbox from Chatwoot and its underlying Evolution instance if applicable.
     """
     import urllib.request
     try:
-        # Try via Chatwoot API first
-        url = f"{CHATWOOT_INTERNAL_API}/inboxes/{inbox_id}"
-        req = urllib.request.Request(
-            url,
-            headers={
-                "api_access_token": CHATWOOT_API_TOKEN,
-                "X-Forwarded-Proto": "https"
-            },
-            method="DELETE"
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status in (200, 204):
-                    return True, "تم حذف القناة بنجاح"
-        except Exception:
-            pass
-
-        # Fallback to direct DB cascade deletion
+        # Check if this inbox has an Evolution WhatsApp instance
+        instance_to_delete = None
         conn = psycopg2.connect(**CHATWOOT_DB_CONFIG)
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT channel_id, channel_type FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+        ibx = cur.fetchone()
+        if ibx and ibx['channel_type'] == 'Channel::Api':
+            cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (ibx['channel_id'],))
+            ch_api = cur.fetchone()
+            if ch_api and ch_api.get('webhook_url') and '/chatwoot/webhook/' in ch_api['webhook_url']:
+                instance_to_delete = ch_api['webhook_url'].split('/chatwoot/webhook/')[-1].strip('/')
+
+        # Clean up captain_inboxes
         cur.execute("DELETE FROM captain_inboxes WHERE inbox_id = %s", (inbox_id,))
         cur.execute("DELETE FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
         conn.commit()
         conn.close()
-        return True, "تم حذف القناة بنجاح"
+
+        # Delete Evolution API instance if applicable
+        if instance_to_delete:
+            try:
+                del_url = f"{EVOLUTION_API_URL}/instance/delete/{instance_to_delete}"
+                req = urllib.request.Request(del_url, headers={"apikey": EVOLUTION_API_KEY}, method="DELETE")
+                urllib.request.urlopen(req, timeout=5)
+                logger.info(f"[EvolutionAPI] Deleted instance {instance_to_delete}")
+            except Exception as ev_err:
+                logger.warning(f"[EvolutionAPI] Warning deleting instance {instance_to_delete}: {ev_err}")
+
+        # Also try via Chatwoot API for complete internal cache cleanup
+        try:
+            url = f"{CHATWOOT_INTERNAL_API}/inboxes/{inbox_id}"
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "api_access_token": CHATWOOT_API_TOKEN,
+                    "X-Forwarded-Proto": "https"
+                },
+                method="DELETE"
+            )
+            urllib.request.urlopen(req, timeout=4)
+        except Exception:
+            pass
+
+        return True, "تم حذف القناة نهائياً بنجاح"
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error deleting inbox {inbox_id}: {e}", exc_info=True)
         return False, f"فشل حذف القناة: {str(e)}"
@@ -465,16 +589,31 @@ def get_evolution_instance_status(instance_name='whatsapp_main'):
         return {"instance_name": instance_name, "connection_status": "unknown"}
 
 
+def disconnect_evolution_instance(instance_name):
+    """
+    Disconnect / logout a WhatsApp Evolution session.
+    """
+    import urllib.request
+    try:
+        url = f"{EVOLUTION_API_URL}/instance/logout/{instance_name}"
+        req = urllib.request.Request(url, headers={"apikey": EVOLUTION_API_KEY}, method="DELETE")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return True, "تم قطع الاتصال بنجاح"
+    except Exception as e:
+        logger.warning(f"[EvolutionAPI] Disconnect error: {e}")
+        return False, f"فشل قطع الاتصال: {str(e)}"
+
+
 def get_evolution_whatsapp_qr(instance_name='whatsapp_main'):
     """
-    Fetch a real-time live WhatsApp QR code from Evolution API.
+    Fetch a real-time live WhatsApp QR code from Evolution API for any instance.
     """
     import urllib.request
     try:
         # Check if instance exists or create it
         status_info = get_evolution_instance_status(instance_name)
         if status_info.get('connection_status') == 'unknown':
-            # Try to create instance
+            # Create instance
             create_url = f"{EVOLUTION_API_URL}/instance/create"
             payload = json.dumps({
                 "instanceName": instance_name,
@@ -502,19 +641,21 @@ def get_evolution_whatsapp_qr(instance_name='whatsapp_main'):
 
             return {
                 "ok": True,
+                "instance_name": instance_name,
                 "qrcode": qrcode_data,
                 "code": code,
                 "pairing_code": pairing_code,
                 "connection_status": data.get('status') or data.get('instance', {}).get('status', 'connecting')
             }
     except Exception as e:
-        logger.error(f"[EvolutionAPI] Error fetching QR code: {e}", exc_info=True)
-        return {"ok": False, "error": f"فشل جلب كود QR من Evolution API: {str(e)}"}
+        logger.error(f"[EvolutionAPI] Error fetching QR code for {instance_name}: {e}", exc_info=True)
+        return {"ok": False, "instance_name": instance_name, "error": f"فشل جلب كود QR: {str(e)}"}
 
 
 def create_channel_inbox(data, account_id=2, assistant_id=1):
     """
-    Create a new inbox across any supported channel:
+    Create a new inbox across any supported channel with multi-account support:
+    - whatsapp_qr (Evolution API instance + Chatwoot API Channel)
     - whatsapp_cloud (Meta Cloud API)
     - telegram (BotFather token)
     - web_widget (Website chat)
@@ -525,13 +666,78 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
     - api (Custom Webhook)
     """
     import urllib.request
+    import re
     channel_type = data.get('channel_type')
     enable_ai = data.get('enable_ai', True)
 
     try:
         inbox_id = None
+        instance_name = None
 
-        if channel_type == 'whatsapp_cloud':
+        if channel_type == 'whatsapp_qr':
+            # Multi-account WhatsApp QR via Evolution API
+            name = (data.get('name') or '').strip()
+            if not name:
+                # Count existing whatsapp_qr channels to suggest auto-name
+                existing = get_all_channels_detailed(account_id, assistant_id).get('grouped', {}).get('whatsapp_qr', [])
+                name = f"واتساب {len(existing) + 1}"
+
+            # Generate sanitized unique instance name for Evolution
+            clean_token = secrets.token_hex(4)
+            safe_slug = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())[:15].strip('_') or "wa"
+            instance_name = f"{safe_slug}_{clean_token}"
+
+            # 1. Create instance in Evolution API
+            create_url = f"{EVOLUTION_API_URL}/instance/create"
+            payload = json.dumps({
+                "instanceName": instance_name,
+                "qrcode": True,
+                "integration": "WHATSAPP-BAILEYS"
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                create_url,
+                data=payload,
+                headers={"apikey": EVOLUTION_API_KEY, "Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                pass
+
+            # 2. Create Channel::Api inbox in Chatwoot with webhook pointing to this instance
+            cw_payload = {
+                "name": name,
+                "channel": {
+                    "type": "api",
+                    "webhook_url": f"http://169.58.32.179:8085/chatwoot/webhook/{instance_name}"
+                }
+            }
+            res = _post_chatwoot_inbox(cw_payload, account_id)
+            if not res.get('id'):
+                return False, res.get('message') or "فشل إنشاء صندوق الوارد في Chatwoot"
+            inbox_id = res['id']
+
+            # 3. Configure Evolution Chatwoot integration
+            set_cw_url = f"{EVOLUTION_API_URL}/chatwoot/set/{instance_name}"
+            set_payload = json.dumps({
+                "enabled": True,
+                "url": "https://chatwoot.169.58.32.179.nip.io",
+                "accountId": str(account_id),
+                "token": CHATWOOT_API_TOKEN,
+                "signMsg": False,
+                "reopenConversation": True,
+                "conversationPending": False,
+                "nameInbox": name
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                set_cw_url,
+                data=set_payload,
+                headers={"apikey": EVOLUTION_API_KEY, "Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=6)
+            except Exception as set_err:
+                logger.warning(f"[EvolutionAPI] Warning setting chatwoot on {instance_name}: {set_err}")
+
+        elif channel_type == 'whatsapp_cloud':
             payload = {
                 "name": data.get('name') or f"WhatsApp ({data.get('phone_number')})",
                 "channel": {
@@ -580,7 +786,6 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
             inbox_id = res['id']
 
         elif channel_type == 'facebook':
-            # Create Facebook Page Channel directly
             page_id = data.get('page_id')
             page_token = data.get('page_access_token')
             user_token = data.get('user_access_token') or page_token
@@ -677,10 +882,14 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
         if inbox_id and enable_ai:
             toggle_channel_ai(inbox_id, enable=True, assistant_id=assistant_id)
 
-        return True, "تم ربط القناة وتفعيلها بنجاح!"
+        msg = "تم ربط القناة بنجاح!"
+        if channel_type == 'whatsapp_qr':
+            msg = f"تم إنشاء حساب واتساب جديد ({instance_name}) وجاري تجهيز كود QR للمسح!"
+
+        return True, msg, {"inbox_id": inbox_id, "instance_name": instance_name}
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error creating channel: {e}", exc_info=True)
-        return False, f"حدث خطأ أثناء ربط القناة: {str(e)}"
+        return False, f"حدث خطأ أثناء ربط القناة: {str(e)}", {}
 
 
 def _post_chatwoot_inbox(payload, account_id=2):
@@ -706,4 +915,8 @@ def _post_chatwoot_inbox(payload, account_id=2):
             return json.loads(body)
         except Exception:
             return {"message": f"Chatwoot Error {err.code}: {body[:200]}"}
+
+
+
+
 

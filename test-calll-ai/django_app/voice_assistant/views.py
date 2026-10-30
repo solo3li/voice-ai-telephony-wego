@@ -998,16 +998,57 @@ def api_chat_channels_delete(request, inbox_id):
 @csrf_exempt
 @login_required
 def api_chat_channels_whatsapp_qr(request):
-    """GET/POST /api/chat/channels/whatsapp-qr/ - Fetch live Evolution WhatsApp QR."""
+    """GET/POST /api/chat/channels/whatsapp-qr/ - Fetch live Evolution WhatsApp QR for any instance."""
     from .chatwoot_service import get_evolution_whatsapp_qr
-    res = get_evolution_whatsapp_qr()
+    instance_name = request.GET.get('instance_name') or request.POST.get('instance_name') or 'whatsapp_main'
+    res = get_evolution_whatsapp_qr(instance_name=instance_name)
     return JsonResponse(res)
 
 
 @csrf_exempt
 @login_required
+def api_chat_channels_disconnect(request):
+    """POST /api/chat/channels/disconnect/ - Disconnect an Evolution WhatsApp instance."""
+    from .chatwoot_service import disconnect_evolution_instance
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST.dict()
+
+    instance_name = data.get('instance_name')
+    if not instance_name:
+        return JsonResponse({"status": "error", "message": "instance_name مطلوب"}, status=400)
+
+    success, msg = disconnect_evolution_instance(instance_name)
+    if success:
+        return JsonResponse({"status": "success", "message": msg})
+    return JsonResponse({"status": "error", "message": msg}, status=400)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_update(request, inbox_id):
+    """POST /api/chat/channels/<inbox_id>/update/ - Update account name or settings."""
+    from .chatwoot_service import update_channel_inbox
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST.dict()
+
+    success, msg = update_channel_inbox(inbox_id, data)
+    if success:
+        return JsonResponse({"status": "success", "message": msg})
+    return JsonResponse({"status": "error", "message": msg}, status=400)
+
+
+@csrf_exempt
+@login_required
 def api_chat_channels_create(request):
-    """POST /api/chat/channels/create/ - Create any supported channel in Chatwoot."""
+    """POST /api/chat/channels/create/ - Create any supported channel with multi-account support."""
     from .chatwoot_service import create_channel_inbox
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
@@ -1016,9 +1057,9 @@ def api_chat_channels_create(request):
     except Exception:
         data = request.POST.dict()
 
-    success, msg = create_channel_inbox(data)
+    success, msg, extra = create_channel_inbox(data)
     if success:
-        return JsonResponse({"status": "success", "message": msg})
+        return JsonResponse({"status": "success", "message": msg, "data": extra})
     return JsonResponse({"status": "error", "message": msg}, status=400)
 
 

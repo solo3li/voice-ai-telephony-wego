@@ -39,7 +39,7 @@
       <span data-i18n="chat_tab_live">المحادثات المباشرة</span>
     </button>
 
-    <!-- Tab 2: Channels Management (New) -->
+    <!-- Tab 2: Channels Management (Grouped Multi-Account) -->
     <button 
       type="button" 
       id="chat-tab-channels-btn"
@@ -48,7 +48,7 @@
     >
       <span class="w-2 h-2 rounded-full bg-slate-300"></span>
       <span data-i18n="chat_tab_channels">ربط القنوات</span>
-      <span id="connected-channels-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-600 font-sans">0</span>
+      <span id="connected-channels-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-600 font-sans font-semibold">0</span>
     </button>
 
     <!-- Tab 3: AI Settings -->
@@ -102,7 +102,7 @@
   ></iframe>
 </div>
 
-<!-- ==================== TAB 2: Channels Integration Hub ==================== -->
+<!-- ==================== TAB 2: Channels Integration Hub (Multi-Account Grouped) ==================== -->
 <div id="tab-panel-channels" class="hidden w-full flex-1 bg-[#fafbfc] overflow-y-auto p-4 sm:p-8">
   <div class="max-w-6xl mx-auto space-y-6 pb-20">
 
@@ -110,7 +110,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaedf0]">
       <div>
         <h2 class="text-base font-semibold text-slate-900" data-i18n="chat_channels_heading">إدارة وربط قنوات التواصل الشاملة</h2>
-        <p class="text-xs text-slate-500 mt-0.5" data-i18n="chat_channels_subheading">اربط واتساب (QR و Meta)، فيسبوك، إنستغرام، تيليجرام وشات الموقع مع تفعيل رد الذكاء الاصطناعي لكل قناة.</p>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="chat_channels_subheading">اربط عدة حسابات لكل منصة (أرقام واتساب متعددة، صفحات فيسبوك، حسابات إنستغرام، بوتات تيليجرام) مع تحكم كامل بالذكاء الاصطناعي.</p>
       </div>
       <div class="flex items-center gap-2">
         <button 
@@ -124,265 +124,31 @@
       </div>
     </div>
 
-    <!-- Connected Channels Active Inboxes Grid -->
-    <div>
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-wider" data-i18n="chat_active_inboxes_title">القنوات المرتبطة حالياً</h3>
-        <span id="active-inboxes-count" class="text-[11px] text-slate-500 font-sans"></span>
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div class="bg-white border border-[#eaedf0] rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] text-slate-500 font-medium">إجمالي الحسابات المرتبطة</span>
+        <div class="text-xl font-bold text-slate-900 mt-1 font-sans" id="stat-total-accounts">0</div>
       </div>
-
-      <div id="active-inboxes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        <!-- Rendered dynamically via JS -->
-        <div class="col-span-full p-8 text-center bg-white border border-[#eaedf0] rounded-xl text-xs text-slate-400">
-          جاري فحص القنوات المرتبطة...
-        </div>
+      <div class="bg-white border border-[#eaedf0] rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] text-slate-500 font-medium">مفعل عليها الذكاء الاصطناعي</span>
+        <div class="text-xl font-bold text-emerald-600 mt-1 font-sans" id="stat-ai-enabled">0</div>
+      </div>
+      <div class="bg-white border border-[#eaedf0] rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] text-slate-500 font-medium">أرقام واتساب النشطة</span>
+        <div class="text-xl font-bold text-teal-600 mt-1 font-sans" id="stat-wa-count">0</div>
+      </div>
+      <div class="bg-white border border-[#eaedf0] rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] text-slate-500 font-medium">حسابات السوشيال والشات</span>
+        <div class="text-xl font-bold text-indigo-600 mt-1 font-sans" id="stat-social-count">0</div>
       </div>
     </div>
 
-    <!-- Available Channels Catalog to Connect -->
-    <div class="pt-4 border-t border-[#eaedf0]">
-      <div class="mb-3">
-        <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-wider" data-i18n="chat_available_channels_title">إضافة قناة جديدة</h3>
-        <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="chat_available_channels_sub">اختر المنصة التي ترغب في ربطها وسيتم توجيه المحادثات إليها تلقائياً.</p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-
-        <!-- 1. WhatsApp QR (Evolution API) -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                WA
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60" data-i18n="badge_qr_scan">مسح كود QR</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_wa_qr_title">واتساب (مسح كود QR)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_wa_qr_desc">ربط فوري عبر مسح كود QR من تطبيق واتساب بهاتفك عبر Evolution API بدون متطلبات Meta.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-[11px] text-slate-400" id="evolution-status-label">جاهز للمسح</span>
-            <button 
-              type="button" 
-              onclick="openWhatsAppQRModal()" 
-              class="px-3 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_scan_qr"
-            >
-              مسح QR الآن
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. WhatsApp Meta Cloud API -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-sm">
-                API
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200/60" data-i18n="badge_meta_official">Meta الرسمي</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_wa_meta_title">واتساب الرسمي (Meta Cloud API)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_wa_meta_desc">حساب واتساب للأعمال المعتمد عبر Meta Developer (WABA ID و Phone Number ID).</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-whatsapp-cloud')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_meta"
-            >
-              إعداد Meta Cloud
-            </button>
-          </div>
-        </div>
-
-        <!-- 3. Facebook Messenger -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                FB
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60" data-i18n="badge_social">صفحة فيسبوك</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_fb_title">فيسبوك ماسنجر (Facebook)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_fb_desc">استقبال والرد على رسائل صفحة فيسبوك الرسمية بواسطة المساعد الذكي.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-facebook')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_fb"
-            >
-              ربط صفحة فيسبوك
-            </button>
-          </div>
-        </div>
-
-        <!-- 4. Instagram Direct -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-sm">
-                IG
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200/60" data-i18n="badge_social">إنستغرام Direct</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_ig_title">إنستغرام (Instagram Direct)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_ig_desc">الرد الفوري على رسائل الدايركت والقصص لصفحة الأعمال في إنستغرام.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-instagram')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_ig"
-            >
-              ربط إنستغرام
-            </button>
-          </div>
-        </div>
-
-        <!-- 5. Telegram Bot -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-sm">
-                TG
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200/60" data-i18n="badge_bot">بوت محادثة</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_tg_title">تيليجرام (Telegram Bot)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_tg_desc">ربط مباشر بواسطة توكن البوت الصادر من @BotFather مع دعم كافة النصوص والأوامر.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-telegram')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_tg"
-            >
-              ربط بوت تيليجرام
-            </button>
-          </div>
-        </div>
-
-        <!-- 6. Website Live Chat Widget -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                WEB
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60" data-i18n="badge_widget">ودجت الموقع</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_web_title">شات الموقع (Live Chat Widget)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_web_desc">تضمين ويدجت محادثة فوري في موقعك الإلكتروني أو متجرك مع كود جافاسكريبت جاهز.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-webwidget')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_create_widget"
-            >
-              إنشاء ودجت الموقع
-            </button>
-          </div>
-        </div>
-
-        <!-- 7. Support Email -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
-                EM
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60" data-i18n="badge_email">بريد إلكتروني</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_email_title">البريد الإلكتروني (Email Support)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_email_desc">استقبال تذاكر واستفسارات البريد عبر خوادم IMAP/SMTP والرد الذكي عليها.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-email')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_email"
-            >
-              إعداد البريد
-            </button>
-          </div>
-        </div>
-
-        <!-- 8. SMS Messages (Twilio) -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
-                SMS
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60" data-i18n="badge_sms">رسائل نصية</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_sms_title">الرسائل النصية (Twilio SMS)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_sms_desc">إرسال واستقبال الرسائل القصيرة النصية لخدمة العملاء والتنبيهات المباشرة.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-sms')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_sms"
-            >
-              إعداد Twilio SMS
-            </button>
-          </div>
-        </div>
-
-        <!-- 9. Custom API / Webhook -->
-        <div class="bg-white border border-[#eaedf0] hover:border-[#1f93ff]/40 rounded-xl p-4 transition shadow-xs flex flex-col justify-between">
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm">
-                DEV
-              </div>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200" data-i18n="badge_webhook">API مخصص</span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-slate-900" data-i18n="channel_api_title">واجهة برمجية مخصصة (API Channel)</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5" data-i18n="channel_api_desc">ربط أنظمتك وتطبيقاتك الخاصة عبر Webhook لاستقبال وإرسال المحادثات برمجياً.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-            <button 
-              type="button" 
-              onclick="openChannelModal('modal-api')" 
-              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs"
-              data-i18n="btn_connect_api"
-            >
-              إنشاء قناة API
-            </button>
-          </div>
-        </div>
-
+    <!-- Grouped Platform Cards Container -->
+    <div id="platforms-grid" class="space-y-5">
+      <!-- Dynamically generated via JavaScript -->
+      <div class="p-8 text-center bg-white border border-[#eaedf0] rounded-xl text-xs text-slate-400">
+        جاري تحميل منصات التواصل وقوائم الحسابات...
       </div>
     </div>
 
@@ -543,7 +309,96 @@
 
 <!-- ==================== MODALS ==================== -->
 
-<!-- Modal 1: WhatsApp Evolution QR Code -->
+<!-- Modal: Comprehensive Account Management (CRUD) -->
+<div id="modal-manage-account" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative">
+    <button type="button" onclick="closeChannelModal('modal-manage-account')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <div class="flex items-center gap-3">
+      <div id="manage-icon" class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-sm">
+        WA
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900" id="manage-title">إدارة حساب القناة</h3>
+        <p class="text-xs text-slate-500" id="manage-subtitle">معرف القناة: <span id="manage-id" class="font-mono">#0</span></p>
+      </div>
+    </div>
+
+    <!-- Management Form -->
+    <div class="space-y-4 pt-2">
+      <!-- Edit Name -->
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1">اسم الحساب / الرقم التعريفي</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="manage-name-input" class="w-full text-xs px-3 py-2 rounded-lg border border-[#eaedf0] focus:ring-1 focus:ring-[#1f93ff]" />
+          <button type="button" onclick="saveAccountName()" class="px-3 py-2 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shrink-0">
+            حفظ الاسم
+          </button>
+        </div>
+      </div>
+
+      <!-- Details List -->
+      <div class="bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-100 font-sans">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">نوع القناة:</span>
+          <span id="manage-type" class="font-semibold text-slate-800"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">المعرف / الرقم:</span>
+          <span id="manage-identifier" class="font-mono text-slate-800"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">حالة الاتصال:</span>
+          <span id="manage-status" class="font-semibold"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">تاريخ الربط:</span>
+          <span id="manage-created-at" class="text-slate-600"></span>
+        </div>
+      </div>
+
+      <!-- AI Toggle -->
+      <div class="pt-2 pb-1 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-900 block">رد الذكاء الاصطناعي (Captain AI)</span>
+          <span class="text-[11px] text-slate-500">تفعيل أو إيقاف المجيب الآلي الذكي على رسائل هذا الحساب.</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="manage-ai-toggle" onchange="onManageAIToggle(this.checked)" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1f93ff]"></div>
+        </label>
+      </div>
+
+      <!-- Specific Actions for WhatsApp QR -->
+      <div id="manage-wa-actions" class="hidden pt-2 border-t border-slate-100 space-y-2">
+        <span class="text-xs font-semibold text-slate-800 block">إجراءات واتساب (Evolution)</span>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="rescanWhatsAppQRFromManage()" class="px-3 py-2 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200 flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            <span>إعادة مسح كود QR</span>
+          </button>
+          <button type="button" onclick="disconnectWhatsAppSession()" class="px-3 py-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg transition border border-slate-200">
+            قطع الاتصال بالهاتف
+          </button>
+        </div>
+      </div>
+
+      <!-- Danger Zone: Delete Account -->
+      <div class="pt-3 border-t border-rose-100 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-rose-700 block">حذف الحساب نهائياً</span>
+          <span class="text-[10px] text-slate-400">سيتم إلغاء الربط وإزالة القناة بالكامل من النظام.</span>
+        </div>
+        <button type="button" onclick="deleteAccountFromManage()" class="px-3 py-1.5 text-xs font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition">
+          حذف الحساب
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: WhatsApp Evolution QR Code Scanner -->
 <div id="modal-wa-qr" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 text-center relative">
     <button type="button" onclick="closeChannelModal('modal-wa-qr')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -553,8 +408,9 @@
       <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2 text-xl font-bold">
         WA
       </div>
-      <h3 class="text-sm font-semibold text-slate-900" data-i18n="qr_modal_title">مسح كود QR لواتساب</h3>
+      <h3 class="text-sm font-semibold text-slate-900" id="qr-modal-title-text" data-i18n="qr_modal_title">مسح كود QR لواتساب</h3>
       <p class="text-xs text-slate-500 mt-1" data-i18n="qr_modal_sub">افتح تطبيق واتساب في هاتفك > الأجهزة المرتبطة > ربط جهاز، وامسح الرمز أدناه:</p>
+      <span id="qr-target-instance" class="inline-block mt-1 text-[11px] font-mono text-slate-400"></span>
     </div>
 
     <!-- QR Code Display Area -->
@@ -573,14 +429,42 @@
 
     <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
       <span id="qr-poll-status" class="font-sans text-[11px]">فحص الاتصال كل 3 ثوانٍ...</span>
-      <button type="button" onclick="loadWhatsAppQR()" class="px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50 rounded-lg transition font-medium" data-i18n="btn_refresh_qr">
+      <button type="button" onclick="loadWhatsAppQR(currentActiveInstanceName)" class="px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50 rounded-lg transition font-medium" data-i18n="btn_refresh_qr">
         تحديث الرمز
       </button>
     </div>
   </div>
 </div>
 
-<!-- Modal 2: Meta Cloud API -->
+<!-- Modal: Add WhatsApp QR Instance -->
+<div id="modal-add-wa-qr" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
+    <button type="button" onclick="closeChannelModal('modal-add-wa-qr')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <div>
+      <h3 class="text-sm font-semibold text-slate-900">ربط رقم واتساب جديد (QR)</h3>
+      <p class="text-xs text-slate-500 mt-0.5">أدخل اسماً مميزاً للرقم (مثل "واتساب المبيعات" أو "واتساب الفرع الثاني"):</p>
+    </div>
+    <form onsubmit="submitCreateChannel(event, 'whatsapp_qr')" class="space-y-3 pt-2">
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1">اسم الحساب / الرقم</label>
+        <input type="text" name="name" required placeholder="مثال: واتساب خدمة العملاء 2" class="w-full text-xs px-3 py-2 rounded-lg border border-[#eaedf0] focus:ring-1 focus:ring-[#1f93ff]" />
+      </div>
+      <div class="pt-2 flex items-center justify-between">
+        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+          <input type="checkbox" name="enable_ai" checked class="w-4 h-4 rounded-sm text-[#1f93ff]" />
+          <span>تفعيل رد الذكاء الاصطناعي فوراً</span>
+        </label>
+        <button type="submit" class="px-4 py-2 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
+          إنشاء ومسح الرمز
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Meta Cloud API -->
 <div id="modal-whatsapp-cloud" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-whatsapp-cloud')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -592,6 +476,10 @@
     </div>
 
     <form onsubmit="submitCreateChannel(event, 'whatsapp_cloud')" class="space-y-3 pt-2">
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1">اسم الحساب / القناة</label>
+        <input type="text" name="name" placeholder="مثال: واتساب الإدارة الرئيسي" class="w-full text-xs px-3 py-2 rounded-lg border border-[#eaedf0] focus:ring-1 focus:ring-[#1f93ff]" />
+      </div>
       <div>
         <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="input_phone_number">رقم الهاتف (مع مفتاح الدولة)</label>
         <input type="text" name="phone_number" required placeholder="+966500000000" class="w-full text-xs px-3 py-2 rounded-lg border border-[#eaedf0] focus:ring-1 focus:ring-[#1f93ff]" />
@@ -621,7 +509,7 @@
   </div>
 </div>
 
-<!-- Modal 3: Facebook Messenger -->
+<!-- Modal: Facebook Messenger -->
 <div id="modal-facebook" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-facebook')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -658,7 +546,7 @@
   </div>
 </div>
 
-<!-- Modal 4: Instagram Direct -->
+<!-- Modal: Instagram Direct -->
 <div id="modal-instagram" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-instagram')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -695,7 +583,7 @@
   </div>
 </div>
 
-<!-- Modal 5: Telegram Bot -->
+<!-- Modal: Telegram Bot -->
 <div id="modal-telegram" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-telegram')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -728,7 +616,7 @@
   </div>
 </div>
 
-<!-- Modal 6: Website Live Chat Widget -->
+<!-- Modal: Website Live Chat Widget -->
 <div id="modal-webwidget" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-webwidget')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -771,7 +659,7 @@
   </div>
 </div>
 
-<!-- Modal 7: Email -->
+<!-- Modal: Email -->
 <div id="modal-email" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-email')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -803,7 +691,7 @@
   </div>
 </div>
 
-<!-- Modal 8: SMS (Twilio) -->
+<!-- Modal: SMS (Twilio) -->
 <div id="modal-sms" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-sms')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -839,7 +727,7 @@
   </div>
 </div>
 
-<!-- Modal 9: API Channel -->
+<!-- Modal: API Channel -->
 <div id="modal-api" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-api')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -871,7 +759,7 @@
   </div>
 </div>
 
-<!-- Modal 10: Show Snippet / Embed Code -->
+<!-- Modal: Show Snippet / Embed Code -->
 <div id="modal-snippet" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
   <div class="bg-white border border-[#eaedf0] rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative">
     <button type="button" onclick="closeChannelModal('modal-snippet')" class="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
@@ -897,6 +785,10 @@
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
   let qrPollInterval = null;
+  let currentActiveInstanceName = 'whatsapp_main';
+  let activeEditingChannel = null;
+  let channelsCache = [];
+  let groupedCache = {};
 
   function onChatFrameLoaded() {
     const loader = document.getElementById('chat-frame-loader');
@@ -920,12 +812,10 @@
     const activeClass = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 bg-[#eff8ff] text-[#1f93ff] border border-[#1f93ff]/20";
     const inactiveClass = "px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent";
 
-    // Reset all buttons
     liveBtn.className = inactiveClass;
     channelsBtn.className = inactiveClass;
     settingsBtn.className = inactiveClass;
 
-    // Hide all panels
     livePanel.classList.add('hidden');
     channelsPanel.classList.add('hidden');
     settingsPanel.classList.add('hidden');
@@ -978,143 +868,387 @@
       });
   }
 
-  // ================= Channels Management Logic =================
-  let channelsCache = [];
+  // Platform definitions for grouped rendering
+  const PLATFORMS_META = {
+    whatsapp_qr: {
+      key: 'whatsapp_qr',
+      name: 'واتساب - مسح كود QR (Evolution API)',
+      desc: 'ربط مباشر عبر مسح كود QR من الهاتف مع دعم تشغيل عدة أرقام وهواتف في آن واحد.',
+      icon: 'WA-QR',
+      color: 'emerald',
+      addModalId: 'modal-add-wa-qr',
+      addBtnText: '+ ربط رقم واتساب جديد (QR)'
+    },
+    whatsapp_cloud: {
+      key: 'whatsapp_cloud',
+      name: 'واتساب الرسمي (Meta Cloud API)',
+      desc: 'ربط أرقام الأعمال المعتمدة رسمياً عبر Meta Developer API.',
+      icon: 'WA-API',
+      color: 'teal',
+      addModalId: 'modal-whatsapp-cloud',
+      addBtnText: '+ ربط رقم Meta رسمي جديد'
+    },
+    telegram: {
+      key: 'telegram',
+      name: 'تيليجرام (Telegram Bots)',
+      desc: 'ربط بوتات تيليجرام متعددة للتواصل وخدمة العملاء التلقائية.',
+      icon: 'TG',
+      color: 'sky',
+      addModalId: 'modal-telegram',
+      addBtnText: '+ ربط بوت تيليجرام جديد'
+    },
+    facebook: {
+      key: 'facebook',
+      name: 'فيسبوك ماسنجر (Facebook Pages)',
+      desc: 'استقبال والرد على رسائل صفحات فيسبوك للأعمال.',
+      icon: 'FB',
+      color: 'blue',
+      addModalId: 'modal-facebook',
+      addBtnText: '+ ربط صفحة فيسبوك'
+    },
+    instagram: {
+      key: 'instagram',
+      name: 'إنستغرام (Instagram Direct)',
+      desc: 'الرد الفوري على رسائل الدايركت والقصص لصفحات الأعمال في إنستغرام.',
+      icon: 'IG',
+      color: 'pink',
+      addModalId: 'modal-instagram',
+      addBtnText: '+ ربط حساب إنستغرام'
+    },
+    web_widget: {
+      key: 'web_widget',
+      name: 'شات الموقع (Live Chat Widgets)',
+      desc: 'ودجت محادثة متجاوب لمواقعك ومتاجرك الإلكترونية المتعددة.',
+      icon: 'WEB',
+      color: 'indigo',
+      addModalId: 'modal-webwidget',
+      addBtnText: '+ إنشاء ودجت موقع جديد'
+    },
+    email: {
+      key: 'email',
+      name: 'البريد الإلكتروني (Email Support)',
+      desc: 'صناديق البريد الإلكتروني لاستقبال التذاكر والمتابعة.',
+      icon: 'EM',
+      color: 'amber',
+      addModalId: 'modal-email',
+      addBtnText: '+ ربط بريد دعم جديد'
+    },
+    sms: {
+      key: 'sms',
+      name: 'الرسائل النصية (Twilio SMS)',
+      desc: 'أرقام الرسائل القصيرة للرسائل النصية الفورية.',
+      icon: 'SMS',
+      color: 'purple',
+      addModalId: 'modal-sms',
+      addBtnText: '+ ربط رقم SMS جديد'
+    },
+    api: {
+      key: 'api',
+      name: 'القنوات البرمجية المخصصة (API Webhooks)',
+      desc: 'واجهات الربط المخصصة لتطبيقاتك ومواقعك عبر Webhook.',
+      icon: 'API',
+      color: 'slate',
+      addModalId: 'modal-api',
+      addBtnText: '+ إنشاء قناة API جديدة'
+    }
+  };
 
   function fetchChannelsData() {
-    const container = document.getElementById('active-inboxes-list');
-    const countBadge = document.getElementById('connected-channels-badge');
-    const inboxesCountLabel = document.getElementById('active-inboxes-count');
+    const container = document.getElementById('platforms-grid');
+    const badge = document.getElementById('connected-channels-badge');
+    const totalStat = document.getElementById('stat-total-accounts');
+    const aiStat = document.getElementById('stat-ai-enabled');
+    const waStat = document.getElementById('stat-wa-count');
+    const socialStat = document.getElementById('stat-social-count');
 
     fetch('/api/chat/channels/')
       .then(res => res.json())
       .then(data => {
         if (!data.ok) {
-          container.innerHTML = `<div class="col-span-full p-4 bg-rose-50 text-rose-700 text-xs rounded-xl">${data.error || 'فشل تحميل القنوات'}</div>`;
+          container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 text-xs rounded-xl">${data.error || 'فشل تحميل القنوات'}</div>`;
           return;
         }
 
         channelsCache = data.channels || [];
-        countBadge.innerText = channelsCache.length;
-        inboxesCountLabel.innerText = `${channelsCache.length} قنوات نشطة`;
+        groupedCache = data.grouped || {};
 
-        // Update Evolution status
-        if (data.evolution) {
-          const evoStatus = data.evolution.connection_status;
-          const evoLabel = document.getElementById('evolution-status-label');
-          if (evoLabel) {
-            evoLabel.innerText = evoStatus === 'open' ? 'متصل بنجاح ✓' : 'جاهز للمسح';
-            evoLabel.className = evoStatus === 'open' ? 'text-[11px] text-emerald-600 font-semibold' : 'text-[11px] text-slate-400';
-          }
-        }
+        const totalAccounts = channelsCache.length;
+        const aiEnabledCount = channelsCache.filter(c => c.is_captain_enabled).length;
+        const waCount = (groupedCache['whatsapp_qr'] || []).length + (groupedCache['whatsapp_cloud'] || []).length;
+        const socialCount = (groupedCache['telegram'] || []).length + (groupedCache['facebook'] || []).length + (groupedCache['instagram'] || []).length + (groupedCache['web_widget'] || []).length;
 
-        if (channelsCache.length === 0) {
-          container.innerHTML = `
-            <div class="col-span-full p-8 text-center bg-white border border-[#eaedf0] rounded-xl text-xs text-slate-400">
-              لا توجد قنوات مرتبطة حالياً. اختر منصة من القائمة أدناه للبدء بالربط.
+        badge.innerText = totalAccounts;
+        totalStat.innerText = totalAccounts;
+        aiStat.innerText = aiEnabledCount;
+        waStat.innerText = waCount;
+        socialStat.innerText = socialCount;
+
+        renderPlatformsGrid();
+      })
+      .catch(err => {
+        container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 text-xs rounded-xl">خطأ في الاتصال بالخادم: ${err}</div>`;
+      });
+  }
+
+  function renderPlatformsGrid() {
+    const container = document.getElementById('platforms-grid');
+    let html = '';
+
+    Object.keys(PLATFORMS_META).forEach(pKey => {
+      const meta = PLATFORMS_META[pKey];
+      const accounts = groupedCache[pKey] || [];
+      const hasAccounts = accounts.length > 0;
+      const countLabel = hasAccounts ? `${accounts.length} ${accounts.length === 1 ? 'حساب متصل' : 'حسابات متصلة'}` : 'لا توجد حسابات بعد';
+      const countBadgeColor = hasAccounts ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200';
+
+      html += `
+        <div class="bg-white border border-[#eaedf0] rounded-xl p-5 shadow-xs transition hover:border-slate-300">
+          <!-- Platform Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
+                ${meta.icon}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-semibold text-slate-900">${meta.name}</h3>
+                  <span class="text-[10px] font-medium px-2 py-0.5 rounded-full border ${countBadgeColor} font-sans">
+                    ${countLabel}
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5">${meta.desc}</p>
+              </div>
             </div>
-          `;
-          return;
-        }
 
-        let html = '';
-        channelsCache.forEach(ch => {
-          const typeBadge = getChannelTypeBadge(ch.channel_type);
-          const aiToggleState = ch.is_captain_enabled ? 'checked' : '';
-          const aiStatusClass = ch.is_captain_enabled ? 'text-emerald-700 font-semibold' : 'text-slate-400';
+            <!-- Add New Account Button -->
+            <button 
+              type="button" 
+              onclick="openChannelModal('${meta.addModalId}')"
+              class="px-3 py-1.5 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-xs flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+            >
+              <span>${meta.addBtnText}</span>
+            </button>
+          </div>
+
+          <!-- Accounts List / Table -->
+          <div class="pt-3">
+      `;
+
+      if (!hasAccounts) {
+        html += `
+          <div class="py-4 text-center bg-slate-50/70 border border-dashed border-slate-200 rounded-lg text-xs text-slate-400 flex items-center justify-center gap-2">
+            <span>لم تقم بربط أي حساب على هذه المنصة بعد.</span>
+            <button type="button" onclick="openChannelModal('${meta.addModalId}')" class="text-[#1f93ff] hover:underline font-medium">ابدأ الربط الآن</button>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="text-[11px] font-semibold text-slate-400 border-b border-slate-100 pb-2">
+                  <th class="py-2 pr-2">اسم الحساب / الرقم</th>
+                  <th class="py-2">المعرف / الرابط</th>
+                  <th class="py-2">الحالة</th>
+                  <th class="py-2">رد الذكاء الاصطناعي</th>
+                  <th class="py-2 pl-2 text-left">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+        `;
+
+        accounts.forEach(acc => {
+          const isConnected = acc.status === 'open' || acc.status === 'connected';
+          const statusDot = isConnected ? 'bg-emerald-500' : 'bg-slate-300';
+          const statusText = isConnected ? 'متصل بنجاح' : (acc.status === 'connecting' ? 'جاري الاتصال' : 'غير متصل');
+          const statusColor = isConnected ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-600 bg-slate-100 border-slate-200';
 
           html += `
-            <div class="bg-white border border-[#eaedf0] rounded-xl p-4 shadow-xs flex flex-col justify-between transition hover:border-slate-300">
-              <div>
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span class="text-xs font-semibold text-slate-900 truncate max-w-[160px]">${escapeHtml(ch.name)}</span>
-                  </div>
-                  ${typeBadge}
-                </div>
-
-                <div class="py-2.5 space-y-1">
-                  <div class="text-[11px] text-slate-500 flex items-center justify-between">
-                    <span>المعرف / الرقم:</span>
-                    <span class="font-mono text-slate-700 truncate max-w-[170px]">${escapeHtml(ch.identifier || '—')}</span>
-                  </div>
-                  <div class="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>تاريخ الربط:</span>
-                    <span class="font-sans">${ch.created_at || '—'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between">
-                <!-- AI Toggle -->
-                <label class="flex items-center gap-1.5 cursor-pointer select-none">
+            <tr class="hover:bg-slate-50/70 transition">
+              <td class="py-3 pr-2">
+                <div class="font-semibold text-slate-900">${escapeHtml(acc.name)}</div>
+                <div class="text-[10px] text-slate-400 font-sans">ID: #${acc.id}</div>
+              </td>
+              <td class="py-3 font-mono text-slate-700">
+                ${escapeHtml(acc.identifier || '—')}
+              </td>
+              <td class="py-3">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border ${statusColor}">
+                  <span class="w-1.5 h-1.5 rounded-full ${statusDot}"></span>
+                  <span>${statusText}</span>
+                </span>
+              </td>
+              <td class="py-3">
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
                   <input 
                     type="checkbox" 
-                    ${aiToggleState} 
-                    onchange="toggleAIResponse(${ch.id}, this.checked)"
+                    ${acc.is_captain_enabled ? 'checked' : ''} 
+                    onchange="toggleAIResponse(${acc.id}, this.checked)"
                     class="w-3.5 h-3.5 rounded-xs text-[#1f93ff] focus:ring-[#1f93ff]"
                   />
-                  <span class="text-[11px] ${aiStatusClass}">رد الذكاء الاصطناعي</span>
+                  <span class="text-[11px] ${acc.is_captain_enabled ? 'text-emerald-700 font-medium' : 'text-slate-400'}">
+                    ${acc.is_captain_enabled ? 'مفعل' : 'معطل'}
+                  </span>
                 </label>
-
-                <!-- Actions -->
-                <div class="flex items-center gap-1.5">
-                  ${ch.channel_type === 'Channel::WebWidget' && ch.extra && ch.extra.script ? `
+              </td>
+              <td class="py-3 pl-2 text-left">
+                <div class="inline-flex items-center gap-1.5">
+                  ${pKey === 'whatsapp_qr' ? `
                     <button 
                       type="button" 
-                      onclick="viewWidgetSnippet(${ch.id})" 
+                      onclick="openWhatsAppQRForInstance('${escapeHtml(acc.instance_name || 'whatsapp_main')}', '${escapeHtml(acc.name)}')" 
+                      title="مسح كود QR"
+                      class="px-2 py-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition"
+                    >
+                      مسح QR
+                    </button>
+                  ` : ''}
+
+                  ${pKey === 'web_widget' && acc.extra && acc.extra.script ? `
+                    <button 
+                      type="button" 
+                      onclick="viewWidgetSnippet(${acc.id})" 
                       title="عرض كود التضمين"
-                      class="px-2 py-1 text-[11px] text-[#1f93ff] bg-sky-50 hover:bg-sky-100 rounded-md transition"
+                      class="px-2 py-1 text-[11px] font-medium text-[#1f93ff] bg-sky-50 hover:bg-sky-100 rounded-md transition"
                     >
                       الكود
                     </button>
                   ` : ''}
+
+                  <!-- Manage Account Button (Full CRUD) -->
                   <button 
                     type="button" 
-                    onclick="deleteChannel(${ch.id}, '${escapeHtml(ch.name)}')" 
-                    title="حذف القناة"
+                    onclick="openManageAccountModal(${acc.id})" 
+                    class="px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition"
+                  >
+                    إدارة
+                  </button>
+
+                  <!-- Delete Account -->
+                  <button 
+                    type="button" 
+                    onclick="deleteChannel(${acc.id}, '${escapeHtml(acc.name)}')" 
+                    title="حذف الحساب"
                     class="p-1 text-slate-400 hover:text-rose-600 rounded-md transition"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                   </button>
                 </div>
-              </div>
-            </div>
+              </td>
+            </tr>
           `;
         });
 
-        container.innerHTML = html;
-      })
-      .catch(err => {
-        container.innerHTML = `<div class="col-span-full p-4 bg-rose-50 text-rose-700 text-xs rounded-xl">خطأ في الاتصال بالخادم: ${err}</div>`;
-      });
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
   }
 
-  function getChannelTypeBadge(channelType) {
-    switch (channelType) {
-      case 'Channel::Telegram':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">Telegram</span>';
-      case 'Channel::Whatsapp':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">WhatsApp Meta</span>';
-      case 'Channel::Api':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">WhatsApp / API</span>';
-      case 'Channel::WebWidget':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Web Widget</span>';
-      case 'Channel::FacebookPage':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Facebook</span>';
-      case 'Channel::Instagram':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200">Instagram</span>';
-      case 'Channel::Email':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Email</span>';
-      case 'Channel::Sms':
-      case 'Channel::TwilioSms':
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">SMS</span>';
-      default:
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">Channel</span>';
+  // ================= Full CRUD Account Management Modal =================
+  function openManageAccountModal(inboxId) {
+    const acc = channelsCache.find(c => c.id === inboxId);
+    if (!acc) return;
+
+    activeEditingChannel = acc;
+    document.getElementById('manage-title').innerText = `إدارة حساب: ${acc.name}`;
+    document.getElementById('manage-id').innerText = `#${acc.id}`;
+    document.getElementById('manage-name-input').value = acc.name;
+    document.getElementById('manage-type').innerText = acc.channel_type;
+    document.getElementById('manage-identifier').innerText = acc.identifier || '—';
+    document.getElementById('manage-created-at').innerText = acc.created_at || '—';
+
+    const isConnected = acc.status === 'open' || acc.status === 'connected';
+    document.getElementById('manage-status').innerText = isConnected ? 'متصل بنجاح ✓' : (acc.status === 'connecting' ? 'جاري الاتصال...' : 'غير متصل');
+    document.getElementById('manage-status').className = isConnected ? 'font-semibold text-emerald-600' : 'font-semibold text-slate-500';
+
+    document.getElementById('manage-ai-toggle').checked = !!acc.is_captain_enabled;
+
+    // Show WA actions if whatsapp_qr
+    const waActions = document.getElementById('manage-wa-actions');
+    if (acc.platform === 'whatsapp_qr' || acc.channel_subtype === 'whatsapp_evolution') {
+      waActions.classList.remove('hidden');
+    } else {
+      waActions.classList.add('hidden');
     }
+
+    openChannelModal('modal-manage-account');
   }
 
+  function saveAccountName() {
+    if (!activeEditingChannel) return;
+    const newName = document.getElementById('manage-name-input').value.trim();
+    if (!newName) {
+      alert('يرجى إدخال اسم صحيح');
+      return;
+    }
+
+    fetch(`/api/chat/channels/${activeEditingChannel.id}/update/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        activeEditingChannel.name = newName;
+        document.getElementById('manage-title').innerText = `إدارة حساب: ${newName}`;
+        fetchChannelsData();
+        alert('تم تحديث اسم الحساب بنجاح!');
+      } else {
+        alert(data.message || 'فشل التحديث');
+      }
+    })
+    .catch(err => alert('خطأ في الاتصال: ' + err));
+  }
+
+  function onManageAIToggle(enabled) {
+    if (!activeEditingChannel) return;
+    toggleAIResponse(activeEditingChannel.id, enabled);
+    activeEditingChannel.is_captain_enabled = enabled;
+  }
+
+  function rescanWhatsAppQRFromManage() {
+    if (!activeEditingChannel) return;
+    closeChannelModal('modal-manage-account');
+    openWhatsAppQRForInstance(activeEditingChannel.instance_name || 'whatsapp_main', activeEditingChannel.name);
+  }
+
+  function disconnectWhatsAppSession() {
+    if (!activeEditingChannel || !activeEditingChannel.instance_name) return;
+    if (!confirm('هل تريد قطع اتصال هذا الرقم بتطبيق واتساب في هاتفك؟')) return;
+
+    fetch('/api/chat/channels/disconnect/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instance_name: activeEditingChannel.instance_name })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message || 'تم قطع الاتصال');
+      fetchChannelsData();
+      closeChannelModal('modal-manage-account');
+    })
+    .catch(err => alert('خطأ في الاتصال: ' + err));
+  }
+
+  function deleteAccountFromManage() {
+    if (!activeEditingChannel) return;
+    deleteChannel(activeEditingChannel.id, activeEditingChannel.name);
+    closeChannelModal('modal-manage-account');
+  }
+
+  // ================= AI Toggle & Delete =================
   function toggleAIResponse(inboxId, enable) {
     fetch('/api/chat/channels/toggle-ai/', {
       method: 'POST',
@@ -1126,6 +1260,13 @@
       if (data.status !== 'success') {
         alert(data.message || 'فشل تحديث حالة الذكاء الاصطناعي');
         fetchChannelsData();
+      } else {
+        const acc = channelsCache.find(c => c.id === inboxId);
+        if (acc) acc.is_captain_enabled = enable;
+        const aiStat = document.getElementById('stat-ai-enabled');
+        if (aiStat) {
+          aiStat.innerText = channelsCache.filter(c => c.is_captain_enabled).length;
+        }
       }
     })
     .catch(err => {
@@ -1135,7 +1276,7 @@
   }
 
   function deleteChannel(inboxId, name) {
-    if (!confirm(`هل أنت متأكد من حذف القناة "${name}" نهائياً من النظام؟`)) {
+    if (!confirm(`هل أنت متأكد من حذف الحساب "${name}" نهائياً؟ سيتم إلغاء الربط وإزالة القناة.`)) {
       return;
     }
 
@@ -1148,7 +1289,7 @@
       if (data.status === 'success') {
         fetchChannelsData();
       } else {
-        alert(data.message || 'فشل حذف القناة');
+        alert(data.message || 'فشل حذف الحساب');
       }
     })
     .catch(err => alert('خطأ في الاتصال: ' + err));
@@ -1200,7 +1341,13 @@
         form.reset();
         closeChannelModal(form.closest('.fixed').id);
         fetchChannelsData();
-        alert('تم ربط القناة وتفعيلها بنجاح!');
+
+        // If WhatsApp QR was created, open QR scanner immediately for this instance!
+        if (channelType === 'whatsapp_qr' && resp.data && resp.data.instance_name) {
+          openWhatsAppQRForInstance(resp.data.instance_name, data.name || 'حساب واتساب جديد');
+        } else {
+          alert('تم ربط القناة وتفعيلها بنجاح!');
+        }
       } else {
         alert(resp.message || 'حدث خطأ أثناء ربط القناة');
       }
@@ -1212,18 +1359,21 @@
     });
   }
 
-  // ================= WhatsApp Live QR Logic =================
-  function openWhatsAppQRModal() {
+  // ================= WhatsApp Live QR Logic for Any Instance =================
+  function openWhatsAppQRForInstance(instanceName, displayName) {
+    currentActiveInstanceName = instanceName || 'whatsapp_main';
+    document.getElementById('qr-modal-title-text').innerText = `مسح كود QR: ${displayName || currentActiveInstanceName}`;
+    document.getElementById('qr-target-instance').innerText = `Instance: ${currentActiveInstanceName}`;
     openChannelModal('modal-wa-qr');
-    loadWhatsAppQR();
+    loadWhatsAppQR(currentActiveInstanceName);
 
     if (qrPollInterval) clearInterval(qrPollInterval);
     qrPollInterval = setInterval(() => {
-      checkWhatsAppQRStatus();
+      checkWhatsAppQRStatus(currentActiveInstanceName);
     }, 3000);
   }
 
-  function loadWhatsAppQR() {
+  function loadWhatsAppQR(instanceName) {
     const loader = document.getElementById('qr-loader');
     const img = document.getElementById('qr-image');
     const badge = document.getElementById('qr-connected-badge');
@@ -1234,7 +1384,7 @@
     badge.classList.add('hidden');
     statusText.innerText = 'جاري الاتصال بـ Evolution API...';
 
-    fetch('/api/chat/channels/whatsapp-qr/')
+    fetch(`/api/chat/channels/whatsapp-qr/?instance_name=${encodeURIComponent(instanceName || 'whatsapp_main')}`)
       .then(res => res.json())
       .then(data => {
         loader.classList.add('hidden');
@@ -1256,11 +1406,13 @@
       });
   }
 
-  function checkWhatsAppQRStatus() {
+  function checkWhatsAppQRStatus(instanceName) {
     fetch('/api/chat/channels/')
       .then(res => res.json())
       .then(data => {
-        if (data.evolution && data.evolution.connection_status === 'open') {
+        const evoList = data.evolution_instances || [];
+        const inst = evoList.find(i => i.name === instanceName);
+        if (inst && inst.connectionStatus === 'open') {
           const img = document.getElementById('qr-image');
           const badge = document.getElementById('qr-connected-badge');
           const phoneLabel = document.getElementById('qr-connected-phone');
@@ -1268,8 +1420,8 @@
 
           if (img) img.classList.add('hidden');
           if (badge) badge.classList.remove('hidden');
-          if (phoneLabel && data.evolution.owner_jid) {
-            phoneLabel.innerText = data.evolution.owner_jid.replace('@s.whatsapp.net', '');
+          if (phoneLabel && inst.ownerJid) {
+            phoneLabel.innerText = inst.ownerJid.replace('@s.whatsapp.net', '');
           }
           if (statusText) statusText.innerText = 'تم الاقتران بنجاح!';
           if (qrPollInterval) {
