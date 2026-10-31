@@ -4,6 +4,7 @@ import logging
 import re
 import secrets
 import urllib.parse
+import urllib.request
 import psycopg2
 import psycopg2.pool
 from psycopg2.extras import RealDictCursor
@@ -164,6 +165,14 @@ def get_or_create_tenant_chatwoot(user):
             """, (name, email, email, dummy_pwd, pubsub_token))
             cw_user_id = cur.fetchone()[0]
 
+            # Ensure access_tokens entry exists for cw_user_id (prevents undefined method 'token' for nil on SSO)
+            new_acc_tok = secrets.token_urlsafe(18)
+            cur.execute("""
+                INSERT INTO access_tokens (owner_type, owner_id, token, created_at, updated_at)
+                VALUES ('User', %s, %s, NOW(), NOW())
+                ON CONFLICT (token) DO NOTHING;
+            """, (cw_user_id, new_acc_tok))
+
             # 4.3 Add user to account as admin (role: 1)
             cur.execute("""
                 INSERT INTO account_users (account_id, user_id, role, availability, auto_offline, created_at, updated_at)
@@ -240,19 +249,57 @@ def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
             cur.execute("SELECT id, email FROM users WHERE email = %s LIMIT 1", (user_email,))
             chatwoot_user = cur.fetchone()
 
-        # 2. If user is authenticated in Django but doesn't exist in Chatwoot users table yet, auto-provision them!
+        # 2. If user is authenticated in Django but doesn't exist in Chatwoot users table yet, auto-provision via HTTP API
         if not chatwoot_user and user and getattr(user, 'is_authenticated', False):
             display_name = user.get_full_name() or getattr(getattr(user, 'employee_profile', None), 'display_name', None) or user.username
-            pubsub_token = secrets.token_urlsafe(18)
-            dummy_pwd = "$2a$11$620BW0C5baV6LeIlL1jNOuNAqoJ9dMmXSbR.2BAxlPmk8FZcs/cUG"
-            cur.execute("""
-                INSERT INTO users (name, email, uid, provider, encrypted_password, pubsub_token, confirmed_at, created_at, updated_at, ui_settings)
-                VALUES (%s, %s, %s, 'email', %s, %s, NOW(), NOW(), NOW(), '{"locale": "ar"}'::jsonb)
-                ON CONFLICT (uid, provider) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, updated_at = NOW()
-                RETURNING id, email;
-            """, (display_name, user_email, user_email, dummy_pwd, pubsub_token))
-            chatwoot_user = cur.fetchone()
-            conn.commit()
+            is_admin = bool(getattr(user, 'is_superuser', False) or (cfg and cfg.user_id == getattr(user, 'id', None)))
+            role_to_set = "administrator" if is_admin else "agent"
+
+            # 2.1 Attempt HTTP REST API agent creation
+            try:
+                api_url = f"http://omni_chatwoot_rails:3000/api/v1/accounts/{account_id}/agents"
+                agent_payload = {
+                    "name": display_name,
+                    "email": user_email,
+                    "role": role_to_set,
+                    "auto_offline": True,
+                    "availability_status": "available"
+                }
+                req = urllib.request.Request(
+                    api_url,
+                    data=json.dumps(agent_payload).encode('utf-8'),
+                    headers={
+                        "api_access_token": CHATWOOT_API_TOKEN,
+                        "X-Forwarded-Proto": "https",
+                        "Content-Type": "application/json"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=6) as resp:
+                    resp_data = json.loads(resp.read().decode('utf-8'))
+                    if resp_data.get('id'):
+                        chatwoot_user = (resp_data['id'], resp_data.get('email', user_email))
+                        logger.info(f"[ChatwootSSO] Created Chatwoot user via HTTP API: {chatwoot_user}")
+            except Exception as api_err:
+                logger.warning(f"[ChatwootSSO] HTTP Agent provision note: {api_err}")
+
+            # 2.2 If already exists in Chatwoot users or HTTP returned error, fetch from DB
+            if not chatwoot_user:
+                cur.execute("SELECT id, email FROM users WHERE email = %s LIMIT 1", (user_email,))
+                chatwoot_user = cur.fetchone()
+
+            # 2.3 Fallback SQL creation if HTTP was unreachable and user does not exist
+            if not chatwoot_user:
+                pubsub_token = secrets.token_urlsafe(18)
+                dummy_pwd = "$2a$11$620BW0C5baV6LeIlL1jNOuNAqoJ9dMmXSbR.2BAxlPmk8FZcs/cUG"
+                cur.execute("""
+                    INSERT INTO users (name, email, uid, provider, encrypted_password, pubsub_token, confirmed_at, created_at, updated_at, ui_settings)
+                    VALUES (%s, %s, %s, 'email', %s, %s, NOW(), NOW(), NOW(), '{"locale": "ar"}'::jsonb)
+                    ON CONFLICT (uid, provider) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, updated_at = NOW()
+                    RETURNING id, email;
+                """, (display_name, user_email, user_email, dummy_pwd, pubsub_token))
+                chatwoot_user = cur.fetchone()
+                conn.commit()
 
         # 3. Try tenant config chatwoot_user_id (if user is employer)
         if not chatwoot_user and cfg and cfg.chatwoot_user_id and cfg.user_id == getattr(user, 'id', None):
@@ -271,6 +318,22 @@ def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
             return f"{CHATWOOT_BASE_URL}/app/accounts/{account_id}"
 
         user_id, email = chatwoot_user[0], chatwoot_user[1]
+
+        # GUARANTEE: Ensure access_tokens entry exists for user in Chatwoot DB (prevents undefined method 'token' for nil on SSO)
+        try:
+            cur.execute("SELECT id FROM access_tokens WHERE owner_type = 'User' AND owner_id = %s LIMIT 1", (user_id,))
+            tok_row = cur.fetchone()
+            if not tok_row:
+                new_token = secrets.token_urlsafe(18)
+                cur.execute("""
+                    INSERT INTO access_tokens (owner_type, owner_id, token, created_at, updated_at)
+                    VALUES ('User', %s, %s, NOW(), NOW())
+                    ON CONFLICT (token) DO NOTHING;
+                """, (user_id, new_token))
+                conn.commit()
+                logger.info(f"[ChatwootSSO] Auto-created missing access_token for Chatwoot user #{user_id}")
+        except Exception as tok_err:
+            logger.warning(f"[ChatwootSSO] Error ensuring access_token for user #{user_id}: {tok_err}")
 
         # Ensure user is linked in account_users for this account_id
         try:
