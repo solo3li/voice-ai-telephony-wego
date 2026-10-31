@@ -171,9 +171,9 @@
   {% block modals %}{% endblock %}
 
   <script>
-    window.EMBED_TOKEN = "{{ embed_token|default:token|default:'' }}";
-    window.EMBED_CLIENT_ID = "{{ embed_client_id|default:client_id|default:'' }}";
-    window.EMBED_LOCALE = "{{ embed_locale|default:locale|default:'ar' }}";
+    window.EMBED_TOKEN = "{% firstof embed_token token '' %}";
+    window.EMBED_CLIENT_ID = "{% firstof embed_client_id client_id '' %}";
+    window.EMBED_LOCALE = "{% firstof embed_locale locale 'ar' %}";
   </script>
 
   <!-- Common Shared Script -->

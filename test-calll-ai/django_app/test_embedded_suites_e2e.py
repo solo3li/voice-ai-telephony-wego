@@ -158,6 +158,7 @@ def test_embedded_suites():
     # TEST 4: Token Authentication & Validation
     # -------------------------------------------------------------------------
     print("\n[TEST 4] Testing Token Authentication & Validation...")
+    client.logout()
     # 4.1 Unauthenticated requests without token must return 401
     for unauth_url in ['/embed/call-center/', '/embed/call-center/room/', '/embed/call-center/calls/', '/embed/chat-hub/']:
         resp_unauth = client.get(unauth_url)
@@ -245,6 +246,7 @@ def test_embedded_suites():
     client.logout()
     print("\n[TEST 7] Testing /embed/voice/ and /embed/dialer/ unified to Call Center AI Suite...")
     for unified_ep in ['/embed/voice/', '/embed/dialer/']:
+        client.logout()
         # Unauthenticated request rejected
         resp_unauth = client.get(unified_ep)
         assert resp_unauth.status_code == 401, f"Expected 401 for unauthenticated {unified_ep}, got {resp_unauth.status_code}"

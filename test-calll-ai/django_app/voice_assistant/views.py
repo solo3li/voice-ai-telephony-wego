@@ -156,6 +156,12 @@ def room_view(request):
         'active_nav': 'voice',
         'page_title': 'غرفة المساعد الصوتي',
         'chatwoot_url': sso_url,
+        'token': '',
+        'embed_token': '',
+        'client_id': '',
+        'embed_client_id': '',
+        'locale': user_lang,
+        'embed_locale': user_lang,
     }
     return render(request, 'voice_assistant/room.html', context)
 
