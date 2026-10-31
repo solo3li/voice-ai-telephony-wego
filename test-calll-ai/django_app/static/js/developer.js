@@ -240,6 +240,26 @@ export default function OmnichannelChatHub({ apiKey = "${currentDeveloperKey}", 
   );
 }`;
       }
+
+      const ccReact = document.getElementById('dev-cc-widget-react-snippet');
+      if (ccReact) {
+        ccReact.innerText = `import React from 'react';
+
+export default function CallCenterSuiteEmbed({ apiKey = "${currentDeveloperKey}", section = "room", locale = "ar" }) {
+  return (
+    <div className="w-full h-full min-h-[800px] rounded-2xl overflow-hidden border border-slate-200">
+      <iframe
+        src={\`${origin}/embed/call-center/\${section}/?token=\${apiKey}&locale=\${locale}\`}
+        width="100%"
+        height="800"
+        frameBorder="0"
+        allow="microphone; camera; clipboard-read; clipboard-write;"
+        title="Call Center AI Suite"
+      />
+    </div>
+  );
+}`;
+      }
     }
   } catch (e) {
     console.error('Error loading developer keys:', e);

@@ -76,7 +76,8 @@
         function isChatwootApiEndpoint(url) {
           if (!url) return false;
           try {
-            var parsed = new URL(url, window.location.origin);
+            var strUrl = (typeof url === 'object' && url && url.href) ? url.href : String(url);
+            var parsed = new URL(strUrl, window.location.origin);
             if (parsed.origin !== window.location.origin) return false;
             var path = parsed.pathname;
             return path.startsWith('/api/') || path.startsWith('/auth/') || path === '/api' || path === '/auth';
@@ -86,7 +87,8 @@
         }
 
         // 1. Intercept document.cookie (Getter & Setter)
-        var cookieDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie') ||
+        var cookieDesc = Object.getOwnPropertyDescriptor(document, 'cookie') ||
+                         Object.getOwnPropertyDescriptor(Document.prototype, 'cookie') ||
                          Object.getOwnPropertyDescriptor(HTMLDocument.prototype, 'cookie');
 
         if (!cookieDesc && document.__lookupGetter__) {
@@ -95,8 +97,8 @@
           if (g && s) cookieDesc = { get: g, set: s };
         }
 
-        var nativeGetCookie = cookieDesc && cookieDesc.get ? cookieDesc.get.bind(document) : function() { return ''; };
-        var nativeSetCookie = cookieDesc && cookieDesc.set ? cookieDesc.set.bind(document) : function(v) {};
+        var nativeGetCookie = cookieDesc && cookieDesc.get ? function() { return cookieDesc.get.call(document); } : function() { return ''; };
+        var nativeSetCookie = cookieDesc && cookieDesc.set ? function(v) { return cookieDesc.set.call(document, v); } : function(v) {};
 
         try {
           Object.defineProperty(document, 'cookie', {
@@ -110,14 +112,19 @@
                 cookies = '';
               }
 
-              // If cw_d_session_info is not found in real cookies (e.g. 3rd-party cookie blocking)
-              var hasSession = (/(?:^|;\s*)cw_d_session_info=/).test(cookies);
-              if (!hasSession) {
+              // Check if cw_d_session_info is present and non-empty
+              var sessionMatch = cookies.match(/(?:^|;\s*)cw_d_session_info=([^;]*)/);
+              var hasValidSession = !!(sessionMatch && sessionMatch[1] && sessionMatch[1].trim() !== '' && sessionMatch[1].trim() !== 'null' && sessionMatch[1].trim() !== 'undefined');
+              if (!hasValidSession) {
                 try {
                   var stored = window.localStorage.getItem(STORAGE_KEY);
                   if (stored) {
-                    var synth = SESSION_COOKIE + '=' + stored;
-                    return cookies ? (cookies + '; ' + synth) : synth;
+                    var auth = getAuthHeadersFromStorage();
+                    if (auth && auth['access-token']) {
+                      var cleaned = cookies.replace(/(?:^|;\s*)cw_d_session_info=[^;]*/g, '').replace(/^;\s*/, '').replace(/;\s*$/, '');
+                      var synth = SESSION_COOKIE + '=' + stored;
+                      return cleaned ? (cleaned + '; ' + synth) : synth;
+                    }
                   }
                 } catch (e) {}
               }
@@ -139,7 +146,9 @@
                   var isDeleting = lower.indexOf('expires=thu, 01 jan 1970') !== -1 ||
                                    lower.indexOf('max-age=0') !== -1 ||
                                    lower.indexOf('max-age=-') !== -1 ||
-                                   rawValue === '';
+                                   rawValue === '' ||
+                                   rawValue === 'null' ||
+                                   rawValue === 'undefined';
                   if (isDeleting) {
                     window.localStorage.removeItem(STORAGE_KEY);
                   } else if (rawValue) {
@@ -173,7 +182,7 @@
               var reqUrl = '';
               if (typeof input === 'string') {
                 reqUrl = input;
-              } else if (input instanceof URL) {
+              } else if (typeof URL !== 'undefined' && input instanceof URL) {
                 reqUrl = input.href;
               } else if (input && typeof input === 'object' && input.url) {
                 reqUrl = input.url;
@@ -183,7 +192,8 @@
                 var auth = getAuthHeadersFromStorage();
                 if (auth && auth['access-token']) {
                   init = init ? Object.assign({}, init) : {};
-                  var headers = new Headers(init.headers || (typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined));
+                  var existingHeaders = init.headers || (typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined);
+                  var headers = new Headers(existingHeaders);
                   if (!headers.has('access-token')) {
                     headers.set('access-token', auth['access-token']);
                     headers.set('client', auth['client']);
@@ -205,13 +215,17 @@
         var originalSend = XMLHttpRequest.prototype.send;
 
         XMLHttpRequest.prototype.open = function(method, url) {
-          this._sessionBridgeUrl = url;
+          try {
+            this._sessionBridgeUrl = (typeof url === 'object' && url && url.href) ? url.href : String(url);
+          } catch (e) {
+            this._sessionBridgeUrl = url;
+          }
           this._sessionBridgeHasAccessToken = false;
           return originalOpen.apply(this, arguments);
         };
 
         XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
-          if (typeof header === 'string' && header.toLowerCase() === 'access-token') {
+          if (typeof header === 'string' && header.trim().toLowerCase() === 'access-token' && value) {
             this._sessionBridgeHasAccessToken = true;
           }
           return originalSetRequestHeader.apply(this, arguments);
