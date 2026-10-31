@@ -102,6 +102,7 @@ urlpatterns = [
     path('api/chat/channels/toggle-ai/', views.api_chat_channels_toggle_ai, name='chat_channels_toggle_ai'),
     path('api/chat/channels/<int:inbox_id>/update/', views.api_chat_channels_update, name='chat_channels_update'),
     path('api/chat/channels/<int:inbox_id>/delete/', views.api_chat_channels_delete, name='chat_channels_delete'),
+    path('api/chat/channels/<int:inbox_id>/hard-delete/', views.api_chat_channels_hard_delete, name='chat_channels_hard_delete'),
     path('api/chat/channels/disconnect/', views.api_chat_channels_disconnect, name='chat_channels_disconnect'),
     path('api/chat/channels/whatsapp-qr/', views.api_chat_channels_whatsapp_qr, name='chat_channels_whatsapp_qr'),
     # Legacy WhatsApp routes - redirected to Chatwoot Hub

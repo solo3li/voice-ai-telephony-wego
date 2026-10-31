@@ -1132,15 +1132,44 @@ def api_chat_channels_toggle_ai(request):
 @csrf_exempt
 @login_required
 def api_chat_channels_delete(request, inbox_id):
-    """POST/DELETE /api/chat/channels/<inbox_id>/delete/ - Remove an inbox with tenant validation (anti-IDOR)."""
-    from .chatwoot_service import delete_channel_inbox, get_or_create_tenant_chatwoot
+    """POST/DELETE /api/chat/channels/<inbox_id>/delete/ - Remove or archive an inbox with tenant validation (anti-IDOR)."""
+    from .chatwoot_service import delete_channel_inbox, hard_delete_channel_inbox, get_or_create_tenant_chatwoot
     cfg = get_or_create_tenant_chatwoot(request.user)
     account_id = cfg.account_id if cfg else 2
 
-    success, msg = delete_channel_inbox(inbox_id, account_id=account_id)
+    hard = False
+    if request.GET.get('hard') == 'true':
+        hard = True
+    elif request.body:
+        try:
+            body_data = json.loads(request.body.decode('utf-8'))
+            if body_data.get('hard'):
+                hard = True
+        except Exception:
+            pass
+
+    if hard:
+        success, msg = hard_delete_channel_inbox(inbox_id, account_id=account_id)
+    else:
+        success, msg = delete_channel_inbox(inbox_id, account_id=account_id)
+
     if success:
         return JsonResponse({"status": "success", "message": msg})
-    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير موجودة" in msg else 400)
+    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير موجودة" in msg or "غير تابعة" in msg else 400)
+
+
+@csrf_exempt
+@login_required
+def api_chat_channels_hard_delete(request, inbox_id):
+    """POST/DELETE /api/chat/channels/<inbox_id>/hard-delete/ - Completely remove an inbox and all messages."""
+    from .chatwoot_service import hard_delete_channel_inbox, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+
+    success, msg = hard_delete_channel_inbox(inbox_id, account_id=account_id)
+    if success:
+        return JsonResponse({"status": "success", "message": msg})
+    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير موجودة" in msg or "غير تابعة" in msg else 400)
 
 
 @csrf_exempt

@@ -1066,15 +1066,18 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
 
 
 
-def delete_channel_inbox(inbox_id, account_id=2):
+def delete_channel_inbox(inbox_id, account_id=2, hard=False):
     """
     Archive channel inbox for read-only reference ("2+ للقراءة فقط"):
+    - If hard=True, delegates directly to hard_delete_channel_inbox.
     - Disconnect Evolution API WhatsApp instance if applicable so phone session terminates.
     - Remove from Captain AI auto-response so bot never replies.
     - Prefix inbox name with [مؤرشف] in Chatwoot API & DB so agents see it as archived.
     - Set allow_messages_after_resolved = false.
     - Keep all previous conversations, messages, and contact links intact for read-only viewing in Chatwoot.
     """
+    if hard:
+        return hard_delete_channel_inbox(inbox_id, account_id=account_id)
     import urllib.request
     try:
         conn = get_chatwoot_db_conn()
@@ -1132,6 +1135,143 @@ def delete_channel_inbox(inbox_id, account_id=2):
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error archiving inbox {inbox_id}: {e}", exc_info=True)
         return False, f"فشل أرشفة القناة: {str(e)}"
+
+
+def hard_delete_channel_inbox(inbox_id, account_id=2):
+    """
+    Permanently purge a channel inbox and all its data across Chatwoot and external integrations:
+    - Enforces tenant ownership (anti-IDOR).
+    - Releases / deletes WhatsApp Evolution instance if applicable.
+    - Cleans Telegram webhook / external connections if applicable.
+    - Removes from Captain AI assistant (captain_inboxes).
+    - Calls Chatwoot API DELETE /api/v1/accounts/<account_id>/inboxes/<inbox_id> for ActionCable notification.
+    - Direct cascade DB purge:
+        * messages & conversations
+        * contact_inboxes, inbox_members, working_hours
+        * agent_bot_inboxes, webhooks, hooks
+        * inboxes record
+        * polymorphic channel table record (channel_api, channel_web_widgets, channel_telegram, etc.)
+    """
+    import urllib.request
+    try:
+        conn = get_chatwoot_db_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # 1. Anti-IDOR: Check inbox ownership
+        cur.execute("""
+            SELECT id, channel_id, channel_type, name, account_id 
+            FROM inboxes 
+            WHERE id = %s AND account_id = %s
+        """, (inbox_id, account_id))
+        ibx = cur.fetchone()
+        if not ibx:
+            conn.close()
+            return False, "القناة غير موجودة أو غير تابعة لهذا الحساب"
+
+        channel_id = ibx['channel_id']
+        channel_type = ibx['channel_type']
+        inbox_name = ibx['name']
+
+        # 2. Cleanup External Services
+        if channel_type == 'Channel::Api':
+            cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (channel_id,))
+            ch_api = cur.fetchone()
+            if ch_api and ch_api.get('webhook_url') and '/chatwoot/webhook/' in ch_api['webhook_url']:
+                inst_name = ch_api['webhook_url'].split('/chatwoot/webhook/')[-1].strip('/')
+                try:
+                    # Logout and delete instance in Evolution API to release WhatsApp phone connection
+                    del_url = f"{EVOLUTION_API_URL}/instance/delete/{inst_name}"
+                    req = urllib.request.Request(del_url, headers={"apikey": EVOLUTION_API_KEY}, method="DELETE")
+                    urllib.request.urlopen(req, timeout=5)
+                    logger.info(f"[EvolutionAPI] Deleted instance {inst_name} on hard delete")
+                except Exception as ev_err:
+                    logger.warning(f"[EvolutionAPI] Warning deleting instance {inst_name}: {ev_err}")
+
+        elif channel_type == 'Channel::Telegram':
+            cur.execute("SELECT bot_token FROM channel_telegram WHERE id = %s", (channel_id,))
+            ch_tg = cur.fetchone()
+            if ch_tg and ch_tg.get('bot_token'):
+                try:
+                    tg_url = f"https://api.telegram.org/bot{ch_tg['bot_token']}/deleteWebhook"
+                    urllib.request.urlopen(tg_url, timeout=4)
+                except Exception as tg_err:
+                    logger.warning(f"[Telegram] Warning deleting webhook: {tg_err}")
+
+        # 3. Notify Chatwoot Rails API to broadcast ActionCable deletion event
+        try:
+            cw_del_url = f"http://omni_chatwoot_rails:3000/api/v1/accounts/{account_id}/inboxes/{inbox_id}"
+            cw_req = urllib.request.Request(
+                cw_del_url,
+                headers={
+                    "api_access_token": CHATWOOT_API_TOKEN,
+                    "X-Forwarded-Proto": "https",
+                    "Content-Type": "application/json"
+                },
+                method="DELETE"
+            )
+            with urllib.request.urlopen(cw_req, timeout=5) as cw_res:
+                logger.info(f"[ChatwootAPI] Delete inbox response: {cw_res.status}")
+        except Exception as cw_err:
+            logger.warning(f"[ChatwootAPI] Non-critical warning from Chatwoot API delete: {cw_err}")
+
+        # 4. Immediate DB Cascade Purge to guarantee complete deletion
+        # 4.1 Captain AI
+        cur.execute("DELETE FROM captain_inboxes WHERE inbox_id = %s", (inbox_id,))
+
+        # 4.2 Messages belonging to this inbox or its conversations
+        cur.execute("""
+            DELETE FROM messages 
+            WHERE inbox_id = %s OR conversation_id IN (SELECT id FROM conversations WHERE inbox_id = %s)
+        """, (inbox_id, inbox_id))
+
+        # 4.3 Conversations
+        cur.execute("DELETE FROM conversations WHERE inbox_id = %s", (inbox_id,))
+
+        # 4.4 Related associations
+        cur.execute("DELETE FROM contact_inboxes WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM inbox_members WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM working_hours WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM agent_bot_inboxes WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM campaigns WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM reporting_events WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM sla_events WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM conversation_outcomes WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM webhooks WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM integrations_hooks WHERE inbox_id = %s", (inbox_id,))
+        cur.execute("DELETE FROM calls WHERE inbox_id = %s", (inbox_id,))
+
+        # 4.5 The Inbox record itself
+        cur.execute("DELETE FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+
+        # 4.6 The Polymorphic Channel table record
+        channel_table_map = {
+            'Channel::Api': 'channel_api',
+            'Channel::WebWidget': 'channel_web_widgets',
+            'Channel::Telegram': 'channel_telegram',
+            'Channel::Whatsapp': 'channel_whatsapp',
+            'Channel::Email': 'channel_email',
+            'Channel::Sms': 'channel_sms',
+            'Channel::Line': 'channel_line',
+            'Channel::FacebookPage': 'channel_facebook_pages',
+            'Channel::Instagram': 'channel_instagram',
+            'Channel::TwitterProfile': 'channel_twitter_profiles',
+            'Channel::TwilioSms': 'channel_twilio_sms',
+        }
+        tbl = channel_table_map.get(channel_type)
+        if tbl and channel_id:
+            try:
+                cur.execute(f"DELETE FROM {tbl} WHERE id = %s", (channel_id,))
+            except Exception as ch_err:
+                logger.warning(f"[ChatwootDB] Warning deleting channel table {tbl} #{channel_id}: {ch_err}")
+
+        conn.commit()
+        conn.close()
+
+        logger.info(f"[ChatwootChannels] Successfully hard-deleted inbox #{inbox_id} ({inbox_name}) for account #{account_id}")
+        return True, f"تم حذف القناة '{inbox_name}' وكافة محادثاتها ورسائلها نهائياً بنجاح"
+    except Exception as e:
+        logger.error(f"[ChatwootChannels] Error hard-deleting inbox #{inbox_id}: {e}", exc_info=True)
+        return False, f"فشل الحذف النهائي للقناة: {str(e)}"
 
 
 def get_evolution_instance_status(instance_name='whatsapp_main'):
