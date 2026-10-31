@@ -33,6 +33,209 @@
     <% end %>
     <link rel="icon" type="image/png" sizes="512x512" href="<%= @global_config['LOGO_THUMBNAIL'] %>">
     <%= csrf_meta_tags %>
+
+    <!-- Chatwoot localStorage Session Bridge for Cross-Origin Third-Party Iframe Embeds -->
+    <script id="cw-session-bridge">
+      (function() {
+        var SESSION_COOKIE = 'cw_d_session_info';
+        var STORAGE_KEY = 'cw_d_session_info';
+
+        // Extract JSON auth data from localStorage
+        function getAuthHeadersFromStorage() {
+          try {
+            var raw = window.localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            var data = null;
+            try {
+              data = JSON.parse(raw);
+            } catch (e1) {
+              try {
+                data = JSON.parse(decodeURIComponent(raw));
+              } catch (e2) {
+                return null;
+              }
+            }
+            if (!data || typeof data !== 'object') return null;
+            var token = data['access-token'] || data.accessToken || data['access_token'];
+            var client = data['client'];
+            var uid = data['uid'];
+            if (!token || !client || !uid) return null;
+            return {
+              'access-token': token,
+              'client': client,
+              'uid': uid,
+              'expiry': String(data['expiry'] || ''),
+              'token-type': data['token-type'] || data.tokenType || 'Bearer'
+            };
+          } catch (e) {
+            return null;
+          }
+        }
+
+        // Check if URL targets Chatwoot API or Auth endpoints
+        function isChatwootApiEndpoint(url) {
+          if (!url) return false;
+          try {
+            var parsed = new URL(url, window.location.origin);
+            if (parsed.origin !== window.location.origin) return false;
+            var path = parsed.pathname;
+            return path.startsWith('/api/') || path.startsWith('/auth/') || path === '/api' || path === '/auth';
+          } catch (e) {
+            return false;
+          }
+        }
+
+        // 1. Intercept document.cookie (Getter & Setter)
+        var cookieDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie') ||
+                         Object.getOwnPropertyDescriptor(HTMLDocument.prototype, 'cookie');
+
+        if (!cookieDesc && document.__lookupGetter__) {
+          var g = document.__lookupGetter__('cookie');
+          var s = document.__lookupSetter__('cookie');
+          if (g && s) cookieDesc = { get: g, set: s };
+        }
+
+        var nativeGetCookie = cookieDesc && cookieDesc.get ? cookieDesc.get.bind(document) : function() { return ''; };
+        var nativeSetCookie = cookieDesc && cookieDesc.set ? cookieDesc.set.bind(document) : function(v) {};
+
+        try {
+          Object.defineProperty(document, 'cookie', {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              var cookies = '';
+              try {
+                cookies = nativeGetCookie() || '';
+              } catch (e) {
+                cookies = '';
+              }
+
+              // If cw_d_session_info is not found in real cookies (e.g. 3rd-party cookie blocking)
+              var hasSession = (/(?:^|;\s*)cw_d_session_info=/).test(cookies);
+              if (!hasSession) {
+                try {
+                  var stored = window.localStorage.getItem(STORAGE_KEY);
+                  if (stored) {
+                    var synth = SESSION_COOKIE + '=' + stored;
+                    return cookies ? (cookies + '; ' + synth) : synth;
+                  }
+                } catch (e) {}
+              }
+              return cookies;
+            },
+            set: function(val) {
+              var strVal = String(val);
+              try {
+                var eqIdx = strVal.indexOf('=');
+                var semiIdx = strVal.indexOf(';');
+                var cookieName = (eqIdx !== -1) ? strVal.substring(0, eqIdx).trim() : '';
+                var rawValue = '';
+                if (eqIdx !== -1) {
+                  rawValue = (semiIdx !== -1 && semiIdx > eqIdx) ? strVal.substring(eqIdx + 1, semiIdx).trim() : strVal.substring(eqIdx + 1).trim();
+                }
+
+                if (cookieName === SESSION_COOKIE) {
+                  var lower = strVal.toLowerCase();
+                  var isDeleting = lower.indexOf('expires=thu, 01 jan 1970') !== -1 ||
+                                   lower.indexOf('max-age=0') !== -1 ||
+                                   lower.indexOf('max-age=-') !== -1 ||
+                                   rawValue === '';
+                  if (isDeleting) {
+                    window.localStorage.removeItem(STORAGE_KEY);
+                  } else if (rawValue) {
+                    window.localStorage.setItem(STORAGE_KEY, rawValue);
+                  }
+
+                  // Append ; SameSite=None; Secure
+                  if (lower.indexOf('samesite=none') === -1) {
+                    strVal = strVal.replace(/;\s*SameSite=[a-zA-Z]+/gi, '');
+                    strVal += '; SameSite=None; Secure';
+                  } else if (lower.indexOf('secure') === -1) {
+                    strVal += '; Secure';
+                  }
+                }
+              } catch (e) {}
+
+              try {
+                nativeSetCookie(strVal);
+              } catch (e) {}
+            }
+          });
+        } catch (e) {
+          console.warn('[SessionBridge] document.cookie interception failed:', e);
+        }
+
+        // 2. Intercept window.fetch
+        var originalFetch = window.fetch;
+        if (typeof originalFetch === 'function') {
+          window.fetch = function(input, init) {
+            try {
+              var reqUrl = '';
+              if (typeof input === 'string') {
+                reqUrl = input;
+              } else if (input instanceof URL) {
+                reqUrl = input.href;
+              } else if (input && typeof input === 'object' && input.url) {
+                reqUrl = input.url;
+              }
+
+              if (isChatwootApiEndpoint(reqUrl)) {
+                var auth = getAuthHeadersFromStorage();
+                if (auth && auth['access-token']) {
+                  init = init ? Object.assign({}, init) : {};
+                  var headers = new Headers(init.headers || (typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined));
+                  if (!headers.has('access-token')) {
+                    headers.set('access-token', auth['access-token']);
+                    headers.set('client', auth['client']);
+                    headers.set('uid', auth['uid']);
+                    if (auth['expiry']) headers.set('expiry', auth['expiry']);
+                    if (auth['token-type']) headers.set('token-type', auth['token-type']);
+                    init.headers = headers;
+                  }
+                }
+              }
+            } catch (e) {}
+            return originalFetch.apply(this, init ? [input, init] : arguments);
+          };
+        }
+
+        // 3. Intercept XMLHttpRequest
+        var originalOpen = XMLHttpRequest.prototype.open;
+        var originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+        var originalSend = XMLHttpRequest.prototype.send;
+
+        XMLHttpRequest.prototype.open = function(method, url) {
+          this._sessionBridgeUrl = url;
+          this._sessionBridgeHasAccessToken = false;
+          return originalOpen.apply(this, arguments);
+        };
+
+        XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
+          if (typeof header === 'string' && header.toLowerCase() === 'access-token') {
+            this._sessionBridgeHasAccessToken = true;
+          }
+          return originalSetRequestHeader.apply(this, arguments);
+        };
+
+        XMLHttpRequest.prototype.send = function(body) {
+          try {
+            if (this._sessionBridgeUrl && isChatwootApiEndpoint(this._sessionBridgeUrl)) {
+              if (!this._sessionBridgeHasAccessToken) {
+                var auth = getAuthHeadersFromStorage();
+                if (auth && auth['access-token']) {
+                  originalSetRequestHeader.call(this, 'access-token', auth['access-token']);
+                  originalSetRequestHeader.call(this, 'client', auth['client']);
+                  originalSetRequestHeader.call(this, 'uid', auth['uid']);
+                  if (auth['expiry']) originalSetRequestHeader.call(this, 'expiry', auth['expiry']);
+                  if (auth['token-type']) originalSetRequestHeader.call(this, 'token-type', auth['token-type']);
+                }
+              }
+            }
+          } catch (e) {}
+          return originalSend.apply(this, arguments);
+        };
+      })();
+    </script>
     <script>
       window.chatwootConfig = {
         hostURL: '<%= ENV.fetch('FRONTEND_URL', '') %>',

@@ -245,7 +245,7 @@
         <!-- HTML Pane -->
         <div data-tab-pane="cc-html-pane" class="space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
-            <pre id="dev-embed-callcenter-snippet">&lt;iframe src="https://localhost/embed/call-center/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <pre id="dev-embed-callcenter-snippet">&lt;iframe src="https://localhost/embed/call-center/?token={{ api_key|default:'&lt;YOUR_API_KEY&gt;' }}&amp;locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
             <button type="button" onclick="copySnippet('dev-embed-callcenter-snippet', 'تم نسخ كود الـ Iframe للمنظومة بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
           <p class="text-xs text-slate-500">يتضمن كافة الصلاحيات الضرورية (الميكروفون والكاميرا ونسخ الحافظة)، ويعرض شريط تبويبات علوي مخصص لكل قسم.</p>
@@ -256,7 +256,7 @@
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-56" dir="ltr">
             <pre id="dev-cc-widget-react-snippet">{% verbatim %}import React from 'react';
 
-export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", section = "room", locale = "ar" }) {
+export default function CallCenterSuiteEmbed({ apiKey = "{% endverbatim %}{{ api_key|default:'<YOUR_API_KEY>' }}{% verbatim %}", section = "room", locale = "ar" }) {
   return (
     <div className="w-full h-full min-h-[800px] rounded-2xl overflow-hidden border border-slate-200">
       <iframe
@@ -312,7 +312,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <a id="dev-embed-chat-preview-btn" href="/embed/chat-hub/" target="_blank" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+          <a id="dev-embed-chat-preview-btn" href="/embed/chat-hub/{% if api_key %}?token={{ api_key }}&amp;locale=ar{% endif %}" target="_blank" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
             <span data-i18n="dev_preview_live">معاينة حية للمنصة</span>
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -336,7 +336,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
             </div>
             <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
               <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/</code>
-              <a href="/embed/chat-hub/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+              <a id="dev-embed-chat-live-preview-btn" href="/embed/chat-hub/{% if api_key %}?token={{ api_key }}&amp;locale=ar{% endif %}" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
             </div>
           </div>
 
@@ -351,7 +351,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
             </div>
             <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
               <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/?tab=channels</code>
-              <a id="dev-embed-chat-channels-preview-btn" href="/embed/chat-hub/?tab=channels" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+              <a id="dev-embed-chat-channels-preview-btn" href="/embed/chat-hub/?tab=channels{% if api_key %}&amp;token={{ api_key }}&amp;locale=ar{% endif %}" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
             </div>
           </div>
 
@@ -366,7 +366,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
             </div>
             <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
               <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/?tab=settings</code>
-              <a id="dev-embed-chat-settings-preview-btn" href="/embed/chat-hub/?tab=settings" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+              <a id="dev-embed-chat-settings-preview-btn" href="/embed/chat-hub/?tab=settings{% if api_key %}&amp;token={{ api_key }}&amp;locale=ar{% endif %}" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
             </div>
           </div>
         </div>
@@ -386,7 +386,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
         <!-- 1. Full Hub HTML Pane -->
         <div data-tab-pane="chat-hub-html-pane" class="space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
-            <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?token={{ api_key|default:'&lt;YOUR_API_KEY&gt;' }}&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
             <button type="button" onclick="copySnippet('dev-embed-chat-snippet', 'تم نسخ كود تضمين منصة الشات الكاملة بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
           <p class="text-xs text-slate-500">تضمين المنصة الكاملة مع إمكانية التنقل بين المحادثات المباشرة وربط القنوات وإعدادات الكابتن.</p>
@@ -395,7 +395,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
         <!-- 2. Channels & QR HTML Pane -->
         <div data-tab-pane="chat-channels-html-pane" class="hidden space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
-            <pre id="dev-embed-chat-channels-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=channels&amp;token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <pre id="dev-embed-chat-channels-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=channels&amp;token={{ api_key|default:'&lt;YOUR_API_KEY&gt;' }}&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
             <button type="button" onclick="copySnippet('dev-embed-chat-channels-snippet', 'تم نسخ كود تضمين ربط القنوات والواتساب بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
           <p class="text-xs text-slate-500">يفتح مباشرة على واجهة مسح كود QR وربط قنوات المراسلة والواتساب مع إمكانية العودة لسائر التبويبات.</p>
@@ -404,7 +404,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
         <!-- 3. AI Settings HTML Pane -->
         <div data-tab-pane="chat-settings-html-pane" class="hidden space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
-            <pre id="dev-embed-chat-settings-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=settings&amp;token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <pre id="dev-embed-chat-settings-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=settings&amp;token={{ api_key|default:'&lt;YOUR_API_KEY&gt;' }}&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
             <button type="button" onclick="copySnippet('dev-embed-chat-settings-snippet', 'تم نسخ كود تضمين إعدادات المساعد الذكي بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
           <p class="text-xs text-slate-500">يفتح مباشرة على إعدادات المساعد الذكي والكابتن AI لتخصيص البرومبت والموجهات وسلوك الردود.</p>
@@ -415,7 +415,7 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-64" dir="ltr">
             <pre id="dev-chat-widget-react-snippet">{% verbatim %}import React, { useState, useEffect } from 'react';
 
-export default function OmnichannelChatHub({ apiKey = "<YOUR_API_KEY>", tab = "live", locale = "ar" }) {
+export default function OmnichannelChatHub({ apiKey = "{% endverbatim %}{{ api_key|default:'<YOUR_API_KEY>' }}{% verbatim %}", tab = "live", locale = "ar" }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {

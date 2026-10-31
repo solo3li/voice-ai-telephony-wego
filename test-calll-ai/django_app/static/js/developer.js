@@ -44,6 +44,7 @@ async function loadDeveloperKeys() {
       const embedChatChannelsSnippet = document.getElementById('dev-embed-chat-channels-snippet');
       const embedChatSettingsSnippet = document.getElementById('dev-embed-chat-settings-snippet');
       const previewChat = document.getElementById('dev-embed-chat-preview-btn');
+      const previewChatLive = document.getElementById('dev-embed-chat-live-preview-btn');
       const previewChatChannels = document.getElementById('dev-embed-chat-channels-preview-btn');
       const previewChatSettings = document.getElementById('dev-embed-chat-settings-preview-btn');
       const embedVoiceSnippet = document.getElementById('dev-embed-voice-snippet');
@@ -68,6 +69,9 @@ async function loadDeveloperKeys() {
       }
       if (previewChat) {
         previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
+      if (previewChatLive) {
+        previewChatLive.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
       }
       if (previewChatChannels) {
         previewChatChannels.href = `/embed/chat-hub/?tab=channels&token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;

@@ -1342,10 +1342,22 @@ def store_page_view(request):
 @login_required
 def developer_page_view(request):
     """Render dedicated Developer API Portal page."""
+    user_key = None
+    try:
+        from developer.models import UserApiKey
+        key_obj = UserApiKey.objects.filter(user=request.user, is_active=True).order_by('-created_at').first()
+        if not key_obj:
+            key_obj = UserApiKey.generate_for_user(request.user)
+        if key_obj:
+            user_key = key_obj.key
+    except Exception as e:
+        logger.error(f"Error fetching user API key for developer portal: {e}")
+
     context = {
         'page_title': 'واجهات المطورين (API)',
         'page_icon': '',
         'active_nav': 'developer',
+        'api_key': user_key,
     }
     return render(request, 'voice_assistant/pages/developer.html', context)
 
