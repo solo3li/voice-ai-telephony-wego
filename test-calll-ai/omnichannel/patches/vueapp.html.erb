@@ -479,7 +479,46 @@
       aside nav {
         padding-bottom: 0.5rem !important;
       }
+
+      /* 4. Complete White-Label: Permanently hide user profile (avatar, name, email) from sidebar */
+      aside > section:last-of-type,
+      aside section:has([class*="Avatar"]),
+      aside div:has(> [class*="SidebarProfileMenu"]),
+      [class*="SidebarProfileMenu"],
+      [class*="SidebarProfileMenuStatus"],
+      aside button:has([class*="Avatar"]),
+      aside div.border-t.border-n-weak {
+        display: none !important;
+      }
     </style>
+    <script id="white-label-sidebar-profile">
+      (function() {
+        function removeSidebarProfile() {
+          try {
+            var sidebar = document.querySelector('aside');
+            if (!sidebar) return;
+            var sections = sidebar.querySelectorAll('section');
+            for (var i = 0; i < sections.length; i++) {
+              var sec = sections[i];
+              if (sec && !sec.classList.contains('grid')) {
+                sec.style.setProperty('display', 'none', 'important');
+              }
+            }
+            var profileMenus = sidebar.querySelectorAll('[class*="SidebarProfileMenu"], [class*="SidebarProfileMenuStatus"]');
+            for (var j = 0; j < profileMenus.length; j++) {
+              profileMenus[j].style.setProperty('display', 'none', 'important');
+            }
+          } catch (e) {}
+        }
+        removeSidebarProfile();
+        document.addEventListener('DOMContentLoaded', removeSidebarProfile);
+        window.addEventListener('load', removeSidebarProfile);
+        if (window.MutationObserver) {
+          var profileObs = new MutationObserver(removeSidebarProfile);
+          profileObs.observe(document.documentElement, { childList: true, subtree: true });
+        }
+      })();
+    </script>
     <script id="route-guard-strict-ui">
       (function() {
         function enforceAllowedRoutes() {
