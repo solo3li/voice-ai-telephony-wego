@@ -334,7 +334,7 @@
           <div class="bg-white shadow-2xs border border-slate-200/80 rounded-xl p-4 flex flex-col h-48">
             <div class="flex justify-between items-center pb-2 border-b border-slate-200/80 mb-2">
               <h3 class="text-xs font-semibold text-slate-800" data-i18n="voice_subtitles_title">نصوص المحادثة الحية (Live Subtitles)</h3>
-              <span class="text-xs text-slate-400" data-i18n="voice_subtitles_status">تحديث فوري عبر Centrifugo</span>
+              <span class="text-xs text-slate-400" data-i18n="voice_subtitles_status">تحديث فوري للمحادثة</span>
             </div>
             <div id="transcript-box" class="flex-1 overflow-y-auto space-y-2 pr-2 text-sm">
               <p class="text-slate-400 text-center italic mt-10 text-xs" data-i18n="voice_subtitles_empty">ستظهر نصوص المحادثة هنا أثناء التحدث مباشرة...</p>
@@ -813,7 +813,7 @@
               <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-4 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="font-medium text-slate-800 text-xs flex items-center gap-1.5">
-                    حالة الجذع في LiveKit
+                    حالة خط الاتصال السحابي
                   </span>
                   <span id="outbound-trunk-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                     غير مهيأ
@@ -1035,7 +1035,7 @@
             <div>
               <h2 class="text-base font-semibold text-slate-900 flex items-center gap-2">
                 <span>حملات الاتصال وإدارة العملاء (Campaigns & Leads CRM)</span>
-                <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">Inngest Powered</span>
+                <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">محرك اتصال آلي ذكي</span>
               </h2>
               <p class="text-xs text-slate-500 mt-0.5">
                 ارفع قوائم العملاء بصيغ متعددة (Excel, CSV, TXT, JSON)، ونظمهم داخل CRM تفاعلي، وأطلق حملات الاتصال المتوازية بفرز واستخلاص ذكي فوري.
@@ -1043,10 +1043,6 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <a href="https://inngest.169.58.32.179.nip.io" target="_blank" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200/80 transition flex items-center gap-1.5 shadow-2xs">
-                <span>مراقبة Inngest</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-              </a>
               <button type="button" onclick="loadCampaignsList()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200/80 transition flex items-center gap-1.5 shadow-2xs">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 <span>تحديث</span>
@@ -1521,7 +1517,7 @@
           <div id="pbx-ip-group">
             <label class="block text-slate-700 font-medium mb-1">عنوان IP العام للسنترال (Public Static IP / FQDN) *</label>
             <input type="text" id="pbx-ip" placeholder="مثال: 197.38.45.12 أو pbx.company.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs focus:outline-none focus:border-[#7c3aed]" />
-            <p class="text-xs text-slate-400 mt-1">سيتم قبول المكالمات الـ SIP الواردة من هذا العنوان حصراً في LiveKit دون الحاجة لتسجيل Register.</p>
+            <p class="text-xs text-slate-400 mt-1">سيتم قبول المكالمات الهاتفية الواردة من هذا العنوان حصراً في بوابة الاتصال السحابية دون الحاجة لتسجيل Register.</p>
           </div>
 
           <!-- Auth Mode Group: Credentials -->
@@ -1597,7 +1593,7 @@
           <div class="flex justify-end gap-2 pt-2 border-t border-slate-200/80">
             <button type="button" onclick="closeNewPbxModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium transition shadow-2xs">إلغاء</button>
             <button type="submit" id="btn-submit-pbx" class="px-4 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium flex items-center gap-1.5 transition shadow-2xs">
-              <span>إنشاء وتفعيل في LiveKit</span>
+              <span>إنشاء وتفعيل خط الاتصال السحابي</span>
             </button>
           </div>
         </form>
@@ -1659,7 +1655,7 @@
             <ol class="list-decimal list-inside space-y-1 text-xs text-slate-600 pr-1">
               <li>افتح <strong class="text-[#7c3aed]">PBX -&gt; Outbound Routes</strong> وأنشئ مساراً جديداً برقم مختصر (Dial Pattern: مثلاً <span class="font-mono text-[#7c3aed]">888</span> أو رقم الـ IVR).</li>
               <li>اختر الـ Trunk الذي أنشأته أعلاه في قائمة <strong class="text-[#7c3aed]">Trunk Sequence</strong>.</li>
-              <li>الآن عند قيام أي موظف بطلب <span class="font-mono text-[#7c3aed]">888</span> أو توجيه خط وارد إليه، ستنتقل المكالمة فوراً لـ LiveKit والمساعد الذكي!</li>
+              <li>الآن عند قيام أي موظف بطلب <span class="font-mono text-[#7c3aed]">888</span> أو توجيه خط وارد إليه، ستنتقل المكالمة فوراً لبوابة الاتصال السحابية والمساعد الذكي!</li>
               <li>لتفعيل التحويل العكسي (<strong class="text-[#7c3aed]">SIP REFER</strong>) للسماح للـ AI بإعادة تحويل العميل لموظفي السنترال، تم تضمين <span class="font-mono text-[#7c3aed]">promiscredir=yes</span> تلقائياً.</li>
             </ol>
           </div>
@@ -2043,7 +2039,7 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </span>
             <div>
-              <span class="font-medium">إدارة التزامن عبر Inngest:</span>
+              <span class="font-medium">إدارة التزامن والجدولة الذكية:</span>
               <p class="mt-0.5 text-xs text-amber-800">
                 يتم تنظيم عدد المكالمات المتوازية تلقائياً بحسب الحد المسموح لحسابك (<strong id="camp-modal-limit-text">1 مكالمة متزامنة</strong>). يمكنك تعديل هذا الحد من لوحة إدارة المشرف (Django Admin -> User Campaign Limits).
               </p>
@@ -3339,7 +3335,7 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-semibold text-slate-900">شات - منصة المحادثات الشاملة (Chatwoot Hub)</h3>
+              <h3 class="text-sm font-semibold text-slate-900">صندوق المحادثات الموحدة (Omnichannel Inbox)</h3>
               <p class="text-xs text-slate-500">إدارة كافة القنوات (واتساب، ويب، تليجرام، فيسبوك) مع استمرار المكالمة الصوتية بدون انقطاع</p>
             </div>
           </div>
@@ -3382,7 +3378,7 @@
       </div>
       <div class="text-xs">
         <p id="floating-status" class="font-semibold text-slate-900">المساعد الصوتي قيد التشغيل</p>
-        <span class="text-xs text-slate-400" data-i18n="floating_hint">محادثة مستمرة عبر LiveKit</span>
+        <span class="text-xs text-slate-400" data-i18n="floating_hint">محادثة صوتية مباشرة نشطة</span>
       </div>
     </div>
 
@@ -3461,7 +3457,7 @@
         metric_rag: "فهرس المعرفة",
         metric_rag_status: "متصل ومحدث",
         metric_queue: "جاهزية الطوابير",
-        floating_hint: "محادثة مستمرة عبر LiveKit",
+        floating_hint: "محادثة صوتية مباشرة نشطة",
         btn_full_room: "غرفة الصوت",
         personas_title: "إدارة الشخصيات واللهجات وأصوات الذكاء الاصطناعي",
         personas_subtitle: "اختر من بين الشخصيات المتاحة لتفعيلها فوراً في المكالمات الحية، أو خصص النبرة واللهجة والصوت",
@@ -3525,7 +3521,7 @@
         metric_rag: "Knowledge Index",
         metric_rag_status: "Online & Indexed",
         metric_queue: "Queue Readiness",
-        floating_hint: "Live session streaming via LiveKit",
+        floating_hint: "Live voice session in progress",
         btn_full_room: "Voice Room",
         personas_title: "AI Personas, Dialects & Voices Management",
         personas_subtitle: "Select an active persona for live calls or customize voice timber, dialect and instructions",
@@ -4144,7 +4140,7 @@
         }
 
         currentVoiceRoomName = data.room_name;
-        callStatus.innerText = 'جاري الاتصال بـ LiveKit...';
+        callStatus.innerText = 'جاري الاتصال الصوتي...';
 
         // 2. Connect to Centrifugo (App WebSockets)
         try {
@@ -4162,15 +4158,15 @@
           });
 
           centrifugeClient.on('connecting', () => {
-            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> Centrifugo: جاري الاتصال';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> ' + (window.t ? window.t('centrifugo_connecting', 'التزامن السحابي: جاري الاتصال...') : 'التزامن السحابي: جاري الاتصال...');
           });
 
           centrifugeClient.on('connected', () => {
-            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Centrifugo: متصل';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ' + (window.t ? window.t('centrifugo_connected', 'التزامن السحابي: متصل') : 'التزامن السحابي: متصل');
           });
 
           centrifugeClient.on('disconnected', () => {
-            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Centrifugo: منقطع';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> ' + (window.t ? window.t('centrifugo_disconnected', 'التزامن السحابي: غير متصل') : 'التزامن السحابي: غير متصل');
           });
 
           let sub = null;
@@ -4197,7 +4193,7 @@
         });
 
         livekitRoom.on(LivekitClient.RoomEvent.Connected, () => {
-          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> LiveKit: متصل';
+          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ' + (window.t ? window.t('livekit_connected', 'المكالمات الصوتية: متصل') : 'المكالمات الصوتية: متصل');
           callStatus.innerText = 'تم الانضمام للغرفة. جاري تشغيل المساعد الذكي وقاعدة المستندات...';
           subStatus.innerText = 'المساعد الصوتي ينضم الآن...';
 
@@ -4254,7 +4250,7 @@
         });
 
         livekitRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
-          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-500"></span> LiveKit: غير متصل';
+          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-500"></span> ' + (window.t ? window.t('livekit_disconnected', 'المكالمات الصوتية: غير متصل') : 'المكالمات الصوتية: غير متصل');
           cleanupCall();
         });
 
@@ -5985,7 +5981,7 @@
             </td>
             <td class="py-3 px-3">
               <span class="inline-flex items-center gap-1 text-xs text-[#7c3aed] font-mono">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#7c3aed]"></span> WebRTC LiveKit
+                <span class="w-1.5 h-1.5 rounded-full bg-[#7c3aed]"></span> WebRTC
               </span>
             </td>
             <td class="py-3 px-3 text-center">
@@ -6415,7 +6411,7 @@
           : '';
 
         if (callTitle) callTitle.innerText = `مكالمة جارية: ${data.target_name || targetName} [${data.target_number || target}]`;
-        if (callSub) callSub.innerText = `متصل عبر WebRTC LiveKit ${agentsInfo} - بانتظار رد الموظف...`;
+        if (callSub) callSub.innerText = `متصل صوتياً ${agentsInfo} - بانتظار رد الموظف...`;
 
         dashboardLivekitRoom = new LivekitClient.Room({
           adaptiveStream: true,
@@ -6527,7 +6523,7 @@
               <div class="flex justify-between items-center"><span class="text-[#64748b]">الخادم:</span> <span class="font-mono text-[#7c3aed] text-xs">${escapeHtml(data.trunk.sip_host)}:${data.trunk.sip_port}</span></div>
               <div class="flex justify-between items-center"><span class="text-[#64748b]">البروتوكول:</span> <span class="text-[#7c3aed] font-semibold">${data.trunk.transport}</span></div>
               <div class="flex justify-between items-center"><span class="text-[#64748b]">Caller ID:</span> <span class="font-mono text-[#7c3aed] font-semibold">${escapeHtml(data.trunk.caller_id || 'افتراضي')}</span></div>
-              <div class="flex justify-between items-center"><span class="text-[#64748b]">معرف LiveKit:</span> <span class="font-mono text-xs text-[#7c3aed]">${data.trunk.livekit_outbound_trunk_id}</span></div>
+              <div class="flex justify-between items-center"><span class="text-[#64748b]">معرف الخط السحابي:</span> <span class="font-mono text-xs text-[#7c3aed]">${data.trunk.livekit_outbound_trunk_id}</span></div>
             </div>
             <div class="pt-2 border-t border-slate-200/80 flex justify-end">
               <button type="button" onclick="handleDeleteOutboundTrunk(${data.trunk.id})" class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1">
@@ -6581,7 +6577,7 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<span>جاري الربط مع LiveKit...</span>';
+      btn.innerHTML = '<span>جاري ربط خط الاتصال السحابي...</span>';
 
       try {
         const res = await fetch('/api/telephony/trunk/save/', {
@@ -6837,12 +6833,12 @@
                     ${numbersBadge}
                   </div>
                   <div class="flex justify-between items-center text-xs font-mono text-slate-400">
-                    <span>LiveKit Trunk:</span>
+                    <span>خط الاتصال السحابي:</span>
                     <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_trunk_id || '')}">${escapeHtml(t.livekit_trunk_id ? t.livekit_trunk_id.substring(0, 15) + '...' : 'غير مزامن')}</span>
                   </div>
                   ${t.enable_outbound && t.livekit_outbound_trunk_id ? `
                   <div class="flex justify-between items-center text-xs font-mono text-[#7c3aed]/80">
-                    <span>LK Outbound:</span>
+                    <span>خط الصادر:</span>
                     <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_outbound_trunk_id)}">${escapeHtml(t.livekit_outbound_trunk_id.substring(0, 15) + '...')}</span>
                   </div>
                   ` : ''}
@@ -7012,7 +7008,7 @@
       const isDefaultOutbound = document.getElementById('pbx-is-default-outbound') ? document.getElementById('pbx-is-default-outbound').checked : false;
 
       btn.disabled = true;
-      btn.innerHTML = '<span>جاري إنشاء الجذع والمزامنة مع LiveKit...</span>';
+      btn.innerHTML = '<span>جاري إنشاء خط الاتصال والمزامنة السحابية...</span>';
 
       const payload = {
         name: name,
@@ -7059,12 +7055,12 @@
         errEl.classList.remove('hidden');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>إنشاء وتفعيل في LiveKit</span>';
+        btn.innerHTML = '<span>إنشاء وتفعيل خط الاتصال السحابي</span>';
       }
     }
 
     async function handleDeletePbxTrunk(id, name) {
-      if (!confirm(`هل أنت متأكد من حذف سنترال "${name}"؟ سيتم إيقاف الـ SIP Trunk وحذف قاعدة التوجيه في LiveKit.`)) return;
+      if (!confirm(`هل أنت متأكد من حذف سنترال "${name}"؟ سيتم إيقاف الـ SIP Trunk وحذف قاعدة التوجيه السحابية.`)) return;
       try {
         const res = await fetch(`/api/telephony/pbx-trunks/${id}/delete/`, {
           method: 'POST',
@@ -8743,7 +8739,7 @@
         return;
       }
 
-      let promptMsg = 'هل تريد بالتأكيد بدء حملة الاتصال التلقائي الآن؟ سيتم جدولة المكالمات وتوزيعها عبر Inngest وفق معدل التزامن المحدد.';
+      let promptMsg = 'هل تريد بالتأكيد بدء حملة الاتصال التلقائي الآن؟ سيتم جدولة المكالمات وتوزيعها آلياً وفق معدل التزامن المحدد.';
       if (channel === 'whatsapp') {
         promptMsg = 'هل تريد بالتأكيد بدء إرسال رسائل الواتساب الذكية لكافة العملاء في الحملة الآن؟';
       } else if (channel === 'hybrid') {

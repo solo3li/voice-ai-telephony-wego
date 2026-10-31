@@ -179,7 +179,7 @@ function renderMcpServersGrid(servers) {
             <div class="flex flex-wrap items-center gap-1.5 pt-1">
               <span class="px-2 py-0.5 rounded-md text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>متزامن مع Chatwoot Captain</span>
+                <span>متزامن مع المساعد الذكي</span>
               </span>
             </div>
 

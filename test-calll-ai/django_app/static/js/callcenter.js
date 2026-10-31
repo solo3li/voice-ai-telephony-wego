@@ -528,7 +528,7 @@ async function dialTargetFromDashboard(target, targetName) {
       : '';
 
     if (callTitle) callTitle.innerText = `مكالمة جارية: ${data.target_name || targetName} [${data.target_number || target}]`;
-    if (callSub) callSub.innerText = `متصل عبر WebRTC LiveKit ${agentsInfo} - بانتظار رد الموظف...`;
+    if (callSub) callSub.innerText = `متصل صوتياً ${agentsInfo} - بانتظار رد الموظف...`;
 
     if (typeof LivekitClient !== 'undefined') {
       dashboardLivekitRoom = new LivekitClient.Room({

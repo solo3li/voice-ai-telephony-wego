@@ -49,7 +49,7 @@ async function loadOutboundTrunk() {
             <div class="flex justify-between items-center"><span class="text-slate-500">الخادم:</span> <span class="font-mono text-slate-700 text-xs">${escapeHtml(data.trunk.sip_host)}:${data.trunk.sip_port}</span></div>
             <div class="flex justify-between items-center"><span class="text-slate-500">البروتوكول:</span> <span class="text-slate-700 font-medium">${data.trunk.transport}</span></div>
             <div class="flex justify-between items-center"><span class="text-slate-500">Caller ID:</span> <span class="font-mono text-slate-700 font-medium">${escapeHtml(data.trunk.caller_id || 'افتراضي')}</span></div>
-            <div class="flex justify-between items-center"><span class="text-slate-500">معرف LiveKit:</span> <span class="font-mono text-xs text-slate-500">${data.trunk.livekit_outbound_trunk_id}</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-500">معرف الخط السحابي:</span> <span class="font-mono text-xs text-slate-500">${data.trunk.livekit_outbound_trunk_id}</span></div>
           </div>
           <div class="pt-2 border-t border-slate-200 flex justify-end">
             <button type="button" onclick="handleDeleteOutboundTrunk(${data.trunk.id})" class="text-xs text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 transition">
@@ -116,7 +116,7 @@ async function handleSaveOutboundTrunk(e) {
   }
 
   btn.disabled = true;
-  btn.innerHTML = '<span>جاري الربط مع LiveKit...</span>';
+  btn.innerHTML = '<span>جاري ربط خط الاتصال السحابي...</span>';
 
   try {
     const res = await fetch('/api/telephony/trunk/save/', {
@@ -395,12 +395,12 @@ async function loadPbxTrunks() {
                 ${numbersBadge}
               </div>
               <div class="flex justify-between items-center text-xs font-mono text-slate-400">
-                <span>LiveKit Trunk:</span>
+                <span>خط الاتصال السحابي:</span>
                 <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_trunk_id || '')}">${escapeHtml(t.livekit_trunk_id ? t.livekit_trunk_id.substring(0, 15) + '...' : 'غير مزامن')}</span>
               </div>
               ${t.enable_outbound && t.livekit_outbound_trunk_id ? `
               <div class="flex justify-between items-center text-xs font-mono text-slate-500">
-                <span>LK Outbound:</span>
+                <span>خط الصادر:</span>
                 <span class="truncate max-w-[120px]" title="${escapeHtml(t.livekit_outbound_trunk_id)}">${escapeHtml(t.livekit_outbound_trunk_id.substring(0, 15) + '...')}</span>
               </div>
               ` : ''}
@@ -574,7 +574,7 @@ async function handleSavePbxTrunk(e) {
   const isDefaultOutbound = document.getElementById('pbx-is-default-outbound') ? document.getElementById('pbx-is-default-outbound').checked : false;
 
   btn.disabled = true;
-  btn.innerHTML = '<span>جاري إنشاء الجذع والمزامنة مع LiveKit...</span>';
+  btn.innerHTML = '<span>جاري إنشاء خط الاتصال والمزامنة السحابية...</span>';
 
   const payload = {
     name: name,
@@ -628,12 +628,12 @@ async function handleSavePbxTrunk(e) {
     }
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>إنشاء وتفعيل في LiveKit</span>';
+    btn.innerHTML = '<span>إنشاء وتفعيل خط الاتصال السحابي</span>';
   }
 }
 
 async function handleDeletePbxTrunk(id, name) {
-  if (!confirm(`هل أنت متأكد من حذف سنترال "${name}"؟ سيتم إيقاف الـ SIP Trunk وحذف قاعدة التوجيه في LiveKit.`)) return;
+  if (!confirm(`هل أنت متأكد من حذف سنترال "${name}"؟ سيتم إيقاف الـ SIP Trunk وحذف قاعدة التوجيه السحابية.`)) return;
   try {
     const res = await fetch(`/api/telephony/pbx-trunks/${id}/delete/`, {
       method: 'POST',

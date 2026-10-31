@@ -234,8 +234,8 @@ def test_embedded_suites():
     assert '/embed/call-center/telephony/' in content_dev
     assert '/embed/call-center/hours/' in content_dev
 
-    # Chatwoot Hub Suite Documentation
-    assert 'Chatwoot Hub Suite' in content_dev
+    # Omnichannel Chat Suite Documentation
+    assert 'Omnichannel Chat Suite' in content_dev
     assert 'dev-embed-chat-snippet' in content_dev
     assert 'dev-embed-chat-preview-btn' in content_dev
     assert '/embed/chat-hub/' in content_dev
