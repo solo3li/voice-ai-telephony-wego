@@ -42,6 +42,7 @@ from agents.views import (
     delete_mcp_server,
     test_mcp_connection_view,
     test_mcp_tool_view,
+    execute_mcp_tool_bridge,
     api_user_live_context_web,
     api_user_live_context_preview_web,
 )
@@ -1328,12 +1329,12 @@ def campaigns_page_view(request):
 
 @login_required
 def store_page_view(request):
-    """Render dedicated Tools & MCP Store page embedding Universal FastMCP Hub."""
+    """Render dedicated Tools & MCP Store page."""
     context = {
         'page_title': 'متجر وأدوات MCP',
         'page_icon': '',
         'active_nav': 'store',
-        'mcp_url': 'https://mcp.169.58.32.179.nip.io/',
+        'preview_url': '/embed/call-center/tools/',
     }
     return render(request, 'voice_assistant/pages/store.html', context)
 
@@ -1636,7 +1637,7 @@ def embed_call_center_view(request, section=None):
             'active_nav': 'store',
             'title': 'متجر وأدوات MCP',
             'extra': lambda req, u: {
-                'mcp_url': 'https://mcp.169.58.32.179.nip.io/',
+                'preview_url': '/embed/call-center/tools/',
             }
         },
         'campaigns': {

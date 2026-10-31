@@ -35,7 +35,7 @@ function renderMcpServersGrid(servers) {
   let allActiveTools = [];
   activeServers.forEach(s => {
     (s.cached_tools || []).forEach(t => {
-      allActiveTools.push({ ...t, server_name: s.name, server_url: s.server_url });
+      allActiveTools.push({ ...t, server_id: s.id, server_name: s.name, server_url: s.server_url, last_synced_at: s.last_synced_at });
     });
   });
   if (mcpToolsCount) mcpToolsCount.innerText = allActiveTools.length;
@@ -141,28 +141,94 @@ function renderMcpServersGrid(servers) {
     `;
   } else {
     const noDesc = window.t ? window.t('store_no_desc', 'بدون وصف') : 'بدون وصف';
-    const paramsLabel = window.t ? window.t('store_params_label', 'المعاملات:') : 'المعاملات:';
     mcpToolsContainer.innerHTML = allActiveTools.map(t => {
-      const paramsList = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
-      const badges = paramsList.map(p => `<span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-xs font-medium">${p}</span>`).join(' ');
+      const schema = t.parameters || t.inputSchema || {};
+      const props = schema.properties || {};
+      const requiredList = schema.required || [];
+      const paramKeys = Object.keys(props);
+      const schemaBadges = paramKeys.length > 0
+        ? paramKeys.map(k => {
+            const p = props[k] || {};
+            const isReq = requiredList.includes(k);
+            const pType = p.type || 'string';
+            return `<span class="px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-700 font-mono text-2xs" title="${escapeHtml(p.description || '')}"><strong>${escapeHtml(k)}</strong>: <span class="text-violet-600">${escapeHtml(pType)}</span>${isReq ? ' <span class="text-rose-500 font-bold" title="إلزامي">*</span>' : ''}</span>`;
+          }).join(' ')
+        : '<span class="text-slate-400 text-2xs italic">لا يتطلب معاملات</span>';
+
       return `
-        <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition shadow-2xs space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-mono font-semibold text-slate-900 text-xs flex items-center gap-1.5 truncate">
-              <svg class="w-3.5 h-3.5 text-[#7c3aed] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              ${escapeHtml(t.name)}
-            </span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-medium shrink-0" title="${escapeHtml(t.server_url)}">
-              ${escapeHtml(t.server_name)}
-            </span>
+        <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition shadow-2xs space-y-3 flex flex-col justify-between">
+          <div class="space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <svg class="w-4 h-4 text-[#7c3aed] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="font-mono font-bold text-slate-900 text-xs truncate" title="${escapeHtml(t.name)}">
+                  ${escapeHtml(t.name)}
+                </span>
+              </div>
+              <span class="text-2xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-medium shrink-0 truncate max-w-[120px]" title="${escapeHtml(t.server_url)}">
+                ${escapeHtml(t.server_name)}
+              </span>
+            </div>
+
+            <p class="text-slate-600 text-xs leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">
+              ${escapeHtml(t.description || noDesc)}
+            </p>
+
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              <span class="px-2 py-0.5 rounded-md text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>متزامن مع Chatwoot Captain</span>
+              </span>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 space-y-1">
+              <span class="text-2xs text-slate-400 font-medium block">مخطط المُدخلات (Input Schema):</span>
+              <div class="flex flex-wrap gap-1 items-center">
+                ${schemaBadges}
+              </div>
+            </div>
           </div>
-          <p class="text-slate-600 text-xs leading-relaxed line-clamp-2" title="${escapeHtml(t.description)}">${escapeHtml(t.description || noDesc)}</p>
-          ${badges ? `<div class="pt-1 flex flex-wrap gap-1 items-center"><span class="text-xs text-slate-400">${paramsLabel}</span> ${badges}</div>` : ''}
+
+          <div class="pt-3 border-t border-slate-100">
+            <button 
+              type="button" 
+              onclick="openToolQuickTest('${escapeHtml(t.name)}', ${t.server_id || 0})" 
+              class="w-full px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition inline-flex items-center justify-center gap-1.5 shadow-2xs"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              </svg>
+              <span>تجربة مباشرة (Live Test)</span>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
+  }
+}
+
+function openToolQuickTest(toolName, serverId) {
+  if (!serverId && userMcpServers) {
+    const s = userMcpServers.find(srv => (srv.cached_tools || []).some(t => t.name === toolName));
+    if (s) serverId = s.id;
+  }
+  openMcpModal(serverId);
+  const playground = document.getElementById('modal-tool-playground');
+  if (playground) {
+    playground.classList.remove('hidden');
+    playground.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  const toolSelect = document.getElementById('playground-tool-select');
+  if (toolSelect && toolSelect.options) {
+    for (let i = 0; i < toolSelect.options.length; i++) {
+      if (toolSelect.options[i].text === toolName) {
+        toolSelect.selectedIndex = i;
+        onPlaygroundToolChange();
+        break;
+      }
+    }
   }
 }
 

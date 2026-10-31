@@ -68,6 +68,12 @@ async def execute_mcp_tool_call(server_url: str, auth_token: str = "", tool_name
     headers = {}
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    extra_headers = kwargs.get("headers") or kwargs.get("extra_headers") or {}
+    if isinstance(extra_headers, dict):
+        headers.update(extra_headers)
+    tenant_id = kwargs.get("tenant_id") or kwargs.get("user_id")
+    if tenant_id:
+        headers["X-Tenant-ID"] = str(tenant_id)
 
     logger.info(f"Connecting to MCP SSE at {server_url} to call '{t_name}' with {args}")
     try:

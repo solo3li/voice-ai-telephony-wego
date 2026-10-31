@@ -533,7 +533,14 @@ async def entrypoint(ctx: JobContext):
                     asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_executing", f"جاري تنفيذ الإجراء ({name})..."))
                     try:
                         res = await asyncio.wait_for(
-                            execute_mcp_tool_call(server_url=url, auth_token=token, tool_name=name, arguments=raw_args),
+                            execute_mcp_tool_call(
+                                server_url=url,
+                                auth_token=token,
+                                tool_name=name,
+                                arguments=raw_args,
+                                tenant_id=user_id,
+                                headers={"X-Tenant-ID": str(user_id)} if user_id else {}
+                            ),
                             timeout=10.0
                         )
                         asyncio.create_task(notify_centrifugo_async(channel_name, "agent_tool_done", f"تم إكمال الإجراء ({name})"))

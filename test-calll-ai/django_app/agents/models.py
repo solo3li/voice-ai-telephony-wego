@@ -1,6 +1,11 @@
 import os
+import logging
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+logger = logging.getLogger(__name__)
 
 class AgentProfile(models.Model):
     GENDER_CHOICES = [
@@ -489,6 +494,28 @@ class UserMCPServer(models.Model):
             "last_synced_at": self.last_synced_at.strftime("%Y-%m-%d %H:%M") if self.last_synced_at else None,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }
+
+
+@receiver(post_save, sender=UserMCPServer)
+def on_user_mcp_server_saved(sender, instance, **kwargs):
+    try:
+        user = User.objects.filter(id=instance.user_id).first() if instance.user_id else None
+        if user:
+            from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+            sync_tenant_mcp_to_chatwoot(user)
+    except Exception as e:
+        logger.warning(f"Failed to auto-sync MCP tools to Chatwoot on post_save: {e}")
+
+
+@receiver(post_delete, sender=UserMCPServer)
+def on_user_mcp_server_deleted(sender, instance, **kwargs):
+    try:
+        user = User.objects.filter(id=instance.user_id).first() if instance.user_id else None
+        if user:
+            from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+            sync_tenant_mcp_to_chatwoot(user)
+    except Exception as e:
+        logger.warning(f"Failed to auto-sync MCP tools to Chatwoot on post_delete: {e}")
 
 
 class SystemSetting(models.Model):

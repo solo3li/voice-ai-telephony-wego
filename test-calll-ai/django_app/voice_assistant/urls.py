@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/mcp/delete/', views.delete_mcp_server, name='delete_mcp_server'),
     path('api/mcp/test-connection/', views.test_mcp_connection_view, name='test_mcp_connection'),
     path('api/mcp/test-tool/', views.test_mcp_tool_view, name='test_mcp_tool'),
+    path('api/mcp/execute/<int:user_id>/<str:tool_name>/', views.execute_mcp_tool_bridge, name='execute_mcp_tool_bridge'),
 
     # Structured Live Context APIs
     path('api/context/', views.api_user_live_context_web, name='api_live_context'),

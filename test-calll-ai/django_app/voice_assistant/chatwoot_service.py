@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import json
 import logging
+import re
 import secrets
 import urllib.parse
 import psycopg2
@@ -1463,4 +1464,159 @@ def create_telegram_channel(data, account_id=2, assistant_id=1):
     payload = dict(data)
     payload['channel_type'] = 'telegram'
     return create_channel_inbox(payload, account_id=account_id, assistant_id=assistant_id)
+
+
+def sync_tenant_mcp_to_chatwoot(user):
+    """
+    Synchronizes all active MCP tools for a tenant into Chatwoot Captain AI
+    (`captain_custom_tools` table in chatwoot_production).
+    
+    1. Fetches TenantChatwootConfig(user) to obtain tenant's account_id and assistant_id.
+    2. Synchronizes all active tools into captain_custom_tools under that tenant's account only (never hardcoding Account 2).
+    3. Injects endpoint: https://app.169.58.32.179.nip.io/api/mcp/execute/{user.id}/{tool.name}/ with headers: {"Authorization": "Bearer {secret}"}.
+    4. Handles tool slug consistency (e.g. mcp_{user.id}_{tool.name}) to prevent tool duplication.
+    5. Cleans up any stale tools for this tenant that are no longer active.
+    """
+    if isinstance(user, int):
+        from django.contrib.auth import get_user_model
+        user = get_user_model().objects.filter(id=user).first()
+
+    if not user or not getattr(user, 'is_authenticated', False):
+        return {"status": "error", "message": "Invalid or unauthenticated user", "synced": 0}
+
+    # If user is an employee, map to their employer's tenant config
+    effective_user = user
+    if hasattr(user, 'employee_profile') and user.employee_profile and user.employee_profile.employer:
+        effective_user = user.employee_profile.employer
+
+    from django.contrib.auth import get_user_model
+    UserModel = get_user_model()
+    if not effective_user or not getattr(effective_user, 'id', None) or not UserModel.objects.filter(id=effective_user.id).exists():
+        return {"status": "error", "message": "User does not exist or is being deleted", "synced": 0}
+
+    from voice_assistant.models import TenantChatwootConfig
+    config = TenantChatwootConfig.objects.filter(user=effective_user).first()
+    if not config or not config.account_id or not config.assistant_id:
+        try:
+            config = get_or_create_tenant_chatwoot(effective_user)
+        except Exception as prov_err:
+            logger.warning(f"[MCP-ChatwootSync] Failed to auto-provision Chatwoot for tenant #{effective_user.id}: {prov_err}")
+            return {"status": "error", "message": f"Chatwoot config not found or could not be provisioned: {prov_err}", "synced": 0}
+
+    from voice_assistant.models import generate_mcp_webhook_secret
+    if not config.mcp_webhook_secret:
+        config.mcp_webhook_secret = generate_mcp_webhook_secret()
+        config.save(update_fields=['mcp_webhook_secret'])
+
+    from agents.models import UserMCPServer
+    active_servers = UserMCPServer.objects.filter(user=effective_user, is_active=True).order_by('-updated_at')
+
+    active_tools = []
+    seen_tool_names = set()
+    for s in active_servers:
+        for t in (s.cached_tools or []):
+            t_name = t.get('name')
+            if not t_name or t_name in seen_tool_names:
+                continue
+            seen_tool_names.add(t_name)
+            active_tools.append((t, s))
+
+    account_id = config.account_id
+    assistant_id = config.assistant_id
+    secret = config.mcp_webhook_secret
+    base_url = getattr(settings, 'APP_BASE_URL', 'https://app.169.58.32.179.nip.io').rstrip('/')
+
+    active_slugs = []
+    with get_chatwoot_db_conn() as conn:
+        try:
+            cur = conn.cursor()
+            for tool, server in active_tools:
+                t_name = tool.get('name', '')
+                t_desc = tool.get('description', '') or f"Tool {t_name} from {server.name}"
+                slug = f"mcp_{effective_user.id}_{t_name}"
+                active_slugs.append(slug)
+
+                endpoint_url = f"{base_url}/api/mcp/execute/{effective_user.id}/{t_name}/"
+                headers_json = json.dumps({"Authorization": f"Bearer {secret}"})
+                auth_config_json = json.dumps({"token": secret})
+
+                schema = tool.get('parameters') or tool.get('inputSchema') or {}
+                props = schema.get('properties', {}) if isinstance(schema, dict) else {}
+                required_fields = schema.get('required', []) if isinstance(schema, dict) else []
+                param_schema = []
+                template_parts = []
+                for p_name, p_def in props.items():
+                    p_type = p_def.get('type', 'string') if isinstance(p_def, dict) else 'string'
+                    p_desc = p_def.get('description', '') if isinstance(p_def, dict) else ''
+                    param_schema.append({
+                        "name": p_name,
+                        "type": p_type,
+                        "required": p_name in required_fields,
+                        "description": p_desc
+                    })
+                    if p_type in ('integer', 'number', 'boolean'):
+                        template_parts.append(f'"{p_name}": {{{{ {p_name} | default: 0 }}}}')
+                    else:
+                        template_parts.append(f'"{p_name}": "{{{{ {p_name} }}}}"')
+
+                request_template = "{" + ", ".join(template_parts) + "}" if template_parts else "{}"
+                param_schema_json = json.dumps(param_schema)
+                title = f"{t_name} ({server.name})"
+
+                cur.execute("""
+                    INSERT INTO captain_custom_tools (
+                        account_id, assistant_id, slug, title, description,
+                        http_method, endpoint_url, headers, param_schema,
+                        request_template, auth_type, auth_config, enabled,
+                        created_at, updated_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, 'POST', %s, %s::jsonb, %s::jsonb, %s, 'bearer', %s::jsonb, true, NOW(), NOW())
+                    ON CONFLICT (assistant_id, slug) DO UPDATE SET
+                        account_id = EXCLUDED.account_id,
+                        title = EXCLUDED.title,
+                        description = EXCLUDED.description,
+                        http_method = EXCLUDED.http_method,
+                        endpoint_url = EXCLUDED.endpoint_url,
+                        headers = EXCLUDED.headers,
+                        param_schema = EXCLUDED.param_schema,
+                        request_template = EXCLUDED.request_template,
+                        auth_type = EXCLUDED.auth_type,
+                        auth_config = EXCLUDED.auth_config,
+                        enabled = EXCLUDED.enabled,
+                        updated_at = NOW();
+                """, (
+                    account_id, assistant_id, slug, title, t_desc,
+                    endpoint_url, headers_json, param_schema_json,
+                    request_template, auth_config_json
+                ))
+
+            tenant_prefix = f"mcp_{effective_user.id}_%"
+            if active_slugs:
+                cur.execute("""
+                    DELETE FROM captain_custom_tools
+                    WHERE assistant_id = %s
+                      AND slug LIKE %s
+                      AND slug NOT IN %s;
+                """, (assistant_id, tenant_prefix, tuple(active_slugs)))
+            else:
+                cur.execute("""
+                    DELETE FROM captain_custom_tools
+                    WHERE assistant_id = %s
+                      AND slug LIKE %s;
+                """, (assistant_id, tenant_prefix))
+
+            conn.commit()
+            logger.info(f"[MCP-ChatwootSync] Synced {len(active_tools)} tools for tenant {effective_user.username} (Account #{account_id}, Assistant #{assistant_id})")
+            return {
+                "status": "success",
+                "synced": len(active_tools),
+                "account_id": account_id,
+                "assistant_id": assistant_id,
+                "tools": [t[0].get('name') for t in active_tools]
+            }
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"[MCP-ChatwootSync] Failed to sync tools for tenant {effective_user.username}: {e}", exc_info=True)
+            return {"status": "error", "message": str(e), "synced": 0}
+
 

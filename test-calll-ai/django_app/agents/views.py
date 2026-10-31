@@ -1,5 +1,7 @@
 import re
 import json
+import secrets
+import time
 import asyncio
 import logging
 from django.conf import settings
@@ -10,7 +12,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import AgentProfile, UserMCPServer, SystemSetting, TenantLiveContext, TenantCustomRole
+from .models import (
+    AgentProfile,
+    UserMCPServer,
+    SystemSetting,
+    TenantLiveContext,
+    TenantCustomRole,
+    AgentToolCallLog,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -377,6 +386,12 @@ def save_mcp_server(request):
             sync_msg = f"تم حفظ الرابط، ولكن تعذر الاتصال بالخادم: {sync_err}"
 
         server.save()
+        try:
+            from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+            sync_tenant_mcp_to_chatwoot(request.user)
+        except Exception as cw_err:
+            logger.warning(f"Error auto-syncing MCP to Chatwoot upon save: {cw_err}")
+
         return JsonResponse({
             "status": "success",
             "message": f"تم حفظ إعدادات MCP بنجاح. {sync_msg}",
@@ -405,6 +420,13 @@ def sync_mcp_server(request):
             server.cached_tools = tools
             server.last_synced_at = timezone.now()
             server.save()
+
+            try:
+                from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+                sync_tenant_mcp_to_chatwoot(request.user)
+            except Exception as cw_err:
+                logger.warning(f"Error auto-syncing MCP to Chatwoot upon server sync: {cw_err}")
+
             return JsonResponse({
                 "status": "success",
                 "message": f"تم تحديث أدوات '{server.name}' بنجاح. تم اكتشاف {len(tools)} أداة.",
@@ -433,6 +455,12 @@ def sync_mcp_server(request):
             except Exception as e:
                 errors.append(f"{s.name}: {e}")
         
+        try:
+            from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+            sync_tenant_mcp_to_chatwoot(request.user)
+        except Exception as cw_err:
+            logger.warning(f"Error auto-syncing MCP to Chatwoot upon bulk sync: {cw_err}")
+
         msg = f"تم تحديث الأدوات بنجاح. إجمالي الأدوات المكتشفة: {total_discovered} أداة."
         if errors:
             msg += f" (تعذر الاتصال بـ: {', '.join(errors)})"
@@ -464,6 +492,13 @@ def toggle_mcp_server(request):
 
     server.is_active = not server.is_active
     server.save()
+
+    try:
+        from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+        sync_tenant_mcp_to_chatwoot(request.user)
+    except Exception as cw_err:
+        logger.warning(f"Error auto-syncing MCP to Chatwoot upon toggle: {cw_err}")
+
     status_str = "تفعيل" if server.is_active else "تعطيل"
     return JsonResponse({
         "status": "success",
@@ -488,12 +523,22 @@ def delete_mcp_server(request):
         server = get_object_or_404(UserMCPServer, id=server_id, user=request.user)
         server_name = server.name
         server.delete()
+        try:
+            from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+            sync_tenant_mcp_to_chatwoot(request.user)
+        except Exception as cw_err:
+            logger.warning(f"Error auto-syncing MCP to Chatwoot upon delete: {cw_err}")
         return JsonResponse({"status": "success", "message": f"تم حذف خادم '{server_name}' بنجاح."})
     else:
         server = UserMCPServer.objects.filter(user=request.user).first()
         if server:
             server_name = server.name
             server.delete()
+            try:
+                from voice_assistant.chatwoot_service import sync_tenant_mcp_to_chatwoot
+                sync_tenant_mcp_to_chatwoot(request.user)
+            except Exception as cw_err:
+                logger.warning(f"Error auto-syncing MCP to Chatwoot upon delete: {cw_err}")
             return JsonResponse({"status": "success", "message": f"تم حذف خادم '{server_name}' بنجاح."})
         return JsonResponse({"status": "error", "message": "لا يوجد خادم لحذفه."}, status=404)
 
@@ -946,4 +991,159 @@ def api_custom_role_detail(request, role_id):
         })
 
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def execute_mcp_tool_bridge(request, user_id: int, tool_name: str):
+    """
+    Secure Execution Bridge in Django for Chatwoot Captain AI.
+    POST /api/mcp/execute/<int:user_id>/<str:tool_name>/
+    
+    1. Validates Authorization: Bearer <mcp_webhook_secret>.
+    2. Resolves the tool on the tenant's active UserMCPServer.
+    3. Executes tool against the FastMCP server via SSE/HTTP and returns JSON response to Chatwoot Captain AI.
+    4. Rejects unauthorized requests or invalid tenant/tool with 403 / 404.
+    """
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    # 1. Validate Authorization header
+    auth_header = request.headers.get('Authorization') or request.META.get('HTTP_AUTHORIZATION') or ''
+    if not auth_header.startswith('Bearer '):
+        return JsonResponse({
+            "status": "error",
+            "message": "Missing or invalid Authorization header (Bearer token required)"
+        }, status=403)
+
+    provided_token = auth_header.split(' ', 1)[1].strip()
+
+    # 2. Resolve TenantChatwootConfig
+    from voice_assistant.models import TenantChatwootConfig
+    config = TenantChatwootConfig.objects.filter(user_id=user_id).first()
+    if not config:
+        return JsonResponse({
+            "status": "error",
+            "message": f"Tenant #{user_id} not found or not configured"
+        }, status=404)
+
+    if not config.mcp_webhook_secret or not secrets.compare_digest(config.mcp_webhook_secret, provided_token):
+        return JsonResponse({
+            "status": "error",
+            "message": "Forbidden: Invalid authorization token for this tenant"
+        }, status=403)
+
+    # 3. Resolve Tool on tenant's active UserMCPServer
+    active_servers = UserMCPServer.objects.filter(user_id=user_id, is_active=True).order_by('-updated_at')
+    target_server = None
+    target_tool = None
+    for s in active_servers:
+        for t in (s.cached_tools or []):
+            if t.get('name') == tool_name:
+                target_server = s
+                target_tool = t
+                break
+        if target_server:
+            break
+
+    if not target_server or not target_tool:
+        return JsonResponse({
+            "status": "error",
+            "message": f"Tool '{tool_name}' not found on active MCP servers for tenant #{user_id}"
+        }, status=404)
+
+    # 4. Parse arguments from request body
+    try:
+        if request.body:
+            arguments = json.loads(request.body.decode('utf-8'))
+            if not isinstance(arguments, dict):
+                arguments = {}
+        else:
+            arguments = {}
+        if not arguments:
+            if request.POST:
+                arguments = request.POST.dict()
+            elif request.GET:
+                arguments = request.GET.dict()
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": f"Invalid JSON body: {str(e)}"
+        }, status=400)
+
+    # Unwrap if wrapped as {"arguments": {...}}
+    if isinstance(arguments, dict) and "arguments" in arguments and isinstance(arguments["arguments"], dict) and len(arguments) == 1:
+        arguments = arguments["arguments"]
+
+    # 5. Execute tool against FastMCP server via SSE
+    start_time = time.perf_counter()
+    from agents.mcp_service import test_mcp_tool_sync
+    try:
+        res = test_mcp_tool_sync(
+            server_url=target_server.server_url,
+            auth_token=target_server.auth_token,
+            tool_name=tool_name,
+            arguments=arguments,
+            timeout=10.0,
+            headers={"X-Tenant-ID": str(user_id)},
+            tenant_id=user_id
+        )
+    except Exception as exec_ex:
+        logger.error(f"Execution error on FastMCP tool '{tool_name}' for tenant #{user_id}: {exec_ex}", exc_info=True)
+        res = {
+            "ok": False,
+            "status": "error",
+            "error_type": "execution_exception",
+            "error_message": str(exec_ex),
+            "result": ""
+        }
+    exec_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+    is_err = not res.get("ok", True)
+    t_output = res.get("result") or res.get("error_message") or ""
+
+    # 6. Log execution in AgentToolCallLog
+    try:
+        raw_resp = {"output": str(t_output)[:2000]} if isinstance(t_output, str) else (t_output if isinstance(t_output, dict) else {"output": str(t_output)})
+        AgentToolCallLog.objects.create(
+            user_id=user_id,
+            room_name="chatwoot_captain",
+            caller_phone="",
+            tool_name=tool_name,
+            tool_type="mcp",
+            server_name=target_server.name,
+            server_url=target_server.server_url,
+            arguments=arguments if isinstance(arguments, dict) else {},
+            status="failed" if is_err else "success",
+            error_type=res.get("error_type", "none" if not is_err else "tool_error"),
+            error_message="" if not is_err else str(t_output)[:500],
+            response_preview=str(t_output)[:500],
+            raw_response=raw_resp,
+            execution_time_ms=int(exec_time_ms)
+        )
+    except Exception as log_ex:
+        logger.warning(f"Failed to log AgentToolCallLog in bridge: {log_ex}")
+
+    # 7. Format JSON response for Chatwoot Captain AI
+    parsed_output = t_output
+    if isinstance(t_output, str):
+        try:
+            parsed_output = json.loads(t_output)
+        except Exception:
+            parsed_output = t_output
+
+    if is_err:
+        return JsonResponse({
+            "status": "error",
+            "ok": False,
+            "error": res.get("error_message") or str(t_output),
+            "result": parsed_output,
+            "execution_time_ms": exec_time_ms
+        }, status=200)
+
+    return JsonResponse({
+        "status": "success",
+        "ok": True,
+        "result": parsed_output,
+        "execution_time_ms": exec_time_ms
+    }, status=200)
 

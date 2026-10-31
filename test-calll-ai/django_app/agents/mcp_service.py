@@ -3,6 +3,7 @@ import time
 import json
 import logging
 import concurrent.futures
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,13 @@ def _run_sync(coro):
         return asyncio.run(coro)
 
 
-async def test_mcp_connection_async(server_url: str, auth_token: str = "", timeout: float = 6.0) -> dict:
+async def test_mcp_connection_async(
+    server_url: str,
+    auth_token: str = "",
+    timeout: float = 6.0,
+    headers: dict = None,
+    tenant_id: Any = None
+) -> dict:
     """
     Connect to external MCP SSE server, perform handshake initialization,
     and discover available tools with schema validation.
@@ -47,9 +54,13 @@ async def test_mcp_connection_async(server_url: str, auth_token: str = "", timeo
             "tools": []
         }
 
-    headers = {}
+    req_headers = {}
     if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+        req_headers["Authorization"] = f"Bearer {auth_token}"
+    if headers and isinstance(headers, dict):
+        req_headers.update(headers)
+    if tenant_id:
+        req_headers["X-Tenant-ID"] = str(tenant_id)
 
     start_time = time.perf_counter()
 
@@ -58,7 +69,7 @@ async def test_mcp_connection_async(server_url: str, auth_token: str = "", timeo
         from mcp.client.sse import sse_client
 
         async def _connect_and_list():
-            async with sse_client(server_url, headers=headers) as (read, write):
+            async with sse_client(server_url, headers=req_headers) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     tool_list = await session.list_tools()
@@ -132,9 +143,21 @@ async def test_mcp_connection_async(server_url: str, auth_token: str = "", timeo
         }
 
 
-def test_mcp_connection_sync(server_url: str, auth_token: str = "", timeout: float = 6.0) -> dict:
+def test_mcp_connection_sync(
+    server_url: str,
+    auth_token: str = "",
+    timeout: float = 6.0,
+    headers: dict = None,
+    tenant_id: Any = None
+) -> dict:
     """Synchronous wrapper for test_mcp_connection_async."""
-    return _run_sync(test_mcp_connection_async(server_url, auth_token=auth_token, timeout=timeout))
+    return _run_sync(test_mcp_connection_async(
+        server_url,
+        auth_token=auth_token,
+        timeout=timeout,
+        headers=headers,
+        tenant_id=tenant_id
+    ))
 
 
 async def test_mcp_tool_async(
@@ -142,7 +165,9 @@ async def test_mcp_tool_async(
     auth_token: str = "",
     tool_name: str = "",
     arguments: dict = None,
-    timeout: float = 8.0
+    timeout: float = 8.0,
+    headers: dict = None,
+    tenant_id: Any = None
 ) -> dict:
     """
     Execute a test call on a specific tool on the remote MCP SSE server,
@@ -170,9 +195,13 @@ async def test_mcp_tool_async(
             "error_message": "اسم الأداة (tool_name) مطلوب لتنفيذ الاختبار."
         }
 
-    headers = {}
+    req_headers = {}
     if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+        req_headers["Authorization"] = f"Bearer {auth_token}"
+    if headers and isinstance(headers, dict):
+        req_headers.update(headers)
+    if tenant_id:
+        req_headers["X-Tenant-ID"] = str(tenant_id)
 
     start_time = time.perf_counter()
 
@@ -181,7 +210,7 @@ async def test_mcp_tool_async(
         from mcp.client.sse import sse_client
 
         async def _call_tool():
-            async with sse_client(server_url, headers=headers) as (read, write):
+            async with sse_client(server_url, headers=req_headers) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     result = await session.call_tool(tool_name, arguments=arguments)
@@ -280,7 +309,9 @@ def test_mcp_tool_sync(
     auth_token: str = "",
     tool_name: str = "",
     arguments: dict = None,
-    timeout: float = 8.0
+    timeout: float = 8.0,
+    headers: dict = None,
+    tenant_id: Any = None
 ) -> dict:
     """Synchronous wrapper for test_mcp_tool_async."""
     return _run_sync(test_mcp_tool_async(
@@ -288,5 +319,7 @@ def test_mcp_tool_sync(
         auth_token=auth_token,
         tool_name=tool_name,
         arguments=arguments,
-        timeout=timeout
+        timeout=timeout,
+        headers=headers,
+        tenant_id=tenant_id
     ))

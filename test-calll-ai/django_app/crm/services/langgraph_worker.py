@@ -17,7 +17,10 @@ import time
 from typing import TypedDict, Dict, Any, Optional, List, Tuple
 from datetime import datetime, timezone
 
-from langgraph.graph import StateGraph, END
+try:
+    from langgraph.graph import StateGraph, END
+except ImportError:
+    StateGraph, END = None, None
 from google import genai
 from google.genai import types
 
@@ -515,6 +518,8 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
                         t_output = ""
                         start_tool_time = time.perf_counter()
                         is_err = False
+                        srv_info = {}
+                        mcp_res = {}
 
                         if t_name == "search_knowledge_base":
                             q = str(t_args.get("query", inbound_msg))
@@ -556,7 +561,9 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
                                 auth_token=srv_info["auth_token"],
                                 tool_name=t_name,
                                 arguments=t_args,
-                                timeout=8.0
+                                timeout=8.0,
+                                headers={"X-Tenant-ID": str(user_id)},
+                                tenant_id=user_id
                             )
                             t_output = mcp_res.get("result") or mcp_res.get("error_message") or "{}"
                             is_err = not mcp_res.get("ok", True)
@@ -568,17 +575,34 @@ def decision_and_drafting_node(state: FollowupState) -> FollowupState:
 
                         # Log tool call into AgentToolCallLog
                         try:
+                            tool_type = (
+                                "rag" if t_name == "search_knowledge_base"
+                                else ("memory" if t_name == "lookup_customer_memory"
+                                else ("transfer" if t_name == "escalate_to_human_support"
+                                else "mcp"))
+                            )
+                            server_name = srv_info.get("name", "") if t_name in mcp_tool_map else ""
+                            server_url = srv_info.get("server_url", "") if t_name in mcp_tool_map else ""
+                            err_type = mcp_res.get("error_type", "tool_error") if (t_name in mcp_tool_map and is_err) else ("tool_error" if is_err else "none")
+                            raw_resp = {"output": str(t_output)[:2000]} if isinstance(t_output, str) else (t_output if isinstance(t_output, dict) else {"output": str(t_output)})
                             AgentToolCallLog.objects.create(
                                 user_id=user_id,
+                                room_name=f"whatsapp_{phone}",
+                                caller_phone=phone,
                                 tool_name=t_name,
-                                arguments=t_args,
-                                result={"output": t_output[:1000]},
-                                is_error=is_err,
-                                error_message="" if not is_err else t_output[:255],
-                                execution_time_ms=exec_ms
+                                tool_type=tool_type,
+                                server_name=server_name,
+                                server_url=server_url,
+                                arguments=t_args if isinstance(t_args, dict) else {},
+                                status="failed" if is_err else "success",
+                                error_type=err_type,
+                                error_message="" if not is_err else str(t_output)[:500],
+                                response_preview=str(t_output)[:500],
+                                raw_response=raw_resp,
+                                execution_time_ms=int(exec_ms)
                             )
                         except Exception as log_ex:
-                            logger.debug(f"Could not log tool call: {log_ex}")
+                            logger.warning(f"Could not log tool call into AgentToolCallLog: {log_ex}")
 
                         # Append tool response part
                         contents.append(types.Content(
