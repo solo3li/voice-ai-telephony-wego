@@ -1,6 +1,6 @@
 {% load static %}
-<!-- ==================== Minimalist Sidebar (5 Dedicated Core Portals) ==================== -->
-<aside id="sidebar" class="bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-slate-200/80 md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
+<!-- ==================== Minimalist Sidebar (5 Dedicated Core Portals - Obsidian Dark) ==================== -->
+<aside id="sidebar" class="bg-[#0f172a] text-slate-300 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-slate-800 md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
   
   <style>
     /* Minimalist text-only sidebar dimensions */
@@ -30,11 +30,11 @@
   </style>
 
   <!-- Top Brand (Pinned) -->
-  <div class="h-14 px-3 flex items-center justify-between gap-2 border-b border-slate-200/80 shrink-0 bg-white">
+  <div class="h-14 px-3 flex items-center justify-between gap-2 border-b border-slate-800 shrink-0 bg-[#0f172a]">
     <a href="{% url 'voice_assistant:room' %}" class="flex items-center gap-2.5 min-w-0 overflow-hidden cursor-pointer group flex-1">
       <img src="{% static 'logo.svg' %}" alt="Logo" class="w-8 h-8 rounded-lg shrink-0 shadow-xs group-hover:scale-105 transition-transform" />
       <div class="brand-text min-w-0 flex-1">
-        <h1 class="text-xs font-bold text-slate-900 tracking-tight truncate whitespace-nowrap leading-tight" data-i18n="app_title">المساعد الصوتي الذكي</h1>
+        <h1 class="text-xs font-bold text-white tracking-tight truncate whitespace-nowrap leading-tight" data-i18n="app_title">المساعد الصوتي الذكي</h1>
         <p class="text-2xs text-slate-400 font-medium truncate whitespace-nowrap leading-tight mt-0.5" data-i18n="app_subtitle">Enterprise Voice AI</p>
       </div>
     </a>
@@ -44,14 +44,14 @@
       type="button" 
       onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
       id="sidebar-top-lang-btn" 
-      class="text-slate-600 hover:text-[#7c3aed] bg-slate-50 hover:bg-violet-50/70 px-2 py-1 rounded-md border border-slate-200/80 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
+      class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 px-2 py-1 rounded-md border border-slate-700/80 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs" 
       title="تغيير اللغة / Switch Language" 
       data-i18n-title="switch_language"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
       </svg>
-      <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider">EN</span>
+      <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">EN</span>
     </button>
     
     <!-- Hidden element to preserve JS compatibility if queried -->
@@ -59,44 +59,44 @@
   </div>
 
   <!-- Navigation Links: Exactly 5 Dedicated Text-Only Portals -->
-  <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-1 text-xs custom-sidebar-scroll min-h-0">
+  <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-1 text-xs custom-sidebar-scroll min-h-0 bg-[#0f172a]">
     
     <!-- 1. Voice & Telephony Suite Portal -->
-    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours' or not active_nav %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:room' %}" id="nav-btn-telephony-portal" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav in 'voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours' or not active_nav %}bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40 font-semibold shadow-xs{% else %}text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_telephony_suite">المساعد الصوتي والاتصالات</span>
     </a>
 
     <!-- 2. Omnichannel Chat -->
-    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:chat_page' %}" id="nav-btn-chat" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'chat' %}bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40 font-semibold shadow-xs{% else %}text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_chat_hub">صندوق المحادثات الموحدة</span>
     </a>
 
     <!-- 3. Billing & Wallet -->
-    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:billing_page' %}" id="nav-btn-billing" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'billing' %}bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40 font-semibold shadow-xs{% else %}text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_billing">الرصيد والفواتير</span>
     </a>
 
     <!-- 4. Developer API -->
-    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:developer_page' %}" id="nav-btn-developer" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'developer' %}bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40 font-semibold shadow-xs{% else %}text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_developer">واجهات المطورين (API)</span>
     </a>
 
     <!-- 5. Partner & SaaS -->
-    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#f5f3ff] text-[#7c3aed] font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal{% endif %}">
+    <a href="{% url 'voice_assistant:partner_page' %}" id="nav-btn-partner" class="nav-item block w-full px-3 py-2 rounded-lg transition text-start {% if active_nav == 'partner' %}bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40 font-semibold shadow-xs{% else %}text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border border-transparent font-normal{% endif %}">
       <span class="nav-text" data-i18n="nav_partner">الشريك والـ SaaS</span>
     </a>
 
   </nav>
 
   <!-- Bottom User Profile (Minimalist & Quiet) -->
-  <div class="p-3 border-t border-slate-200/80 shrink-0 bg-white">
+  <div class="p-3 border-t border-slate-800 shrink-0 bg-[#0f172a]">
     <div class="flex items-center justify-between gap-2 px-1">
       <div class="flex items-center gap-2.5 overflow-hidden">
-        <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-semibold flex items-center justify-center text-xs shrink-0">
+        <div class="w-7 h-7 rounded-full bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold flex items-center justify-center text-xs shrink-0">
           {{ request.user.username|slice:":2"|upper }}
         </div>
         <div class="brand-text overflow-hidden text-xs leading-tight">
-          <p class="font-medium text-slate-800 truncate">{{ request.user.username }}</p>
+          <p class="font-medium text-slate-200 truncate">{{ request.user.username }}</p>
           <span class="text-xs text-slate-400" data-i18n="role_admin">مدير النظام</span>
         </div>
       </div>
@@ -106,17 +106,17 @@
           type="button" 
           onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
           id="sidebar-bottom-lang-btn" 
-          class="text-slate-400 hover:text-[#7c3aed] p-1.5 rounded-md hover:bg-slate-50 transition flex items-center gap-1 cursor-pointer" 
+          class="text-slate-400 hover:text-[#c4b5fd] p-1.5 rounded-md hover:bg-slate-800 transition flex items-center gap-1 cursor-pointer" 
           title="تغيير اللغة / Switch Language" 
           data-i18n-title="switch_language"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
           </svg>
-          <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono">EN</span>
+          <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono text-slate-300">EN</span>
         </button>
 
-        <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50/50 transition" title="تسجيل الخروج" data-i18n-title="btn_logout">
+        <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-md hover:bg-rose-500/10 transition" title="تسجيل الخروج" data-i18n-title="btn_logout">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
           </svg>

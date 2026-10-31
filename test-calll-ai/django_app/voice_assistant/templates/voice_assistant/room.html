@@ -3752,14 +3752,14 @@
         activeTopBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
 
-      // Update sidebar nav active styling (minimalist text-only)
+      // Update sidebar nav active styling (minimalist text-only - dark obsidian)
       document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.remove('bg-[#f5f3ff]', 'text-[#7c3aed]', 'font-bold', 'font-semibold', 'border', 'border-[#ddd6fe]/60', 'shadow-2xs');
-        btn.classList.add('text-slate-600', 'font-normal');
-        btn.classList.remove('font-medium');
+        btn.classList.remove('bg-[#f5f3ff]', 'text-[#7c3aed]', 'font-bold', 'font-semibold', 'border', 'border-[#ddd6fe]/60', 'shadow-2xs', 'bg-[#7c3aed]/20', 'text-[#c4b5fd]', 'border-[#7c3aed]/40', 'shadow-xs');
+        btn.classList.add('text-slate-400', 'font-normal', 'border-transparent');
+        btn.classList.remove('text-slate-600', 'font-medium', 'text-white');
         const icon = btn.querySelector('svg');
         if (icon) {
-          icon.classList.remove('text-[#7c3aed]');
+          icon.classList.remove('text-[#7c3aed]', 'text-[#c4b5fd]');
           icon.classList.add('text-slate-400');
         }
       });
@@ -3769,12 +3769,12 @@
         ? document.getElementById('nav-btn-telephony-portal')
         : (document.getElementById('nav-btn-' + tabId) || (tabId === 'hours' ? document.getElementById('nav-btn-business-hours') : null));
       if (activeNavBtn) {
-        activeNavBtn.classList.add('bg-[#f5f3ff]', 'text-[#7c3aed]', 'font-semibold');
-        activeNavBtn.classList.remove('text-slate-600', 'font-normal', 'font-medium');
+        activeNavBtn.classList.add('bg-[#7c3aed]/20', 'text-[#c4b5fd]', 'font-semibold', 'border', 'border-[#7c3aed]/40', 'shadow-xs');
+        activeNavBtn.classList.remove('text-slate-400', 'text-slate-600', 'font-normal', 'font-medium', 'border-transparent');
         const icon = activeNavBtn.querySelector('svg');
         if (icon) {
           icon.classList.remove('text-slate-400');
-          icon.classList.add('text-[#7c3aed]');
+          icon.classList.add('text-[#c4b5fd]');
         }
       }
 
