@@ -491,15 +491,16 @@
         display: none !important;
       }
 
-      /* 5. Complete White-Label: Permanently hide Onboarding Welcome Screen cards */
-      .grid-rows-\[auto_1fr_1fr\],
+      /* 5. Complete White-Label: Hide Chatwoot Onboarding Cards linking to internal settings */
       div:has(> img[src*="/dashboard/images/onboarding/"]),
       div:has(img[src*="/dashboard/images/onboarding/"]),
       div:has(> div > img[src*="/dashboard/images/onboarding/"]),
+      a[href*="settings_inbox_new"],
+      a[href*="settings_teams_new"],
+      a[href*="canned_list"],
+      a[href*="labels_list"],
       div:has(> a[href*="settings_inbox_new"]),
-      div:has(> div > a[href*="settings_inbox_new"]),
-      div:has(> div > a[href*="settings_teams_new"]),
-      div:has(> p.font-interDisplay:has(+ p[class*="text-n-slate-11"])) {
+      div:has(> a[href*="settings_teams_new"]) {
         display: none !important;
       }
 
@@ -528,22 +529,58 @@
             }
           } catch(e) {}
         }
-        function removeOnboardingView() {
+        function customizeWhiteLabelOnboarding() {
           try {
+            // 1. Hide any remaining onboarding cards linking to internal Chatwoot settings
             var onboardingImgs = document.querySelectorAll('img[src*="/dashboard/images/onboarding/"]');
             for (var i = 0; i < onboardingImgs.length; i++) {
-              var parent = onboardingImgs[i].closest('.grid-rows-\\[auto_1fr_1fr\\], .min-h-screen, .grid');
-              if (parent) {
-                parent.style.setProperty('display', 'none', 'important');
+              var card = onboardingImgs[i].closest('.border, [class*="bg-n-surface-2"], div:has(a)');
+              if (card) {
+                card.style.setProperty('display', 'none', 'important');
               }
             }
+
+            // 2. Scrub any raw "Chatwoot" mentions in text nodes across DOM
+            function scrubChatwoot(node) {
+              if (node.nodeType === 3) {
+                if (node.nodeValue && node.nodeValue.indexOf('Chatwoot') !== -1) {
+                  node.nodeValue = node.nodeValue.replace(/Chatwoot/gi, 'منظومة الذكاء الاصطناعي');
+                }
+              } else if (node.nodeType === 1) {
+                if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+                  for (var c = 0; c < node.childNodes.length; c++) {
+                    scrubChatwoot(node.childNodes[c]);
+                  }
+                }
+              }
+            }
+            if (document.body) {
+              scrubChatwoot(document.body);
+            }
+
+            // 3. Inject elegant White-Label Onboarding Status Card if not already present
             var titles = document.querySelectorAll('p.font-interDisplay, p.text-xl');
             for (var j = 0; j < titles.length; j++) {
               var t = titles[j].textContent || '';
-              if (t.indexOf('مرحبا بك') !== -1 || t.indexOf('Welcome') !== -1 || t.indexOf('Chatwoot') !== -1 || t.indexOf('مساء الخير') !== -1 || t.indexOf('صباح الخير') !== -1) {
-                var pDiv = titles[j].closest('.grid-rows-\\[auto_1fr_1fr\\], .min-h-screen, .grid');
-                if (pDiv) {
-                  pDiv.style.setProperty('display', 'none', 'important');
+              if (t.indexOf('مرحبا بك') !== -1 || t.indexOf('Welcome') !== -1 || t.indexOf('مساء الخير') !== -1 || t.indexOf('صباح الخير') !== -1) {
+                var pDiv = titles[j].closest('.self-start, [class*="col-span-full"], div');
+                if (pDiv && !pDiv.querySelector('#whitelabel-onboarding-callout')) {
+                  var callout = document.createElement('div');
+                  callout.id = 'whitelabel-onboarding-callout';
+                  callout.style.cssText = 'margin-top: 24px; padding: 20px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 16px; max-width: 620px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: right; direction: rtl;';
+                  callout.innerHTML = '' +
+                    '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #7c3aed; font-weight: 700; font-size: 15px;">' +
+                      '<svg style="width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' +
+                      '<span>صندوق المحادثات الموحدة جاهز للعمل</span>' +
+                    '</div>' +
+                    '<p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0 0 14px 0;">' +
+                      'يمكنك ربط قنوات التواصل (واتساب، تيليجرام) عبر زر <strong style="color: #7c3aed;">"ربط القنوات"</strong> في الشريط العلوي لبدء استقبال المحادثات تلقائياً.' +
+                    '</p>' +
+                    '<div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9999px; font-size: 12px; color: #059669; font-weight: 600;">' +
+                      '<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>' +
+                      '<span>الكابتن AI متصل (GPT-4o Mini) وجاهز للرد الذكي التلقائي فور ربط القناة</span>' +
+                    '</div>';
+                  pDiv.appendChild(callout);
                 }
               }
             }
@@ -552,7 +589,7 @@
         function removeSidebarProfile() {
           try {
             removeTopBrandHeader();
-            removeOnboardingView();
+            customizeWhiteLabelOnboarding();
             var sidebar = document.querySelector('aside');
             if (!sidebar) return;
             var sections = sidebar.querySelectorAll('section');
@@ -570,22 +607,22 @@
         }
         removeTopBrandHeader();
         removeSidebarProfile();
-        removeOnboardingView();
+        customizeWhiteLabelOnboarding();
         document.addEventListener('DOMContentLoaded', function() {
           removeTopBrandHeader();
           removeSidebarProfile();
-          removeOnboardingView();
+          customizeWhiteLabelOnboarding();
         });
         window.addEventListener('load', function() {
           removeTopBrandHeader();
           removeSidebarProfile();
-          removeOnboardingView();
+          customizeWhiteLabelOnboarding();
         });
         if (window.MutationObserver) {
           var profileObs = new MutationObserver(function() {
             removeTopBrandHeader();
             removeSidebarProfile();
-            removeOnboardingView();
+            customizeWhiteLabelOnboarding();
           });
           profileObs.observe(document.documentElement, { childList: true, subtree: true });
         }

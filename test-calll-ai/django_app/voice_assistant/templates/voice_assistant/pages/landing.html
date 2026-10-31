@@ -4,8 +4,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>المساعد الصوتي الذكي | Enterprise Voice AI</title>
+  <title data-i18n="page_title">المساعد الصوتي الذكي | Enterprise Voice AI</title>
   
+  <!-- Early Language & Direction Sync -->
+  <script>
+    (function() {
+      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      document.documentElement.lang = savedLang;
+      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+    })();
+  </script>
+
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -38,10 +47,6 @@
               700: '#6d28d9',
               800: '#5b21b6',
               900: '#4c1d95',
-            },
-            obsidian: {
-              900: '#0f172a',
-              950: '#0b0f19',
             }
           }
         }
@@ -54,6 +59,9 @@
       font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
       background-color: #ffffff;
       color: #0f172a;
+    }
+    html[dir="ltr"] body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     }
     .card-shadow {
       box-shadow: 0 12px 35px -5px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
@@ -96,7 +104,7 @@
   <!-- Top Brand Gradient Accent Line -->
   <div class="h-1.5 w-full bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#7c3aed] shrink-0"></div>
 
-  <!-- Main Navigation Header (Clean & Matches Platform Style) -->
+  <!-- Main Navigation Header -->
   <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       
@@ -106,18 +114,18 @@
           <img src="{% static 'logo.svg' %}" alt="Logo" class="w-full h-full object-contain" onerror="this.parentElement.innerHTML='<svg class='w-5 h-5 text-violet-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z'/></svg>'" />
         </div>
         <div>
-          <span class="text-base font-black tracking-tight text-slate-900 group-hover:text-[#7c3aed] transition-colors">المساعد الصوتي الذكي</span>
-          <span class="block text-[10px] font-en font-semibold text-slate-400 -mt-0.5">Enterprise Voice AI Suite</span>
+          <span class="text-base font-black tracking-tight text-slate-900 group-hover:text-[#7c3aed] transition-colors" data-i18n="app_title">المساعد الصوتي الذكي</span>
+          <span class="block text-[10px] font-en font-semibold text-slate-400 -mt-0.5" data-i18n="app_subtitle">Enterprise Voice AI Suite</span>
         </div>
       </a>
 
       <!-- Center Nav Links -->
       <nav class="hidden lg:flex items-center gap-7 text-xs font-bold text-slate-600">
-        <a href="#" class="text-[#7c3aed] font-extrabold">الرئيسية</a>
-        <a href="#features" class="hover:text-slate-900 transition">السنترال الهاتفي FreeSWITCH</a>
-        <a href="#omnichannel" class="hover:text-slate-900 transition">صندوق المحادثات الشامل</a>
-        <a href="#developer" class="hover:text-slate-900 transition">واجهات المطورين (API)</a>
-        <a href="#pricing" class="hover:text-slate-900 transition">الباقات والأسعار</a>
+        <a href="#" class="text-[#7c3aed] font-extrabold" data-i18n="nav_home">الرئيسية</a>
+        <a href="#features" class="hover:text-slate-900 transition" data-i18n="nav_telephony">السنترال الهاتفي FreeSWITCH</a>
+        <a href="#omnichannel" class="hover:text-slate-900 transition" data-i18n="nav_omnichannel">صندوق المحادثات الشامل</a>
+        <a href="#developer" class="hover:text-slate-900 transition" data-i18n="nav_api">واجهات المطورين (API)</a>
+        <a href="#pricing" class="hover:text-slate-900 transition" data-i18n="nav_pricing">الباقات والأسعار</a>
       </nav>
 
       <!-- Right Action CTAs -->
@@ -135,16 +143,16 @@
 
         {% if is_authenticated %}
           <a href="{% url 'voice_assistant:room' %}" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-xs transition flex items-center gap-1.5">
-            <span>لوحة التحكم</span>
+            <span data-i18n="btn_dashboard">لوحة التحكم</span>
             <span class="font-en text-[11px] opacity-80">({{ username }})</span>
             <span>↵</span>
           </a>
         {% else %}
-          <a href="{% url 'voice_assistant:login' %}" class="px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition">
+          <a href="{% url 'voice_assistant:login' %}" class="px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition" data-i18n="btn_login">
             تسجيل الدخول
           </a>
           <a href="{% url 'voice_assistant:register' %}" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-sm shadow-[#7c3aed]/25 transition transform hover:-translate-y-0.5 flex items-center gap-1">
-            <span>ابدأ الآن مجاناً</span>
+            <span data-i18n="btn_start_free">ابدأ الآن مجاناً</span>
             <span class="font-mono">↵</span>
           </a>
         {% endif %}
@@ -157,7 +165,7 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-16 flex-1 flex flex-col justify-center">
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
       
-      <!-- Right Side: Value Propositions & Dynamic Typewriter Headline (7 Cols) -->
+      <!-- Value Propositions & Dynamic Typewriter Headline (7 Cols) -->
       <div class="lg:col-span-7 space-y-6 text-start">
         
         <!-- Pill Badge -->
@@ -166,49 +174,49 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span>منظومة متطورة تجمع الهاتف والشات بذكاء اصطناعي فائق</span>
+          <span data-i18n="hero_badge">منظومة متطورة تجمع الهاتف والشات بذكاء اصطناعي فائق</span>
         </div>
 
         <!-- Big Headline with Smooth Typewriter Effect -->
         <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-[1.3] tracking-tight min-h-[3.8em] sm:min-h-[2.7em]">
-          حوّل سنترالك الهاتفي إلى <br class="hidden sm:inline" />
+          <span data-i18n="hero_title_prefix">حوّل سنترالك الهاتفي إلى</span> <br class="hidden sm:inline" />
           <span id="typewriter-text" class="text-[#7c3aed] underline decoration-[#7c3aed]/30 underline-offset-8"></span><span class="typing-cursor"></span>
         </h1>
 
         <!-- Subheading -->
-        <p class="text-base text-slate-600 leading-relaxed font-normal max-w-xl">
+        <p class="text-base text-slate-600 leading-relaxed font-normal max-w-xl" data-i18n="hero_desc">
           يقوم المساعد الصوتي بالرد الفوري على عملائك هاتفياً، حجز المواعيد، الإجابة على استفسارات قواعد المعرفة (RAG)، وإرسال تأكيدات الواتساب في ثوانٍ معدودة دون تأخير.
         </p>
 
         <!-- Feature Checkpoints Grid (2x2) -->
         <div class="grid sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700 pt-2">
-          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
-            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
-            <span>سنترال هاتفي احترافي (SIP Trunk & DID)</span>
+          <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold shrink-0">✓</div>
+            <span data-i18n="feat_sip">سنترال هاتفي احترافي (SIP Trunk & DID)</span>
           </div>
-          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
-            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
-            <span>صوت بشري واقعي بكل اللهجات العربية</span>
+          <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold shrink-0">✓</div>
+            <span data-i18n="feat_dialects">صوت بشري واقعي بكل اللهجات العربية</span>
           </div>
-          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
-            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
-            <span>صندوق محادثات موحد للواتساب وتيليجرام</span>
+          <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold shrink-0">✓</div>
+            <span data-i18n="feat_omni">صندوق محادثات موحد للواتساب وتيليجرام</span>
           </div>
-          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
-            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
-            <span>علامة تجارية بيضاء 100% White-Label</span>
+          <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold shrink-0">✓</div>
+            <span data-i18n="feat_whitelabel">علامة تجارية بيضاء 100% White-Label</span>
           </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex flex-wrap items-center gap-4 pt-3">
           <a href="{% url 'voice_assistant:register' %}" class="px-7 py-3.5 rounded-xl text-xs font-black bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-md shadow-[#7c3aed]/25 transition transform hover:-translate-y-0.5 flex items-center gap-2">
-            <span>جرّب المنصة الآن مجاناً</span>
-            <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            <span data-i18n="btn_try_free">جرّب المنصة الآن مجاناً</span>
+            <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </a>
           <button onclick="triggerLiveDemoCall()" class="px-6 py-3.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-2xs transition flex items-center gap-2">
             <svg class="w-4 h-4 text-[#7c3aed] animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <span>استمع لمكالمة ذكية حية</span>
+            <span data-i18n="btn_listen_demo">استمع لمكالمة ذكية حية</span>
           </button>
         </div>
 
@@ -216,23 +224,23 @@
         <div class="pt-4 flex items-center gap-6 text-xs text-slate-500 font-medium border-t border-slate-100">
           <div class="flex items-center gap-1.5">
             <span class="text-base font-black text-slate-900 font-en">120ms</span>
-            <span>سرعة الاستجابة</span>
+            <span data-i18n="stat_latency">سرعة الاستجابة</span>
           </div>
           <div class="w-1 h-1 rounded-full bg-slate-300"></div>
           <div class="flex items-center gap-1.5">
             <span class="text-base font-black text-emerald-600 font-en">99.8%</span>
-            <span>فهم دقيق للهجات</span>
+            <span data-i18n="stat_accuracy">فهم دقيق للهجات</span>
           </div>
           <div class="w-1 h-1 rounded-full bg-slate-300"></div>
           <div class="flex items-center gap-1.5">
             <span class="text-base font-black text-violet-700 font-en">0</span>
-            <span>انتظار للعملاء</span>
+            <span data-i18n="stat_wait">انتظار للعملاء</span>
           </div>
         </div>
 
       </div>
 
-      <!-- Left Side: Interactive Voice Studio Cockpit Widget (5 Cols) -->
+      <!-- Interactive Voice Studio Cockpit Widget (5 Cols) -->
       <div class="lg:col-span-5">
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 card-shadow space-y-4 relative overflow-hidden">
           
@@ -240,7 +248,7 @@
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-xs font-bold text-slate-900">غرفة الاتصال الصوتي المباشر</span>
+              <span class="text-xs font-bold text-slate-900" data-i18n="widget_room_title">غرفة الاتصال الصوتي المباشر</span>
             </div>
             <span class="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-violet-50 text-violet-700 border border-violet-100">
               120ms Realtime
@@ -254,20 +262,20 @@
                 SA
               </div>
               <div>
-                <div class="text-xs font-bold text-slate-900">عبدالله الشمري (عميل مميز)</div>
-                <div class="text-[11px] text-slate-500 font-en font-medium">+966 55 432 1098 • الرياض</div>
+                <div class="text-xs font-bold text-slate-900" data-i18n="widget_caller_name">عبدالله الشمري (عميل مميز)</div>
+                <div class="text-[11px] text-slate-500 font-en font-medium" data-i18n="widget_caller_sub">+966 55 432 1098 • الرياض</div>
               </div>
             </div>
             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-              جارية • 01:15
+              <span data-i18n="widget_call_active">جارية • 01:15</span>
             </span>
           </div>
 
           <!-- Live Animated Audio Waveform Box -->
           <div class="p-4 rounded-xl bg-[#f5f3ff] border border-[#7c3aed]/20 text-center space-y-2">
             <div class="flex items-center justify-between text-[11px] font-bold text-[#7c3aed] px-1">
-              <span>صوت المساعد الذكي (لهجة سعودية حية)</span>
+              <span data-i18n="widget_voice_label">صوت المساعد الذكي (لهجة سعودية حية)</span>
               <span class="font-en text-[10px] text-violet-600 font-semibold">PCM16 HD Audio</span>
             </div>
             
@@ -285,7 +293,7 @@
             </div>
 
             <!-- Dynamic Streamed Speech Bubble -->
-            <p id="agent-speech-bubble" class="text-xs text-slate-800 font-medium leading-relaxed bg-white/80 p-2.5 rounded-lg border border-violet-100 min-h-[3.5em] flex items-center justify-center">
+            <p id="agent-speech-bubble" class="text-xs text-slate-800 font-medium leading-relaxed bg-white/80 p-2.5 rounded-lg border border-violet-100 min-h-[3.5em] flex items-center justify-center" data-i18n="widget_speech_text">
               "أهلاً بك أستاذ عبدالله! تم تأكيد موعد الصيانة وحجز الفني بنجاح، ووصلتك الآن رسالة تفاصيل عبر واتساب."
             </p>
           </div>
@@ -293,7 +301,7 @@
           <!-- Interactive Simulated Phone Keypad -->
           <div class="space-y-1.5 pt-1">
             <div class="flex items-center justify-between px-2 text-[11px] text-slate-500 font-semibold">
-              <span>لوحة مفاتيح الاتصال التفاعلية (DTMF)</span>
+              <span data-i18n="widget_dtmf_title">لوحة مفاتيح الاتصال التفاعلية (DTMF)</span>
               <span id="dialed-display" class="font-mono font-bold text-slate-800 text-xs tracking-wider"></span>
             </div>
             <div class="grid grid-cols-3 gap-2">
@@ -310,11 +318,11 @@
           <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
             <button onclick="simulateTransfer()" class="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-              <span>تحويل لوكيل بشري</span>
+              <span data-i18n="btn_transfer">تحويل لوكيل بشري</span>
             </button>
             <button onclick="simulateHangup()" id="hangup-btn" class="flex-1 py-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-rose-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 010-1.41C3.28 8.77 7.42 7 12 7s8.72 1.77 11.71 4.67c.39.39.39 1.02 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
-              <span>إنهاء المكالمة</span>
+              <span data-i18n="btn_hangup">إنهاء المكالمة</span>
             </button>
           </div>
 
@@ -329,8 +337,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       
       <div class="text-center max-w-2xl mx-auto mb-10 space-y-2">
-        <h2 class="text-2xl font-black text-slate-900">كل ما تحتاجه لإدارة الاتصالات في مكان واحد</h2>
-        <p class="text-xs sm:text-sm text-slate-500 font-medium">بنية تحتية سحابية متكاملة مصممة لأداء فائق بدون توقف</p>
+        <h2 class="text-2xl font-black text-slate-900" data-i18n="sec_features_title">كل ما تحتاجه لإدارة الاتصالات في مكان واحد</h2>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium" data-i18n="sec_features_sub">بنية تحتية سحابية متكاملة مصممة لأداء فائق بدون توقف</p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-6 text-start text-xs">
@@ -339,8 +347,8 @@
           <div class="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold text-base">
             📞
           </div>
-          <h3 class="text-sm font-bold text-slate-900">سنترال FreeSWITCH & SIP مؤسسي</h3>
-          <p class="text-slate-600 leading-relaxed">
+          <h3 class="text-sm font-bold text-slate-900" data-i18n="card1_title">سنترال FreeSWITCH & SIP مؤسسي</h3>
+          <p class="text-slate-600 leading-relaxed" data-i18n="card1_desc">
             تحكم كامل بالمسارات الصوتية، قوائم الانتظار mod_callcenter، وإجراء المكالمات الواردة والصادرة عبر أي مزود اتصالات محلي أو عالمي.
           </p>
         </div>
@@ -350,8 +358,8 @@
           <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-base">
             💬
           </div>
-          <h3 class="text-sm font-bold text-slate-900">صندوق محادثات موحد Chatwoot</h3>
-          <p class="text-slate-600 leading-relaxed">
+          <h3 class="text-sm font-bold text-slate-900" data-i18n="card2_title">صندوق محادثات موحد Chatwoot</h3>
+          <p class="text-slate-600 leading-relaxed" data-i18n="card2_desc">
             ادمج قنوات واتساب الرسمية (WhatsApp Cloud)، شات الموقع، ورسائل شبكات التواصل مع تسجيل دخول تلقائي معزول لكل مستأجر.
           </p>
         </div>
@@ -361,8 +369,8 @@
           <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center font-bold text-base">
             🧠
           </div>
-          <h3 class="text-sm font-bold text-slate-900">ذاكرة العملاء وقواعد المعرفة RAG</h3>
-          <p class="text-slate-600 leading-relaxed">
+          <h3 class="text-sm font-bold text-slate-900" data-i18n="card3_title">ذاكرة العملاء وقواعد المعرفة RAG</h3>
+          <p class="text-slate-600 leading-relaxed" data-i18n="card3_desc">
             يربط الذكاء الاصطناعي كل مكالمة ببيانات العميل السابقة وملفات مستنداتك للإجابة بدقة متناهية وإتمام المهام بالصوت فورياً.
           </p>
         </div>
@@ -375,8 +383,8 @@
   <footer class="border-t border-slate-200/80 bg-white py-6 text-xs text-slate-500 font-medium text-center">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-800">المساعد الصوتي الذكي</span>
-        <span>• جميع الحقوق محفوظة © {% now "Y" %}</span>
+        <span class="font-bold text-slate-800" data-i18n="app_title">المساعد الصوتي الذكي</span>
+        <span>• <span data-i18n="footer_rights">جميع الحقوق محفوظة ©</span> {% now "Y" %}</span>
       </div>
       <div class="flex items-center gap-6 font-en font-bold text-slate-600 text-[11px]">
         <span>FREESWITCH NATIVE</span>
@@ -387,40 +395,148 @@
     </div>
   </footer>
 
-  <!-- ==================== JAVASCRIPT: TYPEWRITER & LIVE INTERACTIONS ==================== -->
+  <!-- ==================== JAVASCRIPT: FULL BILINGUAL I18N & LIVE INTERACTIONS ==================== -->
   <script>
-    // 1. TYPEWRITER EFFECT (كأن الكلام بيتكتب)
-    (function initTypewriter() {
-      const phrases = [
+    // 1. COMPREHENSIVE BILINGUAL TRANSLATION DICTIONARY
+    const LANDING_I18N = {
+      ar: {
+        page_title: "المساعد الصوتي الذكي | Enterprise Voice AI",
+        app_title: "المساعد الصوتي الذكي",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "الرئيسية",
+        nav_telephony: "السنترال الهاتفي FreeSWITCH",
+        nav_omnichannel: "صندوق المحادثات الشامل",
+        nav_api: "واجهات المطورين (API)",
+        nav_pricing: "الباقات والأسعار",
+        btn_login: "تسجيل الدخول",
+        btn_start_free: "ابدأ الآن مجاناً",
+        btn_dashboard: "لوحة التحكم",
+        hero_badge: "منظومة متطورة تجمع الهاتف والشات بذكاء اصطناعي فائق",
+        hero_title_prefix: "حوّل سنترالك الهاتفي إلى",
+        hero_desc: "يقوم المساعد الصوتي بالرد الفوري على عملائك هاتفياً، حجز المواعيد، الإجابة على استفسارات قواعد المعرفة (RAG)، وإرسال تأكيدات الواتساب في ثوانٍ معدودة دون تأخير.",
+        feat_sip: "سنترال هاتفي احترافي (SIP Trunk & DID)",
+        feat_dialects: "صوت بشري واقعي بكل اللهجات العربية",
+        feat_omni: "صندوق محادثات موحد للواتساب وتيليجرام",
+        feat_whitelabel: "علامة تجارية بيضاء 100% White-Label",
+        btn_try_free: "جرّب المنصة الآن مجاناً",
+        btn_listen_demo: "استمع لمكالمة ذكية حية",
+        stat_latency: "سرعة الاستجابة",
+        stat_accuracy: "فهم دقيق للهجات",
+        stat_wait: "انتظار للعملاء",
+        widget_room_title: "غرفة الاتصال الصوتي المباشر",
+        widget_caller_name: "عبدالله الشمري (عميل مميز)",
+        widget_caller_sub: "+966 55 432 1098 • الرياض",
+        widget_call_active: "جارية • 01:15",
+        widget_voice_label: "صوت المساعد الذكي (لهجة سعودية حية)",
+        widget_speech_text: '"أهلاً بك أستاذ عبدالله! تم تأكيد موعد الصيانة وحجز الفني بنجاح، ووصلتك الآن رسالة تفاصيل عبر واتساب."',
+        widget_dtmf_title: "لوحة مفاتيح الاتصال التفاعلية (DTMF)",
+        btn_transfer: "تحويل لوكيل بشري",
+        btn_hangup: "إنهاء المكالمة",
+        sec_features_title: "كل ما تحتاجه لإدارة الاتصالات في مكان واحد",
+        sec_features_sub: "بنية تحتية سحابية متكاملة مصممة لأداء فائق بدون توقف",
+        card1_title: "سنترال FreeSWITCH & SIP مؤسسي",
+        card1_desc: "تحكم كامل بالمسارات الصوتية، قوائم الانتظار mod_callcenter، وإجراء المكالمات الواردة والصادرة عبر أي مزود اتصالات محلي أو عالمي.",
+        card2_title: "صندوق محادثات موحد Chatwoot",
+        card2_desc: "ادمج قنوات واتساب الرسمية (WhatsApp Cloud)، شات الموقع، ورسائل شبكات التواصل مع تسجيل دخول تلقائي معزول لكل مستأجر.",
+        card3_title: "ذاكرة العملاء وقواعد المعرفة RAG",
+        card3_desc: "يربط الذكاء الاصطناعي كل مكالمة ببيانات العميل السابقة وملفات مستنداتك للإجابة بدقة متناهية وإتمام المهام بالصوت فورياً.",
+        footer_rights: "جميع الحقوق محفوظة ©",
+        transfer_msg: '"جاري الآن تحويل مكالمتكم لأحد ممثلي خدمة العملاء... يرجى البقاء على الخط."',
+        hangup_msg: '"شكراً لتواصلكم مع المساعد الصوتي الذكي. نتمنى لكم يوماً سعيداً!"'
+      },
+      en: {
+        page_title: "Smart Voice AI | Enterprise Telephony Suite",
+        app_title: "Smart Voice AI",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "Home",
+        nav_telephony: "FreeSWITCH PBX",
+        nav_omnichannel: "Omnichannel Inbox",
+        nav_api: "Developer APIs",
+        nav_pricing: "Plans & Pricing",
+        btn_login: "Sign In",
+        btn_start_free: "Get Started Free",
+        btn_dashboard: "Dashboard",
+        hero_badge: "Unified Telephony & Omnichannel Voice AI Platform",
+        hero_title_prefix: "Transform your phone system into",
+        hero_desc: "Autonomous voice AI agents that answer callers instantly, book appointments, resolve queries using RAG knowledge bases, and send WhatsApp confirmations in seconds without delay.",
+        feat_sip: "Carrier-Grade SIP PBX (Trunks & DIDs)",
+        feat_dialects: "Hyper-realistic voices in all dialects & English",
+        feat_omni: "Unified WhatsApp, Telegram & Chat Inbox",
+        feat_whitelabel: "100% Pure White-Label Ready",
+        btn_try_free: "Start Free Trial Now",
+        btn_listen_demo: "Listen to Live AI Call",
+        stat_latency: "Ultra-low Latency",
+        stat_accuracy: "Dialect Accuracy",
+        stat_wait: "Caller Wait Time",
+        widget_room_title: "Live Voice Call Studio",
+        widget_caller_name: "Abdullah Al-Shammari (VIP Client)",
+        widget_caller_sub: "+966 55 432 1098 • Riyadh",
+        widget_call_active: "Active • 01:15",
+        widget_voice_label: "Smart Assistant Voice (Live AI Dialect)",
+        widget_speech_text: '"Welcome Mr. Abdullah! Your maintenance appointment has been confirmed and the technician is booked. You will receive confirmation via WhatsApp."',
+        widget_dtmf_title: "Interactive DTMF Dialpad",
+        btn_transfer: "Transfer to Agent",
+        btn_hangup: "End Call",
+        sec_features_title: "Everything You Need for Enterprise Telephony",
+        sec_features_sub: "Carrier-grade cloud infrastructure engineered for zero downtime",
+        card1_title: "Enterprise FreeSWITCH & SIP PBX",
+        card1_desc: "Complete inbound & outbound call routing, mod_callcenter queues, and seamless integration with any local or global carrier.",
+        card2_title: "Omnichannel Chatwoot Hub",
+        card2_desc: "Sync official WhatsApp Cloud lines, live website chat, and social channels with isolated tenant auto-provisioning.",
+        card3_title: "Customer Memory & RAG Knowledge",
+        card3_desc: "Real-time context sync with customer CRM history and uploaded documents for instant, accurate voice resolution.",
+        footer_rights: "All Rights Reserved ©",
+        transfer_msg: '"Transferring your call to a customer representative... Please stay on the line."',
+        hangup_msg: '"Thank you for calling Smart Voice AI. Have a wonderful day!"'
+      }
+    };
+
+    // 2. TYPEWRITER EFFECT WITH LANGUAGE-AWARE PHRASES
+    const TYPEWRITER_PHRASES = {
+      ar: [
         'مركز اتصال ذاتي القيادة',
         'وكيل ذكاء اصطناعي صوتي فوري',
         'سنترال سحابي يفهم كل اللهجات',
         'منظومة خدمة عملاء بدون انتظار'
-      ];
-      
+      ],
+      en: [
+        'Autonomous Call Centers',
+        'Realtime AI Voice Agents',
+        'Enterprise Cloud PBX Telephony',
+        'Zero-Wait Customer Care Suite'
+      ]
+    };
+
+    let typewriterTimer = null;
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 80;
+
+    function startTypewriter(lang) {
+      if (typewriterTimer) clearTimeout(typewriterTimer);
+      const phrases = TYPEWRITER_PHRASES[lang] || TYPEWRITER_PHRASES.ar;
       const el = document.getElementById('typewriter-text');
       if (!el) return;
 
-      let phraseIndex = 0;
-      let charIndex = 0;
-      let isDeleting = false;
-      let typingSpeed = 80;
+      charIndex = 0;
+      isDeleting = false;
+      el.textContent = '';
 
-      function type() {
-        const currentPhrase = phrases[phraseIndex];
+      function tick() {
+        const currentPhrase = phrases[phraseIndex % phrases.length];
         
         if (isDeleting) {
           el.textContent = currentPhrase.substring(0, charIndex - 1);
           charIndex--;
-          typingSpeed = 40;
+          typingSpeed = 35;
         } else {
           el.textContent = currentPhrase.substring(0, charIndex + 1);
           charIndex++;
-          typingSpeed = 85;
+          typingSpeed = 75;
         }
 
         if (!isDeleting && charIndex === currentPhrase.length) {
-          // Pause at full phrase
           typingSpeed = 2200;
           isDeleting = true;
         } else if (isDeleting && charIndex === 0) {
@@ -429,13 +545,62 @@
           typingSpeed = 400;
         }
 
-        setTimeout(type, typingSpeed);
+        typewriterTimer = setTimeout(tick, typingSpeed);
       }
 
-      setTimeout(type, 300);
-    })();
+      typewriterTimer = setTimeout(tick, 200);
+    }
 
-    // 2. DIALPAD SIMULATION (Beep & Display)
+    // 3. LANGUAGE SWITCHING & DOM UPDATES
+    function getCurrentLang() {
+      return localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+    }
+
+    function applyLandingLanguage(lang) {
+      const isRtl = (lang === 'ar');
+      document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+
+      // Update button label
+      const langBtnText = document.getElementById('landing-lang-text');
+      if (langBtnText) {
+        langBtnText.textContent = isRtl ? 'EN' : 'عربي';
+      }
+
+      // Update all [data-i18n] text elements
+      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.textContent = dict[key];
+        }
+      });
+
+      // Update document title
+      if (dict.page_title) {
+        document.title = dict.page_title;
+      }
+
+      // Restart typewriter in current language
+      startTypewriter(lang);
+    }
+
+    function toggleAppLanguage() {
+      const current = getCurrentLang();
+      const next = (current === 'ar') ? 'en' : 'ar';
+      localStorage.setItem('app_lang', next);
+      localStorage.setItem('voice_app_lang', next);
+      document.cookie = 'app_lang=' + next + '; path=/; max-age=31536000';
+      applyLandingLanguage(next);
+      window.dispatchEvent(new CustomEvent('appLanguageChanged', { detail: { lang: next, isRtl: (next === 'ar') } }));
+    }
+
+    // Initialize Language on Load
+    document.addEventListener('DOMContentLoaded', function() {
+      applyLandingLanguage(getCurrentLang());
+    });
+
+    // 4. DIALPAD SIMULATION (Beep & Display)
     let dialedDigits = '';
     const audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
 
@@ -445,7 +610,6 @@
       const display = document.getElementById('dialed-display');
       if (display) display.textContent = dialedDigits;
 
-      // Play soft DTMF beep
       if (audioCtx) {
         try {
           if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -463,19 +627,28 @@
       }
     }
 
-    // 3. LIVE DEMO CALL SIMULATION
+    // 5. LIVE DEMO CALL SIMULATION
+    const DEMO_SAMPLES = {
+      ar: [
+        '"أهلاً بك! تم حجز موعد الزيارة بنجاح وتم إرسال كود التأكيد لواتساب فورياً."',
+        '"مرحباً بك في خدمة العملاء، كيف يمكنني مساعدتك في استفسارك الهاتفي اليوم؟"',
+        '"تم تحديث طلبكم في النظام السحابي، والتذكرة الآن قيد المعالجة المباشرة."'
+      ],
+      en: [
+        '"Welcome! Your appointment is successfully booked and details sent to your WhatsApp."',
+        '"Hello and welcome to customer care. How can I assist with your phone inquiry today?"',
+        '"Your request has been updated in our cloud PBX and ticket is active."'
+      ]
+    };
+
     function triggerLiveDemoCall() {
       const bubble = document.getElementById('agent-speech-bubble');
       if (!bubble) return;
       
-      const sampleTexts = [
-        '"أهلاً بك! تم حجز موعد الزيارة بنجاح وتم إرسال كود التأكيد لواتساب فورياً."',
-        '"مرحباً بك في خدمة العملاء، كيف يمكنني مساعدتك في استفسارك الهاتفي اليوم؟"',
-        '"تم تحديث طلبكم في النظام السحابي، والتذكرة الآن قيد المعالجة المباشرة."'
-      ];
-      const randomText = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+      const lang = getCurrentLang();
+      const samples = DEMO_SAMPLES[lang] || DEMO_SAMPLES.ar;
+      const randomText = samples[Math.floor(Math.random() * samples.length)];
       
-      // Typewriter animation on bubble
       bubble.textContent = '';
       let i = 0;
       function streamText() {
@@ -491,32 +664,17 @@
 
     function simulateTransfer() {
       const bubble = document.getElementById('agent-speech-bubble');
-      if (bubble) bubble.textContent = '"جاري الآن تحويل مكالمتكم لأحد ممثلي خدمة العملاء... يرجى البقاء على الخط."';
+      const lang = getCurrentLang();
+      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
+      if (bubble) bubble.textContent = dict.transfer_msg;
     }
 
     function simulateHangup() {
       const bubble = document.getElementById('agent-speech-bubble');
-      if (bubble) bubble.textContent = '"شكراً لتواصلكم مع المساعد الصوتي الذكي. نتمنى لكم يوماً سعيداً!"';
+      const lang = getCurrentLang();
+      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
+      if (bubble) bubble.textContent = dict.hangup_msg;
     }
-
-    // 4. LANGUAGE SWITCHER (EN / AR)
-    function toggleAppLanguage() {
-      const current = localStorage.getItem('app_lang') || 'ar';
-      const next = (current === 'ar') ? 'en' : 'ar';
-      localStorage.setItem('app_lang', next);
-      localStorage.setItem('voice_app_lang', next);
-      window.location.reload();
-    }
-
-    (function syncLandingLanguage() {
-      const saved = localStorage.getItem('app_lang') || 'ar';
-      const btnText = document.getElementById('landing-lang-text');
-      if (btnText) btnText.textContent = (saved === 'ar') ? 'EN' : 'عربي';
-      if (saved === 'en') {
-        document.documentElement.dir = 'ltr';
-        document.documentElement.lang = 'en';
-      }
-    })();
   </script>
 
 </body>
