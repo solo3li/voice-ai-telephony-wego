@@ -69,7 +69,7 @@
     <nav id="top-tabs-container" class="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
       
       <!-- 1. Voice Room -->
-      <a href="{% if is_embed %}/embed/call-center/room/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:room' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/room/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:room' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'voice' or not active_nav %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -79,7 +79,7 @@
       </a>
 
       <!-- 2. CDR Calls -->
-      <a href="{% if is_embed %}/embed/call-center/calls/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:calls_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/calls/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:calls_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'calls' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
         </svg>
@@ -87,7 +87,7 @@
       </a>
 
       <!-- 3. RAG Knowledge Base -->
-      <a href="{% if is_embed %}/embed/call-center/documents/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:rag_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/documents/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:rag_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'rag' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
         </svg>
@@ -95,7 +95,7 @@
       </a>
 
       <!-- 4. Personas & Voices -->
-      <a href="{% if is_embed %}/embed/call-center/personas/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:personas_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/personas/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:personas_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'personas' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
@@ -103,7 +103,7 @@
       </a>
 
       <!-- 5. Customers & CRM Memory -->
-      <a href="{% if is_embed %}/embed/call-center/crm/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:crm_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/crm/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:crm_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'crm' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
@@ -111,7 +111,7 @@
       </a>
 
       <!-- 6. MCP Tools Store -->
-      <a href="{% if is_embed %}/embed/call-center/tools/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:store_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/tools/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:store_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'store' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
         </svg>
@@ -119,7 +119,7 @@
       </a>
 
       <!-- 7. Campaigns & CRM -->
-      <a href="{% if is_embed %}/embed/call-center/campaigns/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:campaigns_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/campaigns/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:campaigns_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'campaigns' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
         </svg>
@@ -127,7 +127,7 @@
       </a>
 
       <!-- 8. Call Center & Queues -->
-      <a href="{% if is_embed %}/embed/call-center/call-center/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:callcenter_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/call-center/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:callcenter_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'callcenter' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
         </svg>
@@ -135,7 +135,7 @@
       </a>
 
       <!-- 9. Telephony & PBX -->
-      <a href="{% if is_embed %}/embed/call-center/telephony/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:telephony_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/telephony/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:telephony_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'telephony' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
         </svg>
@@ -143,7 +143,7 @@
       </a>
 
       <!-- 10. Business Hours -->
-      <a href="{% if is_embed %}/embed/call-center/hours/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% else %}{% url 'voice_assistant:business_hours_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
+      <a href="{% if is_embed %}/embed/call-center/hours/?token={{ embed_token|default:'' }}{% if embed_locale %}&locale={{ embed_locale }}{% endif %}{% if embed_client_id %}&client_id={{ embed_client_id }}{% endif %}{% else %}{% url 'voice_assistant:business_hours_page' %}{% endif %}" class="top-nav-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition {% if active_nav == 'business_hours' or active_nav == 'hours' %}active bg-[#f5f3ff] text-[#7c3aed] font-semibold border-[#ddd6fe]/70 shadow-2xs{% else %}border-transparent text-slate-600 hover:text-slate-900 hover:bg-white font-normal{% endif %}">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
         </svg>

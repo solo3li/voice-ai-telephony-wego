@@ -63,6 +63,22 @@ Rails.application.config.to_prepare do
   endpoint = ENV['CAPTAIN_OPEN_AI_ENDPOINT'].presence ||
              (defined?(InstallationConfig) && InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value).presence
 
+  # Rack::Attack: Safelist SSO logins to prevent 429 Too Many Requests in embedded iframe suites
+  if defined?(Rack::Attack)
+    begin
+      Rack::Attack.safelist('allow sso sign_in') do |req|
+        req.path_without_extensions == '/auth/sign_in' && (
+          req.auth_param('sso_auth_token').present? ||
+          req.params['sso_auth_token'].present? ||
+          req.get_header('HTTP_REFERER').to_s.include?('sso_auth_token')
+        )
+      end
+      Rails.logger.info "[LimitsPatch] Successfully registered Rack::Attack safelist for SSO sign_in"
+    rescue => e
+      Rails.logger.error "[LimitsPatch] Failed to register Rack::Attack safelist: #{e.message}"
+    end
+  end
+
   if key.present?
     begin
       require 'ruby_llm'

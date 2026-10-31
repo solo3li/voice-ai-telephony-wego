@@ -51,6 +51,9 @@ def get_employee_from_token(request):
     else:
         token_str = auth_header.split("Bearer ")[1].strip()
 
+    if token_str.startswith("sk_live_") or token_str.startswith("sk_test_"):
+        return None
+
     try:
         payload = jwt.decode(token_str, JWT_SECRET, algorithms=["HS256"])
         return EmployeeProfile.objects.select_related('user').filter(id=payload.get("employee_id"), is_active=True).first()
@@ -177,6 +180,15 @@ def api_employee_me(request):
 def api_list_employees(request):
     """List all employees and active call queues for the internal directory."""
     employee = get_employee_from_token(request)
+    if not employee and not request.user.is_authenticated:
+        try:
+            from voice_assistant.views import resolve_embed_user
+            u, _ = resolve_embed_user(request)
+            if u:
+                request.user = u
+        except Exception:
+            pass
+
     if not employee and not request.user.is_authenticated:
         return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
 
@@ -538,6 +550,15 @@ async def _async_create_queue_trunk_and_rule(queue_name, queue_code, user_id):
 def list_call_queues(request):
     """List all call queues for authenticated user or employee with waiting metrics."""
     employee = get_employee_from_token(request)
+    if not employee and not request.user.is_authenticated:
+        try:
+            from voice_assistant.views import resolve_embed_user
+            u, _ = resolve_embed_user(request)
+            if u:
+                request.user = u
+        except Exception:
+            pass
+
     if not employee and not request.user.is_authenticated:
         return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
 

@@ -3,6 +3,66 @@
  * Handles CSRF, Centrifugo Realtime, Global Header Balance, Language Toggle, and Sidebar.
  */
 
+// Universal Embed Token & Client ID Fetch Interceptor
+(function() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const embedToken = urlParams.get('token') || urlParams.get('key') || window.EMBED_TOKEN || '';
+    const embedClientId = urlParams.get('client_id') || window.EMBED_CLIENT_ID || '';
+    const embedLocale = urlParams.get('locale') || urlParams.get('lang') || window.EMBED_LOCALE || '';
+
+    if (embedToken) window.EMBED_TOKEN = embedToken;
+    if (embedClientId) window.EMBED_CLIENT_ID = embedClientId;
+    if (embedLocale) window.EMBED_LOCALE = embedLocale;
+
+    const originalFetch = window.fetch;
+    window.fetch = function(resource, init) {
+      init = init || {};
+      let url = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');
+      const isRequestObj = (typeof resource === 'object' && resource !== null && !(resource instanceof URL) && typeof resource.url === 'string');
+
+      const curToken = window.EMBED_TOKEN || '';
+      const curClientId = window.EMBED_CLIENT_ID || '';
+      const curLocale = window.EMBED_LOCALE || '';
+
+      if (curToken && url && (url.startsWith('/api/') || (url.startsWith('http') && url.includes('/api/')))) {
+        try {
+          const parsed = new URL(url, window.location.origin);
+          if (curToken && !parsed.searchParams.has('token') && !parsed.searchParams.has('key')) {
+            parsed.searchParams.set('token', curToken);
+          }
+          if (curClientId && !parsed.searchParams.has('client_id')) {
+            parsed.searchParams.set('client_id', curClientId);
+          }
+          if (curLocale && !parsed.searchParams.has('locale') && !parsed.searchParams.has('lang')) {
+            parsed.searchParams.set('locale', curLocale);
+          }
+          url = parsed.pathname + parsed.search + parsed.hash;
+        } catch (_) {}
+
+        if (!init.headers) init.headers = {};
+        if (init.headers instanceof Headers) {
+          if (curToken && !init.headers.has('Authorization')) init.headers.set('Authorization', 'Bearer ' + curToken);
+          if (curClientId && !init.headers.has('X-Client-ID')) init.headers.set('X-Client-ID', curClientId);
+        } else if (Array.isArray(init.headers)) {
+          if (curToken) init.headers.push(['Authorization', 'Bearer ' + curToken]);
+          if (curClientId) init.headers.push(['X-Client-ID', curClientId]);
+        } else if (typeof init.headers === 'object') {
+          if (curToken && !init.headers['Authorization']) init.headers['Authorization'] = 'Bearer ' + curToken;
+          if (curClientId && !init.headers['X-Client-ID']) init.headers['X-Client-ID'] = curClientId;
+        }
+      }
+
+      if (isRequestObj && url) {
+        return originalFetch.call(this, url, init);
+      }
+      return originalFetch.call(this, url || resource, init);
+    };
+  } catch (e) {
+    console.debug('Fetch interceptor init note:', e);
+  }
+})();
+
 // CSRF Token Helper
 function getCookie(name) {
   let cookieValue = null;

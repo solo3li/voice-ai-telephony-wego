@@ -170,6 +170,12 @@
   <!-- Page Modals Block -->
   {% block modals %}{% endblock %}
 
+  <script>
+    window.EMBED_TOKEN = "{{ embed_token|default:token|default:'' }}";
+    window.EMBED_CLIENT_ID = "{{ embed_client_id|default:client_id|default:'' }}";
+    window.EMBED_LOCALE = "{{ embed_locale|default:locale|default:'ar' }}";
+  </script>
+
   <!-- Common Shared Script -->
   <script src="{% static 'js/common.js' %}"></script>
 

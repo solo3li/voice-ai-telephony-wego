@@ -1695,13 +1695,29 @@ def embed_call_center_view(request, section=None):
     cfg = section_map[normalized_section]
     token_val = request.GET.get('token') or request.GET.get('key') or ''
     locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    client_id_val = request.GET.get('client_id') or request.headers.get('X-Client-ID') or ''
+
+    # Establish user session for cookie-enabled Ajax & iframe security
+    if user and hasattr(request, 'session'):
+        from django.contrib.auth import login
+        try:
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            if token_val:
+                request.session['embed_token'] = token_val
+            if client_id_val:
+                request.session['embed_client_id'] = str(client_id_val)
+        except Exception:
+            pass
 
     context = {
         'is_embed': True,
         'embed_token': token_val,
         'embed_locale': locale_val,
+        'embed_client_id': client_id_val,
         'token': token_val,
         'locale': locale_val,
+        'client_id': client_id_val,
         'user_id': user.id,
         'username': user.username,
         'page_title': cfg['title'],
@@ -1775,6 +1791,20 @@ def embed_chat_hub_view(request):
 
     token_val = request.GET.get('token') or request.GET.get('key') or ''
     locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    client_id_val = request.GET.get('client_id') or request.headers.get('X-Client-ID') or ''
+
+    # Establish user session for cookie-enabled Ajax & iframe security
+    if user and hasattr(request, 'session'):
+        from django.contrib.auth import login
+        try:
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            if token_val:
+                request.session['embed_token'] = token_val
+            if client_id_val:
+                request.session['embed_client_id'] = str(client_id_val)
+        except Exception:
+            pass
 
     from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings, get_or_create_tenant_chatwoot
     cfg = get_or_create_tenant_chatwoot(user)
@@ -1787,8 +1817,10 @@ def embed_chat_hub_view(request):
         'is_embed': True,
         'embed_token': token_val,
         'embed_locale': locale_val,
+        'embed_client_id': client_id_val,
         'token': token_val,
         'locale': locale_val,
+        'client_id': client_id_val,
         'user_id': user.id,
         'username': user.username,
         'page_title': 'شات - منصة المحادثات الشاملة',

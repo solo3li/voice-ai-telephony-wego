@@ -3401,6 +3401,12 @@
     </div>
   </div>
 
+  <script>
+    window.EMBED_TOKEN = "{{ embed_token|default:token|default:'' }}";
+    window.EMBED_CLIENT_ID = "{{ embed_client_id|default:client_id|default:'' }}";
+    window.EMBED_LOCALE = "{{ embed_locale|default:locale|default:'ar' }}";
+  </script>
+
   <!-- Business Hours JavaScript Dependencies -->
   <script src="{% static 'js/business_hours.js' %}"></script>
 
@@ -4156,15 +4162,15 @@
           });
 
           centrifugeClient.on('connecting', () => {
-            cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> Centrifugo: جاري الاتصال';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> Centrifugo: جاري الاتصال';
           });
 
           centrifugeClient.on('connected', () => {
-            cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Centrifugo: متصل';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Centrifugo: متصل';
           });
 
           centrifugeClient.on('disconnected', () => {
-            cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Centrifugo: منقطع';
+            if (cfStatusBadge) cfStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Centrifugo: منقطع';
           });
 
           let sub = null;
@@ -4191,7 +4197,7 @@
         });
 
         livekitRoom.on(LivekitClient.RoomEvent.Connected, () => {
-          lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> LiveKit: متصل';
+          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> LiveKit: متصل';
           callStatus.innerText = 'تم الانضمام للغرفة. جاري تشغيل المساعد الذكي وقاعدة المستندات...';
           subStatus.innerText = 'المساعد الصوتي ينضم الآن...';
 
@@ -4248,7 +4254,7 @@
         });
 
         livekitRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
-          lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-500"></span> LiveKit: غير متصل';
+          if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-500"></span> LiveKit: غير متصل';
           cleanupCall();
         });
 
