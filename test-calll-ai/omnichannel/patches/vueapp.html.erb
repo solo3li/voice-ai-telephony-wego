@@ -502,9 +502,32 @@
       div:has(> p.font-interDisplay:has(+ p[class*="text-n-slate-11"])) {
         display: none !important;
       }
+
+      /* 6. Complete White-Label: Permanently hide Chatwoot Logo and Account Switcher in Sidebar Top */
+      aside > section:first-of-type > div:first-of-type,
+      aside #sidebar-account-switcher,
+      aside [class*="SidebarAccountSwitcher"],
+      aside div:has(> [id="sidebar-account-switcher"]),
+      aside div:has(> svg [clip-path*="woot-logo"]),
+      aside div:has(> .size-6 > svg) {
+        display: none !important;
+      }
     </style>
     <script id="white-label-sidebar-profile">
       (function() {
+        function removeTopBrandHeader() {
+          try {
+            var aside = document.querySelector('aside');
+            if (!aside) return;
+            var firstSection = aside.querySelector('section');
+            if (firstSection && firstSection.firstElementChild) {
+              var topDiv = firstSection.firstElementChild;
+              if (topDiv.querySelector('#sidebar-account-switcher') || topDiv.querySelector('svg') || topDiv.classList.contains('min-w-0')) {
+                topDiv.style.setProperty('display', 'none', 'important');
+              }
+            }
+          } catch(e) {}
+        }
         function removeOnboardingView() {
           try {
             var onboardingImgs = document.querySelectorAll('img[src*="/dashboard/images/onboarding/"]');
@@ -528,6 +551,7 @@
         }
         function removeSidebarProfile() {
           try {
+            removeTopBrandHeader();
             removeOnboardingView();
             var sidebar = document.querySelector('aside');
             if (!sidebar) return;
@@ -544,18 +568,22 @@
             }
           } catch (e) {}
         }
+        removeTopBrandHeader();
         removeSidebarProfile();
         removeOnboardingView();
         document.addEventListener('DOMContentLoaded', function() {
+          removeTopBrandHeader();
           removeSidebarProfile();
           removeOnboardingView();
         });
         window.addEventListener('load', function() {
+          removeTopBrandHeader();
           removeSidebarProfile();
           removeOnboardingView();
         });
         if (window.MutationObserver) {
           var profileObs = new MutationObserver(function() {
+            removeTopBrandHeader();
             removeSidebarProfile();
             removeOnboardingView();
           });
