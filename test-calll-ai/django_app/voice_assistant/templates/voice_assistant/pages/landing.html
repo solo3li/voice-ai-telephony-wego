@@ -1,0 +1,523 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المساعد الصوتي الذكي | Enterprise Voice AI</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Google Fonts: IBM Plex Sans Arabic, Cairo & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Cairo"', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
+            en: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              200: '#ddd6fe',
+              300: '#c4b5fd',
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              800: '#5b21b6',
+              900: '#4c1d95',
+            },
+            obsidian: {
+              900: '#0f172a',
+              950: '#0b0f19',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+    .card-shadow {
+      box-shadow: 0 12px 35px -5px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
+    }
+    /* Audio Bar Animation */
+    @keyframes soundwave {
+      0%, 100% { height: 6px; }
+      50% { height: 26px; }
+    }
+    .wave-bar {
+      animation: soundwave 1.2s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(6) { animation-delay: 0.5s; }
+    .wave-bar:nth-child(7) { animation-delay: 0.35s; }
+    .wave-bar:nth-child(8) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(9) { animation-delay: 0.4s; }
+
+    /* Blinking Cursor for Typewriter */
+    .typing-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 1.1em;
+      background-color: #7c3aed;
+      margin-inline-start: 4px;
+      animation: blink 0.9s infinite;
+      vertical-align: middle;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-[#7c3aed] selection:text-white">
+
+  <!-- Top Brand Gradient Accent Line -->
+  <div class="h-1.5 w-full bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#7c3aed] shrink-0"></div>
+
+  <!-- Main Navigation Header (Clean & Matches Platform Style) -->
+  <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo & Title -->
+      <a href="/" class="flex items-center gap-3 group cursor-pointer">
+        <div class="w-9 h-9 rounded-xl bg-[#0f172a] p-1.5 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+          <img src="{% static 'logo.svg' %}" alt="Logo" class="w-full h-full object-contain" onerror="this.parentElement.innerHTML='<svg class='w-5 h-5 text-violet-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z'/></svg>'" />
+        </div>
+        <div>
+          <span class="text-base font-black tracking-tight text-slate-900 group-hover:text-[#7c3aed] transition-colors">المساعد الصوتي الذكي</span>
+          <span class="block text-[10px] font-en font-semibold text-slate-400 -mt-0.5">Enterprise Voice AI Suite</span>
+        </div>
+      </a>
+
+      <!-- Center Nav Links -->
+      <nav class="hidden lg:flex items-center gap-7 text-xs font-bold text-slate-600">
+        <a href="#" class="text-[#7c3aed] font-extrabold">الرئيسية</a>
+        <a href="#features" class="hover:text-slate-900 transition">السنترال الهاتفي FreeSWITCH</a>
+        <a href="#omnichannel" class="hover:text-slate-900 transition">صندوق المحادثات الشامل</a>
+        <a href="#developer" class="hover:text-slate-900 transition">واجهات المطورين (API)</a>
+        <a href="#pricing" class="hover:text-slate-900 transition">الباقات والأسعار</a>
+      </nav>
+
+      <!-- Right Action CTAs -->
+      <div class="flex items-center gap-2.5">
+        <!-- Language Switcher Pill -->
+        <button 
+          type="button"
+          onclick="toggleAppLanguage()" 
+          id="landing-lang-btn" 
+          class="px-2.5 py-1 rounded-md text-xs font-mono font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition flex items-center gap-1 cursor-pointer"
+          title="Switch Language"
+        >
+          <span id="landing-lang-text">EN</span>
+        </button>
+
+        {% if is_authenticated %}
+          <a href="{% url 'voice_assistant:room' %}" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-xs transition flex items-center gap-1.5">
+            <span>لوحة التحكم</span>
+            <span class="font-en text-[11px] opacity-80">({{ username }})</span>
+            <span>↵</span>
+          </a>
+        {% else %}
+          <a href="{% url 'voice_assistant:login' %}" class="px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition">
+            تسجيل الدخول
+          </a>
+          <a href="{% url 'voice_assistant:register' %}" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-sm shadow-[#7c3aed]/25 transition transform hover:-translate-y-0.5 flex items-center gap-1">
+            <span>ابدأ الآن مجاناً</span>
+            <span class="font-mono">↵</span>
+          </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== SPLIT HERO SECTION (Concept 5) ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-16 flex-1 flex flex-col justify-center">
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+      
+      <!-- Right Side: Value Propositions & Dynamic Typewriter Headline (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6 text-start">
+        
+        <!-- Pill Badge -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f5f3ff] border border-[#7c3aed]/20 text-[#7c3aed] text-xs font-bold shadow-2xs">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>منظومة متطورة تجمع الهاتف والشات بذكاء اصطناعي فائق</span>
+        </div>
+
+        <!-- Big Headline with Smooth Typewriter Effect -->
+        <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-[1.3] tracking-tight min-h-[3.8em] sm:min-h-[2.7em]">
+          حوّل سنترالك الهاتفي إلى <br class="hidden sm:inline" />
+          <span id="typewriter-text" class="text-[#7c3aed] underline decoration-[#7c3aed]/30 underline-offset-8"></span><span class="typing-cursor"></span>
+        </h1>
+
+        <!-- Subheading -->
+        <p class="text-base text-slate-600 leading-relaxed font-normal max-w-xl">
+          يقوم المساعد الصوتي بالرد الفوري على عملائك هاتفياً، حجز المواعيد، الإجابة على استفسارات قواعد المعرفة (RAG)، وإرسال تأكيدات الواتساب في ثوانٍ معدودة دون تأخير.
+        </p>
+
+        <!-- Feature Checkpoints Grid (2x2) -->
+        <div class="grid sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700 pt-2">
+          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
+            <span>سنترال هاتفي احترافي (SIP Trunk & DID)</span>
+          </div>
+          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
+            <span>صوت بشري واقعي بكل اللهجات العربية</span>
+          </div>
+          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
+            <span>صندوق محادثات موحد للواتساب وتيليجرام</span>
+          </div>
+          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div class="w-5 h-5 rounded-full bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center text-xs font-extrabold">✓</div>
+            <span>علامة تجارية بيضاء 100% White-Label</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-4 pt-3">
+          <a href="{% url 'voice_assistant:register' %}" class="px-7 py-3.5 rounded-xl text-xs font-black bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-md shadow-[#7c3aed]/25 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+            <span>جرّب المنصة الآن مجاناً</span>
+            <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+          <button onclick="triggerLiveDemoCall()" class="px-6 py-3.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-2xs transition flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#7c3aed] animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <span>استمع لمكالمة ذكية حية</span>
+          </button>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="pt-4 flex items-center gap-6 text-xs text-slate-500 font-medium border-t border-slate-100">
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-black text-slate-900 font-en">120ms</span>
+            <span>سرعة الاستجابة</span>
+          </div>
+          <div class="w-1 h-1 rounded-full bg-slate-300"></div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-black text-emerald-600 font-en">99.8%</span>
+            <span>فهم دقيق للهجات</span>
+          </div>
+          <div class="w-1 h-1 rounded-full bg-slate-300"></div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-black text-violet-700 font-en">0</span>
+            <span>انتظار للعملاء</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Left Side: Interactive Voice Studio Cockpit Widget (5 Cols) -->
+      <div class="lg:col-span-5">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 card-shadow space-y-4 relative overflow-hidden">
+          
+          <!-- Top Widget Status Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-slate-900">غرفة الاتصال الصوتي المباشر</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-violet-50 text-violet-700 border border-violet-100">
+              120ms Realtime
+            </span>
+          </div>
+
+          <!-- Active Caller Profile -->
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#0f172a] text-white flex items-center justify-center font-bold text-xs font-en shadow-xs">
+                SA
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-900">عبدالله الشمري (عميل مميز)</div>
+                <div class="text-[11px] text-slate-500 font-en font-medium">+966 55 432 1098 • الرياض</div>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              جارية • 01:15
+            </span>
+          </div>
+
+          <!-- Live Animated Audio Waveform Box -->
+          <div class="p-4 rounded-xl bg-[#f5f3ff] border border-[#7c3aed]/20 text-center space-y-2">
+            <div class="flex items-center justify-between text-[11px] font-bold text-[#7c3aed] px-1">
+              <span>صوت المساعد الذكي (لهجة سعودية حية)</span>
+              <span class="font-en text-[10px] text-violet-600 font-semibold">PCM16 HD Audio</span>
+            </div>
+            
+            <!-- Dynamic Wave Bars -->
+            <div class="flex items-center justify-center gap-1.5 h-8 py-1">
+              <span class="w-1.5 bg-[#7c3aed] rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-[#7c3aed] rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-violet-500 rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-violet-400 rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-[#7c3aed] rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-violet-500 rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-[#7c3aed] rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-violet-400 rounded-full wave-bar"></span>
+              <span class="w-1.5 bg-[#7c3aed] rounded-full wave-bar"></span>
+            </div>
+
+            <!-- Dynamic Streamed Speech Bubble -->
+            <p id="agent-speech-bubble" class="text-xs text-slate-800 font-medium leading-relaxed bg-white/80 p-2.5 rounded-lg border border-violet-100 min-h-[3.5em] flex items-center justify-center">
+              "أهلاً بك أستاذ عبدالله! تم تأكيد موعد الصيانة وحجز الفني بنجاح، ووصلتك الآن رسالة تفاصيل عبر واتساب."
+            </p>
+          </div>
+
+          <!-- Interactive Simulated Phone Keypad -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between px-2 text-[11px] text-slate-500 font-semibold">
+              <span>لوحة مفاتيح الاتصال التفاعلية (DTMF)</span>
+              <span id="dialed-display" class="font-mono font-bold text-slate-800 text-xs tracking-wider"></span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="pressDialKey('1')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">1</button>
+              <button onclick="pressDialKey('2')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">2</button>
+              <button onclick="pressDialKey('3')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">3</button>
+              <button onclick="pressDialKey('4')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">4</button>
+              <button onclick="pressDialKey('5')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">5</button>
+              <button onclick="pressDialKey('6')" class="py-2 bg-slate-50 hover:bg-violet-50 hover:text-[#7c3aed] hover:border-violet-300 rounded-lg border border-slate-200/80 text-xs font-bold text-slate-700 font-en transition active:scale-95">6</button>
+            </div>
+          </div>
+
+          <!-- Action Buttons Bar -->
+          <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+            <button onclick="simulateTransfer()" class="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              <span>تحويل لوكيل بشري</span>
+            </button>
+            <button onclick="simulateHangup()" id="hangup-btn" class="flex-1 py-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-rose-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 010-1.41C3.28 8.77 7.42 7 12 7s8.72 1.77 11.71 4.67c.39.39.39 1.02 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+              <span>إنهاء المكالمة</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================== THREE CORE VALUE COLUMNS ==================== -->
+  <section id="features" class="border-t border-slate-200/80 bg-slate-50/60 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      
+      <div class="text-center max-w-2xl mx-auto mb-10 space-y-2">
+        <h2 class="text-2xl font-black text-slate-900">كل ما تحتاجه لإدارة الاتصالات في مكان واحد</h2>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">بنية تحتية سحابية متكاملة مصممة لأداء فائق بدون توقف</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 text-start text-xs">
+        <!-- Card 1 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 card-shadow space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold text-base">
+            📞
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">سنترال FreeSWITCH & SIP مؤسسي</h3>
+          <p class="text-slate-600 leading-relaxed">
+            تحكم كامل بالمسارات الصوتية، قوائم الانتظار mod_callcenter، وإجراء المكالمات الواردة والصادرة عبر أي مزود اتصالات محلي أو عالمي.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 card-shadow space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-base">
+            💬
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">صندوق محادثات موحد Chatwoot</h3>
+          <p class="text-slate-600 leading-relaxed">
+            ادمج قنوات واتساب الرسمية (WhatsApp Cloud)، شات الموقع، ورسائل شبكات التواصل مع تسجيل دخول تلقائي معزول لكل مستأجر.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 card-shadow space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center font-bold text-base">
+            🧠
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">ذاكرة العملاء وقواعد المعرفة RAG</h3>
+          <p class="text-slate-600 leading-relaxed">
+            يربط الذكاء الاصطناعي كل مكالمة ببيانات العميل السابقة وملفات مستنداتك للإجابة بدقة متناهية وإتمام المهام بالصوت فورياً.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Clean Minimalist Footer -->
+  <footer class="border-t border-slate-200/80 bg-white py-6 text-xs text-slate-500 font-medium text-center">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800">المساعد الصوتي الذكي</span>
+        <span>• جميع الحقوق محفوظة © {% now "Y" %}</span>
+      </div>
+      <div class="flex items-center gap-6 font-en font-bold text-slate-600 text-[11px]">
+        <span>FREESWITCH NATIVE</span>
+        <span>CHATWOOT INTEGRATED</span>
+        <span>100% WHITE-LABEL</span>
+        <span>SUB-SECOND LATENCY</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT: TYPEWRITER & LIVE INTERACTIONS ==================== -->
+  <script>
+    // 1. TYPEWRITER EFFECT (كأن الكلام بيتكتب)
+    (function initTypewriter() {
+      const phrases = [
+        'مركز اتصال ذاتي القيادة',
+        'وكيل ذكاء اصطناعي صوتي فوري',
+        'سنترال سحابي يفهم كل اللهجات',
+        'منظومة خدمة عملاء بدون انتظار'
+      ];
+      
+      const el = document.getElementById('typewriter-text');
+      if (!el) return;
+
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let isDeleting = false;
+      let typingSpeed = 80;
+
+      function type() {
+        const currentPhrase = phrases[phraseIndex];
+        
+        if (isDeleting) {
+          el.textContent = currentPhrase.substring(0, charIndex - 1);
+          charIndex--;
+          typingSpeed = 40;
+        } else {
+          el.textContent = currentPhrase.substring(0, charIndex + 1);
+          charIndex++;
+          typingSpeed = 85;
+        }
+
+        if (!isDeleting && charIndex === currentPhrase.length) {
+          // Pause at full phrase
+          typingSpeed = 2200;
+          isDeleting = true;
+        } else if (isDeleting && charIndex === 0) {
+          isDeleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          typingSpeed = 400;
+        }
+
+        setTimeout(type, typingSpeed);
+      }
+
+      setTimeout(type, 300);
+    })();
+
+    // 2. DIALPAD SIMULATION (Beep & Display)
+    let dialedDigits = '';
+    const audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+
+    function pressDialKey(key) {
+      dialedDigits += key;
+      if (dialedDigits.length > 8) dialedDigits = key;
+      const display = document.getElementById('dialed-display');
+      if (display) display.textContent = dialedDigits;
+
+      // Play soft DTMF beep
+      if (audioCtx) {
+        try {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(697 + parseInt(key || '1') * 60, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.12);
+        } catch(e) {}
+      }
+    }
+
+    // 3. LIVE DEMO CALL SIMULATION
+    function triggerLiveDemoCall() {
+      const bubble = document.getElementById('agent-speech-bubble');
+      if (!bubble) return;
+      
+      const sampleTexts = [
+        '"أهلاً بك! تم حجز موعد الزيارة بنجاح وتم إرسال كود التأكيد لواتساب فورياً."',
+        '"مرحباً بك في خدمة العملاء، كيف يمكنني مساعدتك في استفسارك الهاتفي اليوم؟"',
+        '"تم تحديث طلبكم في النظام السحابي، والتذكرة الآن قيد المعالجة المباشرة."'
+      ];
+      const randomText = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+      
+      // Typewriter animation on bubble
+      bubble.textContent = '';
+      let i = 0;
+      function streamText() {
+        if (i < randomText.length) {
+          bubble.textContent += randomText.charAt(i);
+          i++;
+          setTimeout(streamText, 25);
+        }
+      }
+      streamText();
+      pressDialKey('9');
+    }
+
+    function simulateTransfer() {
+      const bubble = document.getElementById('agent-speech-bubble');
+      if (bubble) bubble.textContent = '"جاري الآن تحويل مكالمتكم لأحد ممثلي خدمة العملاء... يرجى البقاء على الخط."';
+    }
+
+    function simulateHangup() {
+      const bubble = document.getElementById('agent-speech-bubble');
+      if (bubble) bubble.textContent = '"شكراً لتواصلكم مع المساعد الصوتي الذكي. نتمنى لكم يوماً سعيداً!"';
+    }
+
+    // 4. LANGUAGE SWITCHER (EN / AR)
+    function toggleAppLanguage() {
+      const current = localStorage.getItem('app_lang') || 'ar';
+      const next = (current === 'ar') ? 'en' : 'ar';
+      localStorage.setItem('app_lang', next);
+      localStorage.setItem('voice_app_lang', next);
+      window.location.reload();
+    }
+
+    (function syncLandingLanguage() {
+      const saved = localStorage.getItem('app_lang') || 'ar';
+      const btnText = document.getElementById('landing-lang-text');
+      if (btnText) btnText.textContent = (saved === 'ar') ? 'EN' : 'عربي';
+      if (saved === 'en') {
+        document.documentElement.dir = 'ltr';
+        document.documentElement.lang = 'en';
+      }
+    })();
+  </script>
+
+</body>
+</html>

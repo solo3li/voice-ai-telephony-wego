@@ -9,8 +9,9 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
 
-    # Voice Assistant Main Room
+    # Voice Assistant Main Room & Landing
     path('', views.room_view, name='room'),
+    path('landing/', views.landing_page_view, name='landing'),
 
     # Real-Time & WebRTC APIs
     path('api/token/', views.get_tokens, name='get_tokens'),

@@ -139,12 +139,25 @@ def logout_view(request):
     logout(request)
     return redirect('voice_assistant:login')
 
+# ==================== Landing Page ====================
+
+def landing_page_view(request):
+    """Render the high-converting Concept 5 Landing Page with Typewriter Effect."""
+    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    context = {
+        'user_lang': user_lang,
+        'is_authenticated': request.user.is_authenticated,
+        'username': request.user.username if request.user.is_authenticated else None,
+    }
+    return render(request, 'voice_assistant/pages/landing.html', context)
+
 # ==================== Voice Room & WebRTC ====================
 
 @never_cache
-@login_required(login_url='/login/')
 def room_view(request):
-    """Render the main Voice Assistant page."""
+    """Render the main Voice Assistant page or landing page if not authenticated."""
+    if not request.user.is_authenticated:
+        return landing_page_view(request)
     from .chatwoot_service import generate_chatwoot_sso_url
     user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
     sso_url = generate_chatwoot_sso_url(user=request.user, locale=user_lang)
