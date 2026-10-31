@@ -41,11 +41,15 @@ async function loadDeveloperKeys() {
       const embedCallCenterSnippet = document.getElementById('dev-embed-callcenter-snippet');
       const previewCallCenter = document.getElementById('dev-embed-callcenter-preview-btn');
       const embedChatSnippet = document.getElementById('dev-embed-chat-snippet');
+      const embedChatChannelsSnippet = document.getElementById('dev-embed-chat-channels-snippet');
+      const embedChatSettingsSnippet = document.getElementById('dev-embed-chat-settings-snippet');
+      const previewChat = document.getElementById('dev-embed-chat-preview-btn');
+      const previewChatChannels = document.getElementById('dev-embed-chat-channels-preview-btn');
+      const previewChatSettings = document.getElementById('dev-embed-chat-settings-preview-btn');
       const embedVoiceSnippet = document.getElementById('dev-embed-voice-snippet');
+      const previewVoice = document.getElementById('dev-embed-voice-preview-btn');
       const curlChatSend = document.getElementById('dev-curl-chat-send-sample');
       const curlDial2 = document.getElementById('dev-curl-dial-sample-2');
-      const previewChat = document.getElementById('dev-embed-chat-preview-btn');
-      const previewVoice = document.getElementById('dev-embed-voice-preview-btn');
 
       if (embedCallCenterSnippet) {
         embedCallCenterSnippet.innerText = `<iframe src="${origin}/embed/call-center/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
@@ -56,20 +60,32 @@ async function loadDeveloperKeys() {
       if (embedChatSnippet) {
         embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
+      if (embedChatChannelsSnippet) {
+        embedChatChannelsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=channels&token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      }
+      if (embedChatSettingsSnippet) {
+        embedChatSettingsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=settings&token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      }
+      if (previewChat) {
+        previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
+      if (previewChatChannels) {
+        previewChatChannels.href = `/embed/chat-hub/?tab=channels&token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
+      if (previewChatSettings) {
+        previewChatSettings.href = `/embed/chat-hub/?tab=settings&token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+      }
       if (embedVoiceSnippet) {
-        embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/voice/?token=${currentDeveloperKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);"></iframe>`;
+        embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/call-center/room/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      }
+      if (previewVoice) {
+        previewVoice.href = `/embed/call-center/room/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
       }
       if (curlChatSend) {
         curlChatSend.innerText = `curl -X POST "${origin}/api/v1/chat/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'`;
       }
       if (curlDial2) {
         curlDial2.innerText = `curl -X POST "${origin}/api/v1/calls/dial/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"phone_number": "+201012345678", "call_goal": "تأكيد تفاصيل الطلب رقم 1005"}'`;
-      }
-      if (previewChat) {
-        previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
-      }
-      if (previewVoice) {
-        previewVoice.href = `/embed/voice/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
       }
 
       // Dynamic update of advanced snippet cards
@@ -189,8 +205,7 @@ export default function VoiceAIWidget({ apiKey = "${currentDeveloperKey}", local
       if (chatReact) {
         chatReact.innerText = `import React, { useState, useEffect } from 'react';
 
-export default function OmnichannelChatWidget({ apiKey = "${currentDeveloperKey}", locale = "ar" }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function OmnichannelChatHub({ apiKey = "${currentDeveloperKey}", tab = "live", locale = "ar" }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -204,40 +219,19 @@ export default function OmnichannelChatWidget({ apiKey = "${currentDeveloperKey}
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
+  const tabQuery = tab && tab !== 'live' ? \`&tab=\${tab}\` : '';
+  const embedUrl = \`${origin}/embed/chat-hub/?token=\${apiKey}\${tabQuery}&locale=\${locale}\`;
+
   return (
-    <div style={{ position: 'fixed', bottom: '24px', right: locale === 'ar' ? 'auto' : '24px', left: locale === 'ar' ? '24px' : 'auto', zIndex: 9999 }}>
-      {isOpen && (
-        <div style={{ marginBottom: '12px', width: '420px', height: '620px', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' }}>
-          <iframe
-            src={\`${origin}/embed/chat/?token=\${apiKey}&locale=\${locale}\`}
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            allow="camera; microphone; clipboard-read; clipboard-write;"
-            title="Chatwoot Omnichannel Inbox"
-          />
-        </div>
-      )}
-      <button
-        onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
-        style={{
-          position: 'relative', width: '56px', height: '56px', borderRadius: '50%',
-          backgroundColor: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 20px rgba(124,58,237,0.4)', fontSize: '24px'
-        }}
-      >
-        {isOpen ? '✕' : '💬'}
-        {unreadCount > 0 && !isOpen && (
-          <span style={{
-            position: 'absolute', top: '-4px', right: '-4px', backgroundColor: '#ef4444',
-            color: '#fff', borderRadius: '9999px', fontSize: '11px', fontWeight: 'bold',
-            padding: '2px 6px', border: '2px solid #fff'
-          }}>
-            {unreadCount}
-          </span>
-        )}
-      </button>
+    <div style={{ width: '100%', height: '800px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+      <iframe
+        src={embedUrl}
+        width="100%"
+        height="100%"
+        frameBorder="0"
+        allow="camera; microphone; clipboard-read; clipboard-write;"
+        title="Chatwoot Omnichannel Hub"
+      />
     </div>
   );
 }`;

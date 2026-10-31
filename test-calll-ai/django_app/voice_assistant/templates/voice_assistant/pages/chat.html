@@ -821,8 +821,46 @@
   }
 
   window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'chatwoot:ready') {
+    if (!event.data) return;
+    let data = event.data;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch(e) {}
+    }
+    if (typeof data !== 'object') return;
+
+    // 1. Ready event from Chatwoot iframe
+    if (data.type === 'chatwoot:ready' || data.type === 'CHAT_READY' || data.event === 'chatwoot:ready') {
       dismissChatLoader();
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'CHAT_READY', event: 'chatwoot:ready', timestamp: new Date().toISOString() }, '*');
+        } catch(e) {}
+      }
+    }
+    // 2. Unread messages count event from Chatwoot -> forward to parent host
+    if (data.event === 'unread_message_count' || data.type === 'unread_message_count') {
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'unread_message_count', event: 'unread_message_count', count: data.count || 0 }, '*');
+        } catch(e) {}
+      }
+    }
+    // 3. Parent command: switch internal sub-tab
+    if (data.type === 'SWITCH_TAB' || data.type === 'switch_tab' || data.action === 'switch_tab') {
+      const targetTab = (data.tab || '').toLowerCase().trim();
+      if (['live', 'channels', 'settings'].includes(targetTab)) {
+        switchChatSubTab(targetTab);
+      }
+    }
+    // 4. Parent command: set theme
+    if (data.type === 'SET_THEME' || data.type === 'set_theme') {
+      const theme = data.theme || 'light';
+      const frame = document.getElementById('chatwoot-frame');
+      if (frame && frame.contentWindow) {
+        try {
+          frame.contentWindow.postMessage({ type: 'set_theme', theme: theme }, '*');
+        } catch(e) {}
+      }
     }
   });
 
@@ -972,6 +1010,16 @@
     const frame = document.getElementById('chatwoot-frame');
     if (frame && activeLang === 'en' && !frame.src.includes('locale=en')) {
       syncChatwootLocale('en');
+    }
+
+    // Deep linking: auto-switch sub-tab if specified via URL (?tab=settings, ?tab=channels, ?tab=live)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab');
+    if (initialTab) {
+      const lowerTab = initialTab.toLowerCase().trim();
+      if (['settings', 'channels', 'live'].includes(lowerTab)) {
+        switchChatSubTab(lowerTab);
+      }
     }
   });
 

@@ -210,29 +210,53 @@
         if (newLang) syncEmbedLinks(newLang);
       });
 
-      // Automatically attach token to API requests for seamless iframe authentication
+      // Automatically attach token and client_id to API requests for seamless iframe authentication
       var urlParams = new URLSearchParams(window.location.search);
       var embedToken = urlParams.get('token') || urlParams.get('key');
-      if (embedToken) {
+      var embedClientId = urlParams.get('client_id');
+      if (embedToken || embedClientId) {
         var origFetch = window.fetch;
         window.fetch = function(input, init) {
-          if (typeof input === 'string' || input instanceof URL) {
-            init = init || {};
-            init.headers = init.headers || {};
-            if (typeof init.headers.append === 'function') {
-              if (!init.headers.has('X-API-Key')) init.headers.append('X-API-Key', embedToken);
+          init = init || {};
+          init.headers = init.headers || {};
+
+          function setHeader(name, value) {
+            if (typeof init.headers.set === 'function') {
+              init.headers.set(name, value);
+            } else if (typeof init.headers.append === 'function') {
+              if (!init.headers.has(name)) init.headers.append(name, value);
             } else if (Array.isArray(init.headers)) {
-              init.headers.push(['X-API-Key', embedToken]);
+              init.headers.push([name, value]);
             } else {
-              if (!init.headers['X-API-Key']) init.headers['X-API-Key'] = embedToken;
+              if (!init.headers[name]) init.headers[name] = value;
             }
-            return origFetch(input, init);
+          }
+
+          if (embedToken) setHeader('X-API-Key', embedToken);
+          if (embedClientId) setHeader('X-Client-ID', embedClientId);
+
+          if (typeof input === 'string') {
+            try {
+              var parsedUrl = new URL(input, window.location.origin);
+              if (parsedUrl.origin === window.location.origin) {
+                if (embedClientId && !parsedUrl.searchParams.has('client_id')) {
+                  parsedUrl.searchParams.set('client_id', embedClientId);
+                }
+                if (embedToken && !parsedUrl.searchParams.has('token') && !parsedUrl.searchParams.has('key')) {
+                  parsedUrl.searchParams.set('token', embedToken);
+                }
+                input = parsedUrl.pathname + parsedUrl.search + parsedUrl.hash;
+              }
+            } catch(e) {}
           } else if (input instanceof Request) {
-            if (!input.headers.has('X-API-Key')) {
+            if (embedToken && !input.headers.has('X-API-Key')) {
               try { input.headers.set('X-API-Key', embedToken); } catch(e) {}
             }
-            return origFetch(input, init);
+            if (embedClientId && !input.headers.has('X-Client-ID')) {
+              try { input.headers.set('X-Client-ID', embedClientId); } catch(e) {}
+            }
           }
+
           return origFetch(input, init);
         };
       }

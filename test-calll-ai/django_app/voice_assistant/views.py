@@ -1500,12 +1500,17 @@ def resolve_embed_user(request):
             return key_obj.user, None
         partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
         if partner:
-            client_id = request.GET.get('client_id')
+            if partner.status != 'approved':
+                return None, "inactive_partner"
+            client_id = request.GET.get('client_id') or request.headers.get('X-Client-ID')
             if client_id:
                 rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
                 if rel:
+                    if not rel.is_active or not rel.client.is_active:
+                        return None, "inactive_client"
                     request.user = rel.client
                     return rel.client, None
+                return None, "invalid_client"
             request.user = partner.user
             return partner.user, None
         return None, "invalid_token"
@@ -1539,6 +1544,30 @@ def embed_call_center_view(request, section=None):
             "status": "error",
             "message": "مفتاح الـ API غير صالح أو غير نشط (Invalid or expired API token)."
         }, status=401)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+    elif err == "inactive_partner":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "حساب الشريك غير نشط أو موقوف مؤقتاً (Partner account is not active or suspended)."
+        }, status=403)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+    elif err == "inactive_client":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "حساب العميل موقوف أو غير نشط حالياً (Sub-client account is inactive or suspended)."
+        }, status=403)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+    elif err == "invalid_client":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "معرف العميل التابع غير موجود أو لا ينتمي لهذا الشريك (Sub-client not found for this partner)."
+        }, status=404)
         resp['Content-Security-Policy'] = "frame-ancestors *"
         resp['X-Frame-Options'] = "ALLOWALL"
         return resp
@@ -1697,6 +1726,30 @@ def embed_chat_hub_view(request):
         resp['Content-Security-Policy'] = "frame-ancestors *"
         resp['X-Frame-Options'] = "ALLOWALL"
         return resp
+    elif err == "inactive_partner":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "حساب الشريك غير نشط أو موقوف مؤقتاً (Partner account is not active or suspended)."
+        }, status=403)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+    elif err == "inactive_client":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "حساب العميل موقوف أو غير نشط حالياً (Sub-client account is inactive or suspended)."
+        }, status=403)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
+    elif err == "invalid_client":
+        resp = JsonResponse({
+            "status": "error",
+            "message": "معرف العميل التابع غير موجود أو لا ينتمي لهذا الشريك (Sub-client not found for this partner)."
+        }, status=404)
+        resp['Content-Security-Policy'] = "frame-ancestors *"
+        resp['X-Frame-Options'] = "ALLOWALL"
+        return resp
 
     if not user:
         resp = JsonResponse({
@@ -1775,28 +1828,10 @@ def embed_chat_view(request):
 def embed_voice_view(request):
     """
     GET /embed/voice/ or /embed/dialer/
-    Standalone, white-label AI Voice Dialer & Webphone Iframe Embed.
-    Permits embedding on external partner websites and CRMs.
+    Unified Call Center AI Embedded Suite (section='room') with all 10 tabs,
+    token authentication, and pure white-label layout.
     """
-    user, _ = resolve_embed_user(request)
-    if not user:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = User.objects.filter(is_superuser=True).first() or User.objects.first()
-
-    req_locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
-    token_val = str(request.GET.get('token') or request.GET.get('key') or '').strip()
-    context = {
-        'locale': req_locale,
-        'user_id': user.id if user else 1,
-        'username': user.username if user else 'Guest',
-        'page_title': 'المساعد الصوتي وقمرة الاتصال المضمنة',
-        'token': token_val,
-    }
-    response = render(request, 'voice_assistant/embed/voice_embed.html', context)
-    response['Content-Security-Policy'] = "frame-ancestors *"
-    response['X-Frame-Options'] = "ALLOWALL"
-    return response
+    return embed_call_center_view(request, section='room')
 
 
 @csrf_exempt

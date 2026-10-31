@@ -5,6 +5,7 @@
  */
 
 let currentPartnerData = null;
+let currentPartnerKey = '';
 
 async function checkPartnerStatusOnLoad() {
   try {
@@ -99,22 +100,31 @@ async function loadPartnerDashboard() {
 
     // White-label embed snippets
     const partnerKey = partner.api_key || '';
+    currentPartnerKey = partnerKey;
     const pChatSnippet = document.getElementById('partner-embed-chat-snippet');
+    const pCallCenterSnippet = document.getElementById('partner-embed-callcenter-snippet');
     const pVoiceSnippet = document.getElementById('partner-embed-voice-snippet');
     const pChatPreview = document.getElementById('partner-embed-chat-preview-btn');
+    const pCallCenterPreview = document.getElementById('partner-embed-callcenter-preview-btn');
     const pVoicePreview = document.getElementById('partner-embed-voice-preview-btn');
 
     if (pChatSnippet) {
-      pChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat/?token=${partnerKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;"></iframe>`;
+      pChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat-hub/?token=${partnerKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 700px;"></iframe>`;
+    }
+    if (pCallCenterSnippet) {
+      pCallCenterSnippet.innerText = `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
     }
     if (pVoiceSnippet) {
-      pVoiceSnippet.innerText = `<iframe src="${window.location.origin}/embed/voice/?token=${partnerKey}&locale=ar" width="400" height="560" frameborder="0" allow="microphone;"></iframe>`;
+      pVoiceSnippet.innerText = pCallCenterSnippet ? pCallCenterSnippet.innerText : `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
     }
     if (pChatPreview) {
-      pChatPreview.href = `/embed/chat/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+      pChatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+    }
+    if (pCallCenterPreview) {
+      pCallCenterPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
     }
     if (pVoicePreview) {
-      pVoicePreview.href = `/embed/voice/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+      pVoicePreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
     }
 
     // 3. Shared MCP Servers dropdown
@@ -148,9 +158,14 @@ async function loadPartnerDashboard() {
               </span>
             </td>
             <td class="py-3 px-4">
-              <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition">
-                تعديل السقف
-              </button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-client-id="${c.client_id}" data-client-name="${escapeHtml(c.name || c.username || '')}" onclick="openClientEmbedModal(this.dataset.clientId, this.dataset.clientName)" class="px-2.5 py-1 rounded-md bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#7c3aed] border border-[#ddd6fe] text-xs font-semibold transition flex items-center gap-1 shadow-2xs">
+                  <span>📋 كود التضمين</span>
+                </button>
+                <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition">
+                  تعديل السقف
+                </button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -431,12 +446,104 @@ function copyPartnerEmbedChatSnippet() {
   }
 }
 
-function copyPartnerEmbedVoiceSnippet() {
-  const el = document.getElementById('partner-embed-voice-snippet');
+function copyPartnerEmbedCallCenterSnippet() {
+  const el = document.getElementById('partner-embed-callcenter-snippet');
   if (el) {
     navigator.clipboard.writeText(el.innerText);
-    showToast(window.t ? window.t('dev_embed_voice_copied', 'تم نسخ كود تضمين المساعد الصوتي بنجاح') : 'تم نسخ كود تضمين المساعد الصوتي بنجاح', 'success');
+    showToast(window.t ? window.t('partner_embed_cc_copied', 'تم نسخ كود تضمين منظومة الكول سنتر بنجاح') : 'تم نسخ كود تضمين منظومة الكول سنتر بنجاح', 'success');
   }
+}
+
+function copyPartnerEmbedVoiceSnippet() {
+  copyPartnerEmbedCallCenterSnippet();
+}
+
+function openClientEmbedModal(clientId, clientName) {
+  const modal = document.getElementById('partner-client-embed-modal');
+  if (!modal) return;
+  const origin = window.location.origin;
+  const partnerKey = currentPartnerKey || '';
+
+  const titleEl = document.getElementById('client-embed-modal-title');
+  const idEl = document.getElementById('client-embed-modal-id');
+  const nameEl = document.getElementById('client-embed-modal-name');
+
+  if (titleEl) titleEl.innerText = `${clientName} (#${clientId})`;
+  if (idEl) idEl.innerText = clientId;
+  if (nameEl) nameEl.innerText = clientName;
+
+  const ccSnippet = document.getElementById('client-embed-callcenter-snippet');
+  const ccPreview = document.getElementById('client-embed-callcenter-preview-btn');
+  const chatSnippet = document.getElementById('client-embed-chat-snippet');
+  const chatPreview = document.getElementById('client-embed-chat-preview-btn');
+
+  const ccUrl = `${origin}/embed/call-center/?token=${partnerKey}&client_id=${clientId}&locale=ar`;
+  const chatUrl = `${origin}/embed/chat-hub/?token=${partnerKey}&client_id=${clientId}&locale=ar`;
+
+  if (ccSnippet) {
+    ccSnippet.innerText = `<iframe src="${ccUrl}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+  }
+  if (ccPreview) {
+    ccPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=ar`;
+  }
+
+  if (chatSnippet) {
+    chatSnippet.innerText = `<iframe src="${chatUrl}" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 700px;"></iframe>`;
+  }
+  if (chatPreview) {
+    chatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=ar`;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeClientEmbedModal() {
+  const modal = document.getElementById('partner-client-embed-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// ==================== Helper Utilities ====================
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function copySnippet(elementId, successMsg) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? el.value : (el.innerText || el.textContent);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(successMsg || 'تم نسخ الكود بنجاح إلى الحافظة!', 'success');
+    }).catch(() => {
+      fallbackCopy(text, successMsg);
+    });
+  } else {
+    fallbackCopy(text, successMsg);
+  }
+}
+
+function fallbackCopy(text, successMsg) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast(successMsg || 'تم نسخ الكود بنجاح!', 'success');
+  } catch(e) {
+    showToast('تعذر نسخ الكود تلقائياً', 'error');
+  }
+  document.body.removeChild(ta);
 }
 
 // Re-render partner dashboard on language toggle

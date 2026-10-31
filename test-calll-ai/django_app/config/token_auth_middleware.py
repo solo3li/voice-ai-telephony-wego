@@ -37,14 +37,16 @@ class ApiTokenAuthMiddleware:
                         UserApiKey.objects.filter(pk=key_obj.pk).update(last_used_at=timezone.now())
                     else:
                         partner = PartnerProfile.objects.filter(api_key=token).select_related('user').first()
-                        if partner:
-                            client_id = request.GET.get('client_id')
+                        if partner and partner.status == 'approved':
+                            client_id = request.GET.get('client_id') or request.headers.get('X-Client-ID')
                             if client_id:
                                 rel = PartnerClientRelationship.objects.filter(partner=partner, client_id=client_id).select_related('client').first()
-                                if rel:
+                                if rel and rel.is_active and rel.client.is_active:
                                     request.user = rel.client
+                                    request.partner_client_rel = rel
                             if not getattr(request, 'user', None) or not request.user.is_authenticated:
-                                request.user = partner.user
+                                if not client_id:
+                                    request.user = partner.user
                 except Exception:
                     pass
 

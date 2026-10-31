@@ -242,7 +242,143 @@ def test_embedded_suites():
     assert 'ربط القنوات' in content_dev
     assert 'إعدادات المساعد الذكي' in content_dev
 
-    print("✅ developer.html contains complete documentation and ready-to-copy snippets for both suites!")
+    client.logout()
+    print("\n[TEST 7] Testing /embed/voice/ and /embed/dialer/ unified to Call Center AI Suite...")
+    for unified_ep in ['/embed/voice/', '/embed/dialer/']:
+        # Unauthenticated request rejected
+        resp_unauth = client.get(unified_ep)
+        assert resp_unauth.status_code == 401, f"Expected 401 for unauthenticated {unified_ep}, got {resp_unauth.status_code}"
+
+        # Authenticated with token renders full 10-tab Call Center AI suite (section='room')
+        resp_unified = client.get(f'{unified_ep}?token={dev_token}&locale=ar')
+        assert resp_unified.status_code == 200, f"Expected 200 for {unified_ep}, got {resp_unified.status_code}"
+        content_unified = resp_unified.content.decode('utf-8')
+        assert 'top-tabs-container' in content_unified, f"top-tabs-container missing in {unified_ep}"
+        assert 'tab-voice' in content_unified, f"tab-voice missing in {unified_ep}"
+        assert '<aside id="sidebar"' not in content_unified, f"Sidebar erroneously rendered in {unified_ep}"
+        assert 'id="header-wallet-badge"' not in content_unified, f"Wallet badge erroneously rendered in {unified_ep}"
+        assert resp_unified.headers.get('Content-Security-Policy') == 'frame-ancestors *'
+        print(f"  ✓ {unified_ep} successfully verified as unified 10-tab Call Center AI Suite")
+
+    print("✅ /embed/voice/ and /embed/dialer/ successfully unified to Call Center AI suite with token auth!")
+
+    # -------------------------------------------------------------------------
+    # TEST 8: Developer Docs Chat Hub Deep-Linking & Partner Sub-Client Modal
+    # -------------------------------------------------------------------------
+    print("\n[TEST 8] Testing Developer Chat Hub deep-linking & Partner Sub-Client embed modal...")
+    # Check developer.html deep-linking snippets
+    assert 'href="#section-chat-embeds"' in content_dev, "Quick-jump link #section-chat-embeds missing in developer.html"
+    assert 'id="section-chat-embeds"' in content_dev, "Full-width section-chat-embeds card missing in developer.html"
+    assert 'dev-embed-chat-channels-snippet' in content_dev, "dev-embed-chat-channels-snippet missing in developer.html"
+    assert 'dev-embed-chat-settings-snippet' in content_dev, "dev-embed-chat-settings-snippet missing in developer.html"
+    assert '/embed/chat-hub/?tab=channels' in content_dev, "Channels deep-link URL missing in developer.html"
+    assert '/embed/chat-hub/?tab=settings' in content_dev, "Settings deep-link URL missing in developer.html"
+    print("  ✓ Developer Docs contains quick-jump button and deep-link snippets for all 3 chat sub-tabs")
+
+    # Check partner.html Call Center embed & Sub-client modal
+    client.force_login(partner_user)
+    resp_partner_page = client.get('/partner/')
+    assert resp_partner_page.status_code == 200, f"Expected 200 for /partner/, got {resp_partner_page.status_code}"
+    content_partner_page = resp_partner_page.content.decode('utf-8')
+
+    assert 'partner-embed-callcenter-snippet' in content_partner_page, "partner-embed-callcenter-snippet missing in partner.html"
+    assert 'partner-embed-callcenter-preview-btn' in content_partner_page, "partner-embed-callcenter-preview-btn missing in partner.html"
+    assert 'partner-embed-chat-snippet' in content_partner_page, "partner-embed-chat-snippet missing in partner.html"
+    assert 'partner-client-embed-modal' in content_partner_page, "partner-client-embed-modal missing in partner.html"
+    assert 'client-embed-callcenter-snippet' in content_partner_page, "client-embed-callcenter-snippet missing in partner.html"
+    assert 'client-embed-chat-snippet' in content_partner_page, "client-embed-chat-snippet missing in partner.html"
+    print("  ✓ Partner Portal contains Call Center embed card (100%x800px) and Sub-Client Embed Modal")
+
+    # -------------------------------------------------------------------------
+    # TEST 9: Partner Sub-Client Isolation & Anti-IDOR Security Boundaries
+    # -------------------------------------------------------------------------
+    print("\n[TEST 9] Testing Partner Sub-Client Isolation & Anti-IDOR Security...")
+    from partners.models import PartnerClientRelationship
+    subclient_user, _ = User.objects.get_or_create(username="subclient_embed_user", defaults={"email": "subclient@example.com"})
+    subclient_user.set_password("pass1234")
+    subclient_user.save()
+
+    rel, _ = PartnerClientRelationship.objects.get_or_create(
+        partner=partner_profile,
+        client=subclient_user,
+        defaults={"external_reference": "CRM-CLIENT-001", "is_active": True}
+    )
+    rel.is_active = True
+    rel.save()
+
+    # 9.1 Valid sub-client under partner renders correctly and binds sub-client user
+    resp_sub = client.get(f'/embed/call-center/room/?token={partner_token}&client_id={subclient_user.id}&locale=ar')
+    assert resp_sub.status_code == 200, f"Expected 200 for subclient, got {resp_sub.status_code}"
+    content_sub = resp_sub.content.decode('utf-8')
+    assert subclient_user.username in content_sub, "Sub-client username missing in embedded room"
+    print("  ✓ Valid sub-client access successfully binds sub-client tenant user")
+
+    # 9.2 Chat Hub under partner token with client_id
+    resp_sub_chat = client.get(f'/embed/chat-hub/?token={partner_token}&client_id={subclient_user.id}&locale=ar')
+    assert resp_sub_chat.status_code == 200, f"Expected 200 for subclient chat-hub, got {resp_sub_chat.status_code}"
+    print("  ✓ Sub-client Chat Hub successfully binds sub-client Chatwoot account")
+
+    # 9.3 Invalid / non-existent client_id MUST be rejected (404) and never escalate to partner user
+    resp_idor = client.get(f'/embed/call-center/room/?token={partner_token}&client_id=888888&locale=ar')
+    assert resp_idor.status_code == 404, f"Expected 404 for non-existent client_id, got {resp_idor.status_code}"
+    resp_idor_chat = client.get(f'/embed/chat-hub/?token={partner_token}&client_id=888888&locale=ar')
+    assert resp_idor_chat.status_code == 404, f"Expected 404 for non-existent client_id on chat-hub, got {resp_idor_chat.status_code}"
+    print("  ✓ Anti-IDOR protection verified: invalid client_id strictly rejected with 404 (zero privilege escalation)")
+
+    # 9.4 Suspended sub-client (is_active=False) MUST be rejected with 403
+    rel.is_active = False
+    rel.save()
+    resp_suspended_client = client.get(f'/embed/call-center/room/?token={partner_token}&client_id={subclient_user.id}&locale=ar')
+    assert resp_suspended_client.status_code == 403, f"Expected 403 for suspended sub-client, got {resp_suspended_client.status_code}"
+    rel.is_active = True
+    rel.save()
+    print("  ✓ Suspended sub-client correctly rejected with 403 Forbidden")
+
+    # 9.5 Suspended partner status MUST be rejected with 403
+    suspended_partner_user, _ = User.objects.get_or_create(username="suspended_partner", defaults={"email": "susp_part@example.com"})
+    suspended_profile, _ = PartnerProfile.objects.get_or_create(
+        user=suspended_partner_user,
+        defaults={
+            "company_name": "Suspended Partner",
+            "partner_code": "PRT-SUSP-777",
+            "api_key": "sk_live_prt_suspended_77777777",
+            "status": "suspended"
+        }
+    )
+    resp_suspended_partner = client.get(f'/embed/call-center/room/?token={suspended_profile.api_key}&locale=ar')
+    assert resp_suspended_partner.status_code == 403, f"Expected 403 for suspended partner, got {resp_suspended_partner.status_code}"
+    print("  ✓ Suspended partner account strictly rejected with 403 Forbidden")
+
+    # -------------------------------------------------------------------------
+    # TEST 10: Bidirectional postMessage Listeners & JS Client Helpers
+    # -------------------------------------------------------------------------
+    print("\n[TEST 10] Testing Bidirectional postMessage Protocol & Helper Functions...")
+    # 10.1 Check chat.html postMessage event handling
+    resp_chat_page = client.get(f'/embed/chat-hub/?token={dev_token}&locale=ar')
+    chat_content = resp_chat_page.content.decode('utf-8')
+    assert 'SWITCH_TAB' in chat_content, "SWITCH_TAB listener missing in chat.html"
+    assert 'SET_THEME' in chat_content, "SET_THEME listener missing in chat.html"
+    assert 'unread_message_count' in chat_content, "unread_message_count forwarder missing in chat.html"
+    assert 'CHAT_READY' in chat_content, "CHAT_READY forwarder missing in chat.html"
+    print("  ✓ chat.html handles SWITCH_TAB, SET_THEME and forwards CHAT_READY, unread_message_count")
+
+    # 10.2 Check room.html postMessage event handling
+    resp_room_page = client.get(f'/embed/call-center/room/?token={dev_token}&locale=ar')
+    room_content = resp_room_page.content.decode('utf-8')
+    assert 'VOICE_DIAL' in room_content, "VOICE_DIAL listener missing in room.html"
+    assert 'VOICE_HANGUP' in room_content, "VOICE_HANGUP listener missing in room.html"
+    assert 'VOICE_CALL_STARTED' in room_content, "VOICE_CALL_STARTED dispatch missing in room.html"
+    assert 'VOICE_CALL_ENDED' in room_content, "VOICE_CALL_ENDED dispatch missing in room.html"
+    print("  ✓ room.html handles VOICE_DIAL, VOICE_HANGUP and dispatches VOICE_CALL_STARTED, VOICE_CALL_ENDED")
+
+    # 10.3 Check partner.js has copySnippet and escapeHtml
+    with open('static/js/partner.js', 'r', encoding='utf-8') as f:
+        partner_js = f.read()
+    assert 'function copySnippet' in partner_js, "copySnippet missing in partner.js"
+    assert 'function fallbackCopy' in partner_js, "fallbackCopy missing in partner.js"
+    assert 'function escapeHtml' in partner_js, "escapeHtml missing in partner.js"
+    assert 'data-client-id' in partner_js, "data-client-id missing in partner.js table button"
+    print("  ✓ partner.js contains copySnippet, fallbackCopy, escapeHtml, and quote-safe data attributes")
 
     print("\n==================================================================")
     print("🎉 ALL FULL WHITE-LABEL EMBEDDED SUITES E2E TESTS PASSED! (100%)")

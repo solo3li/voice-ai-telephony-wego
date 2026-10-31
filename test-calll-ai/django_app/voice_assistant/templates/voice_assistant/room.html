@@ -3630,8 +3630,32 @@
     }
 
     window.addEventListener('message', function(e) {
-      if (e.data && e.data.type === 'chatwoot:ready') {
+      if (!e.data) return;
+      var data = e.data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch(err) {}
+      }
+      if (typeof data !== 'object') return;
+
+      if (data.type === 'chatwoot:ready') {
         dismissRoomChatLoader();
+      } else if (data.type === 'START_CALL' || data.type === 'VOICE_DIAL') {
+        if (data.phone) {
+          currentSelectedPhone = data.phone;
+        }
+        if (!livekitRoom || livekitRoom.state !== 'connected') {
+          startCall();
+        }
+      } else if (data.type === 'END_CALL' || data.type === 'VOICE_HANGUP') {
+        if (typeof hangupCall === 'function') {
+          hangupCall();
+        } else {
+          cleanupCall();
+        }
+      } else if (data.type === 'SWITCH_TAB' || data.type === 'switch_tab') {
+        if (data.tab && typeof switchTab === 'function') {
+          switchTab(data.tab);
+        }
       }
     });
 
@@ -4253,6 +4277,16 @@
         btnMute.disabled = false;
         btnEnd.disabled = false;
 
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({
+              type: 'VOICE_CALL_STARTED',
+              room: currentVoiceRoomName,
+              timestamp: new Date().toISOString()
+            }, '*');
+          } catch (pe) {}
+        }
+
       } catch (err) {
         console.error(err);
         alert('حدث خطأ أثناء بدء المكالمة: ' + err.message);
@@ -4372,6 +4406,16 @@
       btnEnd.disabled = true;
       callStatus.innerText = 'تم إنهاء المكالمة';
       subStatus.innerText = 'اضغط بدء المحادثة للاتصال مجدداً';
+
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({
+            type: 'VOICE_CALL_ENDED',
+            timestamp: new Date().toISOString()
+          }, '*');
+        } catch (pe) {}
+      }
+
       // Automatically refresh wallet balance and calls list after call ends
       setTimeout(() => {
         loadWalletData();

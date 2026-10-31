@@ -46,6 +46,9 @@
   <a href="#section-embeds" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
     <span>🖼️</span> <span data-i18n="dev_tab_embeds">قوالب التضمين وIframes</span>
   </a>
+  <a href="#section-chat-embeds" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
+    <span>💬</span> <span data-i18n="dev_tab_chat_embeds">تضمين منصة الشات (Chat Hub)</span>
+  </a>
   <a href="#section-webrtc" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium whitespace-nowrap transition flex items-center gap-1.5">
     <span>🎙️</span> <span data-i18n="dev_tab_webrtc">مكالمات WebRTC الصوتية</span>
   </a>
@@ -289,200 +292,130 @@ export default function CallCenterSuiteEmbed({ apiKey = "<YOUR_API_KEY>", sectio
       </div>
     </div>
 
-    <!-- Voice Webphone Embed Card -->
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-[#7c3aed]/10 text-[#7c3aed] flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-          </span>
-          <div>
-            <h5 class="font-semibold text-xs text-slate-900" data-i18n="dev_embed_voice_title">قمرة الاتصال والمساعد الصوتي (Voice Webphone)</h5>
-            <span class="text-xs text-slate-400 font-mono">/embed/voice/?token={API_KEY}&amp;locale={ar|en}</span>
-          </div>
-        </div>
-        <a id="dev-embed-voice-preview-btn" href="/embed/voice/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-semibold flex items-center gap-1">
-          <span data-i18n="dev_preview_live">معاينة حية</span>
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        </a>
-      </div>
-
-      <!-- Voice Tabs -->
-      <div id="voice-embed-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2">
-        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-html-pane')" data-tab-target="voice-html-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">HTML Iframe</button>
-        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-react-pane')" data-tab-target="voice-react-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">React Component</button>
-        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-css-pane')" data-tab-target="voice-css-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">Responsive CSS</button>
-        <button type="button" onclick="switchDevTab('voice-embed-tabs', 'voice-pm-pane')" data-tab-target="voice-pm-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">postMessage</button>
-      </div>
-
-      <div id="voice-embed-tabs-panes">
-        <!-- HTML Pane -->
-        <div data-tab-pane="voice-html-pane" class="space-y-2">
-          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
-            <pre id="dev-embed-voice-snippet">&lt;iframe src="https://localhost/embed/voice/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="400" height="560" frameborder="0" allow="microphone;" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);"&gt;&lt;/iframe&gt;</pre>
-            <button type="button" onclick="copyEmbedVoiceSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
-          </div>
-          <p class="text-xs text-slate-500">يتطلب الإذن <code class="font-mono text-slate-700">allow="microphone;"</code> للوصول إلى ميكروفون المستخدم لإجراء المكالمات الصوتية.</p>
-        </div>
-
-        <!-- React Pane -->
-        <div data-tab-pane="voice-react-pane" class="hidden space-y-2">
-          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-56" dir="ltr">
-            <pre id="dev-voice-widget-react-snippet">{% verbatim %}import React, { useState, useEffect, useRef } from 'react';
-
-export default function VoiceAIWidget({ apiKey = "<YOUR_API_KEY>", locale = "ar" }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCalling, setIsCalling] = useState(false);
-  const iframeRef = useRef(null);
-
-  useEffect(() => {
-    const handleMessage = (e) => {
-      if (!e.data || typeof e.data !== 'object') return;
-      if (e.data.type === 'VOICE_CALL_STARTED') setIsCalling(true);
-      if (e.data.type === 'VOICE_CALL_ENDED') setIsCalling(false);
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  return (
-    <div style={{ position: 'fixed', bottom: '24px', left: locale === 'ar' ? '24px' : 'auto', right: locale === 'ar' ? 'auto' : '24px', zIndex: 9999 }}>
-      {isOpen && (
-        <iframe
-          ref={iframeRef}
-          src={`https://localhost/embed/voice/?token=${apiKey}&locale=${locale}`}
-          width="380"
-          height="540"
-          frameBorder="0"
-          allow="microphone;"
-          title="Voice AI"
-        />
-      )}
-      <button onClick={() => setIsOpen(!isOpen)}>{isOpen ? '✕' : '🎙️'}</button>
-    </div>
-  );
-}{% endverbatim %}</pre>
-            <button type="button" onclick="copySnippet('dev-voice-widget-react-snippet', 'تم نسخ مكون React بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
-          </div>
-        </div>
-
-        <!-- CSS Pane -->
-        <div data-tab-pane="voice-css-pane" class="hidden space-y-2">
-          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left max-h-56" dir="ltr">
-            <pre id="dev-voice-widget-css-snippet">/* Floating Responsive Voice AI Widget */
-.voice-widget-dock {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-}
-.voice-widget-frame {
-  width: 380px;
-  height: 540px;
-  border: none;
-  border-radius: 18px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-  margin-bottom: 12px;
-}
-@media (max-width: 640px) {
-  .voice-widget-dock {
-    left: 0; right: 0; bottom: 0; width: 100%;
-  }
-  .voice-widget-frame {
-    width: 100vw; height: 85vh; border-radius: 20px 20px 0 0;
-  }
-}</pre>
-            <button type="button" onclick="copySnippet('dev-voice-widget-css-snippet', 'تم نسخ أكواد الـ CSS بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
-          </div>
-        </div>
-
-        <!-- postMessage Pane -->
-        <div data-tab-pane="voice-pm-pane" class="hidden space-y-2 text-xs">
-          <div class="bg-white rounded-lg p-3 border border-slate-200/80 space-y-2">
-            <div class="flex items-center gap-1.5 font-semibold text-slate-800">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>الأحداث الصادرة من الـ Iframe للموقع المضيف:</span>
-            </div>
-            <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
-              <li><code>VOICE_CALL_STARTED</code>: ترسل عند بدء المكالمة مع رقم هاتف المتصل.</li>
-              <li><code>VOICE_CALL_ENDED</code>: ترسل عند إنهاء المكالمة مع مدتها بالثواني.</li>
-            </ul>
-            <div class="flex items-center gap-1.5 font-semibold text-slate-800 pt-1">
-              <span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span>
-              <span>الأوامر المستقبلة من الموقع المضيف:</span>
-            </div>
-            <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
-              <li><code>{ type: "VOICE_DIAL", phone: "+2010..." }</code>: بدء اتصال آلي فوري.</li>
-              <li><code>{ type: "VOICE_HANGUP" }</code>: إنهاء المكالمة الحالية فوراً.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Full White-Label Chatwoot Hub Embedded Suite Card -->
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+    <!-- 2. Full White-Label Chatwoot Hub Embedded Suite Card (Full Width) -->
+    <div id="section-chat-embeds" class="lg:col-span-2 p-5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </span>
           <div>
-            <h5 class="font-semibold text-xs text-slate-900" data-i18n="dev_embed_chat_title">منصة المحادثات الشاملة (Chatwoot Hub Suite)</h5>
-            <span class="text-xs text-slate-400 font-mono">/embed/chat-hub/?token={API_KEY}&amp;locale={ar|en}</span>
+            <div class="flex items-center gap-2">
+              <h5 class="font-bold text-sm text-slate-900" data-i18n="dev_embed_chat_title">منصة المحادثات الشاملة (Chatwoot Hub Suite)</h5>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">Omnichannel Chat &amp; WhatsApp</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              تضمين منصة المحادثات الوايت ليبل مع دعم التوجيه المباشر (Deep Linking) للأقسام الثلاثة: المحادثات الحية، ربط القنوات والواتساب، وإعدادات المساعد الذكي.
+            </p>
           </div>
         </div>
-        <a id="dev-embed-chat-preview-btn" href="/embed/chat-hub/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-semibold flex items-center gap-1">
-          <span data-i18n="dev_preview_live">معاينة حية</span>
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        </a>
-      </div>
-
-      <!-- 3 Internal Tabs Pill Indicator -->
-      <div class="p-2 rounded bg-white border border-slate-200/60 text-xs text-slate-600 space-y-1">
-        <span class="font-semibold text-slate-700 block">تتضمن التبويبات الثلاثة المدمجة:</span>
-        <div class="flex items-center gap-2 text-xs flex-wrap">
-          <span class="px-2 py-0.5 rounded bg-slate-100 font-medium">1. المحادثات المباشرة</span>
-          <span class="px-2 py-0.5 rounded bg-slate-100 font-medium">2. ربط القنوات وQR واتساب</span>
-          <span class="px-2 py-0.5 rounded bg-slate-100 font-medium">3. إعدادات المساعد الذكي</span>
+        <div class="flex items-center gap-2">
+          <a id="dev-embed-chat-preview-btn" href="/embed/chat-hub/" target="_blank" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+            <span data-i18n="dev_preview_live">معاينة حية للمنصة</span>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
         </div>
       </div>
 
-      <!-- Chat Tabs -->
+      <!-- 3 Sub-Tabs Directory & Deep-Link Jump Cards -->
+      <div class="bg-white rounded-lg p-3 border border-slate-200/80 space-y-2">
+        <span class="text-xs font-semibold text-slate-700 block">التوجيه المباشر للأقسام الثلاثة عبر الرابط (Deep-Linking URLs):</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <!-- Sub-Tab 1: Live Chat -->
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-900">1. المحادثات المباشرة</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">صندوق الوارد الموحد لكافة قنوات المراسلة والمحادثات الحية مع العملاء.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+              <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/</code>
+              <a href="/embed/chat-hub/" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+            </div>
+          </div>
+
+          <!-- Sub-Tab 2: Channels & WhatsApp QR -->
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-900">2. ربط القنوات وQR واتساب</span>
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">مسح كود QR لتشغيل أرقام الواتساب، والفيسبوك، والتيليجرام، وقنوات الويب.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+              <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/?tab=channels</code>
+              <a id="dev-embed-chat-channels-preview-btn" href="/embed/chat-hub/?tab=channels" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+            </div>
+          </div>
+
+          <!-- Sub-Tab 3: AI Captain Settings -->
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-900">3. إعدادات المساعد الذكي</span>
+                <span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">تخصيص تعليمات وسلوك الكابتن AI وقواعد الرد الآلي في المحادثات.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+              <code class="text-xs text-[#7c3aed] font-mono">/embed/chat-hub/?tab=settings</code>
+              <a id="dev-embed-chat-settings-preview-btn" href="/embed/chat-hub/?tab=settings" target="_blank" class="text-xs text-[#7c3aed] hover:underline font-medium">معاينة</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Snippets Tabs Nav -->
       <div id="chat-embed-tabs-nav" class="flex items-center gap-1.5 border-b border-slate-200 pb-2">
-        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-html-pane')" data-tab-target="chat-html-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">HTML Iframe</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-hub-html-pane')" data-tab-target="chat-hub-html-pane" class="px-3 py-1.5 rounded-lg bg-[#7c3aed] text-white font-medium text-xs shadow-2xs transition">HTML Iframe (Full Hub)</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-channels-html-pane')" data-tab-target="chat-channels-html-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">HTML Iframe (Channels &amp; QR)</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-settings-html-pane')" data-tab-target="chat-settings-html-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">HTML Iframe (AI Settings)</button>
         <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-react-pane')" data-tab-target="chat-react-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">React Component</button>
         <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-css-pane')" data-tab-target="chat-css-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">Responsive CSS</button>
-        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-pm-pane')" data-tab-target="chat-pm-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">postMessage</button>
+        <button type="button" onclick="switchDevTab('chat-embed-tabs', 'chat-pm-pane')" data-tab-target="chat-pm-pane" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">postMessage Events</button>
       </div>
 
       <div id="chat-embed-tabs-panes">
-        <!-- HTML Pane -->
-        <div data-tab-pane="chat-html-pane" class="space-y-2">
+        <!-- 1. Full Hub HTML Pane -->
+        <div data-tab-pane="chat-hub-html-pane" class="space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr">
             <pre id="dev-embed-chat-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
-            <button type="button" onclick="copyEmbedChatSnippet()" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+            <button type="button" onclick="copySnippet('dev-embed-chat-snippet', 'تم نسخ كود تضمين منصة الشات الكاملة بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
-          <p class="text-xs text-slate-500">منصة الشات متجاوبة بالكامل وتتضمن المحادثات المباشرة، ربط القنوات، وإعدادات الذكاء الاصطناعي.</p>
+          <p class="text-xs text-slate-500">تضمين المنصة الكاملة مع إمكانية التنقل بين المحادثات المباشرة وربط القنوات وإعدادات الكابتن.</p>
         </div>
 
-        <!-- React Pane -->
+        <!-- 2. Channels & QR HTML Pane -->
+        <div data-tab-pane="chat-channels-html-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-400 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-embed-chat-channels-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=channels&amp;token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <button type="button" onclick="copySnippet('dev-embed-chat-channels-snippet', 'تم نسخ كود تضمين ربط القنوات والواتساب بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">يفتح مباشرة على واجهة مسح كود QR وربط قنوات المراسلة والواتساب مع إمكانية العودة لسائر التبويبات.</p>
+        </div>
+
+        <!-- 3. AI Settings HTML Pane -->
+        <div data-tab-pane="chat-settings-html-pane" class="hidden space-y-2">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-amber-300 overflow-x-auto text-left" dir="ltr">
+            <pre id="dev-embed-chat-settings-snippet">&lt;iframe src="https://localhost/embed/chat-hub/?tab=settings&amp;token=&lt;YOUR_API_KEY&gt;&amp;locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"&gt;&lt;/iframe&gt;</pre>
+            <button type="button" onclick="copySnippet('dev-embed-chat-settings-snippet', 'تم نسخ كود تضمين إعدادات المساعد الذكي بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+          </div>
+          <p class="text-xs text-slate-500">يفتح مباشرة على إعدادات المساعد الذكي والكابتن AI لتخصيص البرومبت والموجهات وسلوك الردود.</p>
+        </div>
+
+        <!-- 4. React Pane with Sub-Tab Selector -->
         <div data-tab-pane="chat-react-pane" class="hidden space-y-2">
-          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-56" dir="ltr">
+          <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-cyan-300 overflow-x-auto text-left max-h-64" dir="ltr">
             <pre id="dev-chat-widget-react-snippet">{% verbatim %}import React, { useState, useEffect } from 'react';
 
-export default function OmnichannelChatWidget({ apiKey = "<YOUR_API_KEY>", locale = "ar" }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function OmnichannelChatHub({ apiKey = "<YOUR_API_KEY>", tab = "live", locale = "ar" }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -494,56 +427,50 @@ export default function OmnichannelChatWidget({ apiKey = "<YOUR_API_KEY>", local
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
+  const tabQuery = tab && tab !== 'live' ? `&tab=${tab}` : '';
+  const embedUrl = `https://localhost/embed/chat-hub/?token=${apiKey}${tabQuery}&locale=${locale}`;
+
   return (
-    <div style={{ position: 'fixed', bottom: '24px', right: locale === 'ar' ? 'auto' : '24px', left: locale === 'ar' ? '24px' : 'auto', zIndex: 9999 }}>
-      {isOpen && (
-        <iframe
-          src={`https://localhost/embed/chat/?token=${apiKey}&locale=${locale}`}
-          width="420"
-          height="620"
-          frameBorder="0"
-          allow="camera; microphone; clipboard-read; clipboard-write;"
-          title="Chatwoot Omnichannel Inbox"
-        />
-      )}
-      <button onClick={() => setIsOpen(!isOpen)}>{isOpen ? '✕' : '💬'}</button>
+    <div style={{ width: '100%', height: '800px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+      <iframe
+        src={embedUrl}
+        width="100%"
+        height="100%"
+        frameBorder="0"
+        allow="camera; microphone; clipboard-read; clipboard-write;"
+        title="Chatwoot Omnichannel Hub"
+      />
     </div>
   );
 }{% endverbatim %}</pre>
-            <button type="button" onclick="copySnippet('dev-chat-widget-react-snippet', 'تم نسخ مكون React للشات بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
+            <button type="button" onclick="copySnippet('dev-chat-widget-react-snippet', 'تم نسخ مكون React لمنصة الشات بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
+          <p class="text-xs text-slate-500">يدعم خاصية <code class="font-mono text-slate-700">tab="live" | "channels" | "settings"</code> لتحديد التبويب المفتوح تلقائياً عند التحميل.</p>
         </div>
 
-        <!-- CSS Pane -->
+        <!-- 5. CSS Pane -->
         <div data-tab-pane="chat-css-pane" class="hidden space-y-2">
           <div class="relative bg-slate-900 rounded-lg p-3 text-xs font-mono text-emerald-300 overflow-x-auto text-left max-h-56" dir="ltr">
-            <pre id="dev-chat-widget-css-snippet">/* Floating Responsive Chat Widget */
-.chat-widget-dock {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9999;
-}
-.chat-widget-frame {
-  width: 420px;
-  height: 620px;
-  border-radius: 18px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.16);
+            <pre id="dev-chat-widget-css-snippet">/* Responsive Chat Hub Suite Container */
+.chathub-suite-frame {
+  width: 100%;
+  min-height: 800px;
+  height: 90vh;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
-@media (max-width: 640px) {
-  .chat-widget-dock {
-    left: 0; right: 0; bottom: 0; width: 100%;
-  }
-  .chat-widget-frame {
-    width: 100vw; height: 90vh; border-radius: 20px 20px 0 0;
+@media (max-width: 768px) {
+  .chathub-suite-frame {
+    min-height: 100vh;
+    border-radius: 0;
   }
 }</pre>
             <button type="button" onclick="copySnippet('dev-chat-widget-css-snippet', 'تم نسخ كود الـ CSS بنجاح!')" class="absolute top-2 right-2 px-2 py-0.5 text-xs rounded bg-white/10 hover:bg-white/20 text-white font-sans transition"><span data-i18n="copy">نسخ</span></button>
           </div>
         </div>
 
-        <!-- postMessage Pane -->
+        <!-- 6. postMessage Events Pane -->
         <div data-tab-pane="chat-pm-pane" class="hidden space-y-2 text-xs">
           <div class="bg-white rounded-lg p-3 border border-slate-200/80 space-y-2">
             <div class="flex items-center gap-1.5 font-semibold text-slate-800">
@@ -551,9 +478,10 @@ export default function OmnichannelChatWidget({ apiKey = "<YOUR_API_KEY>", local
               <span>أحداث الشات المتبادلة مع الموقع المضيف:</span>
             </div>
             <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-xs">
-              <li><code>CHAT_READY</code>: ترسل فور اكتمال تحميل منصة المحادثات.</li>
-              <li><code>unread_message_count</code>: ترسل مع عدد الرسائل غير المقروءة لتحديث بادج التنبيه.</li>
+              <li><code>chatwoot:ready</code> / <code>CHAT_READY</code>: ترسل فور اكتمال تحميل منصة المحادثات مع تسجيل الدخول الصامت.</li>
+              <li><code>unread_message_count</code>: ترسل مع عدد الرسائل غير المقروءة لتحديث بادج التنبيه بالموقع المضيف.</li>
               <li><code>{ type: "SET_THEME", theme: "light"|"dark" }</code>: أمر من المضيف لتبديل ثيم الشات.</li>
+              <li><code>{ type: "SWITCH_TAB", tab: "live"|"channels"|"settings" }</code>: تبديل التبويب الداخلي برمجياً من الموقع الحاضن.</li>
             </ul>
           </div>
         </div>
