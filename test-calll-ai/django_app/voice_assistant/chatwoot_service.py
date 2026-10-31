@@ -88,36 +88,210 @@ CHATWOOT_REDIS_CONFIG = {
 CHATWOOT_BASE_URL = getattr(settings, 'CHATWOOT_BASE_URL', 'https://chatwoot.169.58.32.179.nip.io')
 
 
-def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
+def get_or_create_tenant_chatwoot(user):
+    """
+    Resolve or auto-provision Chatwoot Account, User, and Captain Assistant
+    for multi-tenancy isolation.
+    - Superuser / Platform Admin maps to Account 2.
+    - Employee maps to their employer's tenant config.
+    - Regular tenant auto-provisions dedicated Account, User, and Assistant in Chatwoot DB.
+    Guarantees concurrency safety via Django row locking and atomic PostgreSQL statements.
+    """
+    if not user or not getattr(user, 'is_authenticated', False):
+        return None
+
+    from voice_assistant.models import TenantChatwootConfig
+    from django.db import transaction
+
+    # 1. If user is an employee, map to their employer's tenant config
+    effective_user = user
+    if hasattr(user, 'employee_profile') and user.employee_profile and user.employee_profile.employer:
+        effective_user = user.employee_profile.employer
+
+    # 2. Superuser / Platform Admin maps to Account 2
+    if effective_user.is_superuser:
+        config, _ = TenantChatwootConfig.objects.update_or_create(
+            user=effective_user,
+            defaults={
+                'account_id': 2,
+                'chatwoot_user_id': 2,
+                'assistant_id': 1,
+                'is_provisioned': True,
+            }
+        )
+        return config
+
+    # 3. Fast check existing config in Django
+    config = TenantChatwootConfig.objects.filter(user=effective_user).first()
+    if config and config.is_provisioned and config.account_id:
+        return config
+
+    # 4. Atomic lock to prevent duplicate concurrent provisioning
+    with transaction.atomic():
+        # Lock user row in Django DB
+        from django.contrib.auth.models import User
+        User.objects.select_for_update().get(id=effective_user.id)
+        config = TenantChatwootConfig.objects.filter(user=effective_user).first()
+        if config and config.is_provisioned and config.account_id:
+            return config
+
+        # Auto-provision in Chatwoot database (atomic SQL)
+        conn = get_chatwoot_db_conn()
+        try:
+            cur = conn.cursor()
+
+            # 4.1 Insert account
+            acc_name = getattr(effective_user, 'first_name', '') or effective_user.username
+            cur.execute("""
+                INSERT INTO accounts (name, locale, created_at, updated_at, feature_flags, internal_attributes, feature_flags_ext_1)
+                VALUES (%s, 1, NOW(), NOW(), 6338816368015572959, '{}'::jsonb, 15615)
+                RETURNING id;
+            """, (acc_name,))
+            acc_id = cur.fetchone()[0]
+
+            # 4.2 Insert or update user atomically
+            email = effective_user.email or f"{effective_user.username}@tenant.local"
+            name = effective_user.get_full_name() or effective_user.username
+            pubsub_token = secrets.token_urlsafe(18)
+            dummy_pwd = "$2a$11$620BW0C5baV6LeIlL1jNOuNAqoJ9dMmXSbR.2BAxlPmk8FZcs/cUG"
+
+            cur.execute("""
+                INSERT INTO users (name, email, uid, provider, encrypted_password, pubsub_token, confirmed_at, created_at, updated_at, ui_settings)
+                VALUES (%s, %s, %s, 'email', %s, %s, NOW(), NOW(), NOW(), '{"locale": "ar"}'::jsonb)
+                ON CONFLICT (uid, provider) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, updated_at = NOW()
+                RETURNING id;
+            """, (name, email, email, dummy_pwd, pubsub_token))
+            cw_user_id = cur.fetchone()[0]
+
+            # 4.3 Add user to account as admin (role: 1)
+            cur.execute("""
+                INSERT INTO account_users (account_id, user_id, role, availability, auto_offline, created_at, updated_at)
+                VALUES (%s, %s, 1, 0, true, NOW(), NOW())
+                ON CONFLICT (account_id, user_id) DO UPDATE SET role = EXCLUDED.role;
+            """, (acc_id, cw_user_id))
+
+            # 4.4 Add SuperAdmin user 2 as co-admin so backend API token can manage inboxes
+            cur.execute("""
+                INSERT INTO account_users (account_id, user_id, role, availability, auto_offline, created_at, updated_at)
+                VALUES (%s, 2, 1, 0, true, NOW(), NOW())
+                ON CONFLICT (account_id, user_id) DO UPDATE SET role = EXCLUDED.role;
+            """, (acc_id,))
+
+            # 4.5 Insert Captain AI assistant
+            cur.execute("""
+                INSERT INTO captain_assistants (account_id, name, config, response_guidelines, guardrails, created_at, updated_at)
+                VALUES (%s, 'المساعد الذكي', '{"product_name": "", "temperature": 0.5, "feature_faq": true}'::jsonb, '[]'::jsonb, '[]'::jsonb, NOW(), NOW())
+                RETURNING id;
+            """, (acc_id,))
+            assistant_id = cur.fetchone()[0]
+
+            conn.commit()
+
+            # 4.6 Save TenantChatwootConfig in Django
+            config, _ = TenantChatwootConfig.objects.update_or_create(
+                user=effective_user,
+                defaults={
+                    'account_id': acc_id,
+                    'chatwoot_user_id': cw_user_id,
+                    'assistant_id': assistant_id,
+                    'is_provisioned': True,
+                }
+            )
+            logger.info(f"[ChatwootMultiTenancy] Provisioned Chatwoot Account #{acc_id} (User #{cw_user_id}, Assistant #{assistant_id}) for {effective_user.username}")
+            return config
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"[ChatwootMultiTenancy] Failed to provision tenant account for {effective_user.username}: {e}", exc_info=True)
+            raise
+        finally:
+            conn.close()
+
+
+def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
     """
     Generate a direct SSO login link for Chatwoot that logs the user in
     silently without asking for credentials, using Chatwoot's Redis Alfred SSO token.
     Supports setting the user's and account's active locale ('ar' or 'en').
+    Automatically resolves tenant's account_id and user's Chatwoot identity:
+    - If user is an employee, auto-provisions their distinct agent user in the tenant's account.
+    - Adds user to account_users and all existing inboxes for immediate visibility.
     """
     try:
+        cfg = None
+        if user and getattr(user, 'is_authenticated', False):
+            cfg = get_or_create_tenant_chatwoot(user)
+            if cfg and (account_id is None or account_id == 2):
+                account_id = cfg.account_id
+
+        if account_id is None:
+            account_id = 2
+
         conn = get_chatwoot_db_conn()
         cur = conn.cursor()
 
         chatwoot_user = None
-        if user and getattr(user, 'email', None):
-            cur.execute("SELECT id, email FROM users WHERE email = %s LIMIT 1", (user.email,))
+        user_email = None
+        if user and getattr(user, 'is_authenticated', False):
+            user_email = getattr(user, 'email', None) or f"{user.username}@tenant.local"
+
+        # 1. Try finding Chatwoot user by user_email
+        if user_email:
+            cur.execute("SELECT id, email FROM users WHERE email = %s LIMIT 1", (user_email,))
             chatwoot_user = cur.fetchone()
 
-        if not chatwoot_user:
-            # Fallback to SuperAdmin user fps60y@gmail.com (id: 2) or first SuperAdmin
-            cur.execute("SELECT id, email FROM users WHERE type = 'SuperAdmin' ORDER BY id ASC LIMIT 1")
+        # 2. If user is authenticated in Django but doesn't exist in Chatwoot users table yet, auto-provision them!
+        if not chatwoot_user and user and getattr(user, 'is_authenticated', False):
+            display_name = user.get_full_name() or getattr(getattr(user, 'employee_profile', None), 'display_name', None) or user.username
+            pubsub_token = secrets.token_urlsafe(18)
+            dummy_pwd = "$2a$11$620BW0C5baV6LeIlL1jNOuNAqoJ9dMmXSbR.2BAxlPmk8FZcs/cUG"
+            cur.execute("""
+                INSERT INTO users (name, email, uid, provider, encrypted_password, pubsub_token, confirmed_at, created_at, updated_at, ui_settings)
+                VALUES (%s, %s, %s, 'email', %s, %s, NOW(), NOW(), NOW(), '{"locale": "ar"}'::jsonb)
+                ON CONFLICT (uid, provider) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, updated_at = NOW()
+                RETURNING id, email;
+            """, (display_name, user_email, user_email, dummy_pwd, pubsub_token))
+            chatwoot_user = cur.fetchone()
+            conn.commit()
+
+        # 3. Try tenant config chatwoot_user_id (if user is employer)
+        if not chatwoot_user and cfg and cfg.chatwoot_user_id and cfg.user_id == getattr(user, 'id', None):
+            cur.execute("SELECT id, email FROM users WHERE id = %s LIMIT 1", (cfg.chatwoot_user_id,))
             chatwoot_user = cur.fetchone()
 
-        if not chatwoot_user:
-            cur.execute("SELECT id, email FROM users ORDER BY id ASC LIMIT 1")
+        # 4. If user is superuser, allow user 2
+        if not chatwoot_user and user and getattr(user, 'is_superuser', False):
+            cur.execute("SELECT id, email FROM users WHERE id = 2 LIMIT 1")
             chatwoot_user = cur.fetchone()
 
+        # 5. If still no user, DO NOT fall back to SuperAdmin! Return account URL
         if not chatwoot_user:
             conn.close()
-            logger.warning("[ChatwootSSO] No Chatwoot user found in database.")
+            logger.warning(f"[ChatwootSSO] No Chatwoot user found for user {getattr(user, 'username', 'anonymous')}")
             return f"{CHATWOOT_BASE_URL}/app/accounts/{account_id}"
 
         user_id, email = chatwoot_user[0], chatwoot_user[1]
+
+        # Ensure user is linked in account_users for this account_id
+        try:
+            is_admin = bool(getattr(user, 'is_superuser', False) or (cfg and cfg.user_id == getattr(user, 'id', None)))
+            role_to_set = 1 if is_admin else 0
+            cur.execute("""
+                INSERT INTO account_users (account_id, user_id, role, availability, auto_offline, created_at, updated_at)
+                VALUES (%s, %s, %s, 0, true, NOW(), NOW())
+                ON CONFLICT (account_id, user_id) DO NOTHING;
+            """, (account_id, user_id, role_to_set))
+
+            # Auto-assign user to all existing inboxes in this account
+            cur.execute("""
+                INSERT INTO inbox_members (user_id, inbox_id, created_at, updated_at)
+                SELECT %s, id, NOW(), NOW()
+                FROM inboxes
+                WHERE account_id = %s
+                ON CONFLICT (inbox_id, user_id) DO NOTHING;
+            """, (user_id, account_id))
+            conn.commit()
+        except Exception as au_err:
+            logger.warning(f"[ChatwootSSO] Warning ensuring account_users for user {user_id}: {au_err}")
 
         # Prevent Chatwoot 25-session limit (which causes HTTP 409 Conflict on /auth/sign_in)
         try:
@@ -180,19 +354,26 @@ def generate_chatwoot_sso_url(user=None, account_id=2, locale=None):
         redirect_target += "?" + "&".join(query_params)
 
         sso_url = f"{CHATWOOT_BASE_URL}/app/login?email={encoded_email}&sso_auth_token={token}&redirect_url={urllib.parse.quote(redirect_target)}&theme=light&color_scheme=light"
-        logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id}) [locale: {norm_locale}]")
+        logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id}) -> Account {account_id} [locale: {norm_locale}]")
         return sso_url
     except Exception as e:
         logger.error(f"[ChatwootSSO] Error generating SSO URL: {e}", exc_info=True)
-        return f"{CHATWOOT_BASE_URL}/app/accounts/{account_id}"
+        acc_fallback = account_id or 2
+        return f"{CHATWOOT_BASE_URL}/app/accounts/{acc_fallback}"
 
 
-def set_chatwoot_user_locale(user=None, account_id=2, locale='ar'):
+def set_chatwoot_user_locale(user=None, account_id=None, locale='ar'):
     """
     Update Chatwoot user's ui_settings.locale and account.locale,
     and generate a fresh SSO URL matching the language.
     """
     norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar'
+    if account_id is None and user and getattr(user, 'is_authenticated', False):
+        cfg = get_or_create_tenant_chatwoot(user)
+        if cfg:
+            account_id = cfg.account_id
+    if account_id is None:
+        account_id = 2
     sso_url = generate_chatwoot_sso_url(user=user, account_id=account_id, locale=norm_locale)
     return {
         "status": "success",
@@ -201,7 +382,7 @@ def set_chatwoot_user_locale(user=None, account_id=2, locale='ar'):
     }
 
 
-def get_captain_settings(assistant_id=1, account_id=2):
+def get_captain_settings(assistant_id=None, account_id=2):
     """
     Retrieve Captain AI assistant settings and linked inboxes from Chatwoot database.
     """
@@ -209,12 +390,14 @@ def get_captain_settings(assistant_id=1, account_id=2):
         conn = get_chatwoot_db_conn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        cur.execute("""
-            SELECT id, name, description, config, response_guidelines, guardrails
-            FROM captain_assistants
-            WHERE id = %s AND account_id = %s
-        """, (assistant_id, account_id))
-        assistant = cur.fetchone()
+        assistant = None
+        if assistant_id:
+            cur.execute("""
+                SELECT id, name, description, config, response_guidelines, guardrails
+                FROM captain_assistants
+                WHERE id = %s AND account_id = %s
+            """, (assistant_id, account_id))
+            assistant = cur.fetchone()
 
         if not assistant:
             cur.execute("""
@@ -246,6 +429,7 @@ def get_captain_settings(assistant_id=1, account_id=2):
 
         return {
             "assistant_id": assistant['id'],
+            "account_id": account_id,
             "name": assistant.get('name') or '',
             "product_name": config.get('product_name') or '',
             "description": assistant.get('description') or '',
@@ -268,7 +452,7 @@ def get_captain_settings(assistant_id=1, account_id=2):
         return None
 
 
-def update_captain_settings(data, assistant_id=1, account_id=2):
+def update_captain_settings(data, assistant_id=None, account_id=2):
     """
     Update Captain AI assistant settings and linked inboxes in Chatwoot database.
     """
@@ -276,13 +460,22 @@ def update_captain_settings(data, assistant_id=1, account_id=2):
         conn = get_chatwoot_db_conn()
         cur = conn.cursor()
 
-        cur.execute("SELECT config FROM captain_assistants WHERE id = %s AND account_id = %s", (assistant_id, account_id))
-        row = cur.fetchone()
+        if assistant_id:
+            cur.execute("SELECT id, config FROM captain_assistants WHERE id = %s AND account_id = %s", (assistant_id, account_id))
+            row = cur.fetchone()
+        else:
+            row = None
+
+        if not row:
+            cur.execute("SELECT id, config FROM captain_assistants WHERE account_id = %s ORDER BY id ASC LIMIT 1", (account_id,))
+            row = cur.fetchone()
+
         if not row:
             conn.close()
             return False, "المساعد غير موجود"
 
-        config = row[0] or {}
+        actual_assistant_id = row[0]
+        config = row[1] or {}
         if not isinstance(config, dict):
             config = {}
 
@@ -322,7 +515,7 @@ def update_captain_settings(data, assistant_id=1, account_id=2):
             json.dumps(config, ensure_ascii=False),
             json.dumps(guidelines, ensure_ascii=False),
             json.dumps(guardrails, ensure_ascii=False),
-            assistant_id,
+            actual_assistant_id,
             account_id
         ))
 
@@ -330,28 +523,36 @@ def update_captain_settings(data, assistant_id=1, account_id=2):
         if inbox_ids is not None:
             target_ids = [int(i) for i in inbox_ids if str(i).isdigit()]
 
+            # Enforce that inboxes belong to account_id
             if target_ids:
+                cur.execute("SELECT id FROM inboxes WHERE account_id = %s AND id IN %s", (account_id, tuple(target_ids)))
+                valid_ids = [r[0] for r in cur.fetchall()]
+            else:
+                valid_ids = []
+
+            if valid_ids:
                 cur.execute("""
                     DELETE FROM captain_inboxes
                     WHERE captain_assistant_id = %s AND inbox_id NOT IN %s
-                """, (assistant_id, tuple(target_ids)))
+                """, (actual_assistant_id, tuple(valid_ids)))
             else:
-                cur.execute("DELETE FROM captain_inboxes WHERE captain_assistant_id = %s", (assistant_id,))
+                cur.execute("DELETE FROM captain_inboxes WHERE captain_assistant_id = %s", (actual_assistant_id,))
 
-            for i_id in target_ids:
+            for i_id in valid_ids:
                 cur.execute("""
                     INSERT INTO captain_inboxes (captain_assistant_id, inbox_id, created_at, updated_at)
                     VALUES (%s, %s, NOW(), NOW())
                     ON CONFLICT (captain_assistant_id, inbox_id) DO NOTHING
-                """, (assistant_id, i_id))
+                """, (actual_assistant_id, i_id))
 
         conn.commit()
         conn.close()
-        logger.info(f"[ChatwootCaptain] Updated assistant {assistant_id} settings successfully.")
+        logger.info(f"[ChatwootCaptain] Updated assistant {actual_assistant_id} (account {account_id}) settings successfully.")
         return True, "تم حفظ إعدادات المساعد الذكي بنجاح"
     except Exception as e:
         logger.error(f"[ChatwootCaptain] Error updating settings: {e}", exc_info=True)
         return False, f"حدث خطأ أثناء حفظ الإعدادات: {str(e)}"
+
 
 
 # ==============================================================================
@@ -660,8 +861,32 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
                 else:
                     grouped['api'].append(ch)
 
-        # Primary Evolution status for fallback
-        evolution_status = get_evolution_instance_status('whatsapp_main')
+        # Scoped Evolution instances for this account (prevents cross-tenant leak)
+        tenant_instance_names = {
+            ch['instance_name'] for ch in channels_list if ch.get('instance_name')
+        }
+        if account_id == 2:
+            tenant_instance_names.add('whatsapp_main')
+
+        scoped_evo_instances = [
+            inst for inst in evolution_instances_map.values()
+            if inst.get('name') in tenant_instance_names or inst.get('name', '').startswith(f"acc{account_id}_")
+        ]
+
+        evolution_status = None
+        if account_id == 2:
+            evolution_status = get_evolution_instance_status('whatsapp_main')
+        elif scoped_evo_instances:
+            first_inst = scoped_evo_instances[0]
+            evolution_status = {
+                "instance_name": first_inst.get('name'),
+                "connection_status": first_inst.get('connectionStatus', 'close'),
+                "owner_jid": first_inst.get('ownerJid'),
+                "profile_name": first_inst.get('profileName'),
+                "profile_pic": first_inst.get('profilePicUrl')
+            }
+        else:
+            evolution_status = {"instance_name": None, "connection_status": "disconnected"}
 
         return {
             "ok": True,
@@ -670,20 +895,26 @@ def get_all_channels_detailed(account_id=2, assistant_id=1):
             "all_channels": channels_list,
             "grouped": grouped,
             "evolution": evolution_status,
-            "evolution_instances": list(evolution_instances_map.values())
+            "evolution_instances": scoped_evo_instances
         }
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error listing channels: {e}", exc_info=True)
         return {"ok": False, "error": str(e), "channels": [], "grouped": {}}
 
 
-def toggle_channel_ai(inbox_id, enable=True, assistant_id=1):
+def toggle_channel_ai(inbox_id, enable=True, assistant_id=1, account_id=None):
     """
     Toggle Captain AI auto-reply on a specific inbox.
     """
     try:
         conn = get_chatwoot_db_conn()
         cur = conn.cursor()
+
+        if account_id:
+            cur.execute("SELECT id FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+            if not cur.fetchone():
+                conn.close()
+                return False, "القناة غير موجودة أو غير تابعة لهذا الحساب"
 
         if enable:
             cur.execute("""
@@ -709,8 +940,19 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
     """
     Update channel inbox details (name, AI toggle, etc.).
     Synchronizes with Chatwoot API and Evolution API in real-time.
+    Enforces tenant ownership.
     """
     try:
+        conn = get_chatwoot_db_conn()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Anti-IDOR: verify ownership first
+        cur.execute("SELECT id, channel_id, channel_type, name FROM inboxes WHERE id = %s AND account_id = %s", (inbox_id, account_id))
+        ibx = cur.fetchone()
+        if not ibx:
+            conn.close()
+            return False, "القناة غير موجودة أو غير تابعة لهذا الحساب"
+
         new_name = data.get('name')
         if new_name:
             new_name = new_name.strip()
@@ -718,8 +960,6 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
             _patch_chatwoot_inbox(inbox_id, {"name": new_name}, account_id)
 
             # 2. Update database record
-            conn = get_chatwoot_db_conn()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
                 UPDATE inboxes
                 SET name = %s, updated_at = NOW()
@@ -727,9 +967,7 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
             """, (new_name, inbox_id, account_id))
 
             # 3. If WhatsApp QR (Evolution), update nameInbox in Evolution API
-            cur.execute("SELECT channel_id, channel_type FROM inboxes WHERE id = %s", (inbox_id,))
-            ibx = cur.fetchone()
-            if ibx and ibx['channel_type'] == 'Channel::Api':
+            if ibx['channel_type'] == 'Channel::Api':
                 cur.execute("SELECT webhook_url FROM channel_api WHERE id = %s", (ibx['channel_id'],))
                 ch_api = cur.fetchone()
                 if ch_api and ch_api.get('webhook_url') and '/chatwoot/webhook/' in ch_api['webhook_url']:
@@ -750,17 +988,18 @@ def update_channel_inbox(inbox_id, data, account_id=2, assistant_id=1):
                     except Exception as e:
                         logger.warning(f"[EvolutionAPI] Warning updating name on {inst_name}: {e}")
 
-            conn.commit()
-            conn.close()
+        conn.commit()
+        conn.close()
 
         if 'enable_ai' in data:
             enable = bool(data.get('enable_ai'))
-            toggle_channel_ai(inbox_id, enable=enable, assistant_id=assistant_id)
+            toggle_channel_ai(inbox_id, enable=enable, assistant_id=assistant_id, account_id=account_id)
 
         return True, "تم تحديث بيانات القناة بنجاح ومزامنتها مع شات وت"
     except Exception as e:
         logger.error(f"[ChatwootChannels] Error updating inbox {inbox_id}: {e}", exc_info=True)
         return False, f"فشل تحديث القناة: {str(e)}"
+
 
 
 def delete_channel_inbox(inbox_id, account_id=2):
@@ -949,10 +1188,10 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
                 existing = get_all_channels_detailed(account_id, assistant_id).get('grouped', {}).get('whatsapp_qr', [])
                 name = f"واتساب {len(existing) + 1}"
 
-            # Generate sanitized unique instance name for Evolution
+            # Generate sanitized unique instance name for Evolution scoped to account_id
             clean_token = secrets.token_hex(4)
-            safe_slug = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())[:15].strip('_') or "wa"
-            instance_name = f"{safe_slug}_{clean_token}"
+            safe_slug = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())[:12].strip('_') or "wa"
+            instance_name = f"acc{account_id}_{safe_slug}_{clean_token}"
 
             # 1. Create instance in Evolution API
             create_url = f"{EVOLUTION_API_URL}/instance/create"
@@ -1069,11 +1308,21 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
             channel_id = cur.fetchone()[0]
 
             cur.execute("""
-                INSERT INTO inboxes (name, channel_id, channel_type, account_id, created_at, updated_at)
-                VALUES (%s, %s, 'Channel::FacebookPage', %s, NOW(), NOW())
-                RETURNING id
-            """, (name, channel_id, account_id))
-            inbox_id = cur.fetchone()[0]
+                SELECT id FROM inboxes 
+                WHERE channel_id = %s AND channel_type = 'Channel::FacebookPage' AND account_id = %s
+                LIMIT 1
+            """, (channel_id, account_id))
+            ibx_row = cur.fetchone()
+            if ibx_row:
+                inbox_id = ibx_row[0]
+                cur.execute("UPDATE inboxes SET name = %s, updated_at = NOW() WHERE id = %s", (name, inbox_id))
+            else:
+                cur.execute("""
+                    INSERT INTO inboxes (name, channel_id, channel_type, account_id, created_at, updated_at)
+                    VALUES (%s, %s, 'Channel::FacebookPage', %s, NOW(), NOW())
+                    RETURNING id
+                """, (name, channel_id, account_id))
+                inbox_id = cur.fetchone()[0]
             conn.commit()
             conn.close()
 
@@ -1093,11 +1342,21 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
             channel_id = cur.fetchone()[0]
 
             cur.execute("""
-                INSERT INTO inboxes (name, channel_id, channel_type, account_id, created_at, updated_at)
-                VALUES (%s, %s, 'Channel::Instagram', %s, NOW(), NOW())
-                RETURNING id
-            """, (name, channel_id, account_id))
-            inbox_id = cur.fetchone()[0]
+                SELECT id FROM inboxes 
+                WHERE channel_id = %s AND channel_type = 'Channel::Instagram' AND account_id = %s
+                LIMIT 1
+            """, (channel_id, account_id))
+            ibx_row = cur.fetchone()
+            if ibx_row:
+                inbox_id = ibx_row[0]
+                cur.execute("UPDATE inboxes SET name = %s, updated_at = NOW() WHERE id = %s", (name, inbox_id))
+            else:
+                cur.execute("""
+                    INSERT INTO inboxes (name, channel_id, channel_type, account_id, created_at, updated_at)
+                    VALUES (%s, %s, 'Channel::Instagram', %s, NOW(), NOW())
+                    RETURNING id
+                """, (name, channel_id, account_id))
+                inbox_id = cur.fetchone()[0]
             conn.commit()
             conn.close()
 
@@ -1151,7 +1410,7 @@ def create_channel_inbox(data, account_id=2, assistant_id=1):
 
         # If enable_ai is checked, auto-link to Captain AI
         if inbox_id and enable_ai:
-            toggle_channel_ai(inbox_id, enable=True, assistant_id=assistant_id)
+            toggle_channel_ai(inbox_id, enable=True, assistant_id=assistant_id, account_id=account_id)
 
         msg = "تم ربط القناة بنجاح!"
         if channel_type == 'whatsapp_qr':
@@ -1188,6 +1447,20 @@ def _post_chatwoot_inbox(payload, account_id=2):
             return {"message": f"Chatwoot Error {err.code}: {body[:200]}"}
 
 
+def create_website_channel(data, account_id=2, assistant_id=1):
+    """
+    Convenience function to create a Website Chat Widget channel with dynamic account_id.
+    """
+    payload = dict(data)
+    payload['channel_type'] = 'web_widget'
+    return create_channel_inbox(payload, account_id=account_id, assistant_id=assistant_id)
 
 
+def create_telegram_channel(data, account_id=2, assistant_id=1):
+    """
+    Convenience function to create a Telegram Bot channel with dynamic account_id.
+    """
+    payload = dict(data)
+    payload['channel_type'] = 'telegram'
+    return create_channel_inbox(payload, account_id=account_id, assistant_id=assistant_id)
 

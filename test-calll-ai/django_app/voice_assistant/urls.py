@@ -97,6 +97,7 @@ urlpatterns = [
     path('api/chat/set-locale/', views.api_chat_set_locale, name='chat_set_locale'),
     path('api/chat/assistant/settings/', views.api_captain_settings, name='captain_settings'),
     path('api/chat/channels/', views.api_chat_channels, name='chat_channels_api'),
+    path('api/chat/channels/create/', views.api_chat_channels_create, name='chat_channels_create'),
     path('api/chat/channels/toggle-ai/', views.api_chat_channels_toggle_ai, name='chat_channels_toggle_ai'),
     path('api/chat/channels/<int:inbox_id>/update/', views.api_chat_channels_update, name='chat_channels_update'),
     path('api/chat/channels/<int:inbox_id>/delete/', views.api_chat_channels_delete, name='chat_channels_delete'),

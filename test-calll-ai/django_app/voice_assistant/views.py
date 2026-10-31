@@ -144,6 +144,9 @@ def logout_view(request):
 @login_required(login_url='/login/')
 def room_view(request):
     """Render the main Voice Assistant page."""
+    from .chatwoot_service import generate_chatwoot_sso_url
+    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    sso_url = generate_chatwoot_sso_url(user=request.user, locale=user_lang)
     context = {
         'centrifugo_ws_url': settings.CENTRIFUGO_WS_URL,
         'livekit_url': settings.LIVEKIT_URL,
@@ -151,7 +154,7 @@ def room_view(request):
         'user_id': request.user.id,
         'active_nav': 'voice',
         'page_title': 'غرفة المساعد الصوتي',
-        'chatwoot_url': getattr(settings, 'CHATWOOT_BASE_URL', 'https://chatwoot.169.58.32.179.nip.io') + '/app/accounts/2',
+        'chatwoot_url': sso_url,
     }
     return render(request, 'voice_assistant/room.html', context)
 
@@ -996,15 +999,20 @@ def crm_page_view(request):
 @login_required
 def chat_page_view(request):
     """Render dedicated Chatwoot Omnichannel Chat page with silent SSO & AI Settings."""
-    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings
+    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings, get_or_create_tenant_chatwoot
     user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
-    sso_url = generate_chatwoot_sso_url(user=request.user, locale=user_lang)
-    captain_settings = get_captain_settings() or {}
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+
+    sso_url = generate_chatwoot_sso_url(user=request.user, account_id=account_id, locale=user_lang)
+    captain_settings = get_captain_settings(assistant_id=assistant_id, account_id=account_id) or {}
     context = {
         'page_title': 'شات',
         'page_icon': '',
         'active_nav': 'chat',
         'chatwoot_url': sso_url,
+        'chatwoot_account_id': account_id,
         'captain_settings': captain_settings,
         'captain_settings_json': json.dumps(captain_settings, ensure_ascii=False),
     }
@@ -1014,10 +1022,12 @@ def chat_page_view(request):
 @login_required
 def api_chatwoot_sso_url(request):
     """GET /api/chat/sso-url/ - Generate a fresh silent SSO URL for Chatwoot."""
-    from .chatwoot_service import generate_chatwoot_sso_url
+    from .chatwoot_service import generate_chatwoot_sso_url, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
     locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
-    url = generate_chatwoot_sso_url(user=request.user, locale=locale)
-    return JsonResponse({"status": "success", "sso_url": url, "locale": locale})
+    url = generate_chatwoot_sso_url(user=request.user, account_id=account_id, locale=locale)
+    return JsonResponse({"status": "success", "sso_url": url, "locale": locale, "account_id": account_id})
 
 
 @csrf_exempt
@@ -1027,7 +1037,9 @@ def api_chat_set_locale(request):
     POST /api/chat/set-locale/
     Synchronizes the active user language with Chatwoot and returns refreshed SSO URL.
     """
-    from .chatwoot_service import set_chatwoot_user_locale
+    from .chatwoot_service import set_chatwoot_user_locale, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
     locale = 'ar'
     if request.method == 'POST':
         try:
@@ -1038,7 +1050,7 @@ def api_chat_set_locale(request):
     else:
         locale = request.GET.get('locale', 'ar')
 
-    res = set_chatwoot_user_locale(user=request.user, locale=locale)
+    res = set_chatwoot_user_locale(user=request.user, account_id=account_id, locale=locale)
     return JsonResponse(res)
 
 
@@ -1046,9 +1058,13 @@ def api_chat_set_locale(request):
 @login_required
 def api_captain_settings(request):
     """GET / POST /api/chat/assistant/settings/ - Retrieve or update Captain AI assistant settings."""
-    from .chatwoot_service import get_captain_settings, update_captain_settings
+    from .chatwoot_service import get_captain_settings, update_captain_settings, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+
     if request.method == 'GET':
-        settings_data = get_captain_settings()
+        settings_data = get_captain_settings(assistant_id=assistant_id, account_id=account_id)
         if not settings_data:
             return JsonResponse({"status": "error", "message": "لم يتم العثور على إعدادات المساعد الذكي"}, status=404)
         return JsonResponse({"status": "success", "settings": settings_data})
@@ -1059,9 +1075,9 @@ def api_captain_settings(request):
         except Exception:
             data = request.POST.dict()
 
-        success, msg = update_captain_settings(data)
+        success, msg = update_captain_settings(data, assistant_id=assistant_id, account_id=account_id)
         if success:
-            updated = get_captain_settings()
+            updated = get_captain_settings(assistant_id=assistant_id, account_id=account_id)
             return JsonResponse({"status": "success", "message": msg, "settings": updated})
         return JsonResponse({"status": "error", "message": msg}, status=400)
 
@@ -1071,16 +1087,19 @@ def api_captain_settings(request):
 @login_required
 def api_chat_channels(request):
     """GET /api/chat/channels/ - Retrieve all inboxes and connection status."""
-    from .chatwoot_service import get_all_channels_detailed
-    res = get_all_channels_detailed()
+    from .chatwoot_service import get_all_channels_detailed, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+    res = get_all_channels_detailed(account_id=account_id, assistant_id=assistant_id)
     return JsonResponse(res)
 
 
 @csrf_exempt
 @login_required
 def api_chat_channels_toggle_ai(request):
-    """POST /api/chat/channels/toggle-ai/ - Toggle Captain AI on an inbox."""
-    from .chatwoot_service import toggle_channel_ai
+    """POST /api/chat/channels/toggle-ai/ - Toggle Captain AI on an inbox with tenant validation."""
+    from .chatwoot_service import toggle_channel_ai, get_or_create_tenant_chatwoot
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     try:
@@ -1093,29 +1112,83 @@ def api_chat_channels_toggle_ai(request):
     if not inbox_id:
         return JsonResponse({"status": "error", "message": "inbox_id مطلوب"}, status=400)
 
-    success, msg = toggle_channel_ai(inbox_id, enable=bool(enable))
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+
+    success, msg = toggle_channel_ai(inbox_id, enable=bool(enable), assistant_id=assistant_id, account_id=account_id)
     if success:
         return JsonResponse({"status": "success", "message": msg, "is_captain_enabled": bool(enable)})
-    return JsonResponse({"status": "error", "message": msg}, status=400)
+    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير تابعة" in msg or "غير موجودة" in msg else 400)
 
 
 @csrf_exempt
 @login_required
 def api_chat_channels_delete(request, inbox_id):
-    """POST/DELETE /api/chat/channels/<inbox_id>/delete/ - Remove an inbox."""
-    from .chatwoot_service import delete_channel_inbox
-    success, msg = delete_channel_inbox(inbox_id)
+    """POST/DELETE /api/chat/channels/<inbox_id>/delete/ - Remove an inbox with tenant validation (anti-IDOR)."""
+    from .chatwoot_service import delete_channel_inbox, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+
+    success, msg = delete_channel_inbox(inbox_id, account_id=account_id)
     if success:
         return JsonResponse({"status": "success", "message": msg})
-    return JsonResponse({"status": "error", "message": msg}, status=400)
+    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير موجودة" in msg else 400)
 
 
 @csrf_exempt
 @login_required
 def api_chat_channels_whatsapp_qr(request):
     """GET/POST /api/chat/channels/whatsapp-qr/ - Fetch live Evolution WhatsApp QR for any instance."""
-    from .chatwoot_service import get_evolution_whatsapp_qr
-    instance_name = request.GET.get('instance_name') or request.POST.get('instance_name') or 'whatsapp_main'
+    from .chatwoot_service import get_evolution_whatsapp_qr, get_or_create_tenant_chatwoot, get_chatwoot_db_conn
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+
+    instance_name = request.GET.get('instance_name') or request.POST.get('instance_name')
+    if not instance_name:
+        if account_id == 2 or request.user.is_superuser:
+            instance_name = 'whatsapp_main'
+        else:
+            # Look up tenant's first WhatsApp QR instance if configured
+            try:
+                conn = get_chatwoot_db_conn()
+                cur = conn.cursor()
+                cur.execute("""
+                    SELECT ca.webhook_url FROM inboxes i
+                    JOIN channel_api ca ON ca.id = i.channel_id AND i.channel_type = 'Channel::Api'
+                    WHERE i.account_id = %s AND ca.webhook_url LIKE '%%/chatwoot/webhook/%%'
+                    ORDER BY i.id ASC LIMIT 1
+                """, (account_id,))
+                row = cur.fetchone()
+                conn.close()
+                if row and row[0]:
+                    instance_name = row[0].split('/chatwoot/webhook/')[-1].strip('/')
+            except Exception as e:
+                logger.warning(f"[WhatsAppQR] Error finding tenant instance: {e}")
+
+    if not instance_name:
+        return JsonResponse({"ok": False, "error": "اسم الجهاز (instance_name) مطلوب"}, status=400)
+
+    # Anti-IDOR: Check that instance belongs to tenant's account
+    if not request.user.is_superuser:
+        if account_id == 2 and instance_name == 'whatsapp_main':
+            pass
+        else:
+            try:
+                conn = get_chatwoot_db_conn()
+                cur = conn.cursor()
+                cur.execute("""
+                    SELECT i.id FROM inboxes i
+                    JOIN channel_api ca ON ca.id = i.channel_id AND i.channel_type = 'Channel::Api'
+                    WHERE i.account_id = %s AND ca.webhook_url LIKE %s
+                """, (account_id, f"%/{instance_name}%"))
+                if not cur.fetchone():
+                    conn.close()
+                    return JsonResponse({"ok": False, "error": "غير مصرح بالوصول إلى هذا الحساب"}, status=403)
+                conn.close()
+            except Exception as e:
+                logger.warning(f"[AntiIDOR] Error verifying QR instance: {e}")
+
     res = get_evolution_whatsapp_qr(instance_name=instance_name)
     return JsonResponse(res)
 
@@ -1123,8 +1196,8 @@ def api_chat_channels_whatsapp_qr(request):
 @csrf_exempt
 @login_required
 def api_chat_channels_disconnect(request):
-    """POST /api/chat/channels/disconnect/ - Disconnect an Evolution WhatsApp instance."""
-    from .chatwoot_service import disconnect_evolution_instance
+    """POST /api/chat/channels/disconnect/ - Disconnect an Evolution WhatsApp instance with tenant validation (anti-IDOR)."""
+    from .chatwoot_service import disconnect_evolution_instance, get_or_create_tenant_chatwoot, get_chatwoot_db_conn
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     try:
@@ -1136,6 +1209,26 @@ def api_chat_channels_disconnect(request):
     if not instance_name:
         return JsonResponse({"status": "error", "message": "instance_name مطلوب"}, status=400)
 
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+
+    # Anti-IDOR: Check that instance belongs to tenant's account
+    if not request.user.is_superuser:
+        try:
+            conn = get_chatwoot_db_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT i.id FROM inboxes i
+                JOIN channel_api ca ON ca.id = i.channel_id AND i.channel_type = 'Channel::Api'
+                WHERE i.account_id = %s AND ca.webhook_url LIKE %s
+            """, (account_id, f"%/{instance_name}%"))
+            if not cur.fetchone():
+                conn.close()
+                return JsonResponse({"status": "error", "message": "غير مصرح بقطع اتصال هذا الحساب"}, status=403)
+            conn.close()
+        except Exception as e:
+            logger.warning(f"[AntiIDOR] Error verifying disconnect instance: {e}")
+
     success, msg = disconnect_evolution_instance(instance_name)
     if success:
         return JsonResponse({"status": "success", "message": msg})
@@ -1145,8 +1238,8 @@ def api_chat_channels_disconnect(request):
 @csrf_exempt
 @login_required
 def api_chat_channels_update(request, inbox_id):
-    """POST /api/chat/channels/<inbox_id>/update/ - Update account name or settings."""
-    from .chatwoot_service import update_channel_inbox
+    """POST /api/chat/channels/<inbox_id>/update/ - Update account name or settings with tenant validation (anti-IDOR)."""
+    from .chatwoot_service import update_channel_inbox, get_or_create_tenant_chatwoot
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     try:
@@ -1154,17 +1247,21 @@ def api_chat_channels_update(request, inbox_id):
     except Exception:
         data = request.POST.dict()
 
-    success, msg = update_channel_inbox(inbox_id, data)
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+
+    success, msg = update_channel_inbox(inbox_id, data, account_id=account_id, assistant_id=assistant_id)
     if success:
         return JsonResponse({"status": "success", "message": msg})
-    return JsonResponse({"status": "error", "message": msg}, status=400)
+    return JsonResponse({"status": "error", "message": msg}, status=403 if "غير موجودة" in msg or "غير تابعة" in msg else 400)
 
 
 @csrf_exempt
 @login_required
 def api_chat_channels_create(request):
     """POST /api/chat/channels/create/ - Create any supported channel with multi-account support."""
-    from .chatwoot_service import create_channel_inbox
+    from .chatwoot_service import create_channel_inbox, get_or_create_tenant_chatwoot
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     try:
@@ -1172,7 +1269,11 @@ def api_chat_channels_create(request):
     except Exception:
         data = request.POST.dict()
 
-    success, msg, extra = create_channel_inbox(data)
+    cfg = get_or_create_tenant_chatwoot(request.user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+
+    success, msg, extra = create_channel_inbox(data, account_id=account_id, assistant_id=assistant_id)
     if success:
         return JsonResponse({"status": "success", "message": msg, "data": extra})
     return JsonResponse({"status": "error", "message": msg}, status=400)
@@ -1474,7 +1575,7 @@ def embed_call_center_view(request, section=None):
                 'livekit_url': settings.LIVEKIT_URL,
                 'username': u.username,
                 'user_id': u.id,
-                'chatwoot_url': generate_chatwoot_sso_url(user=u, account_id=2, locale=req.GET.get('locale') or req.GET.get('lang') or 'ar'),
+                'chatwoot_url': generate_chatwoot_sso_url(user=u, locale=req.GET.get('locale') or req.GET.get('lang') or 'ar'),
             }
         },
         'calls': {
@@ -1609,9 +1710,12 @@ def embed_chat_hub_view(request):
     token_val = request.GET.get('token') or request.GET.get('key') or ''
     locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
 
-    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings
-    chatwoot_url = generate_chatwoot_sso_url(user=user, account_id=2, locale=locale_val)
-    captain_settings = get_captain_settings() or {}
+    from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(user)
+    account_id = cfg.account_id if cfg else 2
+    assistant_id = cfg.assistant_id if cfg else 1
+    chatwoot_url = generate_chatwoot_sso_url(user=user, account_id=account_id, locale=locale_val)
+    captain_settings = get_captain_settings(assistant_id=assistant_id, account_id=account_id) or {}
 
     context = {
         'is_embed': True,
@@ -1625,6 +1729,7 @@ def embed_chat_hub_view(request):
         'page_icon': '',
         'active_nav': 'chat',
         'chatwoot_url': chatwoot_url,
+        'chatwoot_account_id': account_id,
         'captain_settings': captain_settings,
         'captain_settings_json': json.dumps(captain_settings, ensure_ascii=False),
     }
@@ -1649,11 +1754,14 @@ def embed_chat_view(request):
         user = User.objects.filter(is_superuser=True).first() or User.objects.first()
 
     req_locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
-    from .chatwoot_service import generate_chatwoot_sso_url
-    chatwoot_url = generate_chatwoot_sso_url(user=user, account_id=2, locale=req_locale)
+    from .chatwoot_service import generate_chatwoot_sso_url, get_or_create_tenant_chatwoot
+    cfg = get_or_create_tenant_chatwoot(user)
+    account_id = cfg.account_id if cfg else 2
+    chatwoot_url = generate_chatwoot_sso_url(user=user, account_id=account_id, locale=req_locale)
 
     context = {
         'chatwoot_url': chatwoot_url,
+        'chatwoot_account_id': account_id,
         'locale': req_locale,
         'page_title': 'منصة المحادثات المضمنة',
     }
