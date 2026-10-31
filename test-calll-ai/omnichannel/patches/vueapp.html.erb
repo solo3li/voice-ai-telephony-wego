@@ -490,11 +490,45 @@
       aside div.border-t.border-n-weak {
         display: none !important;
       }
+
+      /* 5. Complete White-Label: Permanently hide Onboarding Welcome Screen cards */
+      .grid-rows-\[auto_1fr_1fr\],
+      div:has(> img[src*="/dashboard/images/onboarding/"]),
+      div:has(img[src*="/dashboard/images/onboarding/"]),
+      div:has(> div > img[src*="/dashboard/images/onboarding/"]),
+      div:has(> a[href*="settings_inbox_new"]),
+      div:has(> div > a[href*="settings_inbox_new"]),
+      div:has(> div > a[href*="settings_teams_new"]),
+      div:has(> p.font-interDisplay:has(+ p[class*="text-n-slate-11"])) {
+        display: none !important;
+      }
     </style>
     <script id="white-label-sidebar-profile">
       (function() {
+        function removeOnboardingView() {
+          try {
+            var onboardingImgs = document.querySelectorAll('img[src*="/dashboard/images/onboarding/"]');
+            for (var i = 0; i < onboardingImgs.length; i++) {
+              var parent = onboardingImgs[i].closest('.grid-rows-\\[auto_1fr_1fr\\], .min-h-screen, .grid');
+              if (parent) {
+                parent.style.setProperty('display', 'none', 'important');
+              }
+            }
+            var titles = document.querySelectorAll('p.font-interDisplay, p.text-xl');
+            for (var j = 0; j < titles.length; j++) {
+              var t = titles[j].textContent || '';
+              if (t.indexOf('مرحبا بك') !== -1 || t.indexOf('Welcome') !== -1 || t.indexOf('Chatwoot') !== -1 || t.indexOf('مساء الخير') !== -1 || t.indexOf('صباح الخير') !== -1) {
+                var pDiv = titles[j].closest('.grid-rows-\\[auto_1fr_1fr\\], .min-h-screen, .grid');
+                if (pDiv) {
+                  pDiv.style.setProperty('display', 'none', 'important');
+                }
+              }
+            }
+          } catch(e) {}
+        }
         function removeSidebarProfile() {
           try {
+            removeOnboardingView();
             var sidebar = document.querySelector('aside');
             if (!sidebar) return;
             var sections = sidebar.querySelectorAll('section');
@@ -511,10 +545,20 @@
           } catch (e) {}
         }
         removeSidebarProfile();
-        document.addEventListener('DOMContentLoaded', removeSidebarProfile);
-        window.addEventListener('load', removeSidebarProfile);
+        removeOnboardingView();
+        document.addEventListener('DOMContentLoaded', function() {
+          removeSidebarProfile();
+          removeOnboardingView();
+        });
+        window.addEventListener('load', function() {
+          removeSidebarProfile();
+          removeOnboardingView();
+        });
         if (window.MutationObserver) {
-          var profileObs = new MutationObserver(removeSidebarProfile);
+          var profileObs = new MutationObserver(function() {
+            removeSidebarProfile();
+            removeOnboardingView();
+          });
           profileObs.observe(document.documentElement, { childList: true, subtree: true });
         }
       })();
