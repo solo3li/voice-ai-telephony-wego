@@ -3041,11 +3041,16 @@ function applyCommonLanguage(lang) {
   }
 
   // Update language switcher button text in header and sidebar
-  const langTargets = document.querySelectorAll('#lang-text, #sidebar-top-lang-text, #sidebar-bottom-lang-text, .lang-switch-text');
+  const langTargets = document.querySelectorAll('#lang-text, .lang-switch-text');
   langTargets.forEach(el => {
     if (APP_I18N[lang]) {
       el.innerText = APP_I18N[lang].switch_to;
     }
+  });
+
+  const compactLangTargets = document.querySelectorAll('#sidebar-top-lang-text, #sidebar-bottom-lang-text');
+  compactLangTargets.forEach(el => {
+    el.innerText = (lang === 'ar') ? 'EN' : 'عربي';
   });
 
   // Update all [data-i18n] text elements
