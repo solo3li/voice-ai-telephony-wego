@@ -2,7 +2,7 @@
 
 DIALECT_RULES_MAP = {
     "saudi": (
-        "التحدث باللهجة السعودية والخليجية الدارجة فقط: كل كلامك بدون أي استثناء يكون بالسعودي اللطيف الطبيعي "
+        "التحدث باللهجة السعودية والخليجية الدارجة: كلامك الأساسي يكون بالسعودي اللطيف الطبيعي "
         "(زي: 'يا هلا والله ومسهلا'، 'أبشر طال عمرك'، 'سمّ آمرني'، 'على هالخشم'، 'ولا يهمك'). "
         "قواعد صوتية صارمة لمنع الفصحى (Anti-Fusha): "
         "ممنوع منعاً باتاً استخدام كلمات الفصحى مثل: [حسناً، كيف حالك، كيف أساعدك، سوف أتحقق، ماذا تريد]. "
@@ -10,98 +10,98 @@ DIALECT_RULES_MAP = {
         "تحدث بنبرة هاتفية عفوية ومرنة وسريعة كأنك متحدث بشري حقيقي بدون أي تكلف أو نبرة قراءة نصوص."
     ),
     "emirati": (
-        "التحدث باللهجة الإماراتية والخليجية العذبة فقط: كلامك يكون إماراتي دارج طبيعي "
-        "(زي: 'مرحبا الساع'، 'فالك طيب'، 'عيوني لك'، 'ما قصرت طال عمرك'، 'أبشر بالخير'). ممنوع منعاً باتاً الفصحى أو أي لهجة أخرى."
+        "التحدث باللهجة الإماراتية والخليجية العذبة: كلامك الأساسي يكون إماراتي دارج طبيعي "
+        "(زي: 'مرحبا الساع'، 'فالك طيب'، 'عيوني لك'، 'ما قصرت طال عمرك'، 'أبشر بالخير'). تجنب الفصحى والتزم بالهوية الإماراتية."
     ),
     "kuwaiti": (
-        "التحدث باللهجة الكويتية اللطيفة فقط: كلامك كويتي دارج عفوي "
-        "(زي: 'هلا وغلا'، 'من عيوني'، 'تفضل يا قلبي'، 'ولا يهمك مشكور'، 'يا هلا فيك'). ممنوع منعاً باتاً الفصحى أو لهجات أخرى."
+        "التحدث باللهجة الكويتية اللطيفة: كلامك الأساسي كويتي دارج عفوي "
+        "(زي: 'هلا وغلا'، 'من عيوني'، 'تفضل يا قلبي'، 'ولا يهمك مشكور'، 'يا هلا فيك'). تجنب الفصحى والتزم بالهوية الكويتية."
     ),
     "levantine": (
-        "التحدث باللهجة الشامية اللطيفة المحببة فقط: كل كلامك يكون باللهجة الشامية الدارجة العفوية "
-        "(زي: 'يا هلا فيك'، 'تكرم عينك'، 'على راسي'، 'كيف فيني ساعدك اليوم؟'). ممنوع منعاً باتاً الفصحى أو لهجات أخرى."
+        "التحدث باللهجة الشامية اللطيفة المحببة: كل كلامك الأساسي يكون باللهجة الشامية الدارجة العفوية "
+        "(زي: 'يا هلا فيك'، 'تكرم عينك'، 'على راسي'، 'كيف فيني ساعدك اليوم؟'). تجنب الفصحى والتزم بالهوية الشامية."
     ),
     "jordanian_palestinian": (
-        "التحدث باللهجة الأردنية والفلسطينية الأصيلة فقط: كلامك أردني فلسطيني عفوي ومحترم "
-        "(زي: 'يسعد أوقاتك'، 'أهلاً وسهلاً'، 'على راسي والله'، 'تفضل شو بتحب أساعدك'، 'تكرم'). ممنوع منعاً باتاً الفصحى أو لهجات أخرى."
+        "التحدث باللهجة الأردنية والفلسطينية الأصيلة: كلامك الأساسي أردني فلسطيني عفوي ومحترم "
+        "(زي: 'يسعد أوقاتك'، 'أهلاً وسهلاً'، 'على راسي والله'، 'تفضل شو بتحب أساعدك'، 'تكرم'). تجنب الفصحى والتزم بالهوية الأردنية الفلسطينية."
     ),
     "moroccan": (
-        "التحدث بالدارجة المغربية الميسرة واللطيفة فقط: كلامك بالدارجة المغربية المفهومة "
-        "(زي: 'مرحبا بك'، 'كيداير لاباس عليك'، 'على راسي وعيني'، 'مرحبا خويا/أختي'، 'واخا'). ممنوع التحدث بالفصحى أو لهجات أخرى."
+        "التحدث بالدارجة المغربية الميسرة واللطيفة: كلامك الأساسي بالدارجة المغربية المفهومة "
+        "(زي: 'مرحبا بك'، 'كيداير لاباس عليك'، 'على راسي وعيني'، 'مرحبا خويا/أختي'، 'واخا'). تجنب التحدث بالفصحى والتزم بالدارجة المغربية."
     ),
     "algerian": (
-        "التحدث باللهجة الجزائرية العامية المحببة فقط: كلامك جزائري دارج مفهوم "
-        "(زي: 'واش راك خويا/أختي'، 'مرحبا بيك'، 'على عيني وراسي'، 'واش نقدر نعاونك اليوم'). ممنوع التحدث بلهجات أخرى."
+        "التحدث باللهجة الجزائرية العامية المحببة: كلامك الأساسي جزائري دارج مفهوم "
+        "(زي: 'واش راك خويا/أختي'، 'مرحبا بيك'، 'على عيني وراسي'، 'واش نقدر نعاونك اليوم'). تجنب الفصحى والتزم بالعامية الجزائرية."
     ),
     "tunisian": (
-        "التحدث باللهجة التونسية اللطيفة فقط: كلامك تونسي دارج مفهوم "
-        "(زي: 'يعيشك'، 'مرحبا بيك'، 'شنحوالك'، 'على عيني وراسي تفضل'). ممنوع التحدث بلهجات أخرى."
+        "التحدث باللهجة التونسية اللطيفة: كلامك الأساسي تونسي دارج مفهوم "
+        "(زي: 'يعيشك'، 'مرحبا بيك'، 'شنحوالك'، 'على عيني وراسي تفضل'). تجنب الفصحى والتزم بالعامية التونسية."
     ),
     "iraqi": (
-        "التحدث باللهجة العراقية الدافئة والأصيلة فقط: كلامك عراقي دارج طبيعي "
-        "(زي: 'تدلل عيوني'، 'على راسي والله'، 'شكو ماكو'، 'يا هلا بيك عيني'، 'تدلل وأبشر'). ممنوع الفصحى أو لهجات أخرى."
+        "التحدث باللهجة العراقية الدافئة والأصيلة: كلامك الأساسي عراقي دارج طبيعي "
+        "(زي: 'تدلل عيوني'، 'على راسي والله'، 'شكو ماكو'، 'يا هلا بيك عيني'، 'تدلل وأبشر'). تجنب الفصحى والتزم باللهجة العراقية."
     ),
     "sudanese": (
-        "التحدث باللهجة السودانية السمحة والطيبة فقط: كلامك سوداني دارج عفوي "
-        "(زي: 'حبابك عشرة'، 'مرحب بيك حبابك'، 'كيفنك وأخبارك شنو'، 'أبشر والله'). ممنوع الفصحى أو لهجات أخرى."
+        "التحدث باللهجة السودانية السمحة والطيبة: كلامك الأساسي سوداني دارج عفوي "
+        "(زي: 'حبابك عشرة'، 'مرحب بيك حبابك'، 'كيفنك وأخبارك شنو'، 'أبشر والله'). تجنب الفصحى والتزم بالعامية السودانية."
     ),
     "yemeni": (
-        "التحدث باللهجة اليمنية الأصيلة واللطيفة فقط: كلامك يمني دارج وودود "
-        "(زي: 'حياك الله يا غالي'، 'تفضل على العين والراس'، 'أهلاً وسهلا فيك'). ممنوع لهجات أخرى."
+        "التحدث باللهجة اليمنية الأصيلة واللطيفة: كلامك الأساسي يمني دارج وودود "
+        "(زي: 'حياك الله يا غالي'، 'تفضل على العين والراس'، 'أهلاً وسهلا فيك'). تجنب الفصحى والتزم باللهجة اليمنية."
     ),
     "fusha": (
         "التحدث باللغة العربية الفصحى المعاصرة: تحدث بلغة عربية فصحى أنيقة وميسرة وسلسة وواضحة جداً."
     ),
     "english": (
-        "Speak exclusively in natural, professional English."
+        "Speak in natural, professional English as your primary language."
     ),
     "english_us": (
-        "Speak exclusively in clear, natural American English (US accent and phrasing)."
+        "Speak primarily in clear, natural American English (US accent and phrasing)."
     ),
     "english_uk": (
-        "Speak exclusively in polite, natural British English (UK accent and vocabulary)."
+        "Speak primarily in polite, natural British English (UK accent and vocabulary)."
     ),
     "english_aus": (
-        "Speak exclusively in friendly, natural Australian English."
+        "Speak primarily in friendly, natural Australian English."
     ),
     "english_ind": (
-        "Speak exclusively in polite Indian English."
+        "Speak primarily in polite Indian English."
     ),
     "french_fr": (
-        "Parlez exclusivement en français métropolitain naturel, fluide et professionnel."
+        "Parlez principalement en français métropolitain naturel, fluide et professionnel."
     ),
     "french_ca": (
-        "Parlez exclusivement en français canadien (québécois) naturel et courtois."
+        "Parlez principalement en français canadien (québécois) naturel et courtois."
     ),
     "spanish_es": (
-        "Habla exclusivamente en español de España natural, profesional y cercano."
+        "Habla principalmente en español de España natural, profesional y cercano."
     ),
     "spanish_latam": (
-        "Habla exclusivamente en español latinoamericano cálido, amable y profesional."
+        "Habla principalmente en español latinoamericano cálido, amable y profesional."
     ),
     "german_de": (
-        "Sprechen Sie ausschließlich natürliches, professionelles Standarddeutsch."
+        "Sprechen Sie vorrangig natürliches, professionelles Standarddeutsch."
     ),
     "italian_it": (
-        "Parla esclusivamente in italiano naturale, cortese e professionale."
+        "Parla principalmente in italiano naturale, cortese e professionale."
     ),
     "turkish_tr": (
-        "Yalnızca doğal, akıcı ve profesyonel Türkçe konuşun."
+        "Öncelikli olarak doğal, akıcı ve profesyonel Türkçe konuşun."
     ),
     "russian_ru": (
-        "Говорите исключительно на естественном, вежливом и грамотном русском языке."
+        "Говорите преимущественно на естественном, вежливом и грамотном русском языке."
     ),
     "urdu_pk": (
-        "صرف شائستہ، قدرتی اور پیشہ ورانہ اردو میں بات کریں۔"
+        "بنیادی طور پر شائستہ، قدرتی اور پیشہ ورانہ اردو میں بات کریں۔"
     ),
     "hindi_in": (
-        "केवल प्राकृतिक, विनम्र और स्पष्ट हिंदी में बात करें।"
+        "मुख्य रूप से प्राकृतिक, विनम्र और स्पष्ट हिंदी में बात करें।"
     ),
     "chinese_zh": (
-        "请始终使用流利、自然的现代标准普通话进行交谈。"
+        "主要使用流利、自然的现代标准普通话进行交谈。"
     ),
     "egyptian": (
-        "التحدث باللهجة المصرية العامية فقط: كل كلامك بدون أي استثناء لازم يكون باللهجة المصرية الدارجة الطبيعية "
+        "التحدث باللهجة المصرية العامية: كلامك الأساسي يكون باللهجة المصرية الدارجة الطبيعية "
         "(زي: 'أهلاً بحضرتك يا فندم'، 'إزيك عامل إيه؟'، 'أنا تمام أهو معاك'، 'تحت أمرك'، 'عيني حاضر'). "
         "قواعد صوتية صارمة لمنع الفصحى (Anti-Fusha): "
         "ممنوع منعاً باتاً وحاسماً استخدام كلمات الفصحى مثل: [حسناً، كيف حالك، كيف يمكنني مساعدتك، سوف أتحقق، ماذا تريد، هذا صحيح، لا بأس، بالطبع]. "
@@ -168,8 +168,96 @@ DIALECT_NAMES_MAP = {
 }
 
 
+# Dialect-to-language family mapping for robust language switch offer resolution
+DIALECT_TO_LANG_FAMILY = {
+    # Arabic dialects
+    "saudi": "arabic",
+    "egyptian": "arabic",
+    "emirati": "arabic",
+    "kuwaiti": "arabic",
+    "levantine": "arabic",
+    "jordanian_palestinian": "arabic",
+    "jordanian": "arabic",
+    "palestinian": "arabic",
+    "moroccan": "arabic",
+    "algerian": "arabic",
+    "tunisian": "arabic",
+    "iraqi": "arabic",
+    "sudanese": "arabic",
+    "yemeni": "arabic",
+    "fusha": "arabic",
+    "gulf": "arabic",
+    # English dialects
+    "english_us": "english",
+    "english_uk": "english",
+    "english_aus": "english",
+    "english_ind": "english",
+    # French dialects
+    "french_fr": "french",
+    "french_ca": "french",
+    # Spanish dialects
+    "spanish_es": "spanish",
+    "spanish_latam": "spanish",
+    # Others
+    "german_de": "german",
+    "italian_it": "italian",
+    "turkish_tr": "turkish",
+    "russian_ru": "russian",
+    "urdu_pk": "urdu",
+    "hindi_in": "hindi",
+    "chinese_zh": "chinese",
+    "mandarin": "chinese",
+}
+
+LANGUAGE_SWITCH_OFFERS_MAP = {
+    "english": "Certainly! I can assist you in English. Would you like to continue our conversation in English?",
+    "en": "Certainly! I can assist you in English. Would you like to continue our conversation in English?",
+    "french": "Certainement ! Je peux vous aider en français. Souhaitez-vous poursuivre notre conversation en français ?",
+    "fr": "Certainement ! Je peux vous aider en français. Souhaitez-vous poursuivre notre conversation en français ?",
+    "spanish": "¡Por supuesto! Puedo atenderle en español. ¿Le gustaría continuar nuestra conversación en español?",
+    "es": "¡Por supuesto! Puedo atenderle en español. ¿Le gustaría continuar nuestra conversación en español?",
+    "german": "Gerne! Ich kann Ihnen auf Deutsch helfen. Möchten Sie unser Gespräch auf Deutsch fortsetzen?",
+    "de": "Gerne! Ich kann Ihnen auf Deutsch helfen. Möchten Sie unser Gespräch auf Deutsch fortsetzen?",
+    "turkish": "Memnuniyetle! Size Türkçe olarak yardımcı olabilirim. Görüşmemize Türkçe olarak devam etmek ister misiniz?",
+    "tr": "Memnuniyetle! Size Türkçe olarak yardımcı olabilirim. Görüşmemize Türkçe olarak devam etmek ister misiniz?",
+    "russian": "Конечно! Я могу помочь вам на русском языке. Желаете продолжить разговор на русском?",
+    "ru": "Конечно! Я могу помочь вам на русском языке. Желаете продолжить разговор на русском?",
+    "italian": "Certamente! Posso assisterla in italiano. Desidera proseguire la nostra conversazione in italiano?",
+    "it": "Certamente! Posso assisterla in italiano. Desidera proseguire la nostra conversazione in italiano?",
+    "urdu": "ضرور! میں اردو میں آپ کی مدد کر سکتا ہوں۔ کیا آپ بات چيت اردو میں جاری رکھنا چاہیں گے؟",
+    "ur": "ضرور! میں اردو میں آپ کی مدد کر سکتا ہوں۔ کیا آپ بات چيت اردو میں جاری رکھنا چاہیں گے؟",
+    "hindi": "ज़रूर! मैं हिंदी میں आपकी सहायता कर सकता हूँ। क्या आप हिंदी में बातचीत जारी रखना चाहेंगे?",
+    "hi": "ज़रूर! मैं हिंदी میں आपकी सहायता कर सकता हूँ। क्या आप हिंदी में बातचीत जारी रखना चाहेंगे?",
+    "chinese": "当然可以！我可以使用中文为您服务。请问需要切换为中文交流吗？",
+    "zh": "当然可以！我可以使用中文为您服务。请问需要切换为中文交流吗？",
+    "arabic": "أهلاً بك! يمكنني مساعدتك باللغة العربية، هل تفضل مواصلة المحادثة بالعربية؟",
+    "ar": "أهلاً بك! يمكنني مساعدتك باللغة العربية، هل تفضل مواصلة المحادثة بالعربية؟",
+}
+
+
+def get_language_switch_offer(language_or_dialect: str = "english") -> str:
+    """Return the polite language switch offer string for a target language or dialect."""
+    key = (language_or_dialect or "english").lower().strip()
+    # 1. Exact match in switch offers map
+    if key in LANGUAGE_SWITCH_OFFERS_MAP:
+        return LANGUAGE_SWITCH_OFFERS_MAP[key]
+    # 2. Check dialect family mapping (e.g. saudi -> arabic, english_us -> english)
+    family = DIALECT_TO_LANG_FAMILY.get(key)
+    if family and family in LANGUAGE_SWITCH_OFFERS_MAP:
+        return LANGUAGE_SWITCH_OFFERS_MAP[family]
+    # 3. Check prefix matching against switch offers map
+    for k in LANGUAGE_SWITCH_OFFERS_MAP:
+        if key.startswith(k) or k.startswith(key):
+            return LANGUAGE_SWITCH_OFFERS_MAP[k]
+    # 4. Check prefix matching against dialect family keys
+    for d, f in DIALECT_TO_LANG_FAMILY.items():
+        if key.startswith(d) or d.startswith(key):
+            return LANGUAGE_SWITCH_OFFERS_MAP.get(f, LANGUAGE_SWITCH_OFFERS_MAP["english"])
+    return LANGUAGE_SWITCH_OFFERS_MAP["english"]
+
+
 def build_language_lock_instruction(language: str = "arabic", dialect: str = "egyptian") -> str:
-    """Build dynamic, context-aware strict language and dialect lock instructions."""
+    """Build dynamic, context-aware smart language policy, code-switching tolerance, and polite switch offer."""
     lang_key = (language or "arabic").lower().strip()
     dia_key = (dialect or "egyptian").lower().strip()
 
@@ -182,60 +270,49 @@ def build_language_lock_instruction(language: str = "arabic", dialect: str = "eg
     )
 
     if is_non_arabic:
-        non_arabic_refusals = {
-            "english": "I apologize, I can only assist in English for customer service. How may I help you today?",
-            "en": "I apologize, I can only assist in English for customer service. How may I help you today?",
-            "french": "Je vous présente mes excuses, je réponds uniquement en français pour le service client. Comment puis-je vous aider ?",
-            "fr": "Je vous présente mes excuses, je réponds uniquement en français pour le service client. Comment puis-je vous aider ?",
-            "spanish": "Disculpe, solo puedo atenderle en español para el servicio de atención al cliente. ¿En qué puedo ayudarle?",
-            "es": "Disculpe, solo puedo atenderle en español para el servicio de atención al cliente. ¿En qué puedo ayudarle?",
-            "german": "Es tut mir leid, ich spreche ausschließlich Deutsch für den Kundenservice. Wie kann ich Ihnen helfen?",
-            "de": "Es tut mir leid, ich spreche ausschließlich Deutsch für den Kundenservice. Wie kann ich Ihnen helfen?",
-            "turkish": "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum. Size nasıl yardımcı olabilirim?",
-            "tr": "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum. Size nasıl yardımcı olabilirim?",
-            "russian": "Прошу прощения, я могу помочь только на русском языке. Подскажите, чем я могу вам помочь?",
-            "ru": "Прошу прощения, я могу помочь только на русском языке. Подскажите, чем я могу вам помочь?",
-            "italian": "Mi scusi, posso assisterla solo in italiano per l'assistenza clienti. Come posso aiutarla?",
-            "it": "Mi scusi, posso assisterla solo in italiano per l'assistenza clienti. Come posso aiutarla?",
-            "urdu": "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں۔ فرمائیے میں آپ کی کیا مدد کر سکتا ہوں؟",
-            "ur": "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں۔ فرمائیے میں آپ کی کیا مدد کر سکتا ہوں؟",
-            "hindi": "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ?",
-            "hi": "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ?",
-            "chinese": "非常抱歉，我仅支持使用中文提供客户服务。请问有什么可以帮您？",
-            "zh": "非常抱歉，我仅支持使用中文提供客户服务。请问有什么可以帮您？",
-        }
-        matched_lang = next((k for k in non_arabic_refusals if lang_key.startswith(k) or dia_key.startswith(k)), "english")
-        refusal_phrase = non_arabic_refusals.get(matched_lang, non_arabic_refusals["english"])
-
         return (
-            f"قفل اللغة واللهجة الصارم (Strict Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
-            f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} - {dialect_name}.\n"
-            f"- Speak strictly and exclusively in {dialect_name} ({lang_name}) throughout the entire conversation.\n"
-            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق أي جملة أو عبارة بأي لغة أو لهجة أخرى غير لغة المنشأة المعتمدة ({dialect_name}) مهما كان السبب!\n"
-            f"- إذا تحدث المتصل بأي لغة أجنبية أو غير مدعومة (مثل العربية، الفرنسية، الألمانية، الروسية، أو غيرها): يُحظر تماماً التبديل إلى لغته أو مجاراتها! بل ارفض بلباقة واقتصر حصراً على قول هذه العبارة بوضوح:\n"
-            f"  \"{refusal_phrase}\"\n"
-            f"- لا تقلد لغة المتصل أبداً ولا تكررها! واستمر دائماً في الحديث والرد بلغة المنشأة المعتمدة حصراً: {dialect_name}."
+            f"Smart Omnilingual Comprehension & Polite Language Switch Policy (سياسة توجيه واستيعاب اللغات):\n"
+            f"- Primary authorized conversation language & dialect: {lang_name} - {dialect_name}.\n"
+            f"- Speak primarily and naturally in {dialect_name} ({lang_name}) throughout the conversation.\n"
+            f"\n"
+            f"1. Code-Switching & Loanwords Tolerance:\n"
+            f"- When a caller mixes secondary languages, borrowed terms, technical words, or brand names into their speech:\n"
+            f"  * Fully comprehend the caller's intent and execute all tools, lookups, and processes smoothly.\n"
+            f"  * Continue conversing naturally in your primary language ({dialect_name}).\n"
+            f"  * Do not reject or refuse loanwords, and do not offer to switch unless the caller speaks another language entirely.\n"
+            f"\n"
+            f"2. Full Foreign Language Caller & Polite Language Switch Offer:\n"
+            f"- If a caller speaks entirely or primarily in another language (e.g. an Arabic caller, English caller, or another foreign language):\n"
+            f"  * Do NOT issue rigid, robotic refusals (such as claiming you can only speak {lang_name})!\n"
+            f"  * Politely offer in the caller's language to assist them and ask if they would like to switch:\n"
+            f"    - If Arabic caller: \"أهلاً بك! يمكنني مساعدتك باللغة العربية، هل تفضل مواصلة المحادثة بالعربية؟\"\n"
+            f"    - If English caller (when primary is non-English): \"Certainly! I can assist you in English. Would you like to continue our conversation in English?\"\n"
+            f"    - (Or the polite equivalent offer in the caller's spoken language).\n"
+            f"  * Once the caller confirms (e.g., 'Yes', 'Sure', 'نعم تفضل', 'Oui'): seamlessly switch to that language to assist them through all tools, inquiries, and services without requiring human transfer.\n"
+            f"  * If the caller declines or prefers your primary language, continue smoothly in {dialect_name}."
         )
     else:
-        if "saudi" in dia_key or "gulf" in dia_key or "emirati" in dia_key or "kuwaiti" in dia_key:
-            refusal_phrase = "المعذرة من حضرتك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
-        elif "levantine" in dia_key or "jordanian" in dia_key or "palestinian" in dia_key:
-            refusal_phrase = "المعذرة من حضرتك، أنا بحكي باللغة العربية بس لخدمة العملاء، تفضل كيف بقدر ساعدك؟"
-        elif "moroccan" in dia_key or "algerian" in dia_key or "tunisian" in dia_key:
-            refusal_phrase = "المعذرة منك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
-        elif "egyptian" in dia_key:
-            refusal_phrase = "المعذرة من حضرتك، أنا بتكلم باللغة العربية فقط لخدمة العملاء، اتفضل إزاي أقدر أساعدك؟"
-        else:
-            refusal_phrase = "المعذرة من حضرتك، أنا أتحدث باللغة العربية فقط لخدمة العملاء، تفضل كيف أقدر أساعدك؟"
-
         return (
-            f"قفل اللغة واللهجة الصارم (Strict Language & Dialect Lock - حاسم ومطلق بلا استثناء):\n"
-            f"- لغة ولهجة الحوار الحصرية والإلزامية المعتمدة للمنشأة طوال المكالمة هي: {lang_name} ({dialect_name}).\n"
-            f"- يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق جملة أو عبارة بأي لغة أجنبية أو لهجة أخرى غير لغة المنشأة المحددة أعلاه مهما كان السبب!\n"
-            f"- إذا تحدث المتصل بأي لغة أجنبية (مثل الإنجليزية، الفرنسية، الألمانية، التركية، الروسية، أو غيرها) أو حدث تشويش صوتي بدا كلغة أجنبية: يُحظر تماماً التبديل إلى لغة المتصل أو مجاراتها! بل ارفض بلباقة واقتصر على قول هذه العبارة المحددة بلهجتك المعتمدة:\n"
-            f"  «{refusal_phrase}»\n"
-            f"  ثم استمر في الحوار باللغة العربية ({dialect_name}) حصراً وممنوع التحول لأي لغة أخرى.\n"
-            f"- يُحظر تماماً التحدث باللغة الإنجليزية أو خلطها بالحديث؛ ويُستثنى فقط وبشكل ضيق وحصري نطق الأسماء الرسمية للمنتجات أو العلامات التجارية المذكورة نصاً في الكتالوج المعتمد أو بيانات النظام (مثل: VIP, Wi-Fi) عندما ينطقها العميل."
+            f"سياسة توجيه اللغة واللهجة واستيعاب اللغات (Smart Omnilingual Comprehension & Polite Language Switch Policy):\n"
+            f"- لغة ولهجة الحوار الأساسية المعتمدة للمنشأة: {lang_name} ({dialect_name}).\n"
+            f"- تحدث بلهجتك الأساسية المعتمدة ({dialect_name}) طوال المكالمة بنبرة بشرية طبيعية وودودة.\n"
+            f"\n"
+            f"1. استيعاب الخلط اللغوي والمصطلحات الدخيلة (Code-Switching & Loanwords Tolerance):\n"
+            f"- عندما يتحدث العميل باللغة العربية مدمجة بمصطلحات أو كلمات أجنبية شائعة أو تقنية (مثل: 'cancel', 'order', 'check-in', 'Wi-Fi', 'app', 'online', 'discount', 'merci', أو أسماء المنتجات والخدمات والعلامات التجارية):\n"
+            f"  * افهم واستوعب قصد ومطلوب المتصل بالكامل ونفذ الأدوات والعمليات المطلوبة بمرونة ودقة وسرعة.\n"
+            f"  * تابع الحوار بلهجتك الأساسية المعتمدة ({dialect_name}) بتدفق وسلاسة طبيعية.\n"
+            f"  * يُحظر تماماً الاعتذار أو إظهار عدم الفهم أو رفض هذه المصطلحات الدخيلة، ولا تعرض التبديل طالما أن حديث العميل الأساسي بالعربية.\n"
+            f"\n"
+            f"2. التعامل مع المتصل الأجنبي بالكامل والعرض اللبق للتبديل (Full Foreign Language Caller - Polite Switch Offer):\n"
+            f"- إذا تحدث المتصل بالكامل أو بشكل رئيسي بلغة أجنبية (مثل متصل أو سائح يتحدث بالإنجليزية أو الفرنسية أو التركية أو غيرها):\n"
+            f"  * يُمنع منعاً باتاً الرفض الجاف أو إعلان العجز (مثل ادعاء عدم دعم اللغة أو رفض التحدث بلغة العميل)، ولا ترفض تقديم الخدمة إطلاقاً!\n"
+            f"  * بادر بلباقة واستئذان بعرض المساعدة بلغته الأجنبية وسؤاله عما إذا كان يفضل متابعة الحوار بتلك اللغة:\n"
+            f"    - إذا تحدث بالإنجليزية (English): \"Certainly! I can assist you in English. Would you like to continue our conversation in English?\"\n"
+            f"    - إذا تحدث بالفرنسية (Français): \"Certainement ! Je peux vous aider en français. Souhaitez-vous poursuivre notre conversation en français ?\"\n"
+            f"    - إذا تحدث بالتركية (Türkçe): \"Memnuniyetle! Size Türkçe olarak yardımcı olabilirim. Görüşmemize Türkçe olarak devam etmek ister misiniz?\"\n"
+            f"    - (أو العبارة اللبقة المقابلة باللغة الأجنبية التي تحدث بها العميل مثل الإسبانية أو الألمانية أو الروسية).\n"
+            f"  * بمجرد تأكيد المتصل وموافقته (مثل: 'Yes please', 'Sure', 'Oui', 'Yes', 'Okay', 'Evet'): تحول فوراً وسلساً للتحدث بلغته، وقدم له كافة الخدمات واستدعاء الأدوات والمعلومات المطلوبة باحترافية كاملة ودون الحاجة لتحويله لموظف بشري.\n"
+            f"  * إذا رفض العميل التبديل أو فضل الاستمرار بالعربية، واصل خدمته بلهجتك المعتمدة بكل رحابة صدر."
         )
 
 

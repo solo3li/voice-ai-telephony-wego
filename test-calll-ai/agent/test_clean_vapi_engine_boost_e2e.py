@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Comprehensive End-to-End Verification Test for Decoupled Domain-Agnostic
-Voice AI Call Center Engine (Vapi.ai model) & Strict Language/Dialect Lock.
+Voice AI Call Center Engine (Vapi.ai model) & Omnilingual Language Policy.
 
 Validates:
 1. Domain Agnosticism: Zero restaurant / food domain terms across 5 diverse enterprise industries.
-2. Strict Language & Dialect Lock: Authentic refusal phrases for 10+ languages and Arabic dialects,
-   strict prohibition of foreign language adoption, and English limited strictly to catalog proper nouns.
-3. Final Anti-Drift Anchor: Presence of final anti-drift anchor block at the very end of every prompt.
+2. Omnilingual Comprehension & Polite Language Switch Architecture:
+   - Code-Switching & Loanwords Tolerance: Understand intent for mixed loanwords ("cancel", "order", "Wi-Fi", "app", etc.) without refusal.
+   - Polite Language Switch Offer for full foreign language callers ("Certainly! I can assist you in English...").
+   - Seamless switch upon customer confirmation without requiring human transfer.
+3. Final Anti-Drift Anchor: Presence of final anti-drift anchor block at the very end of every prompt with code-switching and polite switch awareness.
 4. Omnichannel Live Context: Clean, generic formatting of services, branches, zones, and offers.
 5. Generic CRM Customer Memory: Distillation prompt & memory card with generic CRM fields.
 6. Core Telephony Tools Scope: Domain-agnostic WhatsApp, queue transfer, knowledge RAG, and FastMCP.
@@ -19,7 +21,14 @@ import os
 import json
 
 from agent.prompts.builder import build_dynamic_system_instruction, generate_welcome_greeting
-from agent.prompts.dialects import build_language_lock_instruction, DIALECT_NAMES_MAP, LANGUAGE_NAMES_MAP
+from agent.prompts.dialects import (
+    build_language_lock_instruction,
+    DIALECT_NAMES_MAP,
+    LANGUAGE_NAMES_MAP,
+    LANGUAGE_SWITCH_OFFERS_MAP,
+    get_language_switch_offer,
+    DIALECT_TO_LANG_FAMILY,
+)
 from agent.prompts.core.universal_voice import build_universal_voice_rules
 from agent.prompts.live_context import format_live_context_for_prompt
 from agent.clients.django_client import parse_customer_memory_from_bootstrap
@@ -112,47 +121,96 @@ def test_1_domain_agnostic_prompts_across_diverse_industries():
 
 
 def test_2_strict_language_and_dialect_lock():
-    print("\n[TEST 2] Verifying Strict Language & Dialect Lock across 10+ Languages and Dialects...")
+    print("\n[TEST 2] Verifying Omnilingual Comprehension & Polite Language Switch across 10+ Languages and Dialects...")
 
-    # Test Arabic dialects
-    arabic_cases = [
-        ("saudi", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
-        ("levantine", "أنا بحكي باللغة العربية بس لخدمة العملاء"),
-        ("egyptian", "أنا بتكلم باللغة العربية فقط لخدمة العملاء"),
-        ("moroccan", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
-        ("fusha", "أنا أتحدث باللغة العربية فقط لخدمة العملاء"),
-    ]
+    # 1. Test get_language_switch_offer resolver across Arabic dialects, codes, and international languages
+    # Critical verification: Arabic dialects must NEVER resolve to English!
+    assert get_language_switch_offer("saudi") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("egyptian") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("levantine") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("fusha") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("moroccan") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("arabic") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
+    assert get_language_switch_offer("ar") == LANGUAGE_SWITCH_OFFERS_MAP["arabic"]
 
-    for dia, expected_refusal_snippet in arabic_cases:
+    # Foreign dialects and language codes
+    assert get_language_switch_offer("english_us") == LANGUAGE_SWITCH_OFFERS_MAP["english"]
+    assert get_language_switch_offer("english_uk") == LANGUAGE_SWITCH_OFFERS_MAP["english"]
+    assert get_language_switch_offer("en") == LANGUAGE_SWITCH_OFFERS_MAP["english"]
+    assert get_language_switch_offer("french_fr") == LANGUAGE_SWITCH_OFFERS_MAP["french"]
+    assert get_language_switch_offer("fr") == LANGUAGE_SWITCH_OFFERS_MAP["french"]
+    assert get_language_switch_offer("turkish") == LANGUAGE_SWITCH_OFFERS_MAP["turkish"]
+    assert get_language_switch_offer("turkish_tr") == LANGUAGE_SWITCH_OFFERS_MAP["turkish"]
+    assert get_language_switch_offer("tr") == LANGUAGE_SWITCH_OFFERS_MAP["turkish"]
+    assert get_language_switch_offer("chinese_zh") == LANGUAGE_SWITCH_OFFERS_MAP["chinese"]
+    assert get_language_switch_offer("mandarin") == LANGUAGE_SWITCH_OFFERS_MAP["chinese"]
+    print("  [+] Switch Offer Resolver: Verified 100% accurate resolution across dialects and ISO codes.")
+
+    # 2. Test Arabic dialects: Code-switching tolerance & polite foreign switch offers
+    arabic_dialects = ["saudi", "levantine", "egyptian", "moroccan", "fusha"]
+
+    for dia in arabic_dialects:
         lock = build_language_lock_instruction(language="arabic", dialect=dia)
-        assert expected_refusal_snippet in lock, f"Expected refusal snippet '{expected_refusal_snippet}' not found for dialect '{dia}'"
-        assert "قفل اللغة واللهجة الصارم" in lock
-        assert "يُمنع منعاً باتاً وحاسماً أن ترد أو تنطق جملة أو عبارة بأي لغة أجنبية" in lock
-        assert "الأسماء الرسمية للمنتجات أو العلامات التجارية المذكورة نصاً في الكتالوج" in lock
-        print(f"  [+] Arabic dialect '{dia}': Refusal and catalog-only English lock verified.")
 
-    # Test Non-Arabic international languages
+        # Verify policy header
+        assert "Smart Omnilingual Comprehension & Polite Language Switch Policy" in lock or "سياسة توجيه اللغة واللهجة واستيعاب اللغات" in lock
+
+        # Verify Code-Switching tolerance & borrowed terms
+        assert "Code-Switching" in lock or "الخلط اللغوي" in lock
+        assert "cancel" in lock and "order" in lock and "Wi-Fi" in lock
+
+        # Verify NO rigid refusals
+        assert "أنا أتحدث باللغة العربية فقط" not in lock
+        assert "يُحظر تماماً التحدث باللغة الإنجليزية" not in lock
+
+        # Verify polite switch offers for foreign callers (English, French, Turkish)
+        assert "Certainly! I can assist you in English. Would you like to continue our conversation in English?" in lock
+        assert "Certainement ! Je peux vous aider en français" in lock
+        assert "Memnuniyetle! Size Türkçe olarak yardımcı olabilirim" in lock
+
+        # Verify seamless switch upon confirmation and graceful decline handling
+        assert "تحول فوراً وسلساً للتحدث بلغته" in lock or "تحول فوراً" in lock
+        assert "دون الحاجة لتحويله لموظف بشري" in lock
+        assert "إذا رفض العميل" in lock
+        print(f"  [+] Arabic dialect '{dia}': Code-switching tolerance and polite switch offer verified.")
+
+    # 3. Test Non-Arabic international languages
     foreign_cases = [
-        ("english", "english_us", "I apologize, I can only assist in English"),
-        ("french", "french_fr", "Je vous présente mes excuses, je réponds uniquement en français"),
-        ("spanish", "spanish_es", "Disculpe, solo puedo atenderle en español"),
-        ("german", "german_de", "Es tut mir leid, ich spreche ausschließlich Deutsch"),
-        ("turkish", "turkish_tr", "Özür dilerim, müşteri hizmetleri için yalnızca Türkçe yardımcı olabiliyorum"),
-        ("russian", "russian_ru", "Прошу прощения, я могу помочь только на русском языке"),
-        ("italian", "italian_it", "Mi scusi, posso assisterla solo in italiano"),
-        ("urdu", "urdu_pk", "معذرت چاہتا ہوں، میں کسٹمر سروس کے لیے صرف اردو میں بات کر سکتا ہوں"),
-        ("hindi", "hindi_in", "क्षमा करें, मैं ग्राहक सेवा के लिए केवल हिंदी में बात कर सकता हूँ"),
-        ("chinese", "chinese_zh", "非常抱歉，我仅支持使用中文提供客户服务"),
+        ("english", "english_us"),
+        ("french", "french_fr"),
+        ("spanish", "spanish_es"),
+        ("german", "german_de"),
+        ("turkish", "turkish_tr"),
+        ("russian", "russian_ru"),
+        ("italian", "italian_it"),
+        ("urdu", "urdu_pk"),
+        ("hindi", "hindi_in"),
+        ("chinese", "chinese_zh"),
     ]
 
-    for lang, dia, expected_phrase in foreign_cases:
+    for lang, dia in foreign_cases:
         lock = build_language_lock_instruction(language=lang, dialect=dia)
-        assert expected_phrase in lock, f"Expected refusal phrase '{expected_phrase}' not found for '{lang}'/'{dia}'"
-        assert "قفل اللغة واللهجة الصارم" in lock
-        assert "لا تقلد لغة المتصل أبداً ولا تكررها" in lock
-        print(f"  [+] Foreign language '{lang}' ({dia}): Native refusal and strict lock verified.")
 
-    print("✅ TEST 2 PASSED: Strict language & dialect lock active across all supported languages.")
+        # Verify omnilingual policy and code-switching
+        assert "Smart Omnilingual Comprehension & Polite Language Switch Policy" in lock
+        assert "Code-Switching & Loanwords Tolerance" in lock
+        assert "Full Foreign Language Caller & Polite Language Switch Offer" in lock
+
+        # Verify polite offers
+        assert "أهلاً بك! يمكنني مساعدتك باللغة العربية، هل تفضل مواصلة المحادثة بالعربية؟" in lock
+        assert "Certainly! I can assist you in English" in lock
+
+        # Verify seamless switch upon confirmation and graceful decline handling
+        assert "seamlessly switch to that language" in lock
+        assert "without requiring human transfer" in lock
+        assert "If the caller declines" in lock
+
+        # Verify NO rigid refusal phrases
+        assert "I apologize, I can only assist in English" not in lock
+        assert "لا تقلد لغة المتصل أبداً ولا تكررها" not in lock
+        print(f"  [+] Foreign language '{lang}' ({dia}): Omnilingual comprehension and polite switch verified.")
+
+    print("✅ TEST 2 PASSED: Omnilingual comprehension and polite language switch active across all supported languages.")
 
 
 def test_3_final_anti_drift_anchor():
@@ -171,8 +229,20 @@ def test_3_final_anti_drift_anchor():
 
         # Anchor must be at the very bottom of the prompt
         anchor_pos = prompt.find(anchor_title)
-        assert len(prompt) - anchor_pos <= 600, f"Anti-drift anchor is not positioned at the very end of prompt for {p['name']}"
+        assert len(prompt) - anchor_pos <= 650, f"Anti-drift anchor is not positioned at the very end of prompt for {p['name']}"
         assert prompt.strip().endswith("=" * 20), f"Anti-drift anchor is not terminating the prompt for {p['name']}"
+
+        # Verify anchor contains code-switching tolerance & polite switch offer
+        assert "Code-Switching" in prompt or "الخلط اللغوي" in prompt
+        assert "يُحظر التبديل إليها إطلاقاً" not in prompt, "Rigid refusal leaked into anti-drift anchor!"
+
+        # Verify language-appropriate anchor body
+        if p["language"] == "arabic":
+            assert "لغتك ولهجتك الأساسية المعتمدة" in prompt
+            assert "المتصل أجنبياً بالكامل" in prompt
+        else:
+            assert "Primary authorized language & dialect" in prompt
+            assert "Code-Switching & loanwords tolerance" in prompt
         print(f"  [+] {p['name']} ({p['language']}): Anti-drift anchor verified at prompt terminal.")
 
     print("✅ TEST 3 PASSED: Anti-drift anchor guaranteed at the end of every prompt.")
@@ -451,9 +521,11 @@ def test_9_dialect_aware_off_topic_and_handoff_isolation():
 
     # 4. ISO 639-1 2-letter language code support
     iso_en_lock = build_language_lock_instruction(language="en", dialect="english_us")
-    assert "I apologize, I can only assist in English" in iso_en_lock
+    assert "Code-Switching & Loanwords Tolerance" in iso_en_lock
+    assert "Polite Language Switch" in iso_en_lock
     iso_ar_lock = build_language_lock_instruction(language="ar", dialect="saudi")
-    assert "أنا أتحدث باللغة العربية فقط لخدمة العملاء" in iso_ar_lock
+    assert "Code-Switching" in iso_ar_lock or "الخلط اللغوي" in iso_ar_lock
+    assert "Certainly! I can assist you in English" in iso_ar_lock
     print("  [+] ISO 639-1 codes: Verified language lock handles 2-letter codes seamlessly.")
 
     print("✅ TEST 9 PASSED: Dialect and language awareness completely verified across all flows.")

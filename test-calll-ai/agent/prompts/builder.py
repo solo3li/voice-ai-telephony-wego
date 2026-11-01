@@ -313,13 +313,32 @@ def build_dynamic_system_instruction(
     from .skills.human_transfer import build_human_transfer_instruction
     queues_instruction = "\n\n" + build_human_transfer_instruction(call_queues, channel=ch, language=language, dialect=dialect)
 
-    lang_name = LANGUAGE_NAMES_MAP.get((language or "arabic").lower().strip(), (language or "arabic").capitalize())
-    dialect_name = DIALECT_NAMES_MAP.get((dialect or "egyptian").lower().strip(), dialect or "egyptian")
+    lang_key = (language or "arabic").lower().strip()
+    dia_key = (dialect or "egyptian").lower().strip()
+    lang_name = LANGUAGE_NAMES_MAP.get(lang_key, lang_key.capitalize())
+    dialect_name = DIALECT_NAMES_MAP.get(dia_key, dia_key)
+
+    is_non_arabic = (
+        lang_key in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"]
+        or any(dia_key.startswith(p) for p in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"])
+    )
+
+    if is_non_arabic:
+        anchor_body = (
+            f"- Primary authorized language & dialect: {lang_name} ({dialect_name}); speak naturally.\n"
+            f"- Code-Switching & loanwords tolerance: fulfill requests immediately without robotic refusal.\n"
+            f"- Full foreign caller: politely offer assistance in their language and ask to switch; upon confirmation, seamlessly switch without human transfer."
+        )
+    else:
+        anchor_body = (
+            f"- لغتك ولهجتك الأساسية المعتمدة هي {lang_name} ({dialect_name})، التزم بها بأسلوب مهني وطبيعي.\n"
+            f"- استوعب الخلط اللغوي والمصطلحات الدخيلة (Code-Switching) ونفذ الطلبات فوراً دون أي اعتراض أو رفض روبوتي.\n"
+            f"- في حال كان المتصل أجنبياً بالكامل: اعرض عليه بأدب ولطف المساعدة بلغته واستأذنه بالتبديل إليها، وعند موافقته تحول بسلاسة لخدمته بتلك اللغة دون تحويل لبشري."
+        )
+
     anti_drift_anchor = (
         f"\n\n==================== [مرساة قفل اللغة واللهجة ومنع الانجراف (Final Anti-Drift Language Lock Anchor)] ====================\n"
-        f"- أنت ملزم إلزاماً مطلقاً بالتحدث حصراً بـ {lang_name} ({dialect_name}) حتى نهاية المكالمة دون أي انحراف.\n"
-        f"- إذا تحدث المتصل بأي لغة أجنبية أو غير مدعومة: يُحظر التبديل إليها إطلاقاً؛ التزم بالرد بعبارة الرفض المحددة بلغتك المعتمدة واطلب منه التفضل بطلبه.\n"
-        f"- حافظ على لهجتك وأسلوبك المهني المعتمد في كل رد وجملة حتى انتهاء المكالمة بالكامل.\n"
+        f"{anchor_body}\n"
         f"=========================================================================================================="
     )
 

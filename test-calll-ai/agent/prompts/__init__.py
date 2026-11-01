@@ -1,5 +1,5 @@
 """Prompts package for Voice & Omnichannel AI Agent."""
-from .dialects import DIALECT_RULES_MAP, build_language_lock_instruction
+from .dialects import DIALECT_RULES_MAP, build_language_lock_instruction, LANGUAGE_SWITCH_OFFERS_MAP, get_language_switch_offer, DIALECT_TO_LANG_FAMILY
 from .verbosity import VERBOSITY_INSTRUCTIONS
 from .builder import build_dynamic_system_instruction, generate_welcome_greeting
 from .live_context import format_live_context_for_prompt
@@ -16,6 +16,9 @@ __all__ = [
     "generate_welcome_greeting",
     "format_live_context_for_prompt",
     "build_language_lock_instruction",
+    "LANGUAGE_SWITCH_OFFERS_MAP",
+    "get_language_switch_offer",
+    "DIALECT_TO_LANG_FAMILY",
     "ROLE_REGISTRY",
     "resolve_role_text",
     "get_role_default_skills",
