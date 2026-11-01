@@ -78,6 +78,40 @@
   </div>
 </div>
 
+<script>
+  // Immediate early declaration so iframe onload="onChatFrameLoaded()" never throws ReferenceError
+  var chatLoaderDismissed = false;
+  function dismissChatLoader() {
+    if (chatLoaderDismissed) return;
+    chatLoaderDismissed = true;
+    var loader = document.getElementById('chat-frame-loader');
+    if (loader) {
+      loader.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(function() {
+        loader.style.display = 'none';
+      }, 350);
+    }
+    var frame = document.getElementById('chatwoot-frame');
+    if (frame && frame.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
+      } catch(e) {}
+    }
+  }
+
+  function onChatFrameLoaded() {
+    // Dismiss loading spinner smoothly once iframe onload triggers
+    setTimeout(function() {
+      dismissChatLoader();
+    }, 600);
+  }
+
+  // Safety fallback: never keep user stuck on loading spinner longer than 2.5s
+  setTimeout(function() {
+    dismissChatLoader();
+  }, 2500);
+</script>
+
 <!-- ==================== TAB 1: Live Chatwoot Iframe ==================== -->
 <div id="tab-panel-live" class="relative w-full flex-1 bg-white overflow-hidden">
   <!-- Loading Spinner Overlay -->
@@ -800,32 +834,7 @@
   let archivedCache = [];
   let groupedCache = {};
 
-  let chatLoaderDismissed = false;
-
-  function dismissChatLoader() {
-    if (chatLoaderDismissed) return;
-    chatLoaderDismissed = true;
-    const loader = document.getElementById('chat-frame-loader');
-    if (loader) {
-      loader.classList.add('opacity-0', 'pointer-events-none');
-      setTimeout(() => {
-        loader.style.display = 'none';
-      }, 350);
-    }
-    const frame = document.getElementById('chatwoot-frame');
-    if (frame && frame.contentWindow) {
-      try {
-        frame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
-      } catch(e) {}
-    }
-  }
-
-  function onChatFrameLoaded() {
-    // Wait for chatwoot:ready postMessage from dashboard, with 2800ms safety fallback
-    setTimeout(() => {
-      dismissChatLoader();
-    }, 2800);
-  }
+  // Note: chatLoaderDismissed, dismissChatLoader, and onChatFrameLoaded are declared above iframe for early readiness.
 
   window.addEventListener('message', function(event) {
     if (!event.data) return;
