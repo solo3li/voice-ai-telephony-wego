@@ -7,23 +7,8 @@
   <title>{{ page_title|default:"منصة المحادثات المضمنة" }}</title>
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"IBM Plex Sans Arabic"', 'Inter', '-apple-system', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Compiled Static Tailwind CSS & Self-Hosted Fonts -->
+  <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
   
   <style>
     html, body {
@@ -67,6 +52,7 @@
   <!-- Fullscreen Chatwoot Iframe -->
   <iframe 
     id="embed-chatwoot-frame"
+    loading="lazy"
     src="{{ chatwoot_url }}"
     class="w-full h-full border-0 block m-0 p-0"
     allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"

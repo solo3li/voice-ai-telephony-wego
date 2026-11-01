@@ -213,7 +213,7 @@ def list_all_calls(request):
     with advanced filters (search, direction, date presets, duration ranges).
     """
     try:
-        from django.db.models import Q, Sum
+        from django.db.models import Q, Sum, Count
         from django.utils import timezone
 
         calls = CallSession.objects.filter(user=request.user)
@@ -277,8 +277,9 @@ def list_all_calls(request):
         elif duration_filter == 'over_5m':
             calls = calls.filter(duration_seconds__gt=300)
 
-        # Compute aggregate metrics on filtered set
-        stats = calls.aggregate(
+        # Compute aggregate metrics on filtered set (strip ordering during aggregation)
+        stats = calls.order_by().aggregate(
+            total_calls=Count('id'),
             total_duration=Sum('duration_seconds'),
             total_minutes=Sum('billed_minutes'),
             total_cost=Sum('cost')
@@ -292,7 +293,7 @@ def list_all_calls(request):
             "calls": results,
             "count": len(results),
             "stats": {
-                "total_calls": calls.count(),
+                "total_calls": stats.get('total_calls') or 0,
                 "total_duration_seconds": stats.get('total_duration') or 0,
                 "total_billed_minutes": stats.get('total_minutes') or 0,
                 "total_cost": float(stats.get('total_cost') or 0.0),

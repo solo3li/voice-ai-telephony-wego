@@ -279,6 +279,9 @@ class CallSession(models.Model):
     class Meta:
         db_table = 'voice_assistant_callsession'
         ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['user', '-started_at'], name='call_user_started_idx'),
+        ]
 
     def __str__(self):
         return f"جلسة مكالمة {self.room_name} ({self.get_direction_display()}) - {self.user.username}"

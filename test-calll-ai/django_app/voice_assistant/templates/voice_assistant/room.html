@@ -22,46 +22,14 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-  <!-- Google Fonts: IBM Plex Sans Arabic & Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Compiled Static Tailwind CSS & Self-Hosted Fonts -->
+  <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
   
-  <!-- Tailwind CSS CDN -->
-  <script>
-    (function(){var w=console.warn;console.warn=function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].indexOf('cdn.tailwindcss.com')!==-1)return;w.apply(console,arguments);};})();
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"IBM Plex Sans Arabic"', 'Inter', '-apple-system', 'system-ui', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Tahoma', 'Arial', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            chatwoot: {
-              50: '#f5f3ff',
-              100: '#ede9fe',
-              200: '#ddd6fe',
-              500: '#7c3aed',
-              600: '#6d28d9',
-              700: '#5b21b6',
-              800: '#4c1d95',
-              900: '#2e1065',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Centrifuge JS Client (Self-Hosted) -->
+  <script src="{% static 'vendor/centrifuge.js' %}"></script>
   
-  <!-- Centrifuge JS Client (WebSockets / App Events) -->
-  <script src="https://unpkg.com/centrifuge@5.0.1/dist/centrifuge.js"></script>
-  
-  <!-- LiveKit Client JS (WebRTC Audio) -->
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <!-- LiveKit Client JS (WebRTC Audio - Self-Hosted) -->
+  <script src="{% static 'vendor/livekit-client.umd.min.js' %}"></script>
 
   <style>
     :root {
@@ -3362,7 +3330,9 @@
 
           <iframe 
             id="room-chatwoot-frame"
-            src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2?theme=light&color_scheme=light' }}"
+            loading="lazy"
+            data-src="{{ chatwoot_url|default:'https://chatwoot.169.58.32.179.nip.io/app/accounts/2?theme=light&color_scheme=light' }}"
+            src="about:blank"
             class="w-full h-full border-0 block"
             allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
             onload="onRoomChatLoaded()"
@@ -3632,6 +3602,8 @@
     }
 
     function onRoomChatLoaded() {
+      const roomFrame = document.getElementById('room-chatwoot-frame');
+      if (!roomFrame || !roomFrame.src || roomFrame.src === 'about:blank' || roomFrame.src.endsWith('/about:blank')) return;
       setTimeout(() => {
         dismissRoomChatLoader();
       }, 2800);
@@ -3726,6 +3698,16 @@
     function switchTab(tabId) {
       if (!tabId) return;
       activeTabId = tabId;
+      
+      // Lazy load heavy Chatwoot iframe on demand when switching to chat tab
+      if (tabId === 'chat') {
+        const roomFrame = document.getElementById('room-chatwoot-frame');
+        if (roomFrame && (!roomFrame.src || roomFrame.src === 'about:blank' || roomFrame.src.endsWith('/about:blank'))) {
+          if (roomFrame.dataset.src) {
+            roomFrame.src = roomFrame.dataset.src;
+          }
+        }
+      }
       
       // Hide all panels
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));

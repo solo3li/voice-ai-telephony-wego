@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-default-key-change-in-prod')
 
-DEBUG = os.getenv('DEBUG', '1') == '1'
+DEBUG = os.getenv('DEBUG', '0') == '1'
 
 ALLOWED_HOSTS = ['*']
 
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'config.cors_middleware.SimpleCorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -74,7 +75,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'APP_DIRS': DEBUG,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -82,6 +83,17 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            **({
+                'loaders': [
+                    (
+                        'django.template.loaders.cached.Loader',
+                        [
+                            'django.template.loaders.filesystem.Loader',
+                            'django.template.loaders.app_directories.Loader',
+                        ],
+                    ),
+                ],
+            } if not DEBUG else {}),
         },
     },
 ]
@@ -129,6 +141,9 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+
+WHITENOISE_MAX_AGE = int(os.getenv('WHITENOISE_MAX_AGE', '31536000'))
+WHITENOISE_USE_FINDERS = DEBUG
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
