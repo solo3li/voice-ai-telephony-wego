@@ -754,19 +754,30 @@ def livekit_webhook(request):
 
     elif event_type == "participant_left":
         participant_identity = event.participant.identity
-        is_agent = (
+        is_non_human = (
             participant_identity in ("ai-agent", "pipecat-agent")
-            or str(participant_identity).startswith("agent-")
-            or str(participant_identity).startswith("ai-")
-            or getattr(event.participant, "kind", None) in (4, api.ParticipantInfo.Kind.AGENT)
+            or str(participant_identity).startswith(("agent-", "ai-", "transfer-", "queue-", "EG_", "egress", "ingress-"))
+            or getattr(event.participant, "kind", None) in (
+                api.ParticipantInfo.Kind.AGENT,
+                api.ParticipantInfo.Kind.EGRESS,
+                api.ParticipantInfo.Kind.INGRESS,
+            )
         )
-        if is_agent:
-            logger.info(f"AI agent ({participant_identity}) left room {room_name}.")
-            publish_to_centrifugo(channel, {
-                "event": "agent_stopped",
-                "message": "غادر المساعد الصوتي الغرفة",
-                "timestamp": time.time(),
-            })
+        if is_non_human:
+            is_agent = (
+                participant_identity in ("ai-agent", "pipecat-agent")
+                or str(participant_identity).startswith(("agent-", "ai-"))
+                or getattr(event.participant, "kind", None) == api.ParticipantInfo.Kind.AGENT
+            )
+            if is_agent:
+                logger.info(f"AI agent ({participant_identity}) left room {room_name}.")
+                publish_to_centrifugo(channel, {
+                    "event": "agent_stopped",
+                    "message": "غادر المساعد الصوتي الغرفة",
+                    "timestamp": time.time(),
+                })
+            else:
+                logger.info(f"Non-human participant ({participant_identity}) left room {room_name}.")
             return HttpResponse("ok")
 
         publish_to_centrifugo(channel, {
@@ -774,6 +785,84 @@ def livekit_webhook(request):
             "message": "المستخدم غادر الغرفة",
             "timestamp": time.time(),
         })
+
+        # Check remaining participants on LiveKit and delete room + finalize session IF no humans remain
+        no_humans_remain = True
+        try:
+            import asyncio
+            async def _check_and_delete_room_if_empty():
+                nonlocal no_humans_remain
+                try:
+                    lk = api.LiveKitAPI(settings.LIVEKIT_INTERNAL_URL, settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
+                    res = await lk.room.list_participants(api.ListParticipantsRequest(room=room_name))
+                    rem_humans = [
+                        p for p in res.participants
+                        if p.identity not in ("ai-agent", "pipecat-agent")
+                        and not str(p.identity).startswith(("agent-", "ai-", "transfer-", "queue-", "EG_", "egress", "ingress-"))
+                        and getattr(p, "kind", None) not in (
+                            api.ParticipantInfo.Kind.AGENT,
+                            api.ParticipantInfo.Kind.EGRESS,
+                            api.ParticipantInfo.Kind.INGRESS,
+                        )
+                        and p.identity != participant_identity
+                    ]
+                    if rem_humans:
+                        no_humans_remain = False
+                        logger.info(f"[LiveKit Webhook] Room '{room_name}' still has {len(rem_humans)} human participant(s).")
+                    else:
+                        logger.info(f"[LiveKit Webhook] No human participants remain in '{room_name}'. Deleting room via RoomServiceClient.")
+                        await lk.room.delete_room(api.DeleteRoomRequest(room=room_name))
+                    await lk.aclose()
+                except Exception as r_del_err:
+                    logger.debug(f"[LiveKit Webhook] Room deletion check note for '{room_name}': {r_del_err}")
+
+            asyncio.run(_check_and_delete_room_if_empty())
+        except Exception as run_err:
+            logger.warning(f"Error checking/deleting empty room '{room_name}': {run_err}")
+
+        if no_humans_remain:
+            # Finalize unclosed CallSession for this room
+            try:
+                from crm.models import CallSession, CampaignContact
+                import datetime
+                import math
+
+                session = CallSession.objects.filter(room_name=room_name, ended_at__isnull=True).first()
+                if session:
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    session.ended_at = now_utc
+                    if session.started_at:
+                        d_sec = max(0, int((now_utc - session.started_at).total_seconds()))
+                    else:
+                        d_sec = 0
+                    session.duration_seconds = d_sec
+                    session.billed_minutes = math.ceil(d_sec / 60.0) if d_sec > 0 else 0
+                    if not session.summary:
+                        session.summary = "انتهت المكالمة بمغادرة المستخدم."
+                    session.save(update_fields=['ended_at', 'duration_seconds', 'billed_minutes', 'summary'])
+                    logger.info(f"[LiveKit Webhook] Finalized CallSession #{session.id} on participant_left for room '{room_name}' (duration: {d_sec}s)")
+
+                    contact = CampaignContact.objects.filter(call_session=session).first()
+                    if contact and contact.call_status != 'answered':
+                        contact.call_status = 'answered' if d_sec >= 5 else 'no_answer'
+                        contact.call_summary = session.summary
+                        contact.save(update_fields=['call_status', 'call_summary', 'updated_at'])
+                        contact.campaign.update_metrics()
+            except Exception as cs_err:
+                logger.warning(f"Error finalizing CallSession in participant_left for room '{room_name}': {cs_err}")
+
+            try:
+                r = redis.Redis.from_url(settings.REDIS_URL)
+                r.delete(f"livekit_room_agent_lock:{room_name}")
+            except Exception:
+                pass
+
+            publish_to_centrifugo(channel, {
+                "event": "call_ended",
+                "room_name": room_name,
+                "timestamp": time.time(),
+            })
+
         if participant_identity.startswith("sip_"):
             try:
                 clean = participant_identity.replace("sip_sip_", "sip_")
@@ -855,6 +944,8 @@ def livekit_webhook(request):
                 # Store internal proxy URL for seamless cross-network streaming
                 if fname:
                     clean_f = fname.lstrip('/')
+                    if clean_f.startswith('recordings/'):
+                        clean_f = clean_f[len('recordings/'):]
                     rec_url = f"/api/calls/recordings/{clean_f}"
                 elif loc:
                     rec_url = loc
@@ -938,7 +1029,12 @@ async def stream_call_recording(request, filename):
     minio_endpoint = getattr(settings, 'MINIO_ENDPOINT', 'http://minio:9000')
     bucket = getattr(settings, 'MINIO_BUCKET_NAME', 'call-recordings')
     clean_filename = filename.lstrip('/')
-    minio_url = f"{minio_endpoint}/{bucket}/{clean_filename}"
+    stripped = clean_filename
+    while stripped.startswith('recordings/'):
+        stripped = stripped[len('recordings/'):]
+    candidate_keys = [f"recordings/{stripped}", stripped, clean_filename]
+    seen = set()
+    candidate_keys = [k for k in candidate_keys if not (k in seen or seen.add(k))]
 
     headers = {}
     if 'HTTP_RANGE' in request.META:
@@ -946,37 +1042,39 @@ async def stream_call_recording(request, filename):
 
     client = httpx.AsyncClient(timeout=15.0)
     try:
-        req = client.build_request("GET", minio_url, headers=headers)
-        upstream_resp = await client.send(req, stream=True)
+        upstream_resp = None
+        for key in candidate_keys:
+            target_url = f"{minio_endpoint}/{bucket}/{key}"
+            req = client.build_request("GET", target_url, headers=headers)
+            resp = await client.send(req, stream=True)
+            if resp.status_code in [200, 206]:
+                upstream_resp = resp
+                break
+            else:
+                await resp.aclose()
 
-        if upstream_resp.status_code in [200, 206]:
-            async def async_content_iterator():
-                try:
-                    async for chunk in upstream_resp.aiter_bytes(chunk_size=8192):
-                        yield chunk
-                finally:
-                    await upstream_resp.aclose()
-                    await client.aclose()
-
-            response = StreamingHttpResponse(
-                async_content_iterator(),
-                status=upstream_resp.status_code,
-                content_type=upstream_resp.headers.get('content-type', 'audio/mpeg')
-            )
-            for h in ['content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']:
-                if h in upstream_resp.headers:
-                    formatted_name = '-'.join(part.capitalize() for part in h.split('-'))
-                    response[formatted_name] = upstream_resp.headers[h]
-            return response
-        elif upstream_resp.status_code == 404:
-            await upstream_resp.aclose()
+        if not upstream_resp:
             await client.aclose()
             return HttpResponse("Recording not found", status=404)
-        else:
-            status_code = upstream_resp.status_code
-            await upstream_resp.aclose()
-            await client.aclose()
-            return HttpResponse("Error fetching recording", status=status_code)
+
+        async def async_content_iterator():
+            try:
+                async for chunk in upstream_resp.aiter_bytes(chunk_size=8192):
+                    yield chunk
+            finally:
+                await upstream_resp.aclose()
+                await client.aclose()
+
+        response = StreamingHttpResponse(
+            async_content_iterator(),
+            status=upstream_resp.status_code,
+            content_type=upstream_resp.headers.get('content-type', 'audio/mpeg')
+        )
+        for h in ['content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']:
+            if h in upstream_resp.headers:
+                formatted_name = '-'.join(part.capitalize() for part in h.split('-'))
+                response[formatted_name] = upstream_resp.headers[h]
+        return response
     except Exception as e:
         await client.aclose()
         logger.error(f"Error streaming recording {filename}: {e}")

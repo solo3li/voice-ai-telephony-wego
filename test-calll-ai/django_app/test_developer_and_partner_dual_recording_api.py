@@ -52,18 +52,21 @@ def test_apis():
     print(f"✅ Partner API Key ready: {partner_key[:12]}... (Company: {partner.company_name})")
 
     # Ensure client relation
-    rel = PartnerClientRelationship.objects.filter(partner=partner, client=user).first()
+    rel = PartnerClientRelationship.objects.filter(client=user).first()
     if not rel:
         rel = PartnerClientRelationship.objects.create(
             partner=partner,
             client=user,
             external_reference="cli_ext_test_99"
         )
+    else:
+        partner = rel.partner
+        partner_key = partner.api_key
     client_id = user.id
 
     # 3. Create a CallSession with dual recordings and transfer data
     room_name = f"dev_api_test_room_{int(time.time())}"
-    ai_rec = f"/api/calls/recordings/recordings/{room_name}_ai.mp3"
+    ai_rec = f"/api/calls/recordings/{room_name}_ai.mp3"
     trans_rec = f"/media/recordings/{int(time.time())}.wav"
     session = CallSession.objects.create(
         user=user,

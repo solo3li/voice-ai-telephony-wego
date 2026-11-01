@@ -2823,7 +2823,7 @@
             </div>
 
             <!-- Call Recording Audio Player (AI Agent) -->
-            <div id="cdm-recording-section" class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2 hidden">
+            <div id="cdm-recording-section" class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
               <div class="flex items-center justify-between">
                 <h5 class="font-medium text-slate-800 text-xs flex items-center gap-1.5">
                   <span>تسجيل محادثة الذكاء الاصطناعي (AI Agent):</span>
@@ -2833,6 +2833,12 @@
                 </a>
               </div>
               <audio id="cdm-audio-player" controls preload="none" class="w-full h-8 rounded-lg outline-none"></audio>
+              <div id="cdm-recording-status" class="hidden text-xs text-slate-500 py-1.5 px-2 bg-amber-50/60 border border-amber-200/60 rounded-md flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span id="cdm-recording-status-text">لا يوجد تسجيل صوتي متاح لهذه المكالمة (أو جاري المعالجة).</span>
+              </div>
             </div>
 
             <!-- Transferred Call Recording Audio Player (Human Employee) -->
@@ -4251,7 +4257,11 @@
 
         livekitRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
           if (lkStatusBadge) lkStatusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-500"></span> ' + (window.t ? window.t('livekit_disconnected', 'المكالمات الصوتية: غير متصل') : 'المكالمات الصوتية: غير متصل');
+          const roomToHangup = currentVoiceRoomName;
           cleanupCall();
+          if (roomToHangup) {
+            triggerHangupBeaconOrFetch(roomToHangup);
+          }
         });
 
         // Connect and enable microphone
@@ -4359,24 +4369,60 @@
       btnMute.classList.toggle('bg-[#7c3aed]', isMuted);
     }
 
+    function triggerHangupBeaconOrFetch(roomName) {
+      if (!roomName) return;
+      const payload = JSON.stringify({ room_name: roomName });
+      let sent = false;
+      if (navigator.sendBeacon) {
+        try {
+          const blob = new Blob([payload], { type: 'application/json' });
+          sent = navigator.sendBeacon('/api/call-center/calls/hangup/', blob);
+        } catch (e) {
+          sent = false;
+        }
+        if (!sent) {
+          try {
+            const formData = new FormData();
+            formData.append('room_name', roomName);
+            sent = navigator.sendBeacon('/api/call-center/calls/hangup/', formData);
+          } catch (e) {
+            sent = false;
+          }
+        }
+      }
+      if (!sent) {
+        try {
+          const csrf = typeof getCookie === 'function' ? getCookie('csrftoken') : '';
+          const headers = { 'Content-Type': 'application/json' };
+          if (csrf) headers['X-CSRFToken'] = csrf;
+          fetch('/api/call-center/calls/hangup/', {
+            method: 'POST',
+            headers: headers,
+            body: payload,
+            keepalive: true,
+          }).catch(() => {});
+        } catch (e) {}
+      }
+    }
+
     async function endCall() {
       const roomToClose = currentVoiceRoomName;
       cleanupCall();
       if (roomToClose) {
-        try {
-          await fetch('/api/call-center/calls/hangup/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ room_name: roomToClose })
-          });
-        } catch (e) {
-          console.error('Hangup API error:', e);
-        }
+        triggerHangupBeaconOrFetch(roomToClose);
       }
     }
+
+    window.addEventListener('beforeunload', () => {
+      const activeVoiceRoom = typeof currentVoiceRoomName !== 'undefined' ? currentVoiceRoomName : null;
+      const activeDashRoom = typeof dashboardCurrentRoomName !== 'undefined' ? dashboardCurrentRoomName : null;
+      if (activeVoiceRoom) {
+        triggerHangupBeaconOrFetch(activeVoiceRoom);
+      }
+      if (activeDashRoom && activeDashRoom !== activeVoiceRoom) {
+        triggerHangupBeaconOrFetch(activeDashRoom);
+      }
+    });
 
     function cleanupCall() {
       currentVoiceRoomName = null;
@@ -6441,8 +6487,12 @@
             dashboardAttachedAudio.remove();
             dashboardAttachedAudio = null;
           }
+          const roomToHangup = dashboardCurrentRoomName;
           dashboardLivekitRoom = null;
           dashboardCurrentRoomName = null;
+          if (roomToHangup) {
+            triggerHangupBeaconOrFetch(roomToHangup);
+          }
         });
 
         await dashboardLivekitRoom.connect(data.livekit_url, data.livekit_token);
@@ -6486,17 +6536,8 @@
 
       dashboardCurrentRoomName = null;
 
-      try {
-        await fetch('/api/call-center/calls/hangup/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: JSON.stringify({ room_name: roomToClose })
-        });
-      } catch (e) {
-        // ignore
+      if (roomToClose) {
+        triggerHangupBeaconOrFetch(roomToClose);
       }
     }
 
@@ -7520,13 +7561,53 @@
       const recSec = document.getElementById('cdm-recording-section');
       const audioEl = document.getElementById('cdm-audio-player');
       const dlBtn = document.getElementById('cdm-download-btn');
-      if (call.recording_url) {
-        if (audioEl) audioEl.src = call.recording_url;
-        if (dlBtn) dlBtn.href = call.recording_url;
-        if (recSec) recSec.classList.remove('hidden');
+      const recStatus = document.getElementById('cdm-recording-status');
+      const recStatusText = document.getElementById('cdm-recording-status-text');
+
+      if (recSec) recSec.classList.remove('hidden');
+
+      let recUrl = (call.recording_url || '').trim();
+      while (recUrl.includes('/api/calls/recordings/recordings/')) {
+        recUrl = recUrl.replace('/api/calls/recordings/recordings/', '/api/calls/recordings/');
+      }
+
+      if (recUrl) {
+        if (audioEl) {
+          audioEl.src = recUrl;
+          audioEl.classList.remove('hidden');
+          audioEl.onerror = () => {
+            audioEl.classList.add('hidden');
+            if (recStatus) {
+              recStatus.classList.remove('hidden');
+              if (recStatusText) {
+                const msg = (window.t ? window.t('calls_modal_rec_processing') : null) || 'جاري معالجة التسجيل الصوتي أو غير متاح حالياً لهذه المكالمة.';
+                recStatusText.innerText = msg;
+              }
+            }
+          };
+        }
+        if (dlBtn) {
+          dlBtn.href = recUrl;
+          dlBtn.classList.remove('hidden');
+        }
+        if (recStatus) recStatus.classList.add('hidden');
       } else {
-        if (audioEl) { audioEl.pause(); audioEl.src = ''; }
-        if (recSec) recSec.classList.add('hidden');
+        if (audioEl) {
+          audioEl.pause();
+          audioEl.src = '';
+          audioEl.classList.add('hidden');
+        }
+        if (dlBtn) dlBtn.classList.add('hidden');
+        if (recStatus) {
+          recStatus.classList.remove('hidden');
+          if (recStatusText) {
+            const isProcessing = !call.ended_at || call.status === 'in_progress';
+            const key = isProcessing ? 'calls_modal_rec_processing' : 'calls_modal_rec_none';
+            const fallback = isProcessing ? 'جاري معالجة التسجيل الصوتي أو غير متاح حالياً لهذه المكالمة.' : 'لا يوجد تسجيل صوتي متاح لهذه المكالمة (أو جاري المعالجة).';
+            const msg = (window.t ? window.t(key) : null) || fallback;
+            recStatusText.innerText = msg;
+          }
+        }
       }
 
       // Transferred Human Employee Recording

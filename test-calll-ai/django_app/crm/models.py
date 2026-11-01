@@ -305,6 +305,8 @@ class CallSession(models.Model):
 
     def to_dict(self, request=None):
         rec_url = self.recording_url or ""
+        while "/api/calls/recordings/recordings/" in rec_url:
+            rec_url = rec_url.replace("/api/calls/recordings/recordings/", "/api/calls/recordings/")
         if rec_url and request and not (rec_url.startswith('http://') or rec_url.startswith('https://')):
             try:
                 rec_url = request.build_absolute_uri(rec_url)
@@ -324,7 +326,7 @@ class CallSession(models.Model):
             "caller_phone": self.caller_phone or "",
             "destination_phone": self.destination_phone or "",
             "call_goal": self.call_goal or "",
-            "started_at": self.started_at.strftime("%Y-%m-%d %H:%M"),
+            "started_at": self.started_at.strftime("%Y-%m-%d %H:%M") if self.started_at else None,
             "ended_at": self.ended_at.strftime("%Y-%m-%d %H:%M") if self.ended_at else None,
             "duration_seconds": self.duration_seconds,
             "billed_minutes": self.billed_minutes,

@@ -822,6 +822,46 @@ async def entrypoint(ctx: JobContext):
 
     ctx.add_shutdown_callback(cleanup_and_distill)
 
+    # Register participant disconnected listener to shut down when human leaves
+    @ctx.room.on("participant_disconnected")
+    def on_participant_disconnected(participant: rtc.RemoteParticipant):
+        p_identity = getattr(participant, "identity", "")
+        logger.info(f"[LiveKit Agent] Remote participant '{p_identity}' disconnected from room '{room_name}'")
+
+        # Ignore if the participant that disconnected is not a human (e.g. egress, another agent, system bot)
+        is_non_human = (
+            p_identity in ("ai-agent", "pipecat-agent")
+            or str(p_identity).startswith(("agent-", "ai-", "transfer-", "queue-", "EG_", "egress", "ingress-"))
+            or getattr(participant, "kind", None) in (
+                rtc.ParticipantKind.PARTICIPANT_KIND_AGENT,
+                rtc.ParticipantKind.PARTICIPANT_KIND_EGRESS,
+                rtc.ParticipantKind.PARTICIPANT_KIND_INGRESS,
+            )
+        )
+        if is_non_human:
+            logger.info(f"[LiveKit Agent] Ignoring non-human disconnect: '{p_identity}'")
+            return
+
+        remaining_humans = [
+            p for p in ctx.room.remote_participants.values()
+            if p.identity not in ("ai-agent", "pipecat-agent")
+            and not str(p.identity).startswith(("agent-", "ai-", "transfer-", "queue-", "EG_", "egress", "ingress-"))
+            and getattr(p, "kind", None) not in (
+                rtc.ParticipantKind.PARTICIPANT_KIND_AGENT,
+                rtc.ParticipantKind.PARTICIPANT_KIND_EGRESS,
+                rtc.ParticipantKind.PARTICIPANT_KIND_INGRESS,
+            )
+            and p.identity != p_identity
+        ]
+        if not remaining_humans:
+            logger.info(f"[LiveKit Agent] No human participants left in room '{room_name}'. Triggering agent shutdown.")
+            ctx.shutdown("human participant disconnected")
+
+    @ctx.room.on("disconnected")
+    def on_room_disconnected():
+        logger.info(f"[LiveKit Agent] Room '{room_name}' disconnected. Triggering agent shutdown.")
+        ctx.shutdown("room disconnected")
+
     # 10. Start Session inside LiveKit Room
     await session.start(agent, room=ctx.room)
     logger.info(f"[LiveKit Agent] AgentSession active for room '{room_name}'")

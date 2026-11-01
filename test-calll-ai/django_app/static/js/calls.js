@@ -132,7 +132,7 @@ function renderCallsTable(calls) {
             <span>${btnDetails}</span>
           </button>
           ${c.recording_url ? `
-            <a href="${c.recording_url}" target="_blank" class="ms-1 px-2 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs" title="استماع لتسجيل الـ AI">
+            <a href="${c.recording_url.replaceAll('/api/calls/recordings/recordings/', '/api/calls/recordings/')}" target="_blank" class="ms-1 px-2 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-medium transition inline-flex items-center gap-1 shadow-2xs" title="استماع لتسجيل الـ AI">
               <span>AI</span>
             </a>
           ` : ''}
@@ -225,13 +225,53 @@ function openCallDetailModal(callId) {
   const recSec = document.getElementById('cdm-recording-section');
   const audioEl = document.getElementById('cdm-audio-player');
   const dlBtn = document.getElementById('cdm-download-btn');
-  if (call.recording_url) {
-    if (audioEl) audioEl.src = call.recording_url;
-    if (dlBtn) dlBtn.href = call.recording_url;
-    if (recSec) recSec.classList.remove('hidden');
+  const recStatus = document.getElementById('cdm-recording-status');
+  const recStatusText = document.getElementById('cdm-recording-status-text');
+
+  if (recSec) recSec.classList.remove('hidden');
+
+  let recUrl = (call.recording_url || '').trim();
+  while (recUrl.includes('/api/calls/recordings/recordings/')) {
+    recUrl = recUrl.replace('/api/calls/recordings/recordings/', '/api/calls/recordings/');
+  }
+
+  if (recUrl) {
+    if (audioEl) {
+      audioEl.src = recUrl;
+      audioEl.classList.remove('hidden');
+      audioEl.onerror = () => {
+        audioEl.classList.add('hidden');
+        if (recStatus) {
+          recStatus.classList.remove('hidden');
+          if (recStatusText) {
+            const msg = (window.t ? window.t('calls_modal_rec_processing') : null) || 'جاري معالجة التسجيل الصوتي أو غير متاح حالياً لهذه المكالمة.';
+            recStatusText.innerText = msg;
+          }
+        }
+      };
+    }
+    if (dlBtn) {
+      dlBtn.href = recUrl;
+      dlBtn.classList.remove('hidden');
+    }
+    if (recStatus) recStatus.classList.add('hidden');
   } else {
-    if (audioEl) { audioEl.pause(); audioEl.src = ''; }
-    if (recSec) recSec.classList.add('hidden');
+    if (audioEl) {
+      audioEl.pause();
+      audioEl.src = '';
+      audioEl.classList.add('hidden');
+    }
+    if (dlBtn) dlBtn.classList.add('hidden');
+    if (recStatus) {
+      recStatus.classList.remove('hidden');
+      if (recStatusText) {
+        const isProcessing = !call.ended_at || call.status === 'in_progress';
+        const key = isProcessing ? 'calls_modal_rec_processing' : 'calls_modal_rec_none';
+        const fallback = isProcessing ? 'جاري معالجة التسجيل الصوتي أو غير متاح حالياً لهذه المكالمة.' : 'لا يوجد تسجيل صوتي متاح لهذه المكالمة (أو جاري المعالجة).';
+        const msg = (window.t ? window.t(key) : null) || fallback;
+        recStatusText.innerText = msg;
+      }
+    }
   }
 
   // Transferred Human Employee Recording

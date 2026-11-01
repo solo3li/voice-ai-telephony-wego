@@ -1255,7 +1255,7 @@ def api_hangup_call(request):
     employee = get_employee_from_token(request)
     caller_name = "المشرف"
     if not employee:
-        if request.user.is_authenticated:
+        if hasattr(request, 'user') and request.user.is_authenticated:
             caller_name = request.user.get_full_name() or request.user.username or "العميل"
         else:
             caller_name = "العميل"
@@ -1263,9 +1263,17 @@ def api_hangup_call(request):
         caller_name = employee.display_name
 
     try:
-        data = json.loads(request.body.decode('utf-8')) if request.body else {}
-        room_name = data.get('room_name') or data.get('call_id')
-        target_employee_id = data.get('target_employee_id')
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        except Exception:
+            data = {}
+        room_name = (
+            data.get('room_name')
+            or data.get('call_id')
+            or request.POST.get('room_name')
+            or request.POST.get('call_id')
+        )
+        target_employee_id = data.get('target_employee_id') or request.POST.get('target_employee_id')
 
         if not room_name and not target_employee_id:
             return JsonResponse({"status": "error", "message": "room_name or target_employee_id is required"}, status=400)

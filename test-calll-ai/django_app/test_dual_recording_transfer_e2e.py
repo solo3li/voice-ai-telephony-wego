@@ -37,7 +37,7 @@ def test_dual_recording_transfer_flow():
     # 1. Simulate an incoming AI CallSession with AI recording
     room_name = f"test_dual_rec_room_{int(time.time())}"
     caller_phone = "01099887766"
-    ai_recording_url = f"/api/calls/recordings/recordings/{room_name}_ai.mp3"
+    ai_recording_url = f"/api/calls/recordings/{room_name}_ai.mp3"
 
     session = CallSession.objects.create(
         user=user,

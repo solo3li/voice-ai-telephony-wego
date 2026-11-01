@@ -30,6 +30,8 @@ def JsonResponse(data, *args, **kwargs):
 def get_full_recording_url(request, rec_url):
     if not rec_url:
         return ""
+    while "/api/calls/recordings/recordings/" in rec_url:
+        rec_url = rec_url.replace("/api/calls/recordings/recordings/", "/api/calls/recordings/")
     if rec_url.startswith("http://") or rec_url.startswith("https://"):
         return rec_url
     return request.build_absolute_uri(rec_url)
