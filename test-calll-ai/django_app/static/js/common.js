@@ -8901,6 +8901,69 @@ window.APP_I18N = APP_I18N;
 window.COMMON_I18N = APP_I18N;
 
 // 6 Supported Platform Languages Configuration
+
+const CARD_I18N_ADDITIONS = {
+  ar: {
+    card_voice_label: "صوت المساعد:",
+    card_style_label: "الأسلوب:",
+    card_btn_edit: "تعديل التفاصيل",
+    card_active_badge: "مفعل حالياً",
+    card_approved_badge: "معتمد للمكالمات الحية",
+    card_btn_activate: "تفعيل للمكالمات",
+    card_empty_personas: 'لا توجد شخصيات مسجلة حالياً. اضغط على "إنشاء شخصية جديدة" للبدء.'
+  },
+  en: {
+    card_voice_label: "Voice:",
+    card_style_label: "Style:",
+    card_btn_edit: "Edit Details",
+    card_active_badge: "Currently Active",
+    card_approved_badge: "Approved for Live Calls",
+    card_btn_activate: "Activate for Calls",
+    card_empty_personas: 'No personas registered yet. Click "Create New Persona" to get started.'
+  },
+  tr: {
+    card_voice_label: "Asistan Sesi:",
+    card_style_label: "Tarz:",
+    card_btn_edit: "Detayları Düzenle",
+    card_active_badge: "Şu Anda Aktif",
+    card_approved_badge: "Canlı Aramalar İçin Onaylandı",
+    card_btn_activate: "Aramalar İçin Etkinleştir",
+    card_empty_personas: 'Henüz kayıtlı persona yok. Başlamak için "Yeni Persona Oluştur"a tıklayın.'
+  },
+  fr: {
+    card_voice_label: "Voix de l'assistant :",
+    card_style_label: "Style :",
+    card_btn_edit: "Modifier les détails",
+    card_active_badge: "Actuellement Actif",
+    card_approved_badge: "Approuvé pour Appels en Direct",
+    card_btn_activate: "Activer pour les appels",
+    card_empty_personas: 'Aucun persona enregistré. Cliquez sur "Créer un nouveau persona" pour commencer.'
+  },
+  de: {
+    card_voice_label: "Stimme:",
+    card_style_label: "Stil:",
+    card_btn_edit: "Details bearbeiten",
+    card_active_badge: "Derzeit Aktiv",
+    card_approved_badge: "Für Live-Anrufe Genehmigt",
+    card_btn_activate: "Für Anrufe aktivieren",
+    card_empty_personas: 'Noch keine Personas registriert. Klicken Sie auf „Neue Persona erstellen“, um zu beginnen.'
+  },
+  es: {
+    card_voice_label: "Voz del Asistente:",
+    card_style_label: "Estilo:",
+    card_btn_edit: "Editar Detalles",
+    card_active_badge: "Actualmente Activo",
+    card_approved_badge: "Aprobado para Llamadas en Vivo",
+    card_btn_activate: "Activar para Llamadas",
+    card_empty_personas: 'No hay personajes registrados todavía. Haga clic en "Crear Nuevo Personaje" para comenzar.'
+  }
+};
+for (const l of Object.keys(CARD_I18N_ADDITIONS)) {
+  if (APP_I18N[l]) {
+    Object.assign(APP_I18N[l], CARD_I18N_ADDITIONS[l]);
+  }
+}
+
 const SUPPORTED_LANGUAGES = [
   { code: 'ar', label: 'العربية', flag: '🇸🇦', dir: 'rtl', short: 'عربي' },
   { code: 'en', label: 'English', flag: '🇬🇧', dir: 'ltr', short: 'EN' },
@@ -8935,11 +8998,14 @@ function getI18nText(key, lang) {
   if (typeof window !== 'undefined' && window.PAGE_I18N && window.PAGE_I18N[l] && window.PAGE_I18N[l][key] !== undefined) {
     return window.PAGE_I18N[l][key];
   }
+  if (typeof window !== 'undefined' && window.I18N && window.I18N[l] && window.I18N[l][key] !== undefined) {
+    return window.I18N[l][key];
+  }
+  if (l !== 'ar' && APP_I18N['en'] && APP_I18N['en'][key] !== undefined) {
+    return APP_I18N['en'][key];
+  }
   if (APP_I18N['ar'] && APP_I18N['ar'][key] !== undefined) {
     return APP_I18N['ar'][key];
-  }
-  if (APP_I18N['en'] && APP_I18N['en'][key] !== undefined) {
-    return APP_I18N['en'][key];
   }
   return null;
 }
@@ -9102,7 +9168,7 @@ function syncChatwootLanguage(lang) {
   const targetLocale = VALID_LANGS.includes(lang) ? lang : 'ar';
 
   // 1. Synchronize any embedded Chatwoot iframes on page
-  const frames = document.querySelectorAll('#chatwoot-frame, #embed-chatwoot-frame, iframe[src*="chatwoot"]');
+  const frames = document.querySelectorAll('#chatwoot-frame, #embed-chatwoot-frame, #room-chatwoot-frame, iframe[src*="chatwoot"], iframe[data-src*="chatwoot"]');
   frames.forEach(frame => {
     try {
       if (frame && frame.src) {
@@ -9178,11 +9244,9 @@ function applyCommonLanguage(lang) {
     try {
       if (window.location && window.history && typeof window.history.replaceState === 'function') {
         const url = new URL(window.location.href);
-        if (url.searchParams.has('lang') || url.searchParams.has('locale')) {
-          if (url.searchParams.has('lang')) url.searchParams.set('lang', lang);
-          if (url.searchParams.has('locale')) url.searchParams.set('locale', lang);
-          window.history.replaceState(null, '', url.pathname + url.search + url.hash);
-        }
+        url.searchParams.set('locale', lang);
+        url.searchParams.set('lang', lang);
+        window.history.replaceState(null, '', url.pathname + url.search + url.hash);
       }
     } catch (e) {}
 

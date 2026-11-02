@@ -113,13 +113,13 @@
       <div class="flex items-center gap-3">
         <a href="/" class="flex items-center gap-2 text-brand-primary font-bold text-lg hover:opacity-90 transition">
           <span class="text-2xl">🎙️</span>
-          <span>{% if is_ar %}المساعد الصوتي الذكي{% else %}AI Voice Assistant{% endif %}</span>
+          <span>{% if current_lang == "es" %}Asistente de Voz IA{% elif current_lang == "tr" %}Yapay Zeka Sesli Asistan{% elif current_lang == "fr" %}Assistant Vocal IA{% elif current_lang == "de" %}KI-Sprachassistent{% elif current_lang == "en" %}AI Voice Assistant{% else %}المساعد الصوتي الذكي{% endif %}</span>
         </a>
         <span class="bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-xs px-2.5 py-0.5 rounded-full font-bold">
           SaaS Partner API v1
         </span>
         <span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-          <span>⚡</span><span>{% if is_ar %}مشغّل Scalar التفاعلي{% else %}Scalar Interactive Docs{% endif %}</span>
+          <span>⚡</span><span>{% if current_lang == "es" %}Docs Interactivos Scalar{% elif current_lang == "tr" %}Scalar Etkileşimli Dokümanlar{% elif current_lang == "fr" %}Documentation Interactive Scalar{% elif current_lang == "de" %}Scalar Interaktive Dokumentation{% elif current_lang == "en" %}Scalar Interactive Docs{% else %}مشغّل Scalar التفاعلي{% endif %}</span>
         </span>
       </div>
 

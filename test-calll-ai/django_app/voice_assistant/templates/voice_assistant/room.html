@@ -440,10 +440,10 @@
         <!-- Available Personas Cards Grid -->
         <div class="space-y-3">
           <div class="flex justify-between items-center">
-            <h3 class="text-xs font-semibold text-slate-900 tracking-wide">
+            <h3 class="text-xs font-semibold text-slate-900 tracking-wide" data-i18n="personas_catalog_title">
               الشخصيات المتاحة للمحادثات (Available AI Personas)
             </h3>
-            <span class="text-xs text-slate-400">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
+            <span class="text-xs text-slate-400" data-i18n="personas_catalog_hint">اضغط "تفعيل للمكالمات" لاختيار الشخصية المعتمدة للمساعد</span>
           </div>
 
           <div id="personas-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -464,14 +464,14 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-sm font-semibold text-slate-900">استوديو تخصيص الشخصية المحددة</h3>
-                <p class="text-xs text-slate-500">تعديل شخصية وصوت المساعد الذكي (30 شخصية)، الدور، والتعليمات البرمجية</p>
+                <h3 class="text-sm font-semibold text-slate-900" data-i18n="personas_studio_title">استوديو تخصيص الشخصية المحددة</h3>
+                <p class="text-xs text-slate-500" data-i18n="personas_studio_subtitle">تعديل شخصية وصوت المساعد الذكي (30 شخصية)، الدور، والتعليمات البرمجية</p>
               </div>
             </div>
 
             <!-- Profile Selector Dropdown -->
             <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-500">الشخصية الحالية:</span>
+              <span class="text-xs text-slate-500" data-i18n="personas_current_label">الشخصية الحالية:</span>
               <select id="profile-select" onchange="handleProfileSelect(this.value)" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#7c3aed]">
                 <option value="">جاري تحميل البروفايلات...</option>
               </select>
@@ -482,7 +482,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <!-- Gender, Language & Dialect -->
             <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-3.5 space-y-2">
-              <label class="block font-medium text-slate-700">النوع واللغة واللهجة</label>
+              <label class="block font-medium text-slate-700" data-i18n="personas_field_gender_dialect">النوع واللغة واللهجة</label>
               <div class="grid grid-cols-2 gap-2">
                 <select id="field-gender" onchange="syncGenderVoiceOptions()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800">
                   <option value="female">أنثى (بنت)</option>
@@ -511,8 +511,8 @@
             <!-- Voice Selector -->
             <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-3.5 space-y-2">
               <div class="flex justify-between items-center">
-                <label class="font-medium text-slate-700">صوت المساعد الذكي</label>
-                <span id="voice-tag-badge" class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium">طبيعي وهادئ</span>
+                <label class="font-medium text-slate-700" data-i18n="personas_field_voice">صوت المساعد الذكي</label>
+                <span id="voice-tag-badge" class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium" data-i18n="personas_style_natural">طبيعي وهادئ</span>
               </div>
               <select id="field-voice" onchange="updateVoiceTag()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono text-xs">
               </select>
@@ -521,23 +521,23 @@
             <!-- Persona Role -->
             <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-3.5 space-y-2">
               <div class="flex justify-between items-center">
-                <label class="block font-medium text-slate-700">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
+                <label class="block font-medium text-slate-700" data-i18n="personas_field_role">الدور والشخصية (20 قطاع + مكتبة مخصصة)</label>
                 <div class="flex items-center gap-1.5">
                   <button type="button" onclick="openCustomRolesModal()" class="text-xs px-2 py-0.5 rounded-md bg-white hover:bg-slate-50 text-[#7c3aed] border border-[#ddd6fe]/70 transition font-medium flex items-center gap-1">
-                    <span>مكتبة أدوار المؤسسة</span> (<span id="custom-roles-count">0</span>)
+                    <span data-i18n="personas_btn_custom_roles">مكتبة أدوار المؤسسة</span> (<span id="custom-roles-count">0</span>)
                   </button>
-                  <span class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium">20 تخصص جاهز</span>
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium" data-i18n="personas_20_roles_badge">20 تخصص جاهز</span>
                 </div>
               </div>
               <div class="space-y-1.5">
                 <select id="field-role-preset" onchange="handleRolePresetSelect(this.value, 'field')" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs font-medium focus:outline-none focus:border-[#7c3aed]">
-                  <option value="">-- اختر من الكتالوج (20 تخصص) أو مكتبتك المخصصة --</option>
+                  <option value="" data-i18n="personas_select_role_preset">-- اختر من الكتالوج (20 تخصص) أو مكتبتك المخصصة --</option>
                 </select>
-                <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#7c3aed]"></textarea>
+                <textarea id="field-role" rows="2" placeholder="اكتب الدور والشخصية المحددة للذكاء الاصطناعي بحرية تامة..." data-i18n-placeholder="personas_role_placeholder" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#7c3aed]"></textarea>
                 <div class="flex justify-between items-center pt-1">
-                  <span id="role-selection-status" class="text-xs text-slate-400">يمكنك التعديل على النص بحرية تامة</span>
+                  <span id="role-selection-status" class="text-xs text-slate-400" data-i18n="personas_role_status_hint">يمكنك التعديل على النص بحرية تامة</span>
                   <button type="button" onclick="promptSaveCurrentRoleAsCustom()" class="text-xs text-[#7c3aed] hover:underline font-medium flex items-center gap-1">
-                    <span>حفظ النص الحالي كدور مخصص في مكتبتي</span>
+                    <span data-i18n="personas_save_role_custom">حفظ النص الحالي كدور مخصص في مكتبتي</span>
                   </button>
                 </div>
               </div>
@@ -546,17 +546,17 @@
             <!-- Speaking Style & Pacing -->
             <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-3.5 space-y-2">
               <div class="flex justify-between items-center">
-                <label class="block font-medium text-slate-700">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
-                <span class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium">نبرة حرة</span>
+                <label class="block font-medium text-slate-700" data-i18n="personas_field_style">أسلوب الإلقاء والنبرة (كتابة حرة)</label>
+                <span class="text-xs px-2 py-0.5 rounded-md bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]/70 font-medium" data-i18n="personas_free_style_badge">نبرة حرة</span>
               </div>
-              <textarea id="field-style" rows="2" placeholder="اكتب أسلوب الإلقاء والنبرة بحرية تامة..." class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#7c3aed]"></textarea>
+              <textarea id="field-style" rows="2" placeholder="اكتب أسلوب الإلقاء والنبرة بحرية تامة..." data-i18n-placeholder="personas_style_placeholder" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#7c3aed]"></textarea>
             </div>
 
             <!-- Verbosity & Conciseness Level -->
             <div class="bg-slate-50/60 border border-slate-200/80 rounded-lg p-3.5 space-y-2">
               <div class="flex justify-between items-center">
-                <label class="block font-medium text-slate-700">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
-                <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 font-medium">التحكم في الرغي</span>
+                <label class="block font-medium text-slate-700" data-i18n="personas_field_verbosity">مستوى الإيجاز وسرعة الرد (Verbosity Level)</label>
+                <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 font-medium" data-i18n="personas_verbosity_badge">التحكم في الرغي</span>
               </div>
               <select id="field-verbosity" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:border-[#7c3aed]">
                 <option value="concise">مختصر ومباشر (ردود سريعة في 1-2 جملة، بدون حشو أو أسئلة زائدة)</option>
@@ -571,14 +571,14 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <div>
-                  <label for="field-welcome-enabled" class="font-medium text-slate-800 text-xs cursor-pointer">رسالة الترحيب الافتتاحية للمساعد</label>
-                  <p class="text-xs text-slate-500">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
+                  <label for="field-welcome-enabled" class="font-medium text-slate-800 text-xs cursor-pointer" data-i18n="personas_welcome_label">رسالة الترحيب الافتتاحية للمساعد</label>
+                  <p class="text-xs text-slate-500" data-i18n="personas_welcome_desc">عند تفعيلها، يبادر المساعد ببدء الكلام وترحيب المتصل فور الرد. إذا عُطلت، ينتظر المساعد حتى يتكلم المتصل أولاً.</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="field-welcome-enabled" onchange="toggleWelcomeInput('active')" class="sr-only peer" checked>
                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7c3aed]"></div>
-                <span id="welcome-toggle-status" class="ms-2 text-xs font-medium text-[#7c3aed]">مفعلة</span>
+                <span id="welcome-toggle-status" class="ms-2 text-xs font-medium text-[#7c3aed]" data-i18n="personas_welcome_status">مفعلة</span>
               </label>
             </div>
             <div id="welcome-message-input-wrapper">
@@ -589,15 +589,15 @@
 
           <!-- Custom Instructions -->
           <div class="space-y-2 text-xs">
-            <label class="block font-medium text-slate-700">تعليمات وتوجيهات خاصة إضافية للشخصية (Custom Prompt Instructions - اختياري):</label>
+            <label class="block font-medium text-slate-700" data-i18n="personas_field_instructions">تعليمات وتوجيهات خاصة إضافية للشخصية (Custom Prompt Instructions - اختياري):</label>
             <textarea id="field-custom" rows="2" placeholder="مثال: ناديني دائماً بـ 'يا باشا'، وركز على تشجيعي لتجربة المنتجات الجديدة..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#7c3aed]"></textarea>
           </div>
 
           <!-- Off-Topic Response -->
           <div class="space-y-2 text-xs">
-            <label class="block font-medium text-slate-700">
+            <label class="block font-medium text-slate-700" data-i18n="personas_off_topic_label">
               رسالة الرد خارج النطاق
-              <span class="font-normal text-slate-500">(اختياري — ماذا يقول المساعد لو سُئل عن شيء خارج عمله أو تخصصه؟)</span>
+              <span class="font-normal text-slate-500" data-i18n="personas_off_topic_hint_sub">(اختياري — ماذا يقول المساعد لو سُئل عن شيء خارج عمله أو تخصصه؟)</span>
             </label>
             <textarea id="field-off-topic" rows="2"
               placeholder='مثال: "بعتذر جداً يا فندم، أنا بساعدك بس في طلبات المتجر، تحب تطلب حاجة؟"'
@@ -612,10 +612,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>حفظ وتطبيق على المكالمات</span>
+                <span data-i18n="personas_btn_save">حفظ وتطبيق على المكالمات</span>
               </button>
               <button type="button" onclick="deleteCurrentProfile()" id="btn-delete-profile" class="px-3.5 py-2 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-600 text-xs font-medium border border-slate-200 transition">
-                <span>حذف البروفايل</span>
+                <span data-i18n="personas_btn_delete">حذف البروفايل</span>
               </button>
             </div>
           </div>
@@ -632,7 +632,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <span>مستندات قاعدة المعرفة (RAG Knowledge Base)</span>
+                <span data-i18n="rag_title">مستندات قاعدة المعرفة (RAG Knowledge Base)</span>
               </h2>
               <p class="text-xs text-slate-500 mt-1">
                 ارفع ملفاتك (PDF, DOCX, TXT) ليتم تضمينها وفهرستها دلالياً في PostgreSQL باستخدام Gemini text-embedding-004.
@@ -646,7 +646,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <span id="upload-file-label">اختر ملفاً (PDF/DOCX/TXT)</span>
+                <span id="upload-file-label" data-i18n="rag_btn_choose">اختر ملفاً (PDF/DOCX/TXT)</span>
                 <input type="file" id="file-input" name="file" accept=".pdf,.docx,.doc,.txt,.md" class="hidden" onchange="handleFileSelect(event)" />
               </label>
               <button 
@@ -655,7 +655,7 @@
                 disabled
                 class="px-4 py-2 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
               >
-                <span>رفع ومعالجة</span>
+                <span data-i18n="rag_btn_upload">رفع ومعالجة</span>
               </button>
             </form>
           </div>
@@ -2222,7 +2222,7 @@
             </div>
             <div class="text-end flex flex-col sm:items-end gap-2">
               <span id="billing-call-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> جاهز للاتصال
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span data-i18n="voice_status_ready">جاهز للاتصال</span>
               </span>
               <button type="button" onclick="openTopupModal()" class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition shadow-2xs">
                 <span>شحن المحفظة</span>
@@ -3867,9 +3867,131 @@
         switch_to: "العربية"
       }
     };
+    window.I18N = I18N;
+    window.PAGE_I18N = I18N;
 
     let currentLanguage = (document.documentElement && document.documentElement.lang) || localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
     let activeTabId = 'voice';
+
+    function syncRoomSpecificLanguage(lang) {
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      if (!valid.includes(lang)) lang = 'ar';
+      currentLanguage = lang;
+
+      const langDict = (window.APP_I18N && window.APP_I18N[lang]) || (I18N && I18N[lang]) || {};
+      const langText = document.getElementById('lang-text');
+      if (langText) {
+        const langLabels = { 'ar': 'العربية', 'en': 'English', 'tr': 'Türkçe', 'fr': 'Français', 'de': 'Deutsch', 'es': 'Español' };
+        const langObj = window.SUPPORTED_LANGUAGES && window.SUPPORTED_LANGUAGES.find(l => l.code === lang);
+        langText.innerText = (langObj && langObj.label) || langLabels[lang] || lang.toUpperCase();
+      }
+
+      // Update [data-i18n] text
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const val = (window.getI18nText && window.getI18nText(key, lang)) || langDict[key];
+        if (val !== null && val !== undefined) {
+          el.innerText = val;
+        }
+      });
+
+      // Update [data-i18n-placeholder] inputs
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        const val = (window.getI18nText && window.getI18nText(key, lang)) || langDict[key];
+        if (val !== null && val !== undefined) {
+          el.placeholder = val;
+        }
+      });
+
+      // Update gender options
+      const genderSelect = document.getElementById('field-gender');
+      if (genderSelect) {
+        const genderOpts = {
+          female: { ar: 'أنثى (بنت)', en: 'Female', tr: 'Kadın', fr: 'Femme', de: 'Weiblich', es: 'Femenino' },
+          male: { ar: 'ذكر (شاب)', en: 'Male', tr: 'Erkek', fr: 'Homme', de: 'Männlich', es: 'Masculino' }
+        };
+        Array.from(genderSelect.options).forEach(opt => {
+          if (genderOpts[opt.value] && genderOpts[opt.value][lang]) {
+            opt.innerText = genderOpts[opt.value][lang];
+          }
+        });
+      }
+
+      // Update verbosity options
+      const verbSelect = document.getElementById('field-verbosity');
+      if (verbSelect) {
+        const verbOpts = {
+          concise: {
+            ar: 'مختصر ومباشر (ردود سريعة في 1-2 جملة، بدون حشو أو أسئلة زائدة)',
+            en: 'Concise & Direct (Quick 1-2 sentence replies, no fluff)',
+            tr: 'Kısa ve Doğrudan (1-2 cümlelik hızlı yanıtlar)',
+            fr: 'Concis et direct (réponses rapides en 1-2 phrases, sans superflu)',
+            de: 'Prägnant & Direkt (Schnelle 1-2 Satz-Antworten, ohne Füllwörter)',
+            es: 'Conciso y Directo (Respuestas rápidas de 1-2 frases, sin rodeos)'
+          },
+          balanced: {
+            ar: 'متوازن وطبيعي (2-3 جمل طبيعية تجمع بين اللباقة والسرعة)',
+            en: 'Balanced & Natural (2-3 natural sentences balancing politeness & speed)',
+            tr: 'Dengeli ve Doğal (Nezaket ve hızı birleştiren 2-3 doğal cümle)',
+            fr: 'Équilibré et naturel (2-3 phrases naturelles alliant courtoisie et rapidité)',
+            de: 'Ausgewogen & Natürlich (2-3 natürliche Sätze, höflich und schnell)',
+            es: 'Equilibrado y Natural (2-3 frases naturales que combinan cortesía y rapidez)'
+          },
+          detailed: {
+            ar: 'مفصل واستشاري (شرح وافٍ مع ذكر الخيارات والتفاصيل والبدائل)',
+            en: 'Detailed & Advisory (In-depth explanations with options & alternatives)',
+            tr: 'Ayrıntılı ve Danışmanlık (Seçenekler ve alternatiflerle kapsamlı açıklama)',
+            fr: 'Détaillé et consultatif (explications complètes avec options et alternatives)',
+            de: 'Detailliert & Beratend (Ausführliche Erklärung mit Optionen und Alternativen)',
+            es: 'Detallado y Consultivo (Explicación completa con opciones y alternativas)'
+          }
+        };
+        Array.from(verbSelect.options).forEach(opt => {
+          if (verbOpts[opt.value] && verbOpts[opt.value][lang]) {
+            opt.innerText = verbOpts[opt.value][lang];
+          }
+        });
+      }
+
+      // Update save & delete profile buttons
+      const btnSave = document.getElementById('btn-save-profile');
+      if (btnSave) {
+        const span = btnSave.querySelector('span');
+        if (span) {
+          const saveLabels = {
+            ar: 'حفظ وتطبيق على المكالمات',
+            en: 'Save & Apply to Calls',
+            tr: 'Kaydet ve Aramalara Uygula',
+            fr: 'Enregistrer et appliquer aux appels',
+            de: 'Speichern & auf Anrufe anwenden',
+            es: 'Guardar y Aplicar a Llamadas'
+          };
+          span.innerText = saveLabels[lang] || saveLabels.ar;
+        }
+      }
+      const btnDel = document.getElementById('btn-delete-profile');
+      if (btnDel) {
+        const span = btnDel.querySelector('span');
+        if (span) {
+          const delLabels = {
+            ar: 'حذف البروفايل',
+            en: 'Delete Persona',
+            tr: 'Personayı Sil',
+            fr: 'Supprimer le profil',
+            de: 'Persona löschen',
+            es: 'Eliminar Personaje'
+          };
+          span.innerText = delLabels[lang] || delLabels.ar;
+        }
+      }
+
+      // Re-render profile cards with translated labels
+      if (typeof renderProfileCards === 'function') {
+        renderProfileCards();
+      }
+      updateHeaderTitle();
+    }
 
     function applyLanguage(lang) {
       const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
@@ -3890,20 +4012,7 @@
         document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
         document.documentElement.lang = lang;
       }
-      const langDict = (window.APP_I18N && window.APP_I18N[lang]) || (I18N && I18N[lang]) || {};
-      const langText = document.getElementById('lang-text');
-      if (langText) {
-        const langLabels = { 'ar': 'العربية', 'en': 'English', 'tr': 'Türkçe', 'fr': 'Français', 'de': 'Deutsch', 'es': 'Español' };
-        const langObj = window.SUPPORTED_LANGUAGES && window.SUPPORTED_LANGUAGES.find(l => l.code === lang);
-        langText.innerText = (langObj && langObj.label) || langLabels[lang] || lang.toUpperCase();
-      }
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (langDict[key]) {
-          el.innerText = langDict[key];
-        }
-      });
-      updateHeaderTitle();
+      syncRoomSpecificLanguage(lang);
     }
 
     function toggleLanguage() {
@@ -3920,7 +4029,7 @@
     window.addEventListener('appLanguageChanged', function(e) {
       if (e.detail && e.detail.lang) {
         currentLanguage = e.detail.lang;
-        updateHeaderTitle();
+        syncRoomSpecificLanguage(currentLanguage);
         const roomFrame = document.getElementById('room-chatwoot-frame');
         if (roomFrame) {
           fetch('/api/chat/set-locale/', {
@@ -4220,11 +4329,35 @@
     function renderProfileCards() {
       const container = document.getElementById('personas-cards-grid');
       if (!container) return;
+      const lang = currentLanguage || 'ar';
+      const labels = {
+        approved: { ar: 'معتمد للمكالمات الحية', en: 'Approved for Live Calls', tr: 'Canlı Aramalar İçin Onaylandı', fr: 'Approuvé pour Appels en Direct', de: 'Für Live-Anrufe Genehmigt', es: 'Aprobado para Llamadas en Vivo' },
+        voice: { ar: 'صوت المساعد:', en: 'Voice:', tr: 'Asistan Sesi:', fr: 'Voix de l\'assistant :', de: 'Stimme:', es: 'Voz del Asistente:' },
+        style: { ar: 'الأسلوب:', en: 'Style:', tr: 'Tarz:', fr: 'Style :', de: 'Stil:', es: 'Estilo:' },
+        edit: { ar: 'تعديل التفاصيل', en: 'Edit Details', tr: 'Detayları Düzenle', fr: 'Modifier les détails', de: 'Details bearbeiten', es: 'Editar Detalles' },
+        active: { ar: 'مفعل حالياً', en: 'Currently Active', tr: 'Şu Anda Aktif', fr: 'Actuellement Actif', de: 'Derzeit Aktiv', es: 'Actualmente Activo' },
+        activate: { ar: 'تفعيل للمكالمات', en: 'Activate for Calls', tr: 'Aramalar İçin Etkinleştir', fr: 'Activer pour les appels', de: 'Für Anrufe aktivieren', es: 'Activar para Llamadas' },
+        empty: {
+          ar: 'لا توجد شخصيات مسجلة حالياً. اضغط على "إنشاء شخصية جديدة" للبدء.',
+          en: 'No personas registered yet. Click "Create New Persona" to get started.',
+          tr: 'Henüz kayıtlı persona yok. Başlamak için "Yeni Persona Oluştur"a tıklayın.',
+          fr: 'Aucun persona enregistré. Cliquez sur "Créer un nouveau persona" pour commencer.',
+          de: 'Noch keine Personas registriert. Klicken Sie auf „Neue Persona erstellen“, um zu beginnen.',
+          es: 'No hay personajes registrados todavía. Haga clic en "Crear Nuevo Personaje" para comenzar.'
+        }
+      };
+      const lApproved = (labels.approved[lang] || labels.approved.ar);
+      const lVoice = (labels.voice[lang] || labels.voice.ar);
+      const lStyle = (labels.style[lang] || labels.style.ar);
+      const lEdit = (labels.edit[lang] || labels.edit.ar);
+      const lActive = (labels.active[lang] || labels.active.ar);
+      const lActivate = (labels.activate[lang] || labels.activate.ar);
+      const lEmpty = (labels.empty[lang] || labels.empty.ar);
 
       if (!userProfiles || userProfiles.length === 0) {
         container.innerHTML = `
           <div class="col-span-2 text-center py-10 bg-white rounded-xl border border-slate-200/80 text-slate-400 text-xs">
-            لا توجد شخصيات مسجلة حالياً. اضغط على "إنشاء شخصية جديدة" للبدء.
+            ${lEmpty}
           </div>
         `;
         return;
@@ -4247,7 +4380,7 @@
                 <div>
                   <h4 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
                     <span>${escapeHtml(p.name)}</span>
-                    ${isActive ? '<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">معتمد للمكالمات الحية</span>' : ''}
+                    ${isActive ? `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${lApproved}</span>` : ''}
                   </h4>
                   <p class="text-xs text-slate-500 mt-0.5 font-normal">
                     ${escapeHtml(p.role_display || p.role)} &bull; ${escapeHtml(p.dialect_display || p.dialect)}
@@ -4259,11 +4392,11 @@
             <!-- Card Voice Timber & Details -->
             <div class="bg-slate-50/50 p-3 rounded-lg border border-slate-200/80 text-xs space-y-1.5">
               <div class="flex justify-between items-center">
-                <span class="text-slate-500">صوت المساعد:</span>
+                <span class="text-slate-500">${lVoice}</span>
                 <span class="font-mono font-medium text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 text-xs">${escapeHtml(p.voice_display || p.voice_name || p.voice || 'nourhan')}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-slate-500">الأسلوب:</span>
+                <span class="text-slate-500">${lStyle}</span>
                 <span class="text-slate-700 font-medium">${escapeHtml(p.style_display || p.style)}</span>
               </div>
               ${p.custom_instructions ? `
@@ -4275,16 +4408,16 @@
 
             <!-- Card Actions -->
             <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/80">
-              <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1">
-                <span>تعديل التفاصيل</span>
+              <button type="button" onclick="selectAndScrollToProfile(${p.id})" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1 cursor-pointer">
+                <span>${lEdit}</span>
               </button>
               ${isActive ? `
                 <span class="text-xs text-emerald-700 font-medium flex items-center gap-1">
-                  <svg class="w-3.5 h-3.5 text-emerald-600 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> مفعل حالياً
+                  <svg class="w-3.5 h-3.5 text-emerald-600 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${lActive}
                 </span>
               ` : `
-                <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition shadow-2xs flex items-center gap-1">
-                  <span>تفعيل للمكالمات</span>
+                <button type="button" onclick="activateProfileById(${p.id})" class="px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-medium transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                  <span>${lActivate}</span>
                 </button>
               `}
             </div>

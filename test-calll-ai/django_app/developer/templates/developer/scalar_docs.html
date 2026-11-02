@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if is_ar %}المساعد الصوتي الذكي | توثيق المطورين المباشر (Scalar API Reference){% else %}AI Voice Assistant | Developer API Reference (Scalar){% endif %}</title>
+  <title>{% if current_lang == "es" %}Asistente de Voz IA | Referencia de API (Scalar){% elif current_lang == "tr" %}Yapay Zeka Sesli Asistan | API Referansı (Scalar){% elif current_lang == "fr" %}Assistant Vocal IA | Référence API (Scalar){% elif current_lang == "de" %}KI-Sprachassistent | API-Referenz (Scalar){% elif current_lang == "en" %}AI Voice Assistant | API Reference (Scalar){% else %}المساعد الصوتي الذكي | توثيق واجهة برمجة التطبيقات (Scalar API Reference){% endif %}</title>
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -113,13 +113,13 @@
       <div class="flex items-center gap-3">
         <a href="/" class="flex items-center gap-2 text-brand-primary font-bold text-lg hover:opacity-90 transition">
           <span class="text-2xl">🎙️</span>
-          <span>{% if is_ar %}المساعد الصوتي الذكي{% else %}AI Voice Assistant{% endif %}</span>
+          <span>{% if current_lang == "es" %}Asistente de Voz IA{% elif current_lang == "tr" %}Yapay Zeka Sesli Asistan{% elif current_lang == "fr" %}Assistant Vocal IA{% elif current_lang == "de" %}KI-Sprachassistent{% elif current_lang == "en" %}AI Voice Assistant{% else %}المساعد الصوتي الذكي{% endif %}</span>
         </a>
         <span class="bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-xs px-2.5 py-0.5 rounded-full font-bold">
           Developer Voice API v1
         </span>
         <span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-          <span>⚡</span><span>{% if is_ar %}مشغّل Scalar التفاعلي{% else %}Scalar Interactive Docs{% endif %}</span>
+          <span>⚡</span><span>{% if current_lang == "es" %}Docs Interactivos Scalar{% elif current_lang == "tr" %}Scalar Etkileşimli Dokümanlar{% elif current_lang == "fr" %}Documentation Interactive Scalar{% elif current_lang == "de" %}Scalar Interaktive Dokumentation{% elif current_lang == "en" %}Scalar Interactive Docs{% else %}مشغّل Scalar التفاعلي{% endif %}</span>
         </span>
       </div>
 
@@ -221,7 +221,15 @@
   <script>
     function copyUserKey(key) {
       navigator.clipboard.writeText(key).then(() => {
-        const msg = "{% if is_ar %}تم نسخ مفتاح API بنجاح لاستخدامه في طلباتك وتطبيقاتك.{% else %}API key copied successfully for use in your applications.{% endif %}";
+        const copyMsgs = {
+        ar: 'تم نسخ مفتاح API بنجاح لاستخدامه في طلباتك وتطبيقاتك.',
+        en: 'API key copied successfully for use in your applications.',
+        tr: 'API anahtarı başarıyla kopyalandı.',
+        fr: 'Clé API copiée avec succès.',
+        de: 'API-Schlüssel erfolgreich kopiert.',
+        es: 'Clave API copiada con éxito.'
+      };
+      const msg = copyMsgs['{{ current_lang }}'] || copyMsgs.ar;
         alert(msg);
       });
     }
