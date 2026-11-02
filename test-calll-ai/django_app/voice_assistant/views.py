@@ -143,7 +143,16 @@ def logout_view(request):
 
 def landing_page_view(request):
     """Render the high-converting Concept 5 Landing Page with Typewriter Effect."""
-    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    raw_lang = (
+        request.GET.get('lang') or
+        request.GET.get('locale') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    user_lang = raw_lang if raw_lang in valid_langs else 'ar'
     context = {
         'user_lang': user_lang,
         'is_authenticated': request.user.is_authenticated,
@@ -159,7 +168,16 @@ def room_view(request):
     if not request.user.is_authenticated:
         return landing_page_view(request)
     from .chatwoot_service import generate_chatwoot_sso_url
-    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    raw_lang = (
+        request.GET.get('lang') or
+        request.GET.get('locale') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    user_lang = raw_lang if raw_lang in valid_langs else 'ar'
     sso_url = generate_chatwoot_sso_url(user=request.user, locale=user_lang)
     context = {
         'centrifugo_ws_url': settings.CENTRIFUGO_WS_URL,
@@ -174,7 +192,8 @@ def room_view(request):
         'client_id': '',
         'embed_client_id': '',
         'locale': user_lang,
-        'embed_locale': user_lang,
+        'embed_locale': '',
+        'is_embed': False,
     }
     return render(request, 'voice_assistant/room.html', context)
 
@@ -1118,7 +1137,16 @@ def crm_page_view(request):
 def chat_page_view(request):
     """Render dedicated Chatwoot Omnichannel Chat page with silent SSO & AI Settings."""
     from .chatwoot_service import generate_chatwoot_sso_url, get_captain_settings, get_or_create_tenant_chatwoot
-    user_lang = request.GET.get('lang') or request.COOKIES.get('app_lang') or 'ar'
+    raw_lang = (
+        request.GET.get('lang') or
+        request.GET.get('locale') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    user_lang = raw_lang if raw_lang in valid_langs else 'ar'
     cfg = get_or_create_tenant_chatwoot(request.user)
     account_id = cfg.account_id if cfg else 2
     assistant_id = cfg.assistant_id if cfg else 1
@@ -1143,7 +1171,16 @@ def api_chatwoot_sso_url(request):
     from .chatwoot_service import generate_chatwoot_sso_url, get_or_create_tenant_chatwoot
     cfg = get_or_create_tenant_chatwoot(request.user)
     account_id = cfg.account_id if cfg else 2
-    locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    raw_locale = (
+        request.GET.get('locale') or
+        request.GET.get('lang') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    locale = raw_locale if raw_locale in valid_langs else 'ar'
     url = generate_chatwoot_sso_url(user=request.user, account_id=account_id, locale=locale)
     return JsonResponse({"status": "success", "sso_url": url, "locale": locale, "account_id": account_id})
 
@@ -1840,7 +1877,16 @@ def embed_call_center_view(request, section=None):
 
     cfg = section_map[normalized_section]
     token_val = request.GET.get('token') or request.GET.get('key') or ''
-    locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    raw_locale = (
+        request.GET.get('locale') or
+        request.GET.get('lang') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    locale_val = raw_locale if raw_locale in valid_langs else 'ar'
     client_id_val = request.GET.get('client_id') or request.headers.get('X-Client-ID') or ''
 
     # Establish user session for cookie-enabled Ajax & iframe security
@@ -1936,7 +1982,16 @@ def embed_chat_hub_view(request):
         return resp
 
     token_val = request.GET.get('token') or request.GET.get('key') or ''
-    locale_val = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    raw_locale = (
+        request.GET.get('locale') or
+        request.GET.get('lang') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    locale_val = raw_locale if raw_locale in valid_langs else 'ar'
     client_id_val = request.GET.get('client_id') or request.headers.get('X-Client-ID') or ''
 
     # Establish user session for cookie-enabled Ajax & iframe security
@@ -1997,7 +2052,16 @@ def embed_chat_view(request):
         User = get_user_model()
         user = User.objects.filter(is_superuser=True).first() or User.objects.first()
 
-    req_locale = request.GET.get('locale') or request.GET.get('lang') or 'ar'
+    raw_req_locale = (
+        request.GET.get('locale') or
+        request.GET.get('lang') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    req_locale = raw_req_locale if raw_req_locale in valid_langs else 'ar'
     from .chatwoot_service import generate_chatwoot_sso_url, get_or_create_tenant_chatwoot
     cfg = get_or_create_tenant_chatwoot(user)
     account_id = cfg.account_id if cfg else 2

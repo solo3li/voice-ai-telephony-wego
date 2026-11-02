@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'ar' or not locale %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,15 +9,34 @@
   <script>
     window.EMBED_TOKEN = "{% firstof embed_token token '' %}";
     window.EMBED_CLIENT_ID = "{% firstof embed_client_id client_id '' %}";
-    window.EMBED_LOCALE = "{% firstof embed_locale locale 'ar' %}";
+    window.EMBED_LOCALE = "{% if is_embed %}{% firstof embed_locale locale '' %}{% endif %}";
+    window.IS_EMBED = {% if is_embed %}true{% else %}false{% endif %};
     (function() {
       var urlParams = new URLSearchParams(window.location ? window.location.search : '');
-      var paramLang = urlParams.get('lang') || urlParams.get('locale');
-      var winLang = window.EMBED_LOCALE;
+      var paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
       var valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
-      var chosen = (paramLang && valid.indexOf(paramLang.toLowerCase()) !== -1) ? paramLang.toLowerCase()
-                 : (winLang && valid.indexOf(winLang.toLowerCase()) !== -1) ? winLang.toLowerCase()
-                 : (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar');
+      var cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+      var cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+      var localLang = '';
+      try {
+        localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+      } catch(e) {}
+      var winLang = (window.EMBED_LOCALE || '').toLowerCase().trim();
+      var isEmbed = window.IS_EMBED || (window.parent && window.parent !== window);
+
+      var chosen = 'ar';
+      if (paramLang && valid.indexOf(paramLang) !== -1) {
+        chosen = paramLang;
+      } else if (isEmbed && winLang && valid.indexOf(winLang) !== -1) {
+        chosen = winLang;
+      } else if (localLang && valid.indexOf(localLang) !== -1) {
+        chosen = localLang;
+      } else if (cookieLang && valid.indexOf(cookieLang) !== -1) {
+        chosen = cookieLang;
+      } else if (winLang && valid.indexOf(winLang) !== -1) {
+        chosen = winLang;
+      }
+
       document.documentElement.lang = chosen;
       document.documentElement.dir = (chosen === 'ar') ? 'rtl' : 'ltr';
     })();
@@ -55,7 +74,16 @@
         if (typeof window.applyCommonLanguage === 'function') {
           window.applyCommonLanguage(lang);
         } else {
-          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          try {
+            localStorage.setItem('app_lang', lang);
+            localStorage.setItem('voice_app_lang', lang);
+          } catch(e) {}
+          try {
+            var cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+            document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+          } catch(e) {}
           var url = new URL(window.location.href);
           url.searchParams.set('locale', lang);
           window.location.href = url.toString();

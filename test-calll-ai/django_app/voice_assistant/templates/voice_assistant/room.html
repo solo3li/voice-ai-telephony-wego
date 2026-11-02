@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'ar' or not locale %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,15 +9,34 @@
   <script>
     window.EMBED_TOKEN = "{% firstof embed_token token '' %}";
     window.EMBED_CLIENT_ID = "{% firstof embed_client_id client_id '' %}";
-    window.EMBED_LOCALE = "{% firstof embed_locale locale 'ar' %}";
+    window.EMBED_LOCALE = "{% if is_embed %}{% firstof embed_locale locale '' %}{% endif %}";
+    window.IS_EMBED = {% if is_embed %}true{% else %}false{% endif %};
     (function() {
       var urlParams = new URLSearchParams(window.location ? window.location.search : '');
-      var paramLang = urlParams.get('lang') || urlParams.get('locale');
-      var winLang = window.EMBED_LOCALE;
+      var paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
       var valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
-      var chosen = (paramLang && valid.indexOf(paramLang.toLowerCase()) !== -1) ? paramLang.toLowerCase()
-                 : (winLang && valid.indexOf(winLang.toLowerCase()) !== -1) ? winLang.toLowerCase()
-                 : (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar');
+      var cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+      var cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+      var localLang = '';
+      try {
+        localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+      } catch(e) {}
+      var winLang = (window.EMBED_LOCALE || '').toLowerCase().trim();
+      var isEmbed = window.IS_EMBED || (window.parent && window.parent !== window);
+
+      var chosen = 'ar';
+      if (paramLang && valid.indexOf(paramLang) !== -1) {
+        chosen = paramLang;
+      } else if (isEmbed && winLang && valid.indexOf(winLang) !== -1) {
+        chosen = winLang;
+      } else if (localLang && valid.indexOf(localLang) !== -1) {
+        chosen = localLang;
+      } else if (cookieLang && valid.indexOf(cookieLang) !== -1) {
+        chosen = cookieLang;
+      } else if (winLang && valid.indexOf(winLang) !== -1) {
+        chosen = winLang;
+      }
+
       document.documentElement.lang = chosen;
       document.documentElement.dir = (chosen === 'ar') ? 'rtl' : 'ltr';
     })();
@@ -61,7 +80,16 @@
         if (typeof window.applyCommonLanguage === 'function') {
           window.applyCommonLanguage(lang);
         } else {
-          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          try {
+            localStorage.setItem('app_lang', lang);
+            localStorage.setItem('voice_app_lang', lang);
+          } catch(e) {}
+          try {
+            var cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+            document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+          } catch(e) {}
           var url = new URL(window.location.href);
           url.searchParams.set('locale', lang);
           window.location.href = url.toString();
@@ -3581,10 +3609,266 @@
         btn_delete_profile: "Delete Persona",
         btn_outbound_ai_call: "Outbound Phone Call (AI Dial)",
         switch_to: "العربية"
+      },
+      tr: {
+        app_title: "Yapay Zeka Sesli Asistan",
+        app_subtitle: "Enterprise Voice AI Platformu",
+        role_admin: "Süper Yönetici (Admin)",
+        btn_logout: "Çıkış Yap",
+        nav_voice: "Sesli Asistan Odası",
+        nav_personas: "Yapay Zeka Personaları ve Lehçeler",
+        nav_rag: "Bilgi Bankası (RAG)",
+        nav_callcenter: "Çağrı Merkezi ve Kuyruklar",
+        nav_telephony: "Telefoni ve Santral (PBX)",
+        nav_crm: "Müşteri Hafızası (CRM)",
+        nav_store: "MCP Mağazası ve Araçları",
+        nav_campaigns: "Arama Kampanyaları ve Kişiler",
+        nav_hours: "Çalışma Saatleri ve Takvim",
+        nav_chat: "Çok Kanallı Sohbet",
+        nav_billing: "Kullanım ve Faturalandırma",
+        nav_calls: "Çağrı Kayıtları (CDR)",
+        nav_partner: "Ortak ve SaaS Portalı",
+        nav_developer: "Geliştirici API'leri",
+        header_balance: "Bakiye:",
+        billing_title: "Kullanım ve Hesap Bakiyesi",
+        billing_subtitle: "Ön ödemeli cüzdan yönetimi ve dakika hesaplama",
+        billing_balance_title: "Mevcut Bakiye",
+        billing_btn_topup: "Bakiye Yükle",
+        billing_spent: "Toplam Harcanan",
+        billing_deposited: "Toplam Yüklenen",
+        billing_ledger_title: "Mali İşlem Kayıtları (Ledger)",
+        calls_title: "Çağrı Kayıtları (CDR)",
+        calls_subtitle: "Gelişmiş filtreleme ve analitikler ile tüm çağrı kayıtları",
+        calls_filter_direction: "Çağrı Yönü",
+        calls_filter_duration: "Çağrı Süresi",
+        calls_filter_date: "Tarih Aralığı:",
+        calls_stat_total: "Toplam Çağrı",
+        calls_stat_minutes: "Faturalandırılan Dakika",
+        calls_stat_cost: "Toplam Maliyet",
+        subtab_employees: "Dahili Hatlar ve Çalışanlar",
+        subtab_queues: "Çağrı Kuyrukları ve Gruplar",
+        subtab_outbound: "Dış Arama ve SIP Trunk",
+        subtab_pbx: "Issabel / Asterisk PBX Santral",
+        metric_calls: "Aktif Çağrılar",
+        metric_latency: "Yapay Zeka Yanıt Süresi",
+        metric_rag: "Bilgi İndeksi",
+        metric_rag_status: "Bağlı ve Güncel",
+        metric_queue: "Kuyruk Hazırlığı",
+        floating_hint: "Canlı sesli görüşme devam ediyor",
+        btn_full_room: "Ses Odası",
+        personas_title: "Personalar, Lehçeler ve Sesler Yönetimi",
+        personas_subtitle: "Canlı aramalar için aktif bir persona seçin veya tonlamayı özelleştirin",
+        personas_catalog: "Mevcut Yapay Zeka Personaları",
+        personas_click_hint: "Varsayılan yapmak için 'Aramalar İçin Etkinleştir'e tıklayın",
+        btn_new_persona: "Yeni Persona Oluştur",
+        studio_title: "Aktif Persona Stüdyosu",
+        studio_subtitle: "Yapay zeka ses personası (30 ses), rol ve yönergeleri düzenleyin",
+        label_selected_profile: "Geçerli Persona:",
+        field_gender_dialect: "Cinsiyet ve Lehçe",
+        field_google_voice: "Ses Karakteri",
+        field_persona_role: "Persona Rolü",
+        field_speaking_style: "Konuşma Tarzı ve Hızı",
+        field_custom_instructions: "Özel Yönergeler ve Talimatlar (İsteğe bağlı):",
+        btn_save_profile: "Kaydet ve Uygula",
+        btn_delete_profile: "Personayı Sil",
+        btn_outbound_ai_call: "Yapay Zeka Araması Yap",
+        switch_to: "Français"
+      },
+      fr: {
+        app_title: "Assistant Vocal IA Intelligent",
+        app_subtitle: "Plateforme IA Vocale d'Entreprise",
+        role_admin: "Super Administrateur",
+        btn_logout: "Déconnexion",
+        nav_voice: "Salle de l'Assistant Vocal",
+        nav_personas: "Personas IA et Dialectes",
+        nav_rag: "Base de Connaissances (RAG)",
+        nav_callcenter: "Centre d'Appels et Files d'Attente",
+        nav_telephony: "Téléphonie et PBX",
+        nav_crm: "Mémoire Client (CRM)",
+        nav_store: "Boutique d'Outils MCP",
+        nav_campaigns: "Campagnes d'Appels et Contacts",
+        nav_hours: "Horaires d'Ouverture et Calendrier",
+        nav_chat: "Chat Omnicanal",
+        nav_billing: "Facturation et Solde",
+        nav_calls: "Journal des Appels (CDR)",
+        nav_partner: "Partenaire et SaaS",
+        nav_developer: "API Développeurs",
+        header_balance: "Solde :",
+        billing_title: "Utilisation et Solde du Compte",
+        billing_subtitle: "Gestion de portefeuille prépayé avec facturation à la minute",
+        billing_balance_title: "Solde Disponible",
+        billing_btn_topup: "Recharger le Solde",
+        billing_spent: "Total Dépensé",
+        billing_deposited: "Total Rechargé",
+        billing_ledger_title: "Grand Livre Financier (Ledger)",
+        calls_title: "Détails des Appels (CDR)",
+        calls_subtitle: "Historique complet des appels avec filtres avancés et analyses",
+        calls_filter_direction: "Direction",
+        calls_filter_duration: "Durée",
+        calls_filter_date: "Période :",
+        calls_stat_total: "Total des Appels",
+        calls_stat_minutes: "Minutes Facturées",
+        calls_stat_cost: "Coût Total",
+        subtab_employees: "Collaborateurs et Extensions",
+        subtab_queues: "Files d'Attente et Routage",
+        subtab_outbound: "Appels Sortants et Ligne SIP",
+        subtab_pbx: "Lignes PBX Issabel / Asterisk",
+        metric_calls: "Appels Actifs",
+        metric_latency: "Latence de l'IA",
+        metric_rag: "Index de Connaissances",
+        metric_rag_status: "En ligne et indexé",
+        metric_queue: "Disponibilité des Files",
+        floating_hint: "Session vocale en cours",
+        btn_full_room: "Salle Vocale",
+        personas_title: "Gestion des Personas IA, Dialectes et Voix",
+        personas_subtitle: "Sélectionnez un persona pour les appels ou personnalisez la voix et les instructions",
+        personas_catalog: "Personas IA Disponibles",
+        personas_click_hint: "Cliquez sur 'Activer pour les Appels' pour définir par défaut",
+        btn_new_persona: "Nouveau Persona IA",
+        studio_title: "Studio d'Édition du Persona Actif",
+        studio_subtitle: "Ajustez les voix (30 personas), les rôles et les instructions",
+        label_selected_profile: "Persona Actuel :",
+        field_gender_dialect: "Genre et Dialecte",
+        field_google_voice: "Voix du Persona",
+        field_persona_role: "Rôle du Persona",
+        field_speaking_style: "Style et Rythme de Parole",
+        field_custom_instructions: "Instructions Personnalisées (Optionnel) :",
+        btn_save_profile: "Enregistrer et Appliquer",
+        btn_delete_profile: "Supprimer le Persona",
+        btn_outbound_ai_call: "Appel Vocal IA Sortant",
+        switch_to: "Deutsch"
+      },
+      de: {
+        app_title: "Smarter KI-Sprachassistent",
+        app_subtitle: "Enterprise Sprach-KI-Plattform",
+        role_admin: "Super-Administrator",
+        btn_logout: "Abmelden",
+        nav_voice: "Sprachassistenten-Raum",
+        nav_personas: "KI-Personas & Dialekte",
+        nav_rag: "Wissensdatenbank (RAG)",
+        nav_callcenter: "Callcenter & Warteschlangen",
+        nav_telephony: "Telefonie & Telefonanlage",
+        nav_crm: "Kunden-Gedächtnis (CRM)",
+        nav_store: "MCP-Tools-Store",
+        nav_campaigns: "Anrufkampagnen & Kontakte",
+        nav_hours: "Geschäftszeiten & Zeitplan",
+        nav_chat: "Omnichannel-Chat",
+        nav_billing: "Abrechnung & Guthaben",
+        nav_calls: "Anrufprotokolle (CDR)",
+        nav_partner: "Partner & SaaS",
+        nav_developer: "Entwickler-APIs",
+        header_balance: "Guthaben:",
+        billing_title: "Nutzung & Kontostand",
+        billing_subtitle: "Prepaid-Guthabenverwaltung mit minutengenauer Abrechnung",
+        billing_balance_title: "Verfügbares Guthaben",
+        billing_btn_topup: "Guthaben aufladen",
+        billing_spent: "Gesamtausgaben",
+        billing_deposited: "Gesamteinzahlung",
+        billing_ledger_title: "Finanzbuchhaltung (Ledger)",
+        calls_title: "Anrufdetails (CDR)",
+        calls_subtitle: "Vollständiges Anrufprotokoll mit erweiterten Filtern und Analysen",
+        calls_filter_direction: "Richtung",
+        calls_filter_duration: "Dauer",
+        calls_filter_date: "Zeitraum:",
+        calls_stat_total: "Anrufe Gesamt",
+        calls_stat_minutes: "Abgerechnete Minuten",
+        calls_stat_cost: "Gesamtkosten",
+        subtab_employees: "Mitarbeiter & Durchwahlen",
+        subtab_queues: "Warteschlangen & Routing",
+        subtab_outbound: "Ausgehende Anrufe & SIP-Trunk",
+        subtab_pbx: "Issabel / Asterisk Telefonanlagen",
+        metric_calls: "Aktive Anrufe",
+        metric_latency: "KI-Antwortzeit",
+        metric_rag: "Wissensindex",
+        metric_rag_status: "Online & indexiert",
+        metric_queue: "Warteschlangen-Bereitschaft",
+        floating_hint: "Live-Sprachsitzung aktiv",
+        btn_full_room: "Sprachraum",
+        personas_title: "KI-Personas, Dialekte & Stimmenverwaltung",
+        personas_subtitle: "Wählen Sie eine aktive Persona für Anrufe oder passen Sie Stimme und Anweisungen an",
+        personas_catalog: "Verfügbare KI-Personas",
+        personas_click_hint: "Klicken Sie auf 'Für Anrufe aktivieren'",
+        btn_new_persona: "Neue KI-Persona",
+        studio_title: "Studio für aktive Persona",
+        studio_subtitle: "Stimmen (30 Personas), Rollen und Prompts feineinstellen",
+        label_selected_profile: "Aktuelle Persona:",
+        field_gender_dialect: "Geschlecht & Dialekt",
+        field_google_voice: "Stimmencharakter",
+        field_persona_role: "Persona-Rolle",
+        field_speaking_style: "Sprechstil & Tempo",
+        field_custom_instructions: "Benutzerdefinierte Anweisungen (Optional):",
+        btn_save_profile: "Speichern & Anwenden",
+        btn_delete_profile: "Persona löschen",
+        btn_outbound_ai_call: "Ausgehender KI-Anruf",
+        switch_to: "Español"
+      },
+      es: {
+        app_title: "Asistente de Voz IA Inteligente",
+        app_subtitle: "Plataforma de Voz IA Empresarial",
+        role_admin: "Superadministrador",
+        btn_logout: "Cerrar Sesión",
+        nav_voice: "Sala del Asistente de Voz",
+        nav_personas: "Personas IA y Dialectos",
+        nav_rag: "Base de Conocimiento (RAG)",
+        nav_callcenter: "Centro de Llamadas y Colas",
+        nav_telephony: "Telefonía y Centralita (PBX)",
+        nav_crm: "Memoria del Cliente (CRM)",
+        nav_store: "Tienda y Herramientas MCP",
+        nav_campaigns: "Campañas de Llamadas y Contactos",
+        nav_hours: "Horarios de Atención y Calendario",
+        nav_chat: "Chat Omnicanal",
+        nav_billing: "Facturación y Saldo",
+        nav_calls: "Registro de Llamadas (CDR)",
+        nav_partner: "Socios y SaaS",
+        nav_developer: "APIs para Desarrolladores",
+        header_balance: "Saldo:",
+        billing_title: "Uso y Saldo de la Cuenta",
+        billing_subtitle: "Gestión de saldo prepago con cálculo estricto por minuto",
+        billing_balance_title: "Saldo Disponible",
+        billing_btn_topup: "Recargar Saldo",
+        billing_spent: "Gasto Total",
+        billing_deposited: "Depósito Total",
+        billing_ledger_title: "Libro Mayor Financiero (Ledger)",
+        calls_title: "Detalle de Llamadas (CDR)",
+        calls_subtitle: "Registro integral de llamadas con filtros avanzados y análisis",
+        calls_filter_direction: "Dirección",
+        calls_filter_duration: "Duración",
+        calls_filter_date: "Rango de Fechas:",
+        calls_stat_total: "Llamadas Totales",
+        calls_stat_minutes: "Minutos Facturados",
+        calls_stat_cost: "Costo Total",
+        subtab_employees: "Empleados y Extensiones",
+        subtab_queues: "Colas de Llamadas y Grupos",
+        subtab_outbound: "Llamadas Salientes y Enlace SIP",
+        subtab_pbx: "Centralitas Issabel / Asterisk",
+        metric_calls: "Llamadas Activas",
+        metric_latency: "Latencia de Respuesta IA",
+        metric_rag: "Índice de Conocimiento",
+        metric_rag_status: "Conectado y Actualizado",
+        metric_queue: "Disponibilidad de Colas",
+        floating_hint: "Llamada de voz en vivo activa",
+        btn_full_room: "Sala de Voz",
+        personas_title: "Gestión de Personas IA, Dialectos y Voces",
+        personas_subtitle: "Seleccione una persona activa para llamadas o personalice voz e instrucciones",
+        personas_catalog: "Personas IA Disponibles",
+        personas_click_hint: "Haga clic en 'Activar para Llamadas'",
+        btn_new_persona: "Nueva Persona IA",
+        studio_title: "Estudio de Edición de Persona Activa",
+        studio_subtitle: "Ajuste las voces (30 personas), roles e instrucciones",
+        label_selected_profile: "Persona Actual:",
+        field_gender_dialect: "Género y Dialecto",
+        field_google_voice: "Voz de la Persona",
+        field_persona_role: "Rol de la Persona",
+        field_speaking_style: "Estilo y Ritmo de Habla",
+        field_custom_instructions: "Instrucciones Personalizadas (Opcional):",
+        btn_save_profile: "Guardar y Aplicar a Llamadas",
+        btn_delete_profile: "Eliminar Persona",
+        btn_outbound_ai_call: "Llamada Saliente de IA",
+        switch_to: "العربية"
       }
     };
 
-    let currentLanguage = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+    let currentLanguage = (document.documentElement && document.documentElement.lang) || localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
     let activeTabId = 'voice';
 
     function applyLanguage(lang) {
@@ -3596,6 +3880,12 @@
       } else {
         localStorage.setItem('app_lang', lang);
         localStorage.setItem('voice_app_lang', lang);
+        try {
+          const cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+          document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+          document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+          document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+        } catch(e) {}
         const isRtl = lang === 'ar';
         document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
         document.documentElement.lang = lang;
@@ -3603,12 +3893,9 @@
       const langDict = (window.APP_I18N && window.APP_I18N[lang]) || (I18N && I18N[lang]) || {};
       const langText = document.getElementById('lang-text');
       if (langText) {
+        const langLabels = { 'ar': 'العربية', 'en': 'English', 'tr': 'Türkçe', 'fr': 'Français', 'de': 'Deutsch', 'es': 'Español' };
         const langObj = window.SUPPORTED_LANGUAGES && window.SUPPORTED_LANGUAGES.find(l => l.code === lang);
-        if (langObj) {
-          langText.innerText = langObj.label;
-        } else {
-          langText.innerText = (lang === 'ar' ? 'العربية' : 'English');
-        }
+        langText.innerText = (langObj && langObj.label) || langLabels[lang] || lang.toUpperCase();
       }
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -3623,13 +3910,15 @@
       if (typeof window.toggleLanguage === 'function') {
         window.toggleLanguage();
       } else {
-        const nextLang = currentLanguage === 'ar' ? 'en' : 'ar';
+        const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+        const idx = valid.indexOf(currentLanguage);
+        const nextLang = (idx === -1 || idx === valid.length - 1) ? valid[0] : valid[idx + 1];
         applyLanguage(nextLang);
       }
     }
 
     window.addEventListener('appLanguageChanged', function(e) {
-      if (e.detail && e.detail.lang && e.detail.lang !== currentLanguage) {
+      if (e.detail && e.detail.lang) {
         currentLanguage = e.detail.lang;
         updateHeaderTitle();
         const roomFrame = document.getElementById('room-chatwoot-frame');

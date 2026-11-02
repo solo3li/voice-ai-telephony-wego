@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'ar' or not locale %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,9 +9,27 @@
   <!-- Early Language & Direction Sync -->
   <script>
     (function() {
-      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
-      document.documentElement.lang = savedLang;
-      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+      var urlParams = new URLSearchParams(window.location ? window.location.search : '');
+      var paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
+      var valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      var cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+      var cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+      var localLang = '';
+      try {
+        localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+      } catch(e) {}
+
+      var chosen = 'ar';
+      if (paramLang && valid.indexOf(paramLang) !== -1) {
+        chosen = paramLang;
+      } else if (localLang && valid.indexOf(localLang) !== -1) {
+        chosen = localLang;
+      } else if (cookieLang && valid.indexOf(cookieLang) !== -1) {
+        chosen = cookieLang;
+      }
+
+      document.documentElement.lang = chosen;
+      document.documentElement.dir = (chosen === 'ar') ? 'rtl' : 'ltr';
     })();
   </script>
 
@@ -43,7 +61,16 @@
         if (typeof window.applyCommonLanguage === 'function') {
           window.applyCommonLanguage(lang);
         } else {
-          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          try {
+            localStorage.setItem('app_lang', lang);
+            localStorage.setItem('voice_app_lang', lang);
+          } catch(e) {}
+          try {
+            var cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+            document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+          } catch(e) {}
           var url = new URL(window.location.href);
           url.searchParams.set('locale', lang);
           window.location.href = url.toString();
@@ -515,6 +542,186 @@
         footer_rights: "All Rights Reserved ©",
         transfer_msg: '"Transferring your call to a customer representative... Please stay on the line."',
         hangup_msg: '"Thank you for calling Smart Voice AI. Have a wonderful day!"'
+      },
+      tr: {
+        page_title: "Yapay Zeka Sesli Asistan | Enterprise Voice AI",
+        app_title: "Yapay Zeka Sesli Asistan",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "Ana Sayfa",
+        nav_telephony: "FreeSWITCH Santral",
+        nav_omnichannel: "Birleşik Mesaj Kutusu",
+        nav_api: "Geliştirici API'leri",
+        nav_pricing: "Planlar ve Fiyatlar",
+        btn_login: "Giriş Yap",
+        btn_start_free: "Ücretsiz Başlayın",
+        btn_dashboard: "Kontrol Paneli",
+        hero_badge: "Telefon ve Sohbeti Yapay Zeka ile Birleştiren Gelişmiş Platform",
+        hero_title_prefix: "Telefon santralinizi dönüştürün:",
+        hero_desc: "Arayanları anında yanıtlayan, randevuları oluşturan, RAG bilgi bankası ile soruları çözen ve saniyeler içinde WhatsApp onayı gönderen otonom sesli yapay zeka.",
+        feat_sip: "Kurumsal SIP Santral (Trunk & DID)",
+        feat_dialects: "Tüm dillerde ve lehçelerde gerçekçi insan sesi",
+        feat_omni: "WhatsApp, Telegram ve Web Chat Birleşik Kutusu",
+        feat_whitelabel: "%100 White-Label Hazır",
+        btn_try_free: "Hemen Ücretsiz Deneyin",
+        btn_listen_demo: "Canlı Yapay Zeka Görüşmesini Dinleyin",
+        stat_latency: "Ultra Düşük Gecikme",
+        stat_accuracy: "Yüksek Anlama Doğruluğu",
+        stat_wait: "Arayan Bekleme Süresi",
+        widget_room_title: "Canlı Sesli Görüşme Stüdyosu",
+        widget_caller_name: "Ahmet Yılmaz (VIP Müşteri)",
+        widget_caller_sub: "+90 532 123 4567 • İstanbul",
+        widget_call_active: "Görüşme Sürüyor • 01:15",
+        widget_voice_label: "Akıllı Asistan Sesi (Canlı Yapay Zeka)",
+        widget_speech_text: '"Hoş geldiniz Sayın Ahmet! Randevunuz başarıyla oluşturuldu ve onay bilgileri WhatsApp üzerinden iletildi."',
+        widget_dtmf_title: "Etkileşimli Tuş Takımı (DTMF)",
+        btn_transfer: "Temsilciye Aktar",
+        btn_hangup: "Çağrıyı Sonlandır",
+        sec_features_title: "Kurumsal İletişim İçin İhtiyacınız Olan Her Şey",
+        sec_features_sub: "Kesintisiz çalışma için tasarlanmış kurumsal bulut altyapısı",
+        card1_title: "Kurumsal FreeSWITCH & SIP Santral",
+        card1_desc: "Gelen ve giden çağrı yönlendirme, mod_callcenter kuyrukları ve yerel/uluslararası operatör entegrasyonu.",
+        card2_title: "Çok Kanallı Chatwoot Merkezi",
+        card2_desc: "Resmi WhatsApp Cloud hatları, canlı web sohbeti ve sosyal medya kanalları tek merkezde.",
+        card3_title: "Müşteri Hafızası ve RAG Bilgi Bankası",
+        card3_desc: "Önceki müşteri geçmişi ve yüklenen belgelerle anlık, doğru ve eksiksiz sesli yanıt.",
+        footer_rights: "Tüm Hakları Saklıdır ©",
+        transfer_msg: '"Aramanız müşteri temsilcisine aktarılıyor... Lütfen hatta kalınız."',
+        hangup_msg: '"Akıllı Sesli Asistan\'ı aradığınız için teşekkür ederiz. İyi günler dileriz!"'
+      },
+      fr: {
+        page_title: "Assistant Vocal IA Intelligent | Enterprise Voice AI",
+        app_title: "Assistant Vocal IA Intelligent",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "Accueil",
+        nav_telephony: "Standard FreeSWITCH",
+        nav_omnichannel: "Boîte de Réception Unifiée",
+        nav_api: "API Développeurs",
+        nav_pricing: "Tarifs & Forfaits",
+        btn_login: "Connexion",
+        btn_start_free: "Démarrer Gratuitement",
+        btn_dashboard: "Tableau de Bord",
+        hero_badge: "Plateforme unifiée combinant téléphonie et chat avec une IA avancée",
+        hero_title_prefix: "Transformez votre téléphonie en :",
+        hero_desc: "Des agents IA vocaux autonomes qui répondent instantanément, prennent des rendez-vous, résolvent les questions grâce au RAG et envoient des confirmations WhatsApp en quelques secondes.",
+        feat_sip: "Standard Téléphonique SIP d'Entreprise (Trunks & DID)",
+        feat_dialects: "Voix ultra-réaliste dans toutes les langues",
+        feat_omni: "Boîte unique WhatsApp, Telegram et Chat web",
+        feat_whitelabel: "100% Prêt pour la Marque Blanche (White-Label)",
+        btn_try_free: "Essai Gratuit Immédiat",
+        btn_listen_demo: "Écouter un Appel IA en Direct",
+        stat_latency: "Latence Ultra-Faible",
+        stat_accuracy: "Précision de Compréhension",
+        stat_wait: "Attente Client",
+        widget_room_title: "Studio d'Appel Vocal en Direct",
+        widget_caller_name: "Jean Dupont (Client VIP)",
+        widget_caller_sub: "+33 6 12 34 56 78 • Paris",
+        widget_call_active: "En cours • 01:15",
+        widget_voice_label: "Voix de l'Assistant Intelligent (IA Directe)",
+        widget_speech_text: '"Bienvenue Monsieur Dupont ! Votre rendez-vous est confirmé et vous venez de recevoir les détails par WhatsApp."',
+        widget_dtmf_title: "Clavier Numéroteur Interactif (DTMF)",
+        btn_transfer: "Transférer à un Conseiller",
+        btn_hangup: "Raccrocher",
+        sec_features_title: "Tout ce dont vous avez besoin pour vos télécommunications",
+        sec_features_sub: "Infrastructure cloud haute performance sans interruption de service",
+        card1_title: "Standard Téléphonique FreeSWITCH & SIP",
+        card1_desc: "Routage complet des appels entrants et sortants, files mod_callcenter et interconnexion opérateurs.",
+        card2_title: "Centre Omnicanal Chatwoot",
+        card2_desc: "Centralisation des canaux WhatsApp Cloud, chat en direct et réseaux sociaux.",
+        card3_title: "Mémoire Client et Connaissances RAG",
+        card3_desc: "Synchronisation de l'historique client et de vos documents pour des réponses vocales immédiates.",
+        footer_rights: "Tous Droits Réservés ©",
+        transfer_msg: '"Votre appel est en cours de transfert vers un conseiller... Veuillez patienter en ligne."',
+        hangup_msg: '"Merci d\'avoir contacté l\'Assistant Vocal Intelligent. Passez une excellente journée !"'
+      },
+      de: {
+        page_title: "Smarter KI-Sprachassistent | Enterprise Voice AI",
+        app_title: "Smarter KI-Sprachassistent",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "Startseite",
+        nav_telephony: "FreeSWITCH Telefonanlage",
+        nav_omnichannel: "Zentraler Posteingang",
+        nav_api: "Entwickler-APIs",
+        nav_pricing: "Preise & Tarife",
+        btn_login: "Anmelden",
+        btn_start_free: "Kostenlos starten",
+        btn_dashboard: "Dashboard",
+        hero_badge: "Plattform, die Telefonie und Chat mit fortschrittlicher KI vereint",
+        hero_title_prefix: "Verwandeln Sie Ihre Telefonanlage in:",
+        hero_desc: "Autonome KI-Sprachagenten, die Anrufer sofort bedienen, Termine vereinbaren, Fragen per RAG beantworten und WhatsApp-Bestätigungen in Sekundenschnelle versenden.",
+        feat_sip: "Enterprise SIP Telefonanlage (Trunks & DIDs)",
+        feat_dialects: "Realistische menschliche Stimme in allen Sprachen",
+        feat_omni: "Einheitlicher Posteingang für WhatsApp, Telegram & Chat",
+        feat_whitelabel: "100% White-Label fähig",
+        btn_try_free: "Jetzt kostenlos testen",
+        btn_listen_demo: "Live-KI-Anruf anhören",
+        stat_latency: "Extrem geringe Latenz",
+        stat_accuracy: "Hohe Sprachgenauigkeit",
+        stat_wait: "Wartezeit für Kunden",
+        widget_room_title: "Live-Sprachanrufstudio",
+        widget_caller_name: "Michael Weber (VIP-Kunde)",
+        widget_caller_sub: "+49 170 1234567 • Berlin",
+        widget_call_active: "Aktiv • 01:15",
+        widget_voice_label: "Stimme des KI-Assistenten (Echtzeit-KI)",
+        widget_speech_text: '"Guten Tag Herr Weber! Ihr Wartungstermin wurde bestätigt. Eine Bestätigung erhalten Sie per WhatsApp."',
+        widget_dtmf_title: "Interaktives Tastenfeld (DTMF)",
+        btn_transfer: "Weiterleiten",
+        btn_hangup: "Auflegen",
+        sec_features_title: "Alles, was Sie für moderne Unternehmenstelefonie brauchen",
+        sec_features_sub: "Ausfallsichere Cloud-Infrastruktur für maximale Zuverlässigkeit",
+        card1_title: "FreeSWITCH & SIP PBX für Unternehmen",
+        card1_desc: "Vollständiges Anruf-Routing, mod_callcenter Warteschlangen und SIP-Trunk-Anbindung.",
+        card2_title: "Omnichannel Chatwoot Hub",
+        card2_desc: "Verbinden Sie offizielle WhatsApp Cloud Konten, Live-Chat und soziale Kanäle.",
+        card3_title: "Kundengedächtnis & RAG-Wissen",
+        card3_desc: "Echtzeit-Synchronisierung mit Kundenhistorie und Dokumenten für präzise Sprachlösungen.",
+        footer_rights: "Alle Rechte vorbehalten ©",
+        transfer_msg: '"Ihr Anruf wird an einen Kundendienstmitarbeiter weitergeleitet... Bitte bleiben Sie in der Leitung."',
+        hangup_msg: '"Vielen Dank für Ihren Anruf beim Smart Voice Assistenten. Einen schönen Tag noch!"'
+      },
+      es: {
+        page_title: "Asistente de Voz IA Inteligente | Enterprise Voice AI",
+        app_title: "Asistente de Voz IA Inteligente",
+        app_subtitle: "Enterprise Voice AI Suite",
+        nav_home: "Inicio",
+        nav_telephony: "Centralita FreeSWITCH",
+        nav_omnichannel: "Bandeja Unificada",
+        nav_api: "APIs para Desarrolladores",
+        nav_pricing: "Planes y Precios",
+        btn_login: "Iniciar Sesión",
+        btn_start_free: "Comenzar Gratis",
+        btn_dashboard: "Panel de Control",
+        hero_badge: "Plataforma avanzada que une telefonía y chat con inteligencia artificial",
+        hero_title_prefix: "Transforme su centralita telefónica en:",
+        hero_desc: "Agentes de voz con IA autónomos que responden a sus llamadas al instante, reservan citas, resuelven dudas con RAG y envían confirmaciones de WhatsApp en segundos sin esperas.",
+        feat_sip: "Centralita SIP Empresarial (Trunks y DIDs)",
+        feat_dialects: "Voz humana hiperrealista en todos los idiomas y acentos",
+        feat_omni: "Bandeja unificada de WhatsApp, Telegram y Chat Web",
+        feat_whitelabel: "100% Marca Blanca (White-Label)",
+        btn_try_free: "Pruébelo Gratis Ahora",
+        btn_listen_demo: "Escuchar Llamada de IA en Vivo",
+        stat_latency: "Latencia Ultrabaja",
+        stat_accuracy: "Precisión de Comprensión",
+        stat_wait: "Tiempo de Espera",
+        widget_room_title: "Estudio de Llamadas de Voz en Vivo",
+        widget_caller_name: "Carlos Mendoza (Cliente VIP)",
+        widget_caller_sub: "+34 612 345 678 • Madrid",
+        widget_call_active: "Activa • 01:15",
+        widget_voice_label: "Voz del Asistente IA (IA en Directo)",
+        widget_speech_text: '"¡Bienvenido Sr. Carlos! Su cita de mantenimiento ha sido confirmada y ha recibido los detalles por WhatsApp."',
+        widget_dtmf_title: "Teclado Interactivo (DTMF)",
+        btn_transfer: "Transferir a Agente",
+        btn_hangup: "Finalizar Llamada",
+        sec_features_title: "Todo lo que necesita para su telefonía empresarial",
+        sec_features_sub: "Infraestructura en la nube de nivel operador diseñada para cero interrupciones",
+        card1_title: "Centralita FreeSWITCH y SIP Empresarial",
+        card1_desc: "Control integral de rutas entrantes y salientes, colas mod_callcenter e integración con cualquier operador.",
+        card2_title: "Centro Omnicanal Chatwoot",
+        card2_desc: "Integre canales oficiales de WhatsApp Cloud, chat web y redes sociales.",
+        card3_title: "Memoria del Cliente y Conocimiento RAG",
+        card3_desc: "Sincronización en tiempo real con el historial del cliente y sus documentos para respuestas instantáneas.",
+        footer_rights: "Todos los derechos reservados ©",
+        transfer_msg: '"Transfiriendo su llamada a un representante de atención al cliente... Por favor, manténgase en la línea."',
+        hangup_msg: '"¡Gracias por comunicarse con el Asistente de Voz Inteligente. Que tenga un excelente día!"'
       }
     };
 
@@ -604,9 +811,47 @@
 
     // 3. LANGUAGE SWITCHING & DOM UPDATES
     function getCurrentLang() {
-      const saved = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      const urlParams = new URLSearchParams(window.location ? window.location.search : '');
+      const paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
+      const cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+      const cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+      let localLang = '';
+      try {
+        localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+      } catch(e) {}
       const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
-      return valid.includes(saved) ? saved : 'ar';
+      if (paramLang && valid.includes(paramLang)) return paramLang;
+      if (localLang && valid.includes(localLang)) return localLang;
+      if (cookieLang && valid.includes(cookieLang)) return cookieLang;
+      return (document.documentElement && document.documentElement.lang) || 'ar';
+    }
+
+    function syncLandingSpecificLanguage(lang) {
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      if (!valid.includes(lang)) lang = 'ar';
+      const dict = (window.APP_I18N && window.APP_I18N[lang]) || (LANDING_I18N[lang] || LANDING_I18N.ar);
+      if (dict && dict.page_title) {
+        document.title = dict.page_title;
+      }
+
+      // Sync data-i18n elements
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict && dict[key]) {
+          el.innerText = dict[key];
+        }
+      });
+
+      // Update lang text in dropdown if present
+      const langText = document.getElementById('lang-text');
+      if (langText) {
+        const langLabels = { 'ar': 'العربية', 'en': 'English', 'tr': 'Türkçe', 'fr': 'Français', 'de': 'Deutsch', 'es': 'Español' };
+        const langObj = window.SUPPORTED_LANGUAGES && window.SUPPORTED_LANGUAGES.find(l => l.code === lang);
+        langText.innerText = (langObj && langObj.label) || langLabels[lang] || lang.toUpperCase();
+      }
+
+      // Restart typewriter in current language
+      startTypewriter(lang);
     }
 
     function applyLandingLanguage(lang) {
@@ -616,18 +861,22 @@
       document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
       document.documentElement.lang = lang;
 
+      try {
+        localStorage.setItem('app_lang', lang);
+        localStorage.setItem('voice_app_lang', lang);
+      } catch(e) {}
+      try {
+        const cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+        document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+        document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+        document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+      } catch(e) {}
+
       if (typeof window.applyCommonLanguage === 'function') {
         window.applyCommonLanguage(lang);
+      } else {
+        syncLandingSpecificLanguage(lang);
       }
-
-      // Update document title if present
-      const dict = (window.APP_I18N && window.APP_I18N[lang]) || (LANDING_I18N[lang] || LANDING_I18N.ar);
-      if (dict && dict.page_title) {
-        document.title = dict.page_title;
-      }
-
-      // Restart typewriter in current language
-      startTypewriter(lang);
     }
 
     function toggleAppLanguage() {
@@ -635,20 +884,24 @@
         window.toggleLanguage();
       } else {
         const current = getCurrentLang();
-        const next = (current === 'ar') ? 'en' : 'ar';
+        const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+        const idx = valid.indexOf(current);
+        const next = (idx === -1 || idx === valid.length - 1) ? valid[0] : valid[idx + 1];
         applyLandingLanguage(next);
       }
     }
 
     window.addEventListener('appLanguageChanged', function(e) {
       if (e.detail && e.detail.lang) {
-        startTypewriter(e.detail.lang);
+        syncLandingSpecificLanguage(e.detail.lang);
       }
     });
 
     // Initialize Language on Load
     document.addEventListener('DOMContentLoaded', function() {
-      applyLandingLanguage(getCurrentLang());
+      if (typeof window.applyCommonLanguage !== 'function') {
+        applyLandingLanguage(getCurrentLang());
+      }
     });
 
     // 4. DIALPAD SIMULATION (Beep & Display)
@@ -736,15 +989,15 @@
     function simulateTransfer() {
       const bubble = document.getElementById('agent-speech-bubble');
       const lang = getCurrentLang();
-      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
-      if (bubble) bubble.textContent = dict.transfer_msg;
+      const dict = (window.APP_I18N && window.APP_I18N[lang]) || (LANDING_I18N[lang] || LANDING_I18N.ar);
+      if (bubble) bubble.textContent = dict.transfer_msg || LANDING_I18N.ar.transfer_msg;
     }
 
     function simulateHangup() {
       const bubble = document.getElementById('agent-speech-bubble');
       const lang = getCurrentLang();
-      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
-      if (bubble) bubble.textContent = dict.hangup_msg;
+      const dict = (window.APP_I18N && window.APP_I18N[lang]) || (LANDING_I18N[lang] || LANDING_I18N.ar);
+      if (bubble) bubble.textContent = dict.hangup_msg || LANDING_I18N.ar.hangup_msg;
     }
   </script>
 

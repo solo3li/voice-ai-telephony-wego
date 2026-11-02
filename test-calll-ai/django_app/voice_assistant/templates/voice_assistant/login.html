@@ -1,14 +1,32 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ locale|default:'ar' }}" dir="{% if locale == 'ar' or not locale %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script>
     (function() {
-      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
-      document.documentElement.lang = savedLang;
-      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+      var urlParams = new URLSearchParams(window.location ? window.location.search : '');
+      var paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
+      var valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      var cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+      var cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+      var localLang = '';
+      try {
+        localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+      } catch(e) {}
+
+      var chosen = 'ar';
+      if (paramLang && valid.indexOf(paramLang) !== -1) {
+        chosen = paramLang;
+      } else if (localLang && valid.indexOf(localLang) !== -1) {
+        chosen = localLang;
+      } else if (cookieLang && valid.indexOf(cookieLang) !== -1) {
+        chosen = cookieLang;
+      }
+
+      document.documentElement.lang = chosen;
+      document.documentElement.dir = (chosen === 'ar') ? 'rtl' : 'ltr';
     })();
   </script>
   <title data-i18n="login_page_title">تسجيل الدخول | المساعد الصوتي الذكي Enterprise Voice AI</title>
@@ -41,7 +59,16 @@
         if (typeof window.applyCommonLanguage === 'function') {
           window.applyCommonLanguage(lang);
         } else {
-          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          try {
+            localStorage.setItem('app_lang', lang);
+            localStorage.setItem('voice_app_lang', lang);
+          } catch(e) {}
+          try {
+            var cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+            document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+            document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+          } catch(e) {}
           var url = new URL(window.location.href);
           url.searchParams.set('locale', lang);
           window.location.href = url.toString();
@@ -84,35 +111,35 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
           </svg>
-          <span id="lang-text" class="text-xs font-medium">العربية</span>
+          <span id="lang-text" class="text-xs font-medium">{% if locale == 'en' %}English{% elif locale == 'tr' %}Türkçe{% elif locale == 'fr' %}Français{% elif locale == 'de' %}Deutsch{% elif locale == 'es' %}Español{% else %}العربية{% endif %}</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
         <div id="login-lang-menu" class="hidden absolute end-0 mt-1.5 w-40 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 transition-all">
-          <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'ar' or not locale %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale and locale != 'ar' %}hidden{% endif %}">✓</span>
           </button>
-          <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'en' %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale != 'en' %}hidden{% endif %}">✓</span>
           </button>
-          <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'tr' %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale != 'tr' %}hidden{% endif %}">✓</span>
           </button>
-          <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'fr' %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale != 'fr' %}hidden{% endif %}">✓</span>
           </button>
-          <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'de' %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale != 'de' %}hidden{% endif %}">✓</span>
           </button>
-          <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+          <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer {% if locale == 'es' %}bg-violet-50 text-[#7c3aed] font-bold{% endif %}">
             <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
-            <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            <span class="lang-check text-[#7c3aed] font-bold text-xs {% if locale != 'es' %}hidden{% endif %}">✓</span>
           </button>
         </div>
       </div>

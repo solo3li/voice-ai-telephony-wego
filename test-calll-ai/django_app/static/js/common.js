@@ -8929,6 +8929,12 @@ function getI18nText(key, lang) {
   if (APP_I18N[l] && APP_I18N[l][key] !== undefined) {
     return APP_I18N[l][key];
   }
+  if (typeof window !== 'undefined' && window.LANDING_I18N && window.LANDING_I18N[l] && window.LANDING_I18N[l][key] !== undefined) {
+    return window.LANDING_I18N[l][key];
+  }
+  if (typeof window !== 'undefined' && window.PAGE_I18N && window.PAGE_I18N[l] && window.PAGE_I18N[l][key] !== undefined) {
+    return window.PAGE_I18N[l][key];
+  }
   if (APP_I18N['ar'] && APP_I18N['ar'][key] !== undefined) {
     return APP_I18N['ar'][key];
   }
@@ -9143,120 +9149,147 @@ function syncChatwootLanguage(lang) {
 }
 window.syncChatwootLanguage = syncChatwootLanguage;
 
+let isApplyingCommonLanguage = false;
 function applyCommonLanguage(lang) {
+  if (isApplyingCommonLanguage) return;
   if (!VALID_LANGS.includes(lang)) {
     lang = 'ar';
   }
-  currentLang = lang;
-
+  isApplyingCommonLanguage = true;
   try {
-    localStorage.setItem('app_lang', lang);
-    localStorage.setItem('voice_app_lang', lang);
-  } catch (e) {
-    console.debug('localStorage error:', e);
-  }
+    currentLang = lang;
 
-  const isRtl = (lang === 'ar');
-  document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-  document.documentElement.lang = lang;
-
-  // Apply font family matching Chatwoot exactly
-  if (document.body) {
-    document.body.style.fontFamily = "'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Tahoma, Arial, sans-serif";
-  }
-
-  // Update document title if recognized route
-  const currentPath = window.location ? window.location.pathname : '';
-  if (PAGE_TITLES[currentPath] && PAGE_TITLES[currentPath][lang]) {
-    document.title = PAGE_TITLES[currentPath][lang];
-  }
-
-  // Update language switcher button label in header and anywhere with #lang-text
-  const langTargets = document.querySelectorAll('#lang-text, .lang-switch-text');
-  langTargets.forEach(el => {
-    const langObj = SUPPORTED_LANGUAGES.find(l => l.code === lang);
-    if (langObj) {
-      el.innerText = langObj.label;
-    } else if (APP_I18N[lang] && APP_I18N[lang].switch_to) {
-      el.innerText = APP_I18N[lang].switch_to;
-    }
-  });
-
-  // Update compact language indicators (sidebar top/bottom, etc.)
-  const compactLangTargets = document.querySelectorAll('#sidebar-top-lang-text, #sidebar-bottom-lang-text');
-  compactLangTargets.forEach(el => {
-    const langObj = SUPPORTED_LANGUAGES.find(l => l.code === lang);
-    el.innerText = langObj ? langObj.short : (lang === 'ar' ? 'عربي' : lang.toUpperCase());
-  });
-
-  // Update active checkmarks in language dropdown menus if present
-  document.querySelectorAll('[data-lang-option]').forEach(opt => {
-    const optLang = opt.getAttribute('data-lang-option');
-    const check = opt.querySelector('.lang-check');
-    if (optLang === lang) {
-      opt.classList.add('bg-violet-50', 'text-[#7c3aed]', 'font-bold');
-      if (check) check.classList.remove('hidden');
-    } else {
-      opt.classList.remove('bg-violet-50', 'text-[#7c3aed]', 'font-bold');
-      if (check) check.classList.add('hidden');
-    }
-  });
-
-  // Update all [data-i18n] text elements
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    const val = getI18nText(key, lang);
-    if (val !== null && val !== undefined) {
-      el.innerText = val;
-    }
-  });
-
-  // Update all [data-i18n-placeholder] input elements
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    const val = getI18nText(key, lang);
-    if (val !== null && val !== undefined) {
-      el.placeholder = val;
-    }
-  });
-
-  // Update all [data-i18n-title] elements
-  document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const val = getI18nText(key, lang);
-    if (val !== null && val !== undefined) {
-      el.title = val;
-    }
-  });
-
-  // Update all [data-i18n-value] button/input elements
-  document.querySelectorAll('[data-i18n-value]').forEach(el => {
-    const key = el.getAttribute('data-i18n-value');
-    const val = getI18nText(key, lang);
-    if (val !== null && val !== undefined) {
-      el.value = val;
-    }
-  });
-
-  // Update live status badges
-  const livekitBadge = document.getElementById('livekit-status');
-  if (livekitBadge) {
-    livekitBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> ' + window.t('livekit_connected', 'المكالمات الصوتية: متصل');
-  }
-  updateCentrifugoStatusBadge();
-
-  // Sync Chatwoot if present on page
-  syncChatwootLanguage(lang);
-
-  // Notify parent embedding window if embedded inside an iframe
-  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
     try {
-      window.parent.postMessage({ type: 'LANGUAGE_CHANGED', lang: lang, isRtl: isRtl }, '*');
-    } catch (e) {}
-  }
+      localStorage.setItem('app_lang', lang);
+      localStorage.setItem('voice_app_lang', lang);
+    } catch (e) {
+      console.debug('localStorage error:', e);
+    }
 
-  // Dispatch custom event for child / modular page controllers
-  window.dispatchEvent(new CustomEvent('appLanguageChanged', { detail: { lang: lang, isRtl: isRtl } }));
+    try {
+      const cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+      document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+      document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+      document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+    } catch (e) {
+      console.debug('cookie error:', e);
+    }
+
+    try {
+      if (window.location && window.history && typeof window.history.replaceState === 'function') {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('lang') || url.searchParams.has('locale')) {
+          if (url.searchParams.has('lang')) url.searchParams.set('lang', lang);
+          if (url.searchParams.has('locale')) url.searchParams.set('locale', lang);
+          window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+        }
+      }
+    } catch (e) {}
+
+    const isRtl = (lang === 'ar');
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+
+    // Apply font family matching Chatwoot exactly
+    if (document.body) {
+      document.body.style.fontFamily = "'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Tahoma, Arial, sans-serif";
+    }
+
+    // Update document title if recognized route
+    const currentPath = window.location ? window.location.pathname : '';
+    if (PAGE_TITLES[currentPath] && PAGE_TITLES[currentPath][lang]) {
+      document.title = PAGE_TITLES[currentPath][lang];
+    }
+
+    // Update language switcher button label in header and anywhere with #lang-text
+    const langTargets = document.querySelectorAll('#lang-text, .lang-switch-text, #scalar-lang-text');
+    langTargets.forEach(el => {
+      const langObj = SUPPORTED_LANGUAGES.find(l => l.code === lang);
+      if (langObj) {
+        el.innerText = langObj.label;
+      } else if (APP_I18N[lang] && APP_I18N[lang].switch_to) {
+        el.innerText = APP_I18N[lang].switch_to;
+      }
+    });
+
+    // Update compact language indicators (sidebar top/bottom, etc.)
+    const compactLangTargets = document.querySelectorAll('#sidebar-top-lang-text, #sidebar-bottom-lang-text');
+    compactLangTargets.forEach(el => {
+      const langObj = SUPPORTED_LANGUAGES.find(l => l.code === lang);
+      el.innerText = langObj ? langObj.short : (lang === 'ar' ? 'عربي' : lang.toUpperCase());
+    });
+
+    // Update active checkmarks in language dropdown menus if present
+    document.querySelectorAll('[data-lang-option]').forEach(opt => {
+      const optLang = opt.getAttribute('data-lang-option');
+      const check = opt.querySelector('.lang-check');
+      if (optLang === lang) {
+        opt.classList.add('bg-violet-50', 'text-[#7c3aed]', 'font-bold');
+        if (check) check.classList.remove('hidden');
+      } else {
+        opt.classList.remove('bg-violet-50', 'text-[#7c3aed]', 'font-bold');
+        if (check) check.classList.add('hidden');
+      }
+    });
+
+    // Update all [data-i18n] text elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = getI18nText(key, lang);
+      if (val !== null && val !== undefined) {
+        el.innerText = val;
+      }
+    });
+
+    // Update all [data-i18n-placeholder] input elements
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      const val = getI18nText(key, lang);
+      if (val !== null && val !== undefined) {
+        el.placeholder = val;
+      }
+    });
+
+    // Update all [data-i18n-title] elements
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      const val = getI18nText(key, lang);
+      if (val !== null && val !== undefined) {
+        el.title = val;
+      }
+    });
+
+    // Update all [data-i18n-value] button/input elements
+    document.querySelectorAll('[data-i18n-value]').forEach(el => {
+      const key = el.getAttribute('data-i18n-value');
+      const val = getI18nText(key, lang);
+      if (val !== null && val !== undefined) {
+        el.value = val;
+      }
+    });
+
+    // Update live status badges
+    const livekitBadge = document.getElementById('livekit-status');
+    if (livekitBadge) {
+      livekitBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#7c3aed]"></span> ' + window.t('livekit_connected', 'المكالمات الصوتية: متصل');
+    }
+    updateCentrifugoStatusBadge();
+
+    // Sync Chatwoot if present on page
+    syncChatwootLanguage(lang);
+
+    // Notify parent embedding window if embedded inside an iframe
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+      try {
+        window.parent.postMessage({ type: 'LANGUAGE_CHANGED', lang: lang, isRtl: isRtl }, '*');
+      } catch (e) {}
+    }
+
+    // Dispatch custom event for child / modular page controllers
+    window.dispatchEvent(new CustomEvent('appLanguageChanged', { detail: { lang: lang, isRtl: isRtl } }));
+  } finally {
+    isApplyingCommonLanguage = false;
+  }
 }
 
 function selectAppLanguage(lang) {
@@ -9284,7 +9317,9 @@ document.addEventListener('click', (e) => {
 });
 
 function toggleLanguage() {
-  const next = (currentLang === 'ar') ? 'en' : 'ar';
+  const valid = VALID_LANGS || ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+  const idx = valid.indexOf(currentLang);
+  const next = (idx === -1 || idx === valid.length - 1) ? valid[0] : valid[idx + 1];
   applyCommonLanguage(next);
 }
 
@@ -9307,15 +9342,39 @@ window.toggleLanguage = toggleLanguage;
 // Self-executing setup on script load with query param & iframe locale precedence
 (function initEarlyLanguage() {
   const urlParams = new URLSearchParams(window.location ? window.location.search : '');
-  const paramLang = urlParams.get('lang') || urlParams.get('locale');
-  const winLang = (typeof window !== 'undefined' && window.EMBED_LOCALE) ? window.EMBED_LOCALE : null;
-  const target = (paramLang && VALID_LANGS.includes(paramLang.toLowerCase())) ? paramLang.toLowerCase()
-               : (winLang && VALID_LANGS.includes(winLang.toLowerCase())) ? winLang.toLowerCase()
-               : (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar');
-  currentLang = VALID_LANGS.includes(target) ? target : 'ar';
+  const paramLang = (urlParams.get('lang') || urlParams.get('locale') || '').toLowerCase().trim();
+  const cookieMatch = document.cookie ? document.cookie.match(/(?:^|;\s*)(?:app_lang|django_language|voice_app_lang)=([^;]+)/) : null;
+  const cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]).toLowerCase().trim() : '';
+  let localLang = '';
+  try {
+    localLang = (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || '').toLowerCase().trim();
+  } catch (e) {}
+  const winLang = (typeof window !== 'undefined' && window.EMBED_LOCALE) ? String(window.EMBED_LOCALE).toLowerCase().trim() : '';
+  const isEmbed = (typeof window !== 'undefined' && (window.IS_EMBED || (window.parent && window.parent !== window)));
+
+  let chosen = 'ar';
+  if (paramLang && VALID_LANGS.includes(paramLang)) {
+    chosen = paramLang;
+  } else if (isEmbed && winLang && VALID_LANGS.includes(winLang)) {
+    chosen = winLang;
+  } else if (localLang && VALID_LANGS.includes(localLang)) {
+    chosen = localLang;
+  } else if (cookieLang && VALID_LANGS.includes(cookieLang)) {
+    chosen = cookieLang;
+  } else if (winLang && VALID_LANGS.includes(winLang)) {
+    chosen = winLang;
+  }
+
+  currentLang = VALID_LANGS.includes(chosen) ? chosen : 'ar';
   try {
     localStorage.setItem('app_lang', currentLang);
     localStorage.setItem('voice_app_lang', currentLang);
+  } catch (e) {}
+  try {
+    const cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+    document.cookie = 'app_lang=' + encodeURIComponent(currentLang) + ';' + cookieExp;
+    document.cookie = 'voice_app_lang=' + encodeURIComponent(currentLang) + ';' + cookieExp;
+    document.cookie = 'django_language=' + encodeURIComponent(currentLang) + ';' + cookieExp;
   } catch (e) {}
   document.documentElement.lang = currentLang;
   document.documentElement.dir = (currentLang === 'ar') ? 'rtl' : 'ltr';

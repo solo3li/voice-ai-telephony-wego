@@ -243,6 +243,13 @@
       const targetLang = valid.includes(lang) ? lang : 'ar';
       localStorage.setItem('user_docs_lang', targetLang);
       localStorage.setItem('app_lang', targetLang);
+      localStorage.setItem('voice_app_lang', targetLang);
+      try {
+        const cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+        document.cookie = 'app_lang=' + encodeURIComponent(targetLang) + ';' + cookieExp;
+        document.cookie = 'voice_app_lang=' + encodeURIComponent(targetLang) + ';' + cookieExp;
+        document.cookie = 'django_language=' + encodeURIComponent(targetLang) + ';' + cookieExp;
+      } catch (e) {}
       if (window.parent && window.parent !== window) {
         try {
           window.parent.postMessage({ type: 'LANGUAGE_CHANGED', lang: targetLang }, '*');
@@ -254,7 +261,10 @@
     }
 
     function toggleLanguage() {
-      const nextLang = "{% if is_ar %}en{% else %}ar{% endif %}";
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      const curr = '{{ current_lang }}';
+      const idx = valid.indexOf(curr);
+      const nextLang = (idx === -1 || idx === valid.length - 1) ? valid[0] : valid[idx + 1];
       selectScalarLanguage(nextLang);
     }
 

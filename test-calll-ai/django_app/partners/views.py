@@ -2514,9 +2514,16 @@ def api_partner_docs(request):
     if request.user.is_authenticated:
         partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
 
-    lang = request.GET.get('lang', 'ar').lower().strip()
-    if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
-        lang = 'ar'
+    raw_lang = (
+        request.GET.get('lang') or
+        request.GET.get('locale') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    lang = raw_lang if raw_lang in valid_langs else 'ar'
 
     resp = render(request, 'partners/scalar_docs.html', {
         'partner': partner,

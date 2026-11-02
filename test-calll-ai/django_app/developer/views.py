@@ -179,9 +179,16 @@ def api_user_docs(request):
     Supports 6 languages: Arabic, English, Turkish, French, German, Spanish (?lang=ar|en|tr|fr|de|es).
     Supports zero-friction embedding in parent portals via iframe and postMessage.
     """
-    lang = request.GET.get('lang', 'ar').lower().strip()
-    if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
-        lang = 'ar'
+    raw_lang = (
+        request.GET.get('lang') or
+        request.GET.get('locale') or
+        request.COOKIES.get('app_lang') or
+        request.COOKIES.get('django_language') or
+        request.COOKIES.get('voice_app_lang') or
+        'ar'
+    ).lower().strip()
+    valid_langs = ('ar', 'en', 'tr', 'fr', 'de', 'es')
+    lang = raw_lang if raw_lang in valid_langs else 'ar'
 
     user_api_key = ''
     if request.user.is_authenticated:

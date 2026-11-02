@@ -16,7 +16,16 @@
       if (typeof window.applyCommonLanguage === 'function') {
         window.applyCommonLanguage(lang);
       } else {
-        try { localStorage.setItem('app_lang', lang); } catch(e) {}
+        try {
+          localStorage.setItem('app_lang', lang);
+          localStorage.setItem('voice_app_lang', lang);
+        } catch(e) {}
+        try {
+          var cookieExp = 'max-age=31536000;path=/;SameSite=Lax';
+          document.cookie = 'app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+          document.cookie = 'voice_app_lang=' + encodeURIComponent(lang) + ';' + cookieExp;
+          document.cookie = 'django_language=' + encodeURIComponent(lang) + ';' + cookieExp;
+        } catch(e) {}
         var url = new URL(window.location.href);
         url.searchParams.set('locale', lang);
         window.location.href = url.toString();
@@ -78,32 +87,32 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
         </svg>
-        <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">AR</span>
+        <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">{{ locale|default:'ar'|upper }}</span>
       </button>
       <div id="sidebar-top-lang-menu" class="hidden absolute end-0 mt-1.5 w-36 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 z-50">
         <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale and locale != 'ar' %}hidden{% endif %}">✓</span>
         </button>
         <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'en' %}hidden{% endif %}">✓</span>
         </button>
         <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'tr' %}hidden{% endif %}">✓</span>
         </button>
         <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'fr' %}hidden{% endif %}">✓</span>
         </button>
         <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'de' %}hidden{% endif %}">✓</span>
         </button>
         <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
           <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
-          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'es' %}hidden{% endif %}">✓</span>
         </button>
       </div>
     </div>
@@ -168,32 +177,32 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
             </svg>
-            <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono text-slate-300">AR</span>
+            <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono text-slate-300">{{ locale|default:'ar'|upper }}</span>
           </button>
           <div id="sidebar-bottom-lang-menu" class="hidden absolute end-0 bottom-full mb-1.5 w-36 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 z-50">
             <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale and locale != 'ar' %}hidden{% endif %}">✓</span>
             </button>
             <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'en' %}hidden{% endif %}">✓</span>
             </button>
             <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'tr' %}hidden{% endif %}">✓</span>
             </button>
             <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'fr' %}hidden{% endif %}">✓</span>
             </button>
             <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'de' %}hidden{% endif %}">✓</span>
             </button>
             <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
               <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
-              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs {% if locale != 'es' %}hidden{% endif %}">✓</span>
             </button>
           </div>
         </div>
