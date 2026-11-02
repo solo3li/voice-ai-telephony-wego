@@ -23,6 +23,34 @@
   <!-- Common Shared Script (Loaded Early in Head) -->
   <script src="{% static 'js/common.js' %}"></script>
 
+  <!-- Early Declarations for Language Switcher -->
+  <script>
+    if (typeof window.toggleLangDropdown !== 'function') {
+      window.toggleLangDropdown = function(menuId) {
+        var menu = document.getElementById(menuId);
+        if (!menu) return;
+        var isCurrentlyHidden = menu.classList.contains('hidden');
+        document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+        if (isCurrentlyHidden) {
+          menu.classList.remove('hidden');
+        }
+      };
+    }
+    if (typeof window.selectAppLanguage !== 'function') {
+      window.selectAppLanguage = function(lang) {
+        if (typeof window.applyCommonLanguage === 'function') {
+          window.applyCommonLanguage(lang);
+        } else {
+          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          var url = new URL(window.location.href);
+          url.searchParams.set('locale', lang);
+          window.location.href = url.toString();
+        }
+        document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+      };
+    }
+  </script>
+
   <style>
     html, body {
       font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -52,7 +80,7 @@
     <!-- Top Lang Switcher: 6-Language Dropdown Selector Component -->
     <div class="flex justify-end mb-2">
       <div class="relative inline-block text-start" id="register-lang-dropdown-wrapper">
-        <button type="button" onclick="toggleLangDropdown('register-lang-menu')" id="lang-switch-btn" class="px-2.5 py-1 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" aria-haspopup="true" aria-expanded="false" title="Language / تغيير اللغة">
+        <button type="button" onclick="window.toggleLangDropdown && window.toggleLangDropdown('register-lang-menu')" id="lang-switch-btn" class="px-2.5 py-1 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" aria-haspopup="true" aria-expanded="false" title="Language / تغيير اللغة">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
           </svg>

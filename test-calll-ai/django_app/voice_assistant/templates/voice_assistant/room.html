@@ -43,8 +43,33 @@
   <!-- Common Shared Script -->
   <script src="{% static 'js/common.js' %}"></script>
 
-  <!-- Early Declarations for Room Chat Frame -->
+  <!-- Early Declarations for Room Chat Frame & Language Switcher -->
   <script>
+    if (typeof window.toggleLangDropdown !== 'function') {
+      window.toggleLangDropdown = function(menuId) {
+        var menu = document.getElementById(menuId);
+        if (!menu) return;
+        var isCurrentlyHidden = menu.classList.contains('hidden');
+        document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+        if (isCurrentlyHidden) {
+          menu.classList.remove('hidden');
+        }
+      };
+    }
+    if (typeof window.selectAppLanguage !== 'function') {
+      window.selectAppLanguage = function(lang) {
+        if (typeof window.applyCommonLanguage === 'function') {
+          window.applyCommonLanguage(lang);
+        } else {
+          try { localStorage.setItem('app_lang', lang); } catch(e) {}
+          var url = new URL(window.location.href);
+          url.searchParams.set('locale', lang);
+          window.location.href = url.toString();
+        }
+        document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+      };
+    }
+
     window.roomChatDismissed = false;
 
     window.dismissRoomChatLoader = function() {
@@ -3378,7 +3403,7 @@
             src="about:blank"
             class="w-full h-full border-0 block"
             allow="camera *; microphone *; clipboard-read *; clipboard-write *; display-capture *; fullscreen *; keyboard-map *"
-            onload="onRoomChatLoaded()"
+            onload="window.onRoomChatLoaded && window.onRoomChatLoaded()"
           ></iframe>
         </div>
       </div>

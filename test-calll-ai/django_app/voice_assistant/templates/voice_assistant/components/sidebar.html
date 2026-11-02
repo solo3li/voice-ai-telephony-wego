@@ -1,4 +1,30 @@
 {% load static %}
+<script>
+  if (typeof window.toggleLangDropdown !== 'function') {
+    window.toggleLangDropdown = function(menuId) {
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      var isCurrentlyHidden = menu.classList.contains('hidden');
+      document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+      if (isCurrentlyHidden) {
+        menu.classList.remove('hidden');
+      }
+    };
+  }
+  if (typeof window.selectAppLanguage !== 'function') {
+    window.selectAppLanguage = function(lang) {
+      if (typeof window.applyCommonLanguage === 'function') {
+        window.applyCommonLanguage(lang);
+      } else {
+        try { localStorage.setItem('app_lang', lang); } catch(e) {}
+        var url = new URL(window.location.href);
+        url.searchParams.set('locale', lang);
+        window.location.href = url.toString();
+      }
+      document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+    };
+  }
+</script>
 <!-- ==================== Minimalist Sidebar (5 Dedicated Core Portals - Obsidian Dark) ==================== -->
 <aside id="sidebar" class="bg-[#0f172a] text-slate-300 flex flex-col justify-between transition-all duration-200 z-30 shrink-0 sidebar-expanded border-b md:border-b-0 md:border-e border-slate-800 md:sticky md:top-0 md:h-screen md:max-h-screen overflow-hidden">
   
@@ -43,7 +69,7 @@
     <div class="relative inline-block text-start shrink-0" id="sidebar-top-lang-wrapper">
       <button 
         type="button" 
-        onclick="toggleLangDropdown('sidebar-top-lang-menu')" 
+        onclick="window.toggleLangDropdown && window.toggleLangDropdown('sidebar-top-lang-menu')" 
         id="sidebar-top-lang-btn" 
         class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 px-2 py-1 rounded-md border border-slate-700/80 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs" 
         title="تغيير اللغة / Switch Language" 
@@ -133,7 +159,7 @@
         <div class="relative inline-block text-start shrink-0" id="sidebar-bottom-lang-wrapper">
           <button 
             type="button" 
-            onclick="toggleLangDropdown('sidebar-bottom-lang-menu')" 
+            onclick="window.toggleLangDropdown && window.toggleLangDropdown('sidebar-bottom-lang-menu')" 
             id="sidebar-bottom-lang-btn" 
             class="text-slate-400 hover:text-[#c4b5fd] p-1.5 rounded-md hover:bg-slate-800 transition flex items-center gap-1 cursor-pointer" 
             title="تغيير اللغة / Switch Language" 
