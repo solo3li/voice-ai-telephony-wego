@@ -17,7 +17,39 @@ def build_universal_voice_rules(language: str = "arabic", dialect: str = "egypti
         or any(dia_key.startswith(p) for p in ["english", "en", "french", "fr", "spanish", "es", "german", "de", "italian", "it", "turkish", "tr", "russian", "ru", "urdu", "ur", "hindi", "hi", "chinese", "zh"])
     )
 
-    if is_non_arabic:
+    if lang_key in ['spanish', 'es'] or dia_key.startswith('spanish'):
+        de_escalate_phrase = "Entiendo perfectamente su frustración y le pido sinceras disculpas por las molestias. Estoy aquí con usted y resolveré esto de inmediato."
+        fillers = '("Por supuesto, un momento por favor...", "Verificando los detalles ahora mismo...", "Entendido, permítame unos segundos...").'
+        correction_examples = '("Espere, en realidad...", "Cámbielo por...", "No, me refería a...").'
+        correction_confirm = '"Entendido, he actualizado los datos a: [nuevo detalle solamente]."'
+        side_talk_example = '("Oye Juan, revisa eso" o voces de fondo)'
+        wrap_up_inquiry = '"¿Hay algo más en lo que pueda ayudarle hoy?"'
+        wrap_up_bye = '"¡Muchas gracias por comunicarse con nosotros, que tenga un excelente día!"'
+    elif lang_key in ['turkish', 'tr'] or dia_key.startswith('turkish'):
+        de_escalate_phrase = "Yaşadığınız memnuniyetsizliği çok iyi anlıyorum ve verdiğimiz rahatsızlıktan ötürü içtenlikle özür dilerim. Konuyu hemen çözüyorum."
+        fillers = '("Elbette, bir saniye lütfen...", "Bilgileri hemen kontrol ediyorum...", "Anladım, bana birkaç saniye izin verin...").'
+        correction_examples = '("Bir dakika aslında...", "Şununla değiştir...", "Hayır, şunu demek istedim...").'
+        correction_confirm = '"Anlaşıldı, şu şekilde güncelledim: [yalnızca yeni detay]."'
+        side_talk_example = '("Ahmet şuna baksana" veya arka plan sesleri)'
+        wrap_up_inquiry = '"Bugün size yardımcı olabileceğim başka bir konu var mı?"'
+        wrap_up_bye = '"Bizi tercih ettiğiniz için teşekkür ederiz, iyi günler dileriz!"'
+    elif lang_key in ['french', 'fr'] or dia_key.startswith('french'):
+        de_escalate_phrase = "Je comprends parfaitement votre déception et je vous prie d'accepter toutes nos excuses. Je m'en occupe immédiatement avec vous."
+        fillers = '("Certainement, un instant s\'il vous plaît...", "Je vérifie cela pour vous tout de suite...", "Bien reçu, donnez-moi quelques secondes...").'
+        correction_examples = '("Attendez, en fait...", "Changez plutôt par...", "Non, je voulais dire...").'
+        correction_confirm = '"Bien noté, j\'ai mis à jour vers : [nouveau détail uniquement]."'
+        side_talk_example = '("Dis Pierre, regarde ça" ou voix ambiantes)'
+        wrap_up_inquiry = '"Y a-t-il autre chose que je puisse faire pour vous aujourd\'hui ?"'
+        wrap_up_bye = '"Merci d\'avoir fait appel à nos services, passez une excellente journée !"'
+    elif lang_key in ['german', 'de'] or dia_key.startswith('german'):
+        de_escalate_phrase = "Ich verstehe Ihren Ärger vollkommen und entschuldige mich aufrichtig für die Unannehmlichkeiten. Ich kümmere mich sofort darum."
+        fillers = '("Selbstverständlich, einen kleinen Moment bitte...", "Ich prüfe das sofort für Sie...", "Verstanden, geben Sie mir bitte ein paar Sekunden...").'
+        correction_examples = '("Warten Sie, eigentlich...", "Ändern Sie das bitte in...", "Nein, ich meinte...").'
+        correction_confirm = '"Verstanden, ich habe das angepasst auf: [nur das neue Detail]."'
+        side_talk_example = '("Hey Thomas, schau mal" oder Hintergrundstimmen)'
+        wrap_up_inquiry = '"Gibt es noch etwas, bei dem ich Ihnen heute behilflich sein kann?"'
+        wrap_up_bye = '"Vielen Dank für Ihren Anruf, wir wünschen Ihnen einen schönen Tag!"'
+    elif is_non_arabic:
         de_escalate_phrase = "I completely understand your frustration, and I apologize for the inconvenience. I am right here with you and will resolve this immediately."
         fillers = '("Certainly, one moment please...", "Checking that for you right now...", "Understood, give me just a few seconds...").'
         correction_examples = '("Wait, actually...", "Change that to...", "No, I meant...").'

@@ -241,7 +241,7 @@
             id="cfg-product-name" 
             value="{{ captain_settings.product_name|default:'مطاعم كُـورَا' }}" 
             class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white focus:outline-hidden focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed]"
-            placeholder="مثال: سلسلة مطاعم كُـورَا"
+            placeholder="مثال: سلسلة مطاعم كُـورَا" data-i18n-placeholder="placeholder_product_name"
           />
         </div>
 
@@ -498,7 +498,7 @@
       <div class="pt-2 flex items-center justify-between">
         <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
           <input type="checkbox" name="enable_ai" checked class="w-4 h-4 rounded-sm text-[#7c3aed]" />
-          <span>تفعيل رد الذكاء الاصطناعي فوراً</span>
+          <span data-i18n="auto_enable_ai">تفعيل رد الذكاء الاصطناعي فوراً</span>
         </label>
         <button type="submit" class="px-4 py-2 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
           إنشاء ومسح الرمز

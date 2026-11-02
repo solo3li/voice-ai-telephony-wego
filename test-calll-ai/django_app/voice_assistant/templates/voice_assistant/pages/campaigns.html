@@ -114,7 +114,7 @@
     <div class="space-y-1.5">
       <div class="flex justify-between items-center text-xs text-slate-500">
         <span><span data-i18n="camp_progress_label">نسبة الإنجاز:</span> <strong id="camp-progress-text" class="text-slate-900 font-medium">0% (0 / 0)</strong></span>
-        <span><span data-i18n="camp_channel_label">القناة:</span> <strong id="camp-channel-text" class="text-[#7c3aed] font-medium">مكالمات</strong> <span data-i18n="camp_agent_label">| المساعد:</span> <strong id="camp-agent-name" class="text-slate-800 font-medium">-</strong></span>
+        <span><span data-i18n="camp_channel_label">القناة:</span> <strong data-i18n="crm_calls_count_suffix" id="camp-channel-text" class="text-[#7c3aed] font-medium">مكالمات</strong> <span data-i18n="camp_agent_label">| المساعد:</span> <strong id="camp-agent-name" class="text-slate-800 font-medium">-</strong></span>
       </div>
       <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
         <div id="camp-progress-bar" class="h-full bg-[#7c3aed] rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -297,7 +297,7 @@
   <div class="bg-white border border-slate-200/80 shadow-md rounded-xl max-w-lg w-full p-5 space-y-4 text-xs max-h-[85vh] overflow-y-auto">
     <div class="flex justify-between items-center pb-2.5 border-b border-slate-200/80">
       <div>
-        <h3 id="contact-modal-name" class="text-sm font-semibold text-slate-900">اسم العميل</h3>
+        <h3 data-i18n="camp_contact_th_name" id="contact-modal-name" class="text-sm font-semibold text-slate-900">اسم العميل</h3>
         <p id="contact-modal-phone" class="text-xs font-mono text-slate-400">+966...</p>
       </div>
       <button type="button" onclick="closeContactModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition" title="إغلاق">
@@ -340,7 +340,7 @@
 
       <div>
         <h4 class="font-medium text-slate-700 mb-1" data-i18n="camp_modal_summary_label">ملخص المكالمة:</h4>
-        <div id="contact-modal-summary" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-700 leading-relaxed whitespace-pre-wrap">لا يوجد ملخص مكالمة بعد.</div>
+        <div data-i18n="camp_contact_no_sum" id="contact-modal-summary" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-700 leading-relaxed whitespace-pre-wrap">لا يوجد ملخص مكالمة بعد.</div>
       </div>
 
       <div>

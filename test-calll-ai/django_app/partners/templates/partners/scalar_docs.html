@@ -102,6 +102,13 @@
       border-bottom: 1px solid #E7E5E4;
     }
   </style>
+  <script>
+    function toggleScalarDropdown(menuId) {
+      var menu = document.getElementById(menuId);
+      if (menu) menu.classList.toggle('hidden');
+    }
+    window.toggleScalarDropdown = toggleScalarDropdown;
+  </script>
 </head>
 <body class="min-h-screen flex flex-col bg-brand-canvas text-brand-dark selection:bg-[#7c3aed] selection:text-white">
 
@@ -166,15 +173,15 @@
         <!-- Partner Key Badge (if authenticated) -->
         {% if partner_api_key %}
         <div class="flex items-center gap-1.5 bg-brand-canvas border border-brand-border px-3 py-1.5 rounded-lg text-brand-dark font-mono">
-          <span class="text-brand-muted font-sans">{% if is_ar %}مفتاحك:{% else %}Your Key:{% endif %}</span>
+          <span class="text-brand-muted font-sans">{% if current_lang == 'es' %}Su Clave:{% elif current_lang == 'tr' %}Anahtarınız:{% elif current_lang == 'fr' %}Votre Clé :{% elif current_lang == 'de' %}Ihr Schlüssel:{% elif current_lang == 'en' %}Your Key:{% else %}مفتاحك:{% endif %}</span>
           <span>{{ partner_api_key|slice:":15" }}...</span>
-          <button onclick="copyPartnerKey('{{ partner_api_key }}')" class="hover:text-brand-primary px-1 font-sans text-brand-primary" title="{% if is_ar %}نسخ المفتاح{% else %}Copy Key{% endif %}">{% if is_ar %}نسخ{% else %}Copy{% endif %}</button>
+          <button onclick="copyPartnerKey('{{ partner_api_key }}')" class="hover:text-brand-primary px-1 font-sans text-brand-primary" title="{% if current_lang == 'es' %}Copiar Clave{% elif current_lang == 'tr' %}Anahtarı Kopyala{% elif current_lang == 'fr' %}Copier la Clé{% elif current_lang == 'de' %}Schlüssel Kopieren{% elif current_lang == 'en' %}Copy Key{% else %}نسخ المفتاح{% endif %}">{% if current_lang == 'es' %}Copiar{% elif current_lang == 'tr' %}Kopyala{% elif current_lang == 'fr' %}Copier{% elif current_lang == 'de' %}Kopieren{% elif current_lang == 'en' %}Copy{% else %}نسخ{% endif %}</button>
         </div>
         {% endif %}
 
         <!-- Return to Dashboard -->
         <a href="/#tab-partner" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-primary text-white hover:bg-brand-primaryHover transition shadow-sm">
-          <span>{% if is_ar %}العودة للوحة التحكم{% else %}Back to Dashboard{% endif %}</span>
+          <span>{% if current_lang == 'es' %}Volver al Panel{% elif current_lang == 'tr' %}Kontrol Paneline Dön{% elif current_lang == 'fr' %}Retour au Tableau de Bord{% elif current_lang == 'de' %}Zurück zum Dashboard{% elif current_lang == 'en' %}Back to Dashboard{% else %}العودة للوحة التحكم{% endif %}</span>
           <span>{% if is_ar %}&larr;{% else %}&rarr;{% endif %}</span>
         </a>
       </div>
@@ -211,17 +218,33 @@
   </main>
 
   <footer class="bg-white border-t border-brand-border py-4 text-center text-xs text-brand-muted">
-    {% if is_ar %}
-    منظومة المساعد الصوتي الذكي للشركاء وخدمات الـ SaaS &copy; 2026. واجهة التوثيق التفاعلية المدمجة عبر Scalar.
-    {% else %}
+    {% if current_lang == 'es' %}
+    Subsistema de Socios y SaaS de Voz IA &copy; 2026. Documentación OpenAPI interactiva con Scalar.
+    {% elif current_lang == 'tr' %}
+    Yapay Zeka Sesli SaaS Ortak Alt Sistemi &copy; 2026. Scalar ile etkileşimli OpenAPI dokümantasyonu.
+    {% elif current_lang == 'fr' %}
+    Sous-système Partenaire et SaaS Vocal IA &copy; 2026. Documentation interactive OpenAPI via Scalar.
+    {% elif current_lang == 'de' %}
+    Sprach-KI Partner- und SaaS-Subsystem &copy; 2026. Interaktive OpenAPI-Dokumentation mit Scalar.
+    {% elif current_lang == 'en' %}
     Voice AI Partner &amp; SaaS Subsystem &copy; 2026. Interactive OpenAPI documentation powered by Scalar.
+    {% else %}
+    منظومة المساعد الصوتي الذكي للشركاء وخدمات الـ SaaS &copy; 2026. واجهة التوثيق التفاعلية المدمجة عبر Scalar.
     {% endif %}
   </footer>
 
   <script>
     function copyPartnerKey(key) {
       navigator.clipboard.writeText(key).then(() => {
-        const msg = "{% if is_ar %}تم نسخ مفتاح الشريك بنجاح لاستخدامه في عميل الاختبار.{% else %}Partner API key copied successfully for use in the test client.{% endif %}";
+        const copyMsgs = {
+        ar: 'تم نسخ مفتاح الشريك بنجاح لاستخدامه في عميل الاختبار.',
+        en: 'Partner API key copied successfully for use in the test client.',
+        es: 'Clave de API de socio copiada con éxito para el cliente de prueba.',
+        tr: 'Ortak API anahtarı test istemcisinde kullanılmak üzere başarıyla kopyalandı.',
+        fr: 'Clé API partenaire copiée avec succès pour le client de test.',
+        de: 'Partner-API-Schlüssel erfolgreich für den Test-Client kopiert.'
+      };
+      const msg = copyMsgs['{{ current_lang }}'] || copyMsgs.ar;
         alert(msg);
       });
     }
