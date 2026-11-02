@@ -983,7 +983,7 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                                     "agent_profile": {
                                         "id": 1,
                                         "name": "نورهان - خدمة عملاء",
-                                        "voice": "Aoede",
+                                        "voice": "nourhan",
                                         "dialect": "egyptian"
                                     }
                                 }
@@ -1877,7 +1877,7 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                 "required": ["name"],
                 "properties": {
                     "name": {"type": "string", "example": "مساعد المبيعات السعودي" if is_ar else "Saudi Sales Advisor"},
-                    "voice_name": {"type": "string", "default": "Aoede", "example": "Aoede"},
+                    "voice_name": {"type": "string", "default": "nourhan", "example": "nourhan"},
                     "gender": {"type": "string", "enum": ["female", "male"], "default": "female"},
                     "language": {"type": "string", "default": "arabic", "example": "arabic"},
                     "dialect": {"type": "string", "default": "egyptian", "example": "egyptian"},

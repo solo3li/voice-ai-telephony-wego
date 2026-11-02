@@ -36,6 +36,7 @@ from agent.session.state import AgentSessionState
 from agent.session.tool_dispatcher import build_gemini_tools, handle_gemini_tool_call
 from agent.session.memory import distill_and_update_memory
 from agent.transfer.transfer_bot import execute_ai_transfer_and_hold
+from agent.voice_catalog import resolve_engine_voice
 
 # Global strong references for background tasks (e.g. memory distillation) to prevent Python 3.11 GC
 BACKGROUND_TASKS: Set[asyncio.Task] = set()
@@ -158,9 +159,10 @@ async def run_agent_session(
     if not active_profile:
         active_profile = parse_active_profile_from_bootstrap({})
 
-    chosen_voice = active_profile.get("voice_name") or "Aoede"
+    active_voice_key = active_profile.get("voice_name") or "nourhan"
+    chosen_voice = resolve_engine_voice(active_voice_key)
     logger.info(
-        f"Using Google voice '{chosen_voice}', language '{active_profile.get('language', 'arabic')}', "
+        f"Using Gemini voice '{chosen_voice}' (persona: '{active_voice_key}'), language '{active_profile.get('language', 'arabic')}', "
         f"dialect '{active_profile.get('dialect')}', gender '{active_profile.get('gender')}', "
         f"verbosity '{active_profile.get('verbosity', 'balanced')}' for user {user_id}"
     )

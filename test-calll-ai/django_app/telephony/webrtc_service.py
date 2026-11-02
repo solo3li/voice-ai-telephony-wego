@@ -134,7 +134,7 @@ def initiate_webrtc_session(
             profile = AgentProfile.objects.create(
                 user=user,
                 name="المساعد الصوتي الذكي",
-                voice_name="Aoede",
+                voice_name="nourhan",
                 gender="female",
                 dialect="egyptian",
                 persona_role="customer_support",

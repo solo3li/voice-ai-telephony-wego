@@ -4,6 +4,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from .voice_catalog import (
+    resolve_display_voice_id,
+    resolve_engine_voice,
+    resolve_display_voice_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -330,7 +335,7 @@ class AgentProfile(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agent_profiles')
     name = models.CharField(max_length=100, default='البروفايل الافتراضي')
-    voice_name = models.CharField(max_length=50, default='Aoede')
+    voice_name = models.CharField(max_length=50, default='nourhan')
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='female')
     language = models.CharField(max_length=50, choices=LANGUAGE_CHOICES, default='arabic')
     dialect = models.CharField(max_length=50, choices=DIALECT_CHOICES, default='egyptian')
@@ -373,6 +378,9 @@ class AgentProfile(models.Model):
         return f"{self.name} ({self.voice_name}/{self.dialect}){active_str}"
 
     def save(self, *args, **kwargs):
+        if self.voice_name:
+            self.voice_name = resolve_display_voice_id(self.voice_name)
+
         # Auto-deduce language from dialect if dialect belongs to a specific language
         if self.dialect in ['english', 'english_us', 'english_uk', 'english_aus', 'english_ind']:
             self.language = 'english'
@@ -403,12 +411,15 @@ class AgentProfile(models.Model):
         super().save(*args, **kwargs)
 
     def to_dict(self):
+        human_voice_id = resolve_display_voice_id(self.voice_name)
         return {
             "id": self.id,
             "name": self.name,
             "language": self.language,
             "language_display": self.get_language_display(),
-            "voice_name": self.voice_name,
+            "voice_name": human_voice_id,
+            "voice": human_voice_id,
+            "voice_display": resolve_display_voice_name(self.voice_name),
             "gender": self.gender,
             "gender_display": self.get_gender_display(),
             "dialect": self.dialect,
@@ -429,6 +440,10 @@ class AgentProfile(models.Model):
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M"),
         }
+
+    def get_engine_voice(self) -> str:
+        """Returns the underlying provider engine voice name for LiveKit agent session."""
+        return resolve_engine_voice(self.voice_name)
 
 
 class TenantCustomRole(models.Model):

@@ -193,7 +193,7 @@ def parse_active_profile_from_bootstrap(bootstrap: dict) -> dict:
     """Extract active profile from bootstrap dictionary with fallbacks."""
     default_profile = {
         "name": "نورهان - خدمة عملاء مصرية",
-        "voice_name": "Aoede",
+        "voice_name": "nourhan",
         "gender": "female",
         "language": "arabic",
         "dialect": "egyptian",
@@ -210,7 +210,7 @@ def parse_active_profile_from_bootstrap(bootstrap: dict) -> dict:
     prof = bootstrap.get("profile")
     if prof and isinstance(prof, dict):
         return {
-            "voice_name": prof.get("voice_name") or "Aoede",
+            "voice_name": prof.get("voice_name") or "nourhan",
             "gender": prof.get("gender") or "female",
             "language": prof.get("language") or "arabic",
             "dialect": prof.get("dialect") or "egyptian",

@@ -78,7 +78,7 @@ class PartnerClientsListResponseSerializer(serializers.Serializer):
 class PartnerClientProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField()
-    voice_name = serializers.CharField(default="Aoede")
+    voice_name = serializers.CharField(default="nourhan")
     gender = serializers.ChoiceField(choices=[('female', 'أنثى'), ('male', 'ذكر')])
     language = serializers.CharField(default="arabic")
     dialect = serializers.CharField(default="egyptian")
@@ -93,7 +93,7 @@ class PartnerClientProfileSerializer(serializers.Serializer):
 
 class PartnerClientProfileCreateRequestSerializer(serializers.Serializer):
     name = serializers.CharField(required=True)
-    voice_name = serializers.CharField(default="Aoede")
+    voice_name = serializers.CharField(default="nourhan")
     gender = serializers.ChoiceField(choices=[('female', 'أنثى'), ('male', 'ذكر')], default='female')
     language = serializers.CharField(default="arabic")
     dialect = serializers.CharField(default="egyptian")

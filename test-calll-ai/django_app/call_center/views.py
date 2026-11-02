@@ -861,7 +861,7 @@ def api_dial_call(request):
                             "action_type": b_sched.action_type,
                             "ai_message": b_sched.ai_message,
                             "audio_file_url": b_sched.get_audio_url(request),
-                            "voice_name": (profile_dict.get("voice_name") if profile_dict else "Aoede") or "Aoede"
+                            "voice_name": (profile_dict.get("voice_name") if profile_dict else "nourhan") or "nourhan"
                         }
                         logger.info(f"AI call from employee #{caller.id} ({caller.extension}) is OUTSIDE business hours for owner #{owner_user.id}. Action: {b_sched.action_type}")
                 except Exception as b_err:

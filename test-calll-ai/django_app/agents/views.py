@@ -23,41 +23,16 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
-GOOGLE_VOICES = [
-    # Female Voices (15)
-    {"name": "Aoede", "gender": "female", "style": "Brisk & Breezy (نشيطة وسريعة)", "tag": "افتراضي"},
-    {"name": "Kore", "gender": "female", "style": "Firm & Confident (واثقة وحازمة)", "tag": "رسمي"},
-    {"name": "Leda", "gender": "female", "style": "Youthful & Friendly (شابة وودودة)", "tag": "ودود"},
-    {"name": "Callisto", "gender": "female", "style": "Warm & Comforting (دافئة ومريحة)", "tag": "دافئ"},
-    {"name": "Sulafat", "gender": "female", "style": "Gentle & Clear (رقيقة وواضحة)", "tag": "رقيق"},
-    {"name": "Autonoe", "gender": "female", "style": "Bright & Enthusiastic (مشرقة ومتحمسة)", "tag": "حيوي"},
-    {"name": "Achernar", "gender": "female", "style": "Soft & Calming (ناعمة ومطمئنة)", "tag": "هادئ"},
-    {"name": "Erinome", "gender": "female", "style": "Resonant & Authoritative (رنانة ومتمكنة)", "tag": "رسمي"},
-    {"name": "Laomedeia", "gender": "female", "style": "Expressive & Engaging (تعبيرية وتفاعلية)", "tag": "تفاعلي"},
-    {"name": "Gacrux", "gender": "female", "style": "Welcoming & Hospitable (مرحبة ومضيافة)", "tag": "مضياف"},
-    {"name": "Vindemiatrix", "gender": "female", "style": "Sophisticated & Polished (أنيقة وراقية)", "tag": "فاخر"},
-    {"name": "Despina", "gender": "female", "style": "Clear & Direct (واضحة ومباشرة)", "tag": "مباشر"},
-    {"name": "Galatea", "gender": "female", "style": "Melodic & Elegant (نقية وأنيقة)", "tag": "أنيق"},
-    {"name": "Larissa", "gender": "female", "style": "Pleasant & Friendly (مبهجة ولطيفة)", "tag": "لطيف"},
-    {"name": "Naiad", "gender": "female", "style": "Smooth & Natural (سلسة وعفوية)", "tag": "طبيعي"},
+from .voice_catalog import (
+    PLATFORM_VOICES,
+    get_public_voices,
+    resolve_engine_voice,
+    resolve_display_voice_id,
+    resolve_display_voice_name,
+    get_voice_by_id,
+)
 
-    # Male Voices (15)
-    {"name": "Puck", "gender": "male", "style": "Cheerful & Upbeat (مرح وحيوي)", "tag": "حيوي"},
-    {"name": "Charon", "gender": "male", "style": "Calm & Informative (هادئ ووقور)", "tag": "هادئ"},
-    {"name": "Fenrir", "gender": "male", "style": "Deep & Authoritative (عميق وجهوري)", "tag": "رسمي"},
-    {"name": "Zephyr", "gender": "male", "style": "Bright & Crisp (منعش ومشرق)", "tag": "منعش"},
-    {"name": "Orus", "gender": "male", "style": "Firm & Direct (حازم ومباشر)", "tag": "حازم"},
-    {"name": "Umbriel", "gender": "male", "style": "Easy-going & Casual (تلقائي وعفوي)", "tag": "تلقائي"},
-    {"name": "Schedar", "gender": "male", "style": "Clear & Articulate (واضح ورصين)", "tag": "رصين"},
-    {"name": "Achird", "gender": "male", "style": "Crisp & Practical (عملي وسريع)", "tag": "عملي"},
-    {"name": "Sadachbia", "gender": "male", "style": "Lively & Engaging (متفاعل وحيوي)", "tag": "حيوي"},
-    {"name": "Zubenelgenubi", "gender": "male", "style": "Casual & Grounded (واقعي وبسيط)", "tag": "واقعي"},
-    {"name": "Thalassa", "gender": "male", "style": "Reassuring & Steady (مطمئن ومتزن)", "tag": "مطمئن"},
-    {"name": "Proteus", "gender": "male", "style": "Dynamic & Confident (ديناميكي ومتمكن)", "tag": "متمكن"},
-    {"name": "Neso", "gender": "male", "style": "Youthful & Tech-savvy (شاب وتقني)", "tag": "تقني"},
-    {"name": "Halimede", "gender": "male", "style": "Smooth & Polite (مهذب وسلس)", "tag": "مهذب"},
-    {"name": "Sao", "gender": "male", "style": "Direct & Concise (مختصر وموجز)", "tag": "موجز"},
-]
+GOOGLE_VOICES = get_public_voices()
 
 LANGUAGE_DIALECTS_MAP = {
     'arabic': [
@@ -124,7 +99,7 @@ def list_profiles(request):
         default_prof = AgentProfile.objects.create(
             user=request.user,
             name="نورهان - خدمة عملاء مصرية",
-            voice_name="Aoede",
+            voice_name="nourhan",
             gender="female",
             language="arabic",
             dialect="egyptian",
@@ -141,7 +116,8 @@ def list_profiles(request):
         "status": "success",
         "profiles": [p.to_dict() for p in profiles],
         "active_profile": active_p.to_dict(),
-        "google_voices": GOOGLE_VOICES,
+        "platform_voices": get_public_voices(),
+        "google_voices": get_public_voices(),
         "languages": [{"id": l[0], "label": l[1]} for l in AgentProfile.LANGUAGE_CHOICES],
         "language_dialects_map": LANGUAGE_DIALECTS_MAP,
         "dialects": [{"id": d[0], "label": d[1]} for d in AgentProfile.DIALECT_CHOICES],
@@ -162,7 +138,8 @@ def create_profile(request):
     try:
         data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         name = data.get('name', '').strip() or 'بروفايل مخصص'
-        voice_name = data.get('voice_name', 'Aoede').strip()
+        raw_voice = data.get('voice_name', 'nourhan').strip()
+        voice_name = resolve_display_voice_id(raw_voice)
         gender = data.get('gender', 'female')
         language = data.get('language', '').strip() or 'arabic'
         dialect = data.get('dialect', 'egyptian')
@@ -220,7 +197,7 @@ def update_profile(request, profile_id):
         if 'name' in data and data['name'].strip():
             profile.name = data['name'].strip()
         if 'voice_name' in data and data['voice_name'].strip():
-            profile.voice_name = data['voice_name'].strip()
+            profile.voice_name = resolve_display_voice_id(data['voice_name'].strip())
         if 'gender' in data:
             profile.gender = data['gender']
         if 'language' in data and data['language'].strip():

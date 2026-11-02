@@ -59,6 +59,7 @@ from agent.prompts import build_dynamic_system_instruction, generate_welcome_gre
 from agent.transfer.transfer_bot import execute_ai_transfer_and_hold
 from agent.queue_manager import run_queue_session
 from agent.session.memory import distill_and_update_memory
+from agent.voice_catalog import resolve_engine_voice
 
 
 async def _run_background_distillation(
@@ -226,11 +227,12 @@ async def entrypoint(ctx: JobContext):
     if not active_profile:
         active_profile = parse_active_profile_from_bootstrap({})
 
-    chosen_voice = active_profile.get("voice_name") or "Aoede"
+    active_voice_key = active_profile.get("voice_name") or "nourhan"
+    chosen_voice = resolve_engine_voice(active_voice_key)
     chosen_model = os.getenv("GEMINI_LIVE_MODEL", GEMINI_LIVE_MODEL) or "gemini-3.8-live"
 
     logger.info(
-        f"[LiveKit Agent] Using Gemini model '{chosen_model}', voice '{chosen_voice}', "
+        f"[LiveKit Agent] Using Gemini model '{chosen_model}', voice '{chosen_voice}' (persona: '{active_voice_key}'), "
         f"language '{active_profile.get('language', 'arabic')}' for user {user_id}"
     )
 

@@ -19,6 +19,7 @@ from agent.config import (
     GEMINI_LIVE_MODEL,
 )
 from agent.clients.centrifugo_client import notify_centrifugo_async
+from agent.voice_catalog import resolve_engine_voice
 
 
 async def run_off_hours_session(
@@ -35,7 +36,8 @@ async def run_off_hours_session(
     action_type = off_hours_data.get("action_type", "ai_message")
     ai_message = off_hours_data.get("ai_message") or "مرحباً بك، نتأسف لاتصالك خارج أوقات العمل الرسمية. نسعد بتواصلك معنا مجدداً خلال أوقات العمل."
     audio_file_url = off_hours_data.get("audio_file_url") or ""
-    voice_name = off_hours_data.get("voice_name") or (profile_data.get("voice_name") if profile_data else "Aoede") or "Aoede"
+    raw_voice = off_hours_data.get("voice_name") or (profile_data.get("voice_name") if profile_data else "nourhan") or "nourhan"
+    voice_name = resolve_engine_voice(raw_voice)
 
     channel_name = f"rooms:{room_name}"
     logger.info(f"[OFF-HOURS] Starting off-hours handling in room '{room_name}' (action: {action_type}, caller: {caller_phone})")

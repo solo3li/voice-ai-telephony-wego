@@ -45,19 +45,35 @@ def run_e2e_tests():
     user, _ = User.objects.get_or_create(username="test_voice_suite_user", defaults={"email": "voices@test.com"})
 
     # -------------------------------------------------------------
-    # TEST 1: Verify 30 Google Voices Metadata
+    # TEST 1: Verify 30 White-Label Voices Metadata & Private Isolation
     # -------------------------------------------------------------
-    print("\n[TEST 1] Verifying Google Voices Metadata (30 Voices)...")
+    print("\n[TEST 1] Verifying White-Label Voice Catalog (30 Human Personas)...")
     female_voices = [v for v in GOOGLE_VOICES if v['gender'] == 'female']
     male_voices = [v for v in GOOGLE_VOICES if v['gender'] == 'male']
-    print(f"[+] Total Google Voices defined: {len(GOOGLE_VOICES)}")
-    print(f"    - Female Voices: {len(female_voices)} (e.g. Aoede, Kore, Leda, Callisto...)")
-    print(f"    - Male Voices: {len(male_voices)} (e.g. Puck, Charon, Fenrir, Zephyr...)")
+    print(f"[+] Total Voices defined: {len(GOOGLE_VOICES)}")
+    print(f"    - Female Personas: {len(female_voices)} (e.g. nourhan, mariam, sarah, laila...)")
+    print(f"    - Male Personas: {len(male_voices)} (e.g. omar, tarek, khaled, ziad...)")
 
     assert len(GOOGLE_VOICES) == 30, f"Expected 30 voices, got {len(GOOGLE_VOICES)}"
     assert len(female_voices) == 15, f"Expected 15 female voices, got {len(female_voices)}"
     assert len(male_voices) == 15, f"Expected 15 male voices, got {len(male_voices)}"
-    print("✅ TEST 1 PASSED: 30 Google Voices verified.")
+
+    # Private Field Isolation assertion
+    for v in GOOGLE_VOICES:
+        assert "engine_voice" not in v, f"Private field engine_voice leaked in public voice: {v}"
+        assert "id" in v and "name" in v and "gender" in v and "style" in v and "tag" in v
+
+    # Bidirectional resolvers test
+    from agents.voice_catalog import resolve_engine_voice, resolve_display_voice_id
+    assert resolve_engine_voice("nourhan") == "Aoede"
+    assert resolve_engine_voice("Aoede") == "Aoede"
+    assert resolve_engine_voice("omar") == "Puck"
+    assert resolve_engine_voice("Puck") == "Puck"
+    assert resolve_display_voice_id("Aoede") == "nourhan"
+    assert resolve_display_voice_id("nourhan") == "nourhan"
+    assert resolve_display_voice_id("Puck") == "omar"
+    assert resolve_display_voice_id("omar") == "omar"
+    print("✅ TEST 1 PASSED: 30 White-Label Personas & Server-Side Bidirectional Resolvers verified.")
 
     # -------------------------------------------------------------
     # TEST 2: Verify Language & Dialect Mapping Hierarchy
@@ -96,27 +112,49 @@ def run_e2e_tests():
     assert resp.status_code == 200, f"Unexpected status: {resp.status_code}"
     data = json.loads(resp.content.decode('utf-8'))
     assert data["status"] == "success"
+    assert "platform_voices" in data
+    assert len(data["platform_voices"]) == 30
     assert len(data["google_voices"]) == 30
+    for v in data["platform_voices"]:
+        assert "engine_voice" not in v, f"engine_voice leaked in platform_voices API: {v}"
     assert "language_dialects_map" in data
     assert "languages" in data
-    print(f"[+] API returned {len(data['languages'])} languages and {len(data['google_voices'])} voices.")
-    print("✅ TEST 3 PASSED: list_profiles API returns full metadata.")
+    print(f"[+] API returned {len(data['languages'])} languages and {len(data['platform_voices'])} platform voices.")
+
+    # Developer & Partner Studio Endpoints Parity Test
+    from developer.models import UserApiKey
+    from developer.views import api_user_profiles_studio
+    dev_key, _ = UserApiKey.objects.get_or_create(
+        user=user,
+        defaults={"name": "Voices Dev Key", "key": "sk_live_usr_vtest_" + "v" * 27, "is_active": True}
+    )
+    dev_req = rf.get('/api/v1/profiles/studio/', HTTP_X_API_KEY=dev_key.key)
+    dev_req.user = user
+    dev_resp = api_user_profiles_studio(dev_req)
+    assert dev_resp.status_code == 200, f"Studio returned {dev_resp.status_code}: {dev_resp.content}"
+    dev_data = json.loads(dev_resp.content.decode('utf-8'))
+    assert "platform_voices" in dev_data
+    assert len(dev_data["platform_voices"]) == 30
+    for v in dev_data["platform_voices"]:
+        assert "engine_voice" not in v
+
+    print("✅ TEST 3 PASSED: list_profiles & studio APIs return full metadata with engine_voice strictly isolated.")
 
     # -------------------------------------------------------------
     # TEST 4: Create and Activate Profiles with Different Dialects & Voices
     # -------------------------------------------------------------
-    print("\n[TEST 4] Creating & Activating Profiles for various Regions & Dialects...")
+    print("\n[TEST 4] Creating & Activating Profiles with Human Personas & Engine Abstraction...")
     test_cases = [
-        {"name": "سارة - مبيعات سعودي", "voice": "Kore", "gender": "female", "lang": "arabic", "dialect": "saudi"},
-        {"name": "فاطمة - خدمة عملاء إماراتي", "voice": "Callisto", "gender": "female", "lang": "arabic", "dialect": "emirati"},
-        {"name": "كريم - دعم مغربي", "voice": "Achird", "gender": "male", "lang": "arabic", "dialect": "moroccan"},
-        {"name": "زيد - دعم عراقي", "voice": "Charon", "gender": "male", "lang": "arabic", "dialect": "iraqi"},
-        {"name": "John - US Sales", "voice": "Zephyr", "gender": "male", "lang": "english", "dialect": "english_us"},
-        {"name": "Emma - UK Support", "voice": "Aoede", "gender": "female", "lang": "english", "dialect": "english_uk"},
-        {"name": "Pierre - Paris", "voice": "Orus", "gender": "male", "lang": "french", "dialect": "french_fr"},
-        {"name": "Hans - Berlin", "voice": "Fenrir", "gender": "male", "lang": "german", "dialect": "german_de"},
-        {"name": "Ali - Lahore", "voice": "Sadachbia", "gender": "male", "lang": "urdu", "dialect": "urdu_pk"},
-        {"name": "Mei - Beijing", "voice": "Autonoe", "gender": "female", "lang": "chinese", "dialect": "chinese_zh"},
+        {"name": "سارة - مبيعات سعودي", "voice": "mariam", "expected_engine": "Kore", "gender": "female", "lang": "arabic", "dialect": "saudi"},
+        {"name": "فاطمة - خدمة عملاء إماراتي", "voice": "laila", "expected_engine": "Callisto", "gender": "female", "lang": "arabic", "dialect": "emirati"},
+        {"name": "كريم - دعم مغربي", "voice": "sameh", "expected_engine": "Achird", "gender": "male", "lang": "arabic", "dialect": "moroccan"},
+        {"name": "زيد - دعم عراقي", "voice": "tarek", "expected_engine": "Charon", "gender": "male", "lang": "arabic", "dialect": "iraqi"},
+        {"name": "John - US Sales", "voice": "ziad", "expected_engine": "Zephyr", "gender": "male", "lang": "english", "dialect": "english_us"},
+        {"name": "Emma - UK Support", "voice": "nourhan", "expected_engine": "Aoede", "gender": "female", "lang": "english", "dialect": "english_uk"},
+        {"name": "Pierre - Paris", "voice": "youssef", "expected_engine": "Orus", "gender": "male", "lang": "french", "dialect": "french_fr"},
+        {"name": "Hans - Berlin", "voice": "khaled", "expected_engine": "Fenrir", "gender": "male", "lang": "german", "dialect": "german_de"},
+        {"name": "Ali - Lahore", "voice": "faisal", "expected_engine": "Sadachbia", "gender": "male", "lang": "urdu", "dialect": "urdu_pk"},
+        {"name": "Mei - Beijing", "voice": "yasmin", "expected_engine": "Autonoe", "gender": "female", "lang": "chinese", "dialect": "chinese_zh"},
     ]
 
     for tc in test_cases:
@@ -142,9 +180,44 @@ def run_e2e_tests():
         assert prof["language"] == tc["lang"]
         assert prof["dialect"] == tc["dialect"]
         assert prof["voice_name"] == tc["voice"]
-        print(f"    [+] Created: {prof['name']} (ID: {prof['id']}) -> {prof['language']} / {prof['dialect']} / {prof['voice_name']}")
+        assert "voice_display" in prof, f"voice_display missing in profile to_dict: {prof}"
+        # Verify engine voice resolution via model helper
+        p_obj = AgentProfile.objects.get(id=prof["id"])
+        assert p_obj.get_engine_voice() == tc["expected_engine"]
+        print(f"    [+] Created: {prof['name']} (ID: {prof['id']}) -> {prof['language']} / {prof['dialect']} / {prof['voice_name']} (Display: '{prof['voice_display']}', Engine: {p_obj.get_engine_voice()})")
 
-    print("✅ TEST 4 PASSED: Successfully created and verified multi-lingual profiles.")
+    # Mixed-case & raw engine name resilience test
+    mixed_cases = [
+        ("NOURHAN", "nourhan", "Aoede"),
+        ("pUcK", "omar", "Puck"),
+        ("Aoede", "nourhan", "Aoede"),
+        ("  KhAlEd  ", "khaled", "Fenrir"),
+    ]
+    for raw_input, expected_id, expected_eng in mixed_cases:
+        mc_req = rf.post(
+            '/api/agents/profiles/create/',
+            data=json.dumps({
+                "name": f"Resilience Test {raw_input.strip()}",
+                "voice_name": raw_input,
+                "gender": "male",
+                "language": "arabic",
+                "dialect": "egyptian",
+                "persona_role": "customer_support",
+                "speaking_style": "friendly",
+                "is_active": False
+            }),
+            content_type='application/json'
+        )
+        mc_req.user = user
+        mc_resp = create_profile(mc_req)
+        assert mc_resp.status_code == 201
+        mc_prof = json.loads(mc_resp.content.decode('utf-8'))["profile"]
+        assert mc_prof["voice_name"] == expected_id, f"Expected {expected_id}, got {mc_prof['voice_name']}"
+        mc_obj = AgentProfile.objects.get(id=mc_prof["id"])
+        assert mc_obj.get_engine_voice() == expected_eng
+        print(f"    [+] Mixed-case input '{raw_input}' cleanly normalized to '{expected_id}' (Engine: {expected_eng})")
+
+    print("✅ TEST 4 PASSED: Successfully created and verified multi-lingual profiles with engine voice isolation & casing resilience.")
 
     # -------------------------------------------------------------
     # TEST 5: Verify AI Dynamic System Instruction Prompt Builder

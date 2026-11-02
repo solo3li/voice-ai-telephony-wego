@@ -1,4 +1,4 @@
-﻿from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from voice_assistant.models import AgentProfile
 
@@ -14,7 +14,7 @@ class Command(BaseCommand):
         presets = [
             {
                 "name": "نورهان - خدمة عملاء مصرية",
-                "voice_name": "Aoede",
+                "voice_name": "nourhan",
                 "gender": "female",
                 "dialect": "egyptian",
                 "persona_role": "customer_support",
@@ -24,7 +24,7 @@ class Command(BaseCommand):
             },
             {
                 "name": "فهد - مستشار مبيعات سعودي",
-                "voice_name": "Puck",
+                "voice_name": "omar",
                 "gender": "male",
                 "dialect": "saudi",
                 "persona_role": "sales_advisor",
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             },
             {
                 "name": "سارة - مساعدة رسمية بالفصحى",
-                "voice_name": "Kore",
+                "voice_name": "mariam",
                 "gender": "female",
                 "dialect": "fusha",
                 "persona_role": "technical_consultant",
@@ -44,7 +44,7 @@ class Command(BaseCommand):
             },
             {
                 "name": "كريم - دعم فني شامي",
-                "voice_name": "Charon",
+                "voice_name": "tarek",
                 "gender": "male",
                 "dialect": "levantine",
                 "persona_role": "personal_assistant",

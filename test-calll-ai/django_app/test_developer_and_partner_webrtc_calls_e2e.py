@@ -60,7 +60,7 @@ def run_e2e_tests():
         user=user,
         name="نورهان - تجربة المتجر",
         defaults={
-            "voice_name": "Aoede",
+            "voice_name": "nourhan",
             "gender": "female",
             "dialect": "egyptian",
             "persona_role": "customer_support",

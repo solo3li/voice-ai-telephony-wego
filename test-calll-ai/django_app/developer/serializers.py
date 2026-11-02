@@ -39,7 +39,7 @@ class UserAccountResponseSerializer(serializers.Serializer):
 class AgentProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(help_text="اسم الشخصية (مثال: نورهان - خدمة عملاء)")
-    voice_name = serializers.CharField(default="Aoede", help_text="صوت Google المعتمد (مثال: Aoede, Puck, Charon)")
+    voice_name = serializers.CharField(default="nourhan", help_text="صوت المنصة المعتمد (مثال: nourhan, omar, khaled)")
     gender = serializers.ChoiceField(choices=[('female', 'أنثى'), ('male', 'ذكر')])
     language = serializers.CharField(default="arabic")
     dialect = serializers.CharField(default="egyptian", help_text="اللهجة الإقليمية")
@@ -56,7 +56,7 @@ class AgentProfileSerializer(serializers.Serializer):
 
 class AgentProfileCreateRequestSerializer(serializers.Serializer):
     name = serializers.CharField(required=True, help_text="اسم الشخصية")
-    voice_name = serializers.CharField(default="Aoede")
+    voice_name = serializers.CharField(default="nourhan")
     gender = serializers.ChoiceField(choices=[('female', 'أنثى'), ('male', 'ذكر')], default='female')
     language = serializers.CharField(default="arabic")
     dialect = serializers.CharField(default="egyptian")
@@ -79,6 +79,7 @@ class AgentProfilesListResponseSerializer(serializers.Serializer):
 
 class AgentStudioMetadataResponseSerializer(serializers.Serializer):
     status = serializers.CharField(default="success")
+    platform_voices = serializers.ListField(child=serializers.DictField(), required=False)
     google_voices = serializers.ListField(child=serializers.DictField())
     languages = serializers.ListField(child=serializers.DictField())
     language_dialects_map = serializers.DictField()

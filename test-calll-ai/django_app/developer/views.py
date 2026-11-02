@@ -314,7 +314,7 @@ def api_user_profiles_studio(request):
     """
     GET /api/v1/profiles/studio/
     Returns full studio customization metadata:
-    - 30 Google HD studio voices with styles and gender classifications
+    - 30 Platform HD voice personas with styles and gender classifications
     - 11 Supported languages
     - 29 Regional dialects grouped hierarchically
     - Sample roles and styles for inspiration
@@ -326,6 +326,7 @@ def api_user_profiles_studio(request):
     custom_roles = list(TenantCustomRole.objects.filter(user=request.user))
     return JsonResponse({
         "status": "success",
+        "platform_voices": GOOGLE_VOICES,
         "google_voices": GOOGLE_VOICES,
         "languages": [{"id": l[0], "label": l[1]} for l in AgentProfile.LANGUAGE_CHOICES],
         "language_dialects_map": LANGUAGE_DIALECTS_MAP,
@@ -397,7 +398,7 @@ def api_user_profiles(request):
         profile = AgentProfile.objects.create(
             user=request.user,
             name=name,
-            voice_name=data.get('voice_name', 'Aoede').strip(),
+            voice_name=data.get('voice_name', 'nourhan').strip(),
             gender=data.get('gender', 'female'),
             language=data.get('language', 'arabic').strip(),
             dialect=data.get('dialect', 'egyptian').strip(),

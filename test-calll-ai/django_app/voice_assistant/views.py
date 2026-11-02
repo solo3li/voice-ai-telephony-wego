@@ -277,7 +277,7 @@ def get_tokens(request):
         active_profile = AgentProfile.objects.create(
             user=user,
             name="نورهان - خدمة عملاء مصرية",
-            voice_name="Aoede",
+            voice_name="nourhan",
             gender="female",
             dialect="egyptian",
             persona_role="customer_support",
@@ -700,7 +700,7 @@ def livekit_webhook(request):
                             "action_type": b_sched.action_type,
                             "ai_message": b_sched.ai_message,
                             "audio_file_url": b_sched.get_audio_url(request),
-                            "voice_name": (profile.get("voice_name") if profile else "Aoede") or "Aoede"
+                            "voice_name": (profile.get("voice_name") if profile else "nourhan") or "nourhan"
                         }
                         logger.info(f"Incoming call in room '{room_name}' is OUTSIDE business hours for user #{user_id}. Action: {b_sched.action_type}")
                 except Exception as b_err:

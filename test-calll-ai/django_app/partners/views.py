@@ -394,7 +394,7 @@ def api_partner_register_client(request):
         name=f"مساعد {name}",
         is_active=True,
         dialect='egyptian',
-        voice_name='Aoede',
+        voice_name='nourhan',
         custom_instructions=f"أنت المساعد الصوتي الذكي الخاص بـ '{name}'، تتحدث بلباقة ووضوح لخدمة العملاء."
     )
 
@@ -653,7 +653,7 @@ def api_partner_studio(request, client_id=None):
     """
     GET /api/partner/v1/studio/ or /api/partner/v1/clients/<int:client_id>/profiles/studio/
     Returns full studio customization metadata:
-    - 30 Google HD studio voices with styles and gender classifications
+    - 30 Platform HD voice personas with styles and gender classifications
     - 11 Supported languages
     - 29 Regional dialects grouped hierarchically
     - Sample roles and styles for free-text inspiration
@@ -667,6 +667,7 @@ def api_partner_studio(request, client_id=None):
         custom_roles = [cr.to_dict() for cr in TenantCustomRole.objects.filter(user_id=client_id)]
     return JsonResponse({
         "status": "success",
+        "platform_voices": GOOGLE_VOICES,
         "google_voices": GOOGLE_VOICES,
         "languages": [{"id": l[0], "label": l[1]} for l in AgentProfile.LANGUAGE_CHOICES],
         "language_dialects_map": LANGUAGE_DIALECTS_MAP,
@@ -745,7 +746,7 @@ def api_partner_client_profile(request, client_id):
             return JsonResponse({"status": "error", "message": "Invalid JSON body"}, status=400)
 
         name = data.get('name') or f"مساعد {request.client_user.first_name or request.client_user.username}"
-        voice_name = data.get('voice_name', 'Aoede').strip()
+        voice_name = data.get('voice_name', 'nourhan').strip()
         gender = data.get('gender', 'female').strip()
         language = data.get('language', 'arabic').strip()
         dialect = data.get('dialect', 'egyptian').strip()

@@ -101,7 +101,7 @@ def assemble_agent_bootstrap_data(
     profile = AgentProfile.objects.filter(user=user, is_active=True).first()
     profile_data = profile.to_dict() if profile else {
         "name": "البروفايل الافتراضي",
-        "voice_name": "Aoede",
+        "voice_name": "nourhan",
         "gender": "female",
         "dialect": "egyptian",
         "persona_role": "customer_support",

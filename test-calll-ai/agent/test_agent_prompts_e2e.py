@@ -58,13 +58,21 @@ def run_agent_e2e_tests():
     print("=" * 65)
 
     # -------------------------------------------------------------
-    # TEST 1: Verify PrebuiltVoiceConfig for all 30 voices
+    # TEST 1: Verify PrebuiltVoiceConfig for all 30 voices & Persona Resolution
     # -------------------------------------------------------------
     print(f"\n[TEST 1] Verifying PrebuiltVoiceConfig instantiation for {len(ALL_30_VOICES)} voices...")
     for voice in ALL_30_VOICES:
         cfg = types.PrebuiltVoiceConfig(voice_name=voice)
         assert cfg.voice_name == voice
-    print(f"✅ TEST 1 PASSED: All {len(ALL_30_VOICES)} voice configs valid and instantiated.")
+
+    from voice_catalog import PLATFORM_VOICES, resolve_engine_voice, resolve_display_voice_id
+    assert len(PLATFORM_VOICES) == 30
+    for p in PLATFORM_VOICES:
+        assert p["engine_voice"] in ALL_30_VOICES, f"Engine voice {p['engine_voice']} not in ALL_30_VOICES"
+        assert resolve_engine_voice(p["id"]) == p["engine_voice"], f"Failed resolving {p['id']} to {p['engine_voice']}"
+        assert resolve_display_voice_id(p["engine_voice"]) == p["id"], f"Failed resolving {p['engine_voice']} to {p['id']}"
+
+    print(f"✅ TEST 1 PASSED: All {len(ALL_30_VOICES)} voice configs valid and 30 human personas bidirectional resolution verified.")
 
     # -------------------------------------------------------------
     # TEST 2: Verify Dynamic Prompt Builder for all Dialects
@@ -73,7 +81,7 @@ def run_agent_e2e_tests():
     for dialect_code, expected_rule, _ in ALL_DIALECT_CHECKS:
         profile = {
             "name": f"Agent {dialect_code}",
-            "voice_name": "Aoede",
+            "voice_name": "nourhan",
             "gender": "female",
             "dialect": dialect_code,
             "persona_role": "customer_support",
@@ -112,12 +120,31 @@ def run_agent_e2e_tests():
     }
     parsed = parse_active_profile_from_bootstrap(sample_bootstrap)
     assert parsed["voice_name"] == "Fenrir"
+    assert resolve_engine_voice(parsed["voice_name"]) == "Fenrir"
     assert parsed["gender"] == "male"
     assert parsed["language"] == "arabic"
     assert parsed["dialect"] == "saudi"
     assert parsed["persona_role"] == "sales_advisor"
-    print(f"    [+] Parsed: {parsed['name']} -> {parsed['voice_name']} | {parsed['language']} | {parsed['dialect']}")
-    print("✅ TEST 3 PASSED: Bootstrap parser successfully preserves all fields.")
+    print(f"    [+] Parsed legacy: {parsed['name']} -> {parsed['voice_name']} (Engine: {resolve_engine_voice(parsed['voice_name'])})")
+
+    # Persona alias in bootstrap
+    persona_bootstrap = {
+        "profile": {
+            "name": "مريم المستشارة",
+            "voice_name": "mariam",
+            "gender": "female",
+            "language": "arabic",
+            "dialect": "saudi",
+            "persona_role": "consultant",
+        }
+    }
+    parsed_persona = parse_active_profile_from_bootstrap(persona_bootstrap)
+    assert parsed_persona["voice_name"] == "mariam"
+    assert resolve_engine_voice(parsed_persona["voice_name"]) == "Kore"
+    assert resolve_display_voice_id(resolve_engine_voice(parsed_persona["voice_name"])) == "mariam"
+    print(f"    [+] Parsed persona: {parsed_persona['name']} -> {parsed_persona['voice_name']} (Resolved Engine: {resolve_engine_voice(parsed_persona['voice_name'])})")
+
+    print("✅ TEST 3 PASSED: Bootstrap parser successfully preserves and resolves all fields.")
 
     print("\n" + "=" * 65)
     print("🎉 ALL AGENT E2E TESTS PASSED SUCCESSFULLY!")

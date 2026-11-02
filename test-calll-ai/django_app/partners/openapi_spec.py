@@ -437,7 +437,7 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                             "schema": {"$ref": "#/components/schemas/ProfileCreateRequest"},
                             "example": {
                                 "name": "مساعد المبيعات السعودي" if is_ar else "Saudi Sales Advisor",
-                                "voice_name": "Aoede",
+                                "voice_name": "nourhan",
                                 "gender": "female",
                                 "dialect": "saudi",
                                 "persona_role": "sales_advisor",
@@ -491,7 +491,7 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                             "example": {
                                 "name": "مستشار الدعم الفني المصري" if is_ar else "Egyptian Tech Consultant",
                                 "dialect": "egyptian",
-                                "voice_name": "Fenrir",
+                                "voice_name": "khaled",
                                 "speaking_style": "formal",
                                 "off_topic_response": "بعتذر، تخصصي محدود في دعم منتجات شركتك، تحب تسأل عن منتج معين؟" if is_ar else "Sorry, my expertise is limited to your company's products. Can I help with a specific product?"
                             }
@@ -1303,7 +1303,7 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                                     "agent_profile": {
                                         "id": 1,
                                         "name": "نورهان - خدمة عملاء",
-                                        "voice": "Aoede",
+                                        "voice": "nourhan",
                                         "dialect": "egyptian"
                                     }
                                 }
@@ -2479,7 +2479,7 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                 "required": ["name"],
                 "properties": {
                     "name": {"type": "string", "example": "مساعد المبيعات السعودي" if is_ar else "Saudi Sales Advisor"},
-                    "voice_name": {"type": "string", "default": "Aoede", "example": "Aoede"},
+                    "voice_name": {"type": "string", "default": "nourhan", "example": "nourhan"},
                     "gender": {"type": "string", "enum": ["female", "male"], "default": "female"},
                     "language": {"type": "string", "default": "arabic", "example": "arabic"},
                     "dialect": {"type": "string", "default": "saudi", "example": "saudi"},

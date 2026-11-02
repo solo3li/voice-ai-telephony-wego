@@ -156,7 +156,7 @@ async function loadProfiles() {
     if (data.status === 'success') {
       userProfiles = data.profiles;
       activeProfile = data.active_profile;
-      googleVoices = data.google_voices;
+      googleVoices = data.platform_voices || data.google_voices || [];
       availableLanguages = data.languages || [];
       languageDialectsMap = data.language_dialects_map || {};
       industryRolesCatalog = data.industry_roles_catalog || [];
@@ -221,8 +221,8 @@ function renderProfileCards() {
         <!-- Card Voice Timber & Details -->
         <div class="bg-slate-50/60 p-3 rounded-lg border border-slate-100 text-xs space-y-1.5">
           <div class="flex justify-between items-center">
-            <span class="text-slate-500">${window.t ? window.t("personas_google_voice_lbl", "صوت Google:") : "صوت Google:"}</span>
-            <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-xs">${escapeHtml(p.voice || p.voice_name)}</span>
+            <span class="text-slate-500">${window.t ? window.t("personas_google_voice_lbl", "صوت المساعد:") : "صوت المساعد:"}</span>
+            <span class="font-mono font-medium text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-xs">${escapeHtml(p.voice_display || p.voice_name || p.voice || 'nourhan')}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-500">${window.t ? window.t("personas_style_lbl", "الأسلوب:") : "الأسلوب:"}</span>
@@ -319,7 +319,8 @@ function populateVoiceSelect(selectElem, targetGender, selectedVoice) {
   if (filtered.length > 0) {
     html += `<optgroup label="أصوات (${targetGender === 'female' ? 'نسائية' : 'رجالية'})">`;
     filtered.forEach(v => {
-      html += `<option value="${v.name}" ${v.name === selectedVoice ? 'selected' : ''}>${v.name} - ${v.style}</option>`;
+      const isSelected = (v.id === selectedVoice || v.name === selectedVoice);
+      html += `<option value="${v.id}" ${isSelected ? 'selected' : ''}>${v.name} - ${v.style}</option>`;
     });
     html += '</optgroup>';
   }
@@ -327,7 +328,8 @@ function populateVoiceSelect(selectElem, targetGender, selectedVoice) {
   if (other.length > 0) {
     html += `<optgroup label="أصوات أخرى">`;
     other.forEach(v => {
-      html += `<option value="${v.name}" ${v.name === selectedVoice ? 'selected' : ''}>${v.name} - ${v.style}</option>`;
+      const isSelected = (v.id === selectedVoice || v.name === selectedVoice);
+      html += `<option value="${v.id}" ${isSelected ? 'selected' : ''}>${v.name} - ${v.style}</option>`;
     });
     html += '</optgroup>';
   }
@@ -338,7 +340,7 @@ function populateVoiceSelect(selectElem, targetGender, selectedVoice) {
 function syncGenderVoiceOptions() {
   if (!fieldGender || !fieldVoice) return;
   const g = fieldGender.value;
-  const currentVoice = fieldVoice.value || (activeProfile ? (activeProfile.voice_name || activeProfile.voice) : 'Aoede');
+  const currentVoice = fieldVoice.value || (activeProfile ? (activeProfile.voice_name || activeProfile.voice) : 'nourhan');
   populateVoiceSelect(fieldVoice, g, currentVoice);
   updateVoiceTag();
 }
@@ -346,15 +348,15 @@ function syncGenderVoiceOptions() {
 function syncNewProfileVoices() {
   if (!newProfGender || !newProfVoice) return;
   const g = newProfGender.value;
-  populateVoiceSelect(newProfVoice, g, g === 'female' ? 'Aoede' : 'Puck');
+  populateVoiceSelect(newProfVoice, g, g === 'female' ? 'nourhan' : 'omar');
 }
 
 function updateVoiceTag() {
   if (!fieldVoice || !voiceTagBadge) return;
-  const selectedName = fieldVoice.value;
-  const v = googleVoices.find(x => x.name === selectedName);
+  const selectedVal = fieldVoice.value;
+  const v = googleVoices.find(x => x.id === selectedVal || x.name === selectedVal);
   if (v) {
-    voiceTagBadge.innerText = `${v.tag} | ${v.style.split('(')[0].trim()}`;
+    voiceTagBadge.innerText = `${v.tag} | ${v.name}`;
   }
 }
 
@@ -474,7 +476,7 @@ async function saveActiveProfileChanges() {
     gender: fieldGender ? fieldGender.value : 'female',
     language: fieldLanguage ? fieldLanguage.value : 'arabic',
     dialect: fieldDialect ? fieldDialect.value : 'egyptian',
-    voice_name: fieldVoice ? fieldVoice.value : 'Aoede',
+    voice_name: fieldVoice ? fieldVoice.value : 'nourhan',
     custom_role_id: selectedCustomRoleId,
     persona_role: fieldRole ? fieldRole.value : '',
     speaking_style: fieldStyle ? fieldStyle.value : '',
