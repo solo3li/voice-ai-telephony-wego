@@ -1,6 +1,32 @@
 {% load static %}
 {% if not is_embed or active_nav in "voice,calls,rag,personas,crm,store,campaigns,callcenter,telephony,business_hours,hours" or not active_nav %}
 <!-- Top Clean Header Component with Conditional Minimalist Telephony Horizontal Bar -->
+<script>
+  if (typeof window.toggleLangDropdown !== 'function') {
+    window.toggleLangDropdown = function(menuId) {
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      var isCurrentlyHidden = menu.classList.contains('hidden');
+      document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+      if (isCurrentlyHidden) {
+        menu.classList.remove('hidden');
+      }
+    };
+  }
+  if (typeof window.selectAppLanguage !== 'function') {
+    window.selectAppLanguage = function(lang) {
+      if (typeof window.applyCommonLanguage === 'function') {
+        window.applyCommonLanguage(lang);
+      } else {
+        try { localStorage.setItem('app_lang', lang); } catch(e) {}
+        var url = new URL(window.location.href);
+        url.searchParams.set('locale', lang);
+        window.location.href = url.toString();
+      }
+      document.querySelectorAll('[id$="-lang-menu"]').forEach(function(m) { m.classList.add('hidden'); });
+    };
+  }
+</script>
 <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
   
   {% if not is_embed %}

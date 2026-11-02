@@ -19,6 +19,9 @@
 
   <!-- Compiled Static Tailwind CSS & Self-Hosted Fonts -->
   <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
+  
+  <!-- Common Shared Script (Loaded Early in Head) -->
+  <script src="{% static 'js/common.js' %}"></script>
 
   <style>
     html, body {
@@ -228,7 +231,6 @@
 
   </div>
 
-  <script src="{% static 'js/common.js' %}"></script>
   <script>
     function togglePasswordVisibility(fieldId, btn) {
       const input = document.getElementById(fieldId);

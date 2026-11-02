@@ -40,6 +40,40 @@
   <!-- LiveKit Client JS (WebRTC Audio - Self-Hosted) -->
   <script src="{% static 'vendor/livekit-client.umd.min.js' %}"></script>
 
+  <!-- Common Shared Script -->
+  <script src="{% static 'js/common.js' %}"></script>
+
+  <!-- Early Declarations for Room Chat Frame -->
+  <script>
+    window.roomChatDismissed = false;
+
+    window.dismissRoomChatLoader = function() {
+      if (window.roomChatDismissed) return;
+      window.roomChatDismissed = true;
+      var loader = document.getElementById('room-chat-frame-loader');
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(function() { loader.style.display = 'none'; }, 350);
+      }
+      var roomFrame = document.getElementById('room-chatwoot-frame');
+      if (roomFrame && roomFrame.contentWindow) {
+        try {
+          roomFrame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
+        } catch(e) {}
+      }
+    };
+
+    window.onRoomChatLoaded = function() {
+      var roomFrame = document.getElementById('room-chatwoot-frame');
+      if (!roomFrame || !roomFrame.src || roomFrame.src === 'about:blank' || roomFrame.src.endsWith('/about:blank')) return;
+      setTimeout(function() {
+        if (typeof window.dismissRoomChatLoader === 'function') {
+          window.dismissRoomChatLoader();
+        }
+      }, 2800);
+    };
+  </script>
+
   <style>
     :root {
       --bg-canvas: #f8fafc;
@@ -3391,9 +3425,6 @@
   <!-- Business Hours JavaScript Dependencies -->
   <script src="{% static 'js/business_hours.js' %}"></script>
 
-  <!-- Common Shared Script -->
-  <script src="{% static 'js/common.js' %}"></script>
-
   <!-- ==================== Scripts + Luxury UI Orchestrator ==================== -->
   <script>
     // Bilingual Localization Dictionary
@@ -3603,30 +3634,18 @@
       }
     });
 
-    let roomChatDismissed = false;
-
-    function dismissRoomChatLoader() {
-      if (roomChatDismissed) return;
-      roomChatDismissed = true;
-      const loader = document.getElementById('room-chat-frame-loader');
-      if (loader) {
-        loader.classList.add('opacity-0', 'pointer-events-none');
-        setTimeout(() => { loader.style.display = 'none'; }, 350);
-      }
-      const roomFrame = document.getElementById('room-chatwoot-frame');
-      if (roomFrame && roomFrame.contentWindow) {
-        try {
-          roomFrame.contentWindow.postMessage({ type: 'set_theme', theme: 'light' }, '*');
-        } catch(e) {}
-      }
-    }
-
-    function onRoomChatLoaded() {
-      const roomFrame = document.getElementById('room-chatwoot-frame');
-      if (!roomFrame || !roomFrame.src || roomFrame.src === 'about:blank' || roomFrame.src.endsWith('/about:blank')) return;
-      setTimeout(() => {
-        dismissRoomChatLoader();
-      }, 2800);
+    // dismissRoomChatLoader and onRoomChatLoaded are initialized in <head> for zero-error iframe readiness
+    if (typeof window.dismissRoomChatLoader !== 'function') {
+      window.roomChatDismissed = false;
+      window.dismissRoomChatLoader = function() {
+        if (window.roomChatDismissed) return;
+        window.roomChatDismissed = true;
+        var loader = document.getElementById('room-chat-frame-loader');
+        if (loader) {
+          loader.classList.add('opacity-0', 'pointer-events-none');
+          setTimeout(() => { loader.style.display = 'none'; }, 350);
+        }
+      };
     }
 
     window.addEventListener('message', function(e) {

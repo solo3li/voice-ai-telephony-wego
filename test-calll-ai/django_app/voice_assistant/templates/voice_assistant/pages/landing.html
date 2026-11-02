@@ -22,6 +22,9 @@
   <!-- Compiled Static Tailwind CSS & Self-Hosted Fonts -->
   <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
 
+  <!-- Common Shared Script (Loaded Early in Head) -->
+  <script src="{% static 'js/common.js' %}"></script>
+
   <style>
     body {
       font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
@@ -392,7 +395,6 @@
   </footer>
 
   <!-- ==================== JAVASCRIPT: FULL 6-LANGUAGE I18N & LIVE INTERACTIONS ==================== -->
-  <script src="{% static 'js/common.js' %}"></script>
   <script>
     // 1. COMPREHENSIVE BILINGUAL TRANSLATION DICTIONARY
     const LANDING_I18N = {
