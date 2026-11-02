@@ -2497,13 +2497,18 @@ def api_partner_client_mcp_test_tool(request, client_id, mcp_id=None):
 
 # =========================================================================
 # Partner API Documentation Portal View
+from django.views.decorators.clickjacking import xframe_options_exempt
+
+
 # =========================================================================
 
+@xframe_options_exempt
 def api_partner_docs(request):
     """
     GET /api/partner/v1/docs/
     Official Interactive Scalar API Reference for Partners & SaaS Integrations (Burgundy & Off-White Theme).
-    Supports bilingual Arabic & English switching (?lang=ar | ?lang=en).
+    Supports 6 languages: Arabic, English, Turkish, French, German, Spanish (?lang=ar|en|tr|fr|de|es).
+    Supports zero-friction embedding in partner dashboards via iframe and postMessage.
     """
     partner = None
     if request.user.is_authenticated:
@@ -2513,13 +2518,16 @@ def api_partner_docs(request):
     if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
         lang = 'ar'
 
-    return render(request, 'partners/scalar_docs.html', {
+    resp = render(request, 'partners/scalar_docs.html', {
         'partner': partner,
         'partner_api_key': partner.api_key if partner else '',
         'base_url': request.build_absolute_uri('/')[:-1],
         'current_lang': lang,
         'is_ar': (lang == 'ar'),
     })
+    resp['Content-Security-Policy'] = "frame-ancestors *"
+    resp['X-Frame-Options'] = "ALLOWALL"
+    return resp
 
 
 class PartnerSpectacularSchemaView(SpectacularAPIView):
@@ -2562,17 +2570,15 @@ class PartnerSpectacularSchemaView(SpectacularAPIView):
                 if path_key not in spec['paths']:
                     spec['paths'][path_key] = path_data
 
-        for k in ('info', 'servers', 'components'):
+        for k in ('servers', 'components'):
             if k not in spec or not spec[k]:
                 spec[k] = legacy_spec.get(k, {})
 
-        # Use curated ordered tags from partner openapi_spec
+        # Always use localized info and tags matching requested language (ar, en, tr, fr, de, es)
+        spec['info'] = legacy_spec.get('info', {})
         spec['tags'] = legacy_spec.get('tags', [])
 
         if lang == 'en':
-            if 'info' in spec:
-                spec['info']['title'] = 'Partner SaaS Multi-Tenant REST API (v1)'
-                spec['info']['description'] = 'B2B Partner API for multi-tenant customer management, voice AI personas, and WebRTC telephony.'
             # Translate campaign tag on paths if English
             for p_key, p_methods in spec.get('paths', {}).items():
                 for m_verb, m_data in p_methods.items():

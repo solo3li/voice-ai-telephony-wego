@@ -52,38 +52,40 @@ async function loadDeveloperKeys() {
       const curlChatSend = document.getElementById('dev-curl-chat-send-sample');
       const curlDial2 = document.getElementById('dev-curl-dial-sample-2');
 
+      const activeLocale = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'ar';
+
       if (embedCallCenterSnippet) {
-        embedCallCenterSnippet.innerText = `<iframe src="${origin}/embed/call-center/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+        embedCallCenterSnippet.innerText = `<iframe src="${origin}/embed/call-center/?token=${currentDeveloperKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (previewCallCenter) {
-        previewCallCenter.href = `/embed/call-center/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewCallCenter.href = `/embed/call-center/?token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (embedChatSnippet) {
-        embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+        embedChatSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?token=${currentDeveloperKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (embedChatChannelsSnippet) {
-        embedChatChannelsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=channels&token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+        embedChatChannelsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=channels&token=${currentDeveloperKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (embedChatSettingsSnippet) {
-        embedChatSettingsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=settings&token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+        embedChatSettingsSnippet.innerText = `<iframe src="${origin}/embed/chat-hub/?tab=settings&token=${currentDeveloperKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (previewChat) {
-        previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewChat.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (previewChatLive) {
-        previewChatLive.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewChatLive.href = `/embed/chat-hub/?token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (previewChatChannels) {
-        previewChatChannels.href = `/embed/chat-hub/?tab=channels&token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewChatChannels.href = `/embed/chat-hub/?tab=channels&token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (previewChatSettings) {
-        previewChatSettings.href = `/embed/chat-hub/?tab=settings&token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewChatSettings.href = `/embed/chat-hub/?tab=settings&token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (embedVoiceSnippet) {
-        embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/call-center/room/?token=${currentDeveloperKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+        embedVoiceSnippet.innerText = `<iframe src="${origin}/embed/call-center/room/?token=${currentDeveloperKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
       }
       if (previewVoice) {
-        previewVoice.href = `/embed/call-center/room/?token=${encodeURIComponent(currentDeveloperKey)}&locale=ar`;
+        previewVoice.href = `/embed/call-center/room/?token=${encodeURIComponent(currentDeveloperKey)}&locale=${activeLocale}`;
       }
       if (curlChatSend) {
         curlChatSend.innerText = `curl -X POST "${origin}/api/v1/chat/send/" \\\n  -H "X-API-Key: ${currentDeveloperKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"to": "+201012345678", "message": "مرحباً بك! كود التحقق هو 5491", "channel": "whatsapp"}'`;
@@ -659,7 +661,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLiveContext();
 });
 
-// Re-render developer live context on language toggle
+// Re-render developer live context & embed snippets on language toggle
 window.addEventListener('appLanguageChanged', () => {
   loadLiveContext();
+  if (currentDeveloperKey) {
+    loadDeveloperKeys();
+  }
 });

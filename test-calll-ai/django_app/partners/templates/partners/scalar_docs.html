@@ -243,6 +243,11 @@
       const targetLang = valid.includes(lang) ? lang : 'ar';
       localStorage.setItem('partner_docs_lang', targetLang);
       localStorage.setItem('app_lang', targetLang);
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'LANGUAGE_CHANGED', lang: targetLang }, '*');
+        } catch(e) {}
+      }
       const url = new URL(window.location.href);
       url.searchParams.set('lang', targetLang);
       window.location.href = url.toString();
@@ -253,12 +258,30 @@
       selectScalarLanguage(nextLang);
     }
 
+    // Cross-origin iframe postMessage language receiver
+    window.addEventListener('message', function(event) {
+      if (!event.data || typeof event.data !== 'object') return;
+      const type = event.data.type || event.data.action || '';
+      if (type === 'SET_LANGUAGE' || type === 'SET_LOCALE' || type === 'CHANGE_LANGUAGE') {
+        const reqLang = (event.data.lang || event.data.locale || '').toLowerCase().trim();
+        const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+        if (valid.includes(reqLang) && reqLang !== '{{ current_lang }}') {
+          selectScalarLanguage(reqLang);
+        }
+      }
+    });
+
     // Align with saved language preference if no query parameter is explicitly provided
     (function initLanguagePreference() {
       const urlParams = new URLSearchParams(window.location.search);
-      if (!urlParams.has('lang')) {
+      const paramLang = urlParams.get('lang') || urlParams.get('locale');
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      if (paramLang && valid.includes(paramLang.toLowerCase()) && paramLang.toLowerCase() !== '{{ current_lang }}') {
+        selectScalarLanguage(paramLang.toLowerCase());
+        return;
+      }
+      if (!paramLang) {
         const savedLang = localStorage.getItem('partner_docs_lang') || localStorage.getItem('app_lang');
-        const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
         if (savedLang && valid.includes(savedLang) && savedLang !== '{{ current_lang }}') {
           const url = new URL(window.location.href);
           url.searchParams.set('lang', savedLang);

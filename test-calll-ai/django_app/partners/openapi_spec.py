@@ -5,26 +5,74 @@ endpoint summaries, realistic examples, and security definitions.
 """
 
 def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "ar") -> dict:
-    lang = "ar" if lang.lower() == "ar" else "en"
+    lang = lang.lower().strip() if lang else "ar"
+    if lang not in ("ar", "en", "tr", "fr", "de", "es"):
+        lang = "ar"
     is_ar = (lang == "ar")
 
-    # 1. Info Definition
-    info = {
-        "title": "منظومة المساعد الصوتي للشركاء (Voice SaaS Partner API)" if is_ar else "Voice AI Partner Platform API (Headless Voice SaaS)",
-        "version": "1.0.0",
-        "description": (
+    info_titles = {
+        "ar": "منظومة المساعد الصوتي - بوابة الشركاء (Voice SaaS Partner API)",
+        "en": "Voice AI Partner Platform API (Headless Voice SaaS)",
+        "tr": "Yapay Zeka Sesli SaaS Ortak API (Voice SaaS Partner API)",
+        "fr": "API Partenaire Vocal SaaS IA (Voice SaaS Partner API)",
+        "de": "Sprach-KI Partner-Plattform API (Voice SaaS Partner API)",
+        "es": "API para Socios de Plataforma de Voz IA (Voice SaaS Partner API)",
+    }
+
+    info_descriptions = {
+        "ar": (
             "دليل تكامل واجهات الشركاء وخدمات الـ SaaS (Headless Architecture). "
             "يتيح لك هذا الـ API بناء وتضمين خدمة المساعد الصوتي الذكي داخل تطبيقك أو متجرك "
             "أو نظامك السحابي دون أن يرى عميلك واجهتنا مطلقاً (White-Label). "
             "تتم محاسبتك بسعر الجملة المخفض المخصص لك بخصم مباشر من محفظتك المركزية مع التقريب الصارم لأعلى دقيقة."
-            if is_ar else
+        ),
+        "en": (
             "Developer Integration Guide for SaaS Partners & Resellers (Headless Architecture). "
             "This API enables you to embed intelligent, dialect-aware conversational voice AI directly into your applications, "
             "e-commerce stores, or SaaS platforms with zero third-party branding (White-Label). "
             "Usage is billed at your negotiated wholesale per-minute rate directly from your central pooled wallet with strict ceiling minute rounding."
         ),
+        "tr": (
+            "SaaS Ortakları ve Bayiler İçin Geliştirici Entegrasyon Kılavuzu (Headless Architecture). "
+            "Bu API, akıllı, çok dilli sesli yapay zekayı doğrudan kendi uygulamalarınıza, e-ticaret sitelerinize veya SaaS platformlarınıza "
+            "üçüncü taraf markası olmadan (White-Label) entegre etmenizi sağlar. "
+            "Kullanım, merkezi ortak cüzdanınızdan toptan indirimli dakika tarifesiyle faturalandırılır."
+        ),
+        "fr": (
+            "Guide d'intégration développeur pour les partenaires SaaS et revendeurs (Headless Architecture). "
+            "Cette API vous permet d'intégrer une IA vocale conversationnelle intelligente directement dans vos applications, "
+            "boutiques en ligne ou plateformes SaaS sans marque tierce (White-Label). "
+            "La consommation est facturée à votre tarif de gros négocié directement depuis votre portefeuille centralisé."
+        ),
+        "de": (
+            "Entwickler-Integrationsleitfaden für SaaS-Partner und Wiederverkäufer (Headless Architecture). "
+            "Diese API ermöglicht die Einbettung intelligenter, dialektfähiger KI-Sprachassistenten direkt in Ihre Anwendungen "
+            "oder SaaS-Plattformen ohne Drittanbieter-Branding (White-Label). "
+            "Die Abrechnung erfolgt zu Ihrem Großhandels-Minutentarif direkt über Ihre zentrale Wallet."
+        ),
+        "es": (
+            "Guía de integración para socios SaaS y revendedores (Headless Architecture). "
+            "Esta API le permite incrustar inteligencia artificial conversacional por voz directamente en sus aplicaciones "
+            "o plataformas SaaS con su propia marca (White-Label). "
+            "El uso se factura a su tarifa mayorista por minuto negociada directamente desde su billetera centralizada."
+        ),
+    }
+
+    info_contacts = {
+        "ar": "فريق الدعم الفني للمنظومة",
+        "en": "Voice AI Platform Partner Support",
+        "tr": "Sesli Yapay Zeka Ortak Destek Ekibi",
+        "fr": "Support Partenaire Plateforme Vocale IA",
+        "de": "Sprach-KI Plattform Partner-Support",
+        "es": "Soporte para Socios de Plataforma de Voz IA",
+    }
+
+    info = {
+        "title": info_titles.get(lang, info_titles["ar"]),
+        "version": "1.0.0",
+        "description": info_descriptions.get(lang, info_descriptions["ar"]),
         "contact": {
-            "name": "فريق الدعم الفني للمنظومة" if is_ar else "Voice AI Platform Partner Support",
+            "name": info_contacts.get(lang, info_contacts["ar"]),
             "url": "https://localhost/api/partner/v1/docs/"
         }
     }
@@ -68,7 +116,91 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
         {"name": "16. Client WhatsApp & Omnichannel", "description": "Sub-client WhatsApp instance pairing, live chat inspection, human agent reply, and post-call receipts."}
     ]
 
-    tags = tags_ar if is_ar else tags_en
+    tags_tr = [
+        {"name": "1. Genel Bakış ve Merkezi Cüzdan (Overview & Pooled Wallet)", "description": "X-Partner-Key kimlik doğrulaması, toptan bakiye ve işlem defteri."},
+        {"name": "2. Müşteri Yönetimi (Client Management)", "description": "Alt müşteri hesapları, harcama ve dakika kotaları yönetimi."},
+        {"name": "3. Ses Profilleri ve Çalışma Saatleri (Voice Profiles & Business Hours)", "description": "Yapay zeka ses profilleri, şiveler ve müşteri çalışma saatleri."},
+        {"name": "4. Müşteri CRM ve Bağlam Belleği (Customer CRM & Context Memory)", "description": "Arayan geçmişi, CRM müşteri hafızası ve not sorguları."},
+        {"name": "5. Bilgi Bankası ve RAG Arama (Knowledge Base & Semantic RAG)", "description": "Belge yükleme, pgvector anlamsal indeksleme ve RAG bilgi araması."},
+        {"name": "6. Telefon, PBX ve DID Numaraları (Telephony, PBX & DIDs)", "description": "PBX santral bağlantıları (Issabel), çift yönlü yapılandırma ve DID eşleştirme."},
+        {"name": "7. Personel Rehberi ve Dahili Hatlar (Employee Directory & Extensions)", "description": "Müşteri personeli, dahili hatlar, aktarımlar ve çağrı ses kayıtları."},
+        {"name": "8. Çağrı Kuyrukları ve Yönlendirme (Call Queues & Routing)", "description": "Kuyruklar, dağıtım stratejileri (Round Robin) ve temsilciler."},
+        {"name": "9. Çağrı Kayıtları ve CDR (Call Logs & CDR)", "description": "Ayrıntılı çağrı kayıtları (CDR), ses kayıtları ve yapay zeka özetleri."},
+        {"name": "10. Webhook ve HMAC İmzaları (Webhooks & HMAC Signatures)", "description": "Gerçek zamanlı webhook bildirimleri ve HMAC-SHA256 imza doğrulaması."},
+        {"name": "11. Müşteri FastMCP Yönetimi (Client FastMCP Management)", "description": "Müşteri bazlı harici FastMCP sunucuları ve araç şemaları eşitlemesi."},
+        {"name": "12. Müşteri Dış Arama Kampanyaları (Client Outbound Campaigns)", "description": "Otomatik dış arama kampanyaları ve Inngest ile arama yönetimi."},
+        {"name": "13. Müşteri Dinamik Canlı Bağlamı (Client Structured Live Context)", "description": "Hızlı Redis önbelleğinde dinamik işletme verileri (< 2ms) yönetimi."},
+        {"name": "14. Müşteri Sektörel Yapay Zeka Rolleri (Client AI Industry Roles)", "description": "Sektörel roller kataloğu ve müşteri bazlı özel roller tanımlama."},
+        {"name": "15. Arama Yasaklı Listesi (Client Do Not Call - DNC)", "description": "Müşteri DNC listesi ve arama öncesi yasaklı numara denetimi."},
+        {"name": "16. Müşteri WhatsApp ve Çok Kanallı İletişim (Client WhatsApp Omnichannel)", "description": "Müşteri WhatsApp oturumları, canlı sohbetler ve otomatik faturalandırma."}
+    ]
+
+    tags_fr = [
+        {"name": "1. Aperçu et Portefeuille Centralisé (Overview & Pooled Wallet)", "description": "Authentification X-Partner-Key, solde centralisé et relevé de facturation en gros."},
+        {"name": "2. Gestion des Clients (Client Management)", "description": "Création de sous-clients, statuts et plafonds de dépenses/minutes."},
+        {"name": "3. Profils Vocaux et Horaires (Voice Profiles & Business Hours)", "description": "Profils vocaux IA, dialectes et horaires d'ouverture des clients."},
+        {"name": "4. Mémoire Client CRM (Customer CRM & Context Memory)", "description": "Historique des appelants, mémoire CRM et notes par numéro de téléphone."},
+        {"name": "5. Base de Connaissances RAG (Knowledge Base & Semantic RAG)", "description": "Indexation sémantique pgvector et recherche de connaissances RAG."},
+        {"name": "6. Téléphonie, PBX et DID (Telephony, PBX & DIDs)", "description": "Liaisons PBX (Issabel), configuration bidirectionnelle et numéros DID."},
+        {"name": "7. Annuaire et Postes Internes (Employee Directory & Extensions)", "description": "Postes internes SIP, transferts d'appels et enregistrements audio."},
+        {"name": "8. Files d'Attente et Routage (Call Queues & Routing)", "description": "Files d'attente du centre d'appels, Round Robin et membres."},
+        {"name": "9. Journaux d'Appels CDR (Call Logs & CDR)", "description": "Rapports détaillés CDR, enregistrements audios et résumés de conversation IA."},
+        {"name": "10. Webhooks et Signatures HMAC (Webhooks & HMAC Signatures)", "description": "Notifications webhook en temps réel et validation de signature HMAC-SHA256."},
+        {"name": "11. Gestion FastMCP Clients (Client FastMCP Management)", "description": "Serveurs d'outils FastMCP externes par sous-client et schémas d'outils."},
+        {"name": "12. Campagnes d'Appels Sortants (Client Outbound Campaigns)", "description": "Campagnes d'appels sortants automatisées et exécution Inngest."},
+        {"name": "13. Contexte Dynamique Client (Client Structured Live Context)", "description": "Cache mémoire Redis ultra-rapide (< 2ms) pour les données client."},
+        {"name": "14. Rôles Métiers IA Clients (Client AI Industry Roles)", "description": "Catalogue de rôles sectoriels prédéfinis et attribution par client."},
+        {"name": "15. Liste d'Opposition Téléphonique (Client Do Not Call - DNC)", "description": "Gestion de liste DNC et vérification de conformité avant numérotation."},
+        {"name": "16. Gestion WhatsApp et Omnicanal Client (Client WhatsApp Omnichannel)", "description": "Appairage WhatsApp par sous-client, reprise par opérateur et reçus."}
+    ]
+
+    tags_de = [
+        {"name": "1. Übersicht und Zentrales Wallet (Overview & Pooled Wallet)", "description": "Authentifizierung über X-Partner-Key, Guthaben und Großhandelsabrechnung."},
+        {"name": "2. Mandantenverwaltung (Client Management)", "description": "Bereitstellung von Unterkunden, Kontostatus und Minuten-Limits."},
+        {"name": "3. Sprachprofile und Geschäftszeiten (Voice Profiles & Business Hours)", "description": "KI-Sprachprofile, Dialekte und Mandanten-Geschäftszeiten."},
+        {"name": "4. Kunden-CRM und Kontextgedächtnis (Customer CRM & Context Memory)", "description": "Anruferhistorie, CRM-Kundengedächtnis und Notizen."},
+        {"name": "5. Wissensdatenbank und RAG (Knowledge Base & Semantic RAG)", "description": "pgvector semantische Vektorindexierung und RAG-Suche."},
+        {"name": "6. Telefonie, PBX und DIDs (Telephony, PBX & DIDs)", "description": "PBX-Trunks (Issabel), bidirektionale Konfiguration und DID-Rufnummern."},
+        {"name": "7. Mitarbeiterverzeichnis und Nebenstellen (Employee Directory & Extensions)", "description": "Mitarbeiterverzeichnis, Nebenstellen, Weiterleitungen und Aufnahmen."},
+        {"name": "8. Anrufwarteschlangen und Routing (Call Queues & Routing)", "description": "Callcenter-Warteschlangen, Round-Robin-Strategien und Agenten."},
+        {"name": "9. Anrufprotokolle und CDR (Call Logs & CDR)", "description": "Detaillierte Anrufdaten (CDR), Audioaufnahmen und KI-Zusammenfassungen."},
+        {"name": "10. Webhooks und HMAC-Signaturen (Webhooks & HMAC Signatures)", "description": "Echtzeit-Webhook-Benachrichtigungen und HMAC-SHA256-Signaturprüfung."},
+        {"name": "11. Mandanten FastMCP-Verwaltung (Client FastMCP Management)", "description": "Externe FastMCP-Server je Mandant und Live-Tool-Synchronisation."},
+        {"name": "12. Ausgehende Mandanten-Kampagnen (Client Outbound Campaigns)", "description": "Automatisierte Anrufkampagnen und parallele Ausführung über Inngest."},
+        {"name": "13. Strukturierter Live-Kontext des Mandanten (Client Structured Live Context)", "description": "Echtzeit-In-Memory-Cache (< 2ms) für dynamische Geschäftsdaten."},
+        {"name": "14. Branchenspezifische KI-Rollen des Mandanten (Client AI Industry Roles)", "description": "Vordefinierte Branchenrollen und kundenspezifische Rollenerstellung."},
+        {"name": "15. Mandanten-Sperrliste (Client Do Not Call - DNC)", "description": "DNC-Verwaltung und Vorabprüfung von Telefonnummern."},
+        {"name": "16. Mandanten-WhatsApp und Omnichannel (Client WhatsApp Omnichannel)", "description": "WhatsApp-Instanz-Pairing je Mandant, Live-Chats und Anrufquittungen."}
+    ]
+
+    tags_es = [
+        {"name": "1. Resumen y Billetera Centralizada (Overview & Pooled Wallet)", "description": "Autenticación X-Partner-Key, saldo centralizado y registro de transacciones mayoristas."},
+        {"name": "2. Gestión de Clientes (Client Management)", "description": "Aprovisionamiento de subclientes, estado y límites de minutos/gasto."},
+        {"name": "3. Perfiles de Voz y Horarios (Voice Profiles & Business Hours)", "description": "Perfiles de voz IA, dialectos y horarios comerciales del subcliente."},
+        {"name": "4. CRM y Memoria del Cliente (Customer CRM & Context Memory)", "description": "Historial de llamadas, memoria CRM y notas por teléfono."},
+        {"name": "5. Base de Conocimiento y RAG (Knowledge Base & Semantic RAG)", "description": "Indexación semántica pgvector y búsqueda RAG con Gemini."},
+        {"name": "6. Telefonía, PBX y DIDs (Telephony, PBX & DIDs)", "description": "Troncales PBX (Issabel), configuración bidireccional y asignación DID."},
+        {"name": "7. Directorio de Personal y Extensiones (Employee Directory & Extensions)", "description": "Directorio de personal, extensiones SIP, transferencias y grabaciones."},
+        {"name": "8. Colas de Llamadas y Enrutamiento (Call Queues & Routing)", "description": "Colas de centro de llamadas, estrategias Round Robin y miembros."},
+        {"name": "9. Registros de Llamadas CDR (Call Logs & CDR)", "description": "Registros de llamadas CDR, grabaciones de audio y resúmenes de IA."},
+        {"name": "10. Webhooks y Firmas HMAC (Webhooks & HMAC Signatures)", "description": "Notificaciones de llamadas finalizadas y verificación de firma HMAC-SHA256."},
+        {"name": "11. Gestión FastMCP de Clientes (Client FastMCP Management)", "description": "Servidores de herramientas FastMCP externos por cliente y sincronización."},
+        {"name": "12. Campañas de Llamadas Salientes de Clientes (Client Outbound Campaigns)", "description": "Campañas automatizadas y ejecución en paralelo vía Inngest."},
+        {"name": "13. Contexto Estructurado del Cliente (Client Structured Live Context)", "description": "Caché en memoria Redis (< 2ms) para datos comerciales del cliente."},
+        {"name": "14. Roles de IA por Industria para Clientes (Client AI Industry Roles)", "description": "Catálogo de roles por sector y aprovisionamiento personalizado."},
+        {"name": "15. Registro No Llamar del Cliente (Client Do Not Call - DNC)", "description": "Gestión de lista DNC y validación previa antes de marcar."},
+        {"name": "16. WhatsApp y Gestión Omnicanal del Cliente (Client WhatsApp Omnichannel)", "description": "Vinculación de WhatsApp por cliente, atención en vivo y recibos post-llamada."}
+    ]
+
+    tags_map = {
+        "ar": tags_ar,
+        "en": tags_en,
+        "tr": tags_tr,
+        "fr": tags_fr,
+        "de": tags_de,
+        "es": tags_es,
+    }
+    tags = tags_map.get(lang, tags_ar)
     tag_map = {
         "tag_auth": tags[0]["name"],
         "tag_clients": tags[1]["name"],

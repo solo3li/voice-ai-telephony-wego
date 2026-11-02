@@ -101,6 +101,7 @@ async function loadPartnerDashboard() {
     // White-label embed snippets
     const partnerKey = partner.api_key || '';
     currentPartnerKey = partnerKey;
+    const activeLocale = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'ar';
     const pChatSnippet = document.getElementById('partner-embed-chat-snippet');
     const pCallCenterSnippet = document.getElementById('partner-embed-callcenter-snippet');
     const pVoiceSnippet = document.getElementById('partner-embed-voice-snippet');
@@ -109,22 +110,22 @@ async function loadPartnerDashboard() {
     const pVoicePreview = document.getElementById('partner-embed-voice-preview-btn');
 
     if (pChatSnippet) {
-      pChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat-hub/?token=${partnerKey}&locale=ar" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 700px;"></iframe>`;
+      pChatSnippet.innerText = `<iframe src="${window.location.origin}/embed/chat-hub/?token=${partnerKey}&locale=${activeLocale}" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 700px;"></iframe>`;
     }
     if (pCallCenterSnippet) {
-      pCallCenterSnippet.innerText = `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      pCallCenterSnippet.innerText = `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
     }
     if (pVoiceSnippet) {
-      pVoiceSnippet.innerText = pCallCenterSnippet ? pCallCenterSnippet.innerText : `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=ar" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
+      pVoiceSnippet.innerText = pCallCenterSnippet ? pCallCenterSnippet.innerText : `<iframe src="${window.location.origin}/embed/call-center/?token=${partnerKey}&locale=${activeLocale}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
     }
     if (pChatPreview) {
-      pChatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+      pChatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&locale=${activeLocale}`;
     }
     if (pCallCenterPreview) {
-      pCallCenterPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+      pCallCenterPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=${activeLocale}`;
     }
     if (pVoicePreview) {
-      pVoicePreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=ar`;
+      pVoicePreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&locale=${activeLocale}`;
     }
 
     // 3. Shared MCP Servers dropdown
@@ -438,6 +439,13 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPartnerDashboard();
 });
 
+// Refresh partner embed snippets and cards on language toggle
+window.addEventListener('appLanguageChanged', () => {
+  if (currentPartnerKey) {
+    loadPartnerDashboard();
+  }
+});
+
 function copyPartnerEmbedChatSnippet() {
   const el = document.getElementById('partner-embed-chat-snippet');
   if (el) {
@@ -477,21 +485,22 @@ function openClientEmbedModal(clientId, clientName) {
   const chatSnippet = document.getElementById('client-embed-chat-snippet');
   const chatPreview = document.getElementById('client-embed-chat-preview-btn');
 
-  const ccUrl = `${origin}/embed/call-center/?token=${partnerKey}&client_id=${clientId}&locale=ar`;
-  const chatUrl = `${origin}/embed/chat-hub/?token=${partnerKey}&client_id=${clientId}&locale=ar`;
+  const activeLocale = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'ar';
+  const ccUrl = `${origin}/embed/call-center/?token=${partnerKey}&client_id=${clientId}&locale=${activeLocale}`;
+  const chatUrl = `${origin}/embed/chat-hub/?token=${partnerKey}&client_id=${clientId}&locale=${activeLocale}`;
 
   if (ccSnippet) {
     ccSnippet.innerText = `<iframe src="${ccUrl}" width="100%" height="800" frameborder="0" allow="microphone; camera; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 800px;"></iframe>`;
   }
   if (ccPreview) {
-    ccPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=ar`;
+    ccPreview.href = `/embed/call-center/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=${activeLocale}`;
   }
 
   if (chatSnippet) {
     chatSnippet.innerText = `<iframe src="${chatUrl}" width="100%" height="700" frameborder="0" allow="camera; microphone; clipboard-read; clipboard-write;" style="border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; min-height: 700px;"></iframe>`;
   }
   if (chatPreview) {
-    chatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=ar`;
+    chatPreview.href = `/embed/chat-hub/?token=${encodeURIComponent(partnerKey)}&client_id=${encodeURIComponent(clientId)}&locale=${activeLocale}`;
   }
 
   modal.classList.remove('hidden');

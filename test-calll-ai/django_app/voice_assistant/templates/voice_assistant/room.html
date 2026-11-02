@@ -7,10 +7,19 @@
   <meta name="user-id" content="{{ user_id|default:request.user.id }}" />
   <meta name="user-username" content="{{ username|default:request.user.username }}" />
   <script>
+    window.EMBED_TOKEN = "{% firstof embed_token token '' %}";
+    window.EMBED_CLIENT_ID = "{% firstof embed_client_id client_id '' %}";
+    window.EMBED_LOCALE = "{% firstof embed_locale locale 'ar' %}";
     (function() {
-      var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
-      document.documentElement.lang = savedLang;
-      document.documentElement.dir = (savedLang === 'ar') ? 'rtl' : 'ltr';
+      var urlParams = new URLSearchParams(window.location ? window.location.search : '');
+      var paramLang = urlParams.get('lang') || urlParams.get('locale');
+      var winLang = window.EMBED_LOCALE;
+      var valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      var chosen = (paramLang && valid.indexOf(paramLang.toLowerCase()) !== -1) ? paramLang.toLowerCase()
+                 : (winLang && valid.indexOf(winLang.toLowerCase()) !== -1) ? winLang.toLowerCase()
+                 : (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar');
+      document.documentElement.lang = chosen;
+      document.documentElement.dir = (chosen === 'ar') ? 'rtl' : 'ltr';
     })();
   </script>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -3646,6 +3655,12 @@
       } else if (data.type === 'SWITCH_TAB' || data.type === 'switch_tab') {
         if (data.tab && typeof switchTab === 'function') {
           switchTab(data.tab);
+        }
+      } else if (data.type === 'SET_LANGUAGE' || data.type === 'SET_LOCALE' || data.type === 'CHANGE_LANGUAGE') {
+        var reqLang = (data.lang || data.locale || '').toLowerCase().trim();
+        var validLangs = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+        if (validLangs.indexOf(reqLang) !== -1 && typeof applyCommonLanguage === 'function') {
+          applyCommonLanguage(reqLang);
         }
       }
     });

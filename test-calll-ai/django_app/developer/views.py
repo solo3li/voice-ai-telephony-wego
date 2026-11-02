@@ -164,15 +164,20 @@ def rotate_developer_key(request):
     })
 
 
+from django.views.decorators.clickjacking import xframe_options_exempt
+
+
 # =========================================================================
 # Documentation Portal Views (Scalar)
 # =========================================================================
 
+@xframe_options_exempt
 def api_user_docs(request):
     """
     GET /api/v1/docs/
     Interactive Scalar Reference for User Developer API (Burgundy & Warm Off-White Theme).
-    Supports bilingual Arabic & English switching (?lang=ar | ?lang=en).
+    Supports 6 languages: Arabic, English, Turkish, French, German, Spanish (?lang=ar|en|tr|fr|de|es).
+    Supports zero-friction embedding in parent portals via iframe and postMessage.
     """
     lang = request.GET.get('lang', 'ar').lower().strip()
     if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
@@ -185,12 +190,15 @@ def api_user_docs(request):
             key_obj = UserApiKey.generate_for_user(user=request.user, name="مفتاح التطبيق الرئيسي")
         user_api_key = key_obj.key
 
-    return render(request, 'developer/scalar_docs.html', {
+    resp = render(request, 'developer/scalar_docs.html', {
         'user_api_key': user_api_key,
         'base_url': request.build_absolute_uri('/')[:-1],
         'current_lang': lang,
         'is_ar': (lang == 'ar'),
     })
+    resp['Content-Security-Policy'] = "frame-ancestors *"
+    resp['X-Frame-Options'] = "ALLOWALL"
+    return resp
 
 
 class UserSpectacularSchemaView(SpectacularAPIView):
@@ -233,9 +241,13 @@ class UserSpectacularSchemaView(SpectacularAPIView):
                 if path_key not in spec['paths']:
                     spec['paths'][path_key] = path_data
 
-        for k in ('info', 'servers'):
+        for k in ('servers',):
             if k not in spec or not spec[k]:
                 spec[k] = legacy_spec.get(k, {})
+
+        # Always use localized info and tags matching requested language (ar, en, tr, fr, de, es)
+        spec['info'] = legacy_spec.get('info', {})
+        spec['tags'] = legacy_spec.get('tags', [])
 
         if 'components' not in spec or not spec['components']:
             spec['components'] = legacy_spec.get('components', {})
@@ -250,11 +262,8 @@ class UserSpectacularSchemaView(SpectacularAPIView):
         # Use curated ordered tags from user_openapi_spec
         spec['tags'] = legacy_spec.get('tags', [])
 
-        if lang == 'en':
-            if 'info' in spec:
-                spec['info']['title'] = 'User Developer REST API (v1)'
-                spec['info']['description'] = 'Developer REST API for Voice Assistant, LiveKit WebRTC, and FastMCP tools.'
-            # Translate tags on paths if English
+        if lang != 'ar':
+            # Translate tags on paths if non-Arabic
             for p_key, p_methods in spec.get('paths', {}).items():
                 for m_verb, m_data in p_methods.items():
                     if isinstance(m_data, dict) and 'tags' in m_data:

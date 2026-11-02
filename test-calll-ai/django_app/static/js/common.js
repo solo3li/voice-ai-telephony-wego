@@ -9248,6 +9248,13 @@ function applyCommonLanguage(lang) {
   // Sync Chatwoot if present on page
   syncChatwootLanguage(lang);
 
+  // Notify parent embedding window if embedded inside an iframe
+  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+    try {
+      window.parent.postMessage({ type: 'LANGUAGE_CHANGED', lang: lang, isRtl: isRtl }, '*');
+    } catch (e) {}
+  }
+
   // Dispatch custom event for child / modular page controllers
   window.dispatchEvent(new CustomEvent('appLanguageChanged', { detail: { lang: lang, isRtl: isRtl } }));
 }
@@ -9281,14 +9288,35 @@ function toggleLanguage() {
   applyCommonLanguage(next);
 }
 
+// Cross-origin iframe postMessage language receiver
+window.addEventListener('message', (event) => {
+  if (!event.data || typeof event.data !== 'object') return;
+  const msgType = event.data.type || event.data.action || '';
+  if (msgType === 'SET_LANGUAGE' || msgType === 'SET_LOCALE' || msgType === 'CHANGE_LANGUAGE') {
+    const requested = (event.data.lang || event.data.locale || '').toLowerCase().trim();
+    if (VALID_LANGS.includes(requested)) {
+      applyCommonLanguage(requested);
+    }
+  }
+});
+
 // Expose globally
 window.applyCommonLanguage = applyCommonLanguage;
 window.toggleLanguage = toggleLanguage;
 
-// Self-executing setup on script load
+// Self-executing setup on script load with query param & iframe locale precedence
 (function initEarlyLanguage() {
-  const saved = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
-  currentLang = VALID_LANGS.includes(saved) ? saved : 'ar';
+  const urlParams = new URLSearchParams(window.location ? window.location.search : '');
+  const paramLang = urlParams.get('lang') || urlParams.get('locale');
+  const winLang = (typeof window !== 'undefined' && window.EMBED_LOCALE) ? window.EMBED_LOCALE : null;
+  const target = (paramLang && VALID_LANGS.includes(paramLang.toLowerCase())) ? paramLang.toLowerCase()
+               : (winLang && VALID_LANGS.includes(winLang.toLowerCase())) ? winLang.toLowerCase()
+               : (localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar');
+  currentLang = VALID_LANGS.includes(target) ? target : 'ar';
+  try {
+    localStorage.setItem('app_lang', currentLang);
+    localStorage.setItem('voice_app_lang', currentLang);
+  } catch (e) {}
   document.documentElement.lang = currentLang;
   document.documentElement.dir = (currentLang === 'ar') ? 'rtl' : 'ltr';
 })();

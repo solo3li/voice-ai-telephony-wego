@@ -879,6 +879,14 @@
         } catch(e) {}
       }
     }
+    // 5. Parent command: set language / locale
+    if (data.type === 'SET_LANGUAGE' || data.type === 'SET_LOCALE' || data.type === 'CHANGE_LANGUAGE') {
+      const reqLang = (data.lang || data.locale || '').toLowerCase().trim();
+      const validLangs = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      if (validLangs.includes(reqLang) && typeof applyCommonLanguage === 'function') {
+        applyCommonLanguage(reqLang);
+      }
+    }
   });
 
   function switchChatSubTab(tab) {

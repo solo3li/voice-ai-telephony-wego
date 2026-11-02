@@ -5,25 +5,72 @@ endpoint summaries, realistic examples, and security definitions.
 """
 
 def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict:
-    lang = "ar" if lang.lower() == "ar" else "en"
+    lang = lang.lower().strip() if lang else "ar"
+    if lang not in ("ar", "en", "tr", "fr", "de", "es"):
+        lang = "ar"
     is_ar = (lang == "ar")
 
-    info = {
-        "title": "واجهة برمجة تطبيقات المساعد الصوتي (Developer Voice API)" if is_ar else "Voice AI Developer API (Platform REST Reference)",
-        "version": "1.0.0",
-        "description": (
+    info_titles = {
+        "ar": "واجهة برمجة تطبيقات المساعد الصوتي (Developer Voice API)",
+        "en": "Voice AI Developer API (Platform REST Reference)",
+        "tr": "Yapay Zeka Sesli Asistan Geliştirici API (Developer Voice API)",
+        "fr": "API Développeur d'Assistant Vocal IA (Developer Voice API)",
+        "de": "KI-Sprachassistent Entwickler-API (Developer Voice API)",
+        "es": "API para Desarrolladores de Asistente de Voz IA (Developer Voice API)",
+    }
+
+    info_descriptions = {
+        "ar": (
             "دليل تكامل واجهات المطورين المباشرة (Direct Developer API). "
             "يتيح لك هذا الـ API ربط وتضمين المساعد الصوتي الذكي داخل موقعك أو تطبيقك أو نظامك الخاص مباشرة "
             "باستخدام مفتاح الـ API الشخصي الخاص بك (X-API-Key). "
             "تتم إدارة الموارد التابعة لحسابك (الشخصيات، المستندات، خوادم FastMCP، الموظفين، واستخراج توكنات WebRTC لبدء المكالمات الحية) بكل سلاسة."
-            if is_ar else
+        ),
+        "en": (
             "Direct Developer Integration Guide for Platform Users. "
             "This API enables you to embed intelligent, dialect-aware conversational voice AI directly into your apps and web services "
             "using your personal API key (X-API-Key). "
             "Effortlessly manage your voice personas, CRM customer memories, FastMCP servers, and issue ephemeral WebRTC LiveKit tokens for live calling."
         ),
+        "tr": (
+            "Platform Kullanıcıları İçin Doğrudan Geliştirici Entegrasyon Kılavuzu. "
+            "Bu API, kişisel API anahtarınızı (X-API-Key) kullanarak akıllı, çok dilli sesli yapay zekayı doğrudan uygulamalarınıza ve web sitelerinize entegre etmenizi sağlar. "
+            "Ses profillerinizi, CRM müşteri belleğini, FastMCP araçlarını yönetin ve canlı WebRTC aramaları için token oluşturun."
+        ),
+        "fr": (
+            "Guide d'intégration directe pour les développeurs. "
+            "Cette API vous permet d'intégrer un assistant vocal IA conversationnel et intelligent directement dans vos applications web "
+            "à l'aide de votre clé API personnelle (X-API-Key). "
+            "Gérez vos personas vocaux, la mémoire CRM, les serveurs FastMCP et générez des jetons WebRTC LiveKit pour les appels en direct."
+        ),
+        "de": (
+            "Direkter Entwickler-Integrationsleitfaden für Plattform-Benutzer. "
+            "Diese API ermöglicht es Ihnen, intelligente, dialektfähige Sprach-KI mit Ihrem persönlichen API-Schlüssel (X-API-Key) direkt in Ihre Anwendungen einzubinden. "
+            "Verwalten Sie Ihre Sprach-Personas, CRM-Kundendaten, FastMCP-Tools und erstellen Sie flüchtige WebRTC LiveKit-Tokens."
+        ),
+        "es": (
+            "Guía de integración directa para desarrolladores. "
+            "Esta API le permite incrustar asistentes de voz conversacionales con IA directamente en sus aplicaciones y sitios web "
+            "utilizando su clave de API personal (X-API-Key). "
+            "Administre fácilmente sus personajes de voz, memoria de clientes CRM, servidores FastMCP y emita tokens WebRTC LiveKit efímeros."
+        ),
+    }
+
+    info_contacts = {
+        "ar": "فريق دعم المطورين",
+        "en": "Developer API Support",
+        "tr": "Geliştirici Destek Ekibi",
+        "fr": "Support Développeur API",
+        "de": "Entwickler-Support-Team",
+        "es": "Equipo de Soporte para Desarrolladores",
+    }
+
+    info = {
+        "title": info_titles.get(lang, info_titles["ar"]),
+        "version": "1.0.0",
+        "description": info_descriptions.get(lang, info_descriptions["ar"]),
         "contact": {
-            "name": "فريق دعم المطورين" if is_ar else "Developer API Support",
+            "name": info_contacts.get(lang, info_contacts["ar"]),
             "url": "https://localhost/api/v1/docs/"
         }
     }
@@ -64,7 +111,87 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
         {"name": "15. WhatsApp & Omnichannel Management", "description": "WhatsApp Baileys instance pairing, automated AI customer chats, manual operator takeover, and call followups."}
     ]
 
-    tags = tags_ar if is_ar else tags_en
+    tags_tr = [
+        {"name": "1. Hesap ve Bakiye (Account & Balance)", "description": "Hesap ayrıntılarını, kullanılabilir cüzdan bakiyesini ve aktif ses profili durumunu görüntüleyin."},
+        {"name": "2. Ses Profilleri ve Kişilikler (Voice Profiles & Personas)", "description": "Yapay zeka ses kişiliğini, şiveleri ve ses profilini yönetin ve etkinleştirin."},
+        {"name": "3. Müşteri CRM ve Bağlam Belleği (Customer CRM & Context Memory)", "description": "Geçmiş arama kayıtları, CRM müşteri hafızası ve notları telefon numarasıyla sorgulayın."},
+        {"name": "4. Bilgi Bankası ve RAG Arama (Knowledge Base & Semantic RAG)", "description": "Belge yükleme, pgvector anlamsal indeksleme ve Gemini ile RAG anlamsal araması."},
+        {"name": "5. FastMCP Sunucuları ve Canlı Araçlar (FastMCP Servers & Live Tools)", "description": "Harici FastMCP SSE sunucularını bağlayın ve canlı yapay zeka araçlarını eşitleyin."},
+        {"name": "6. Telefon, PBX ve DID Numaraları (Telephony, PBX & DIDs)", "description": "PBX santral bağlantıları (Issabel), giden SIP hatları ve DID numara yönlendirmeleri."},
+        {"name": "7. Personel Rehberi ve Dahili Hatlar (Employee Directory & Extensions)", "description": "Personel rehberi, dahili SIP hatları, çağrı aktarımı ve temsilci uygunluk durumu."},
+        {"name": "8. Çağrı Kuyrukları ve Yönlendirme (Call Queues & Routing)", "description": "Çağrı merkezi kuyrukları, dağıtım stratejileri (Round Robin) ve üye yönetimi."},
+        {"name": "9. Dış Arama Kampanyaları (Outbound Campaigns)", "description": "Otomatik dış arama kampanyaları oluşturun ve Inngest ile paralel aramaları yönetin."},
+        {"name": "10. Çağrı Kayıtları ve CDR (Call Logs & CDR)", "description": "Çağrı detay kayıtları (CDR), faturalandırılan dakikalar, ses kayıtları ve özetler."},
+        {"name": "11. Webhook ve Olaylar (Webhooks & Events)", "description": "Çağrı tamamlama bildirimleri ve imzalı olaylar için webhook uç noktalarını yapılandırın."},
+        {"name": "12. Canlı Dinamik Bağlam (Structured Live Context)", "description": "Hızlı Redis önbelleğinde dinamik işletme verilerini (< 2ms) yönetin ve halüsinasyonları önleyin."},
+        {"name": "13. Sektörel Yapay Zeka Rolleri (Industry AI Roles)", "description": "Hazır sektör rolleri kataloğu, özel roller oluşturma ve araç yetkilendirmesi."},
+        {"name": "14. Arama Yasaklı Listesi (Do Not Call - DNC)", "description": "Yasaklı numara listesi yönetimi ve aramalardan önce numara uygunluk kontrolü."},
+        {"name": "15. WhatsApp ve Çok Kanallı İletişim (WhatsApp Omnichannel)", "description": "WhatsApp oturumları, otomatik mesajlaşma, operatör devralması ve arama sonrası takipler."}
+    ]
+
+    tags_fr = [
+        {"name": "1. Compte et Solde (Account & Balance)", "description": "Consulter les détails du compte, le solde disponible et le profil vocal actif."},
+        {"name": "2. Profils Vocaux et Personas (Voice Profiles & Personas)", "description": "Créer et gérer les personnalités des agents IA, les dialectes et l'activation."},
+        {"name": "3. Mémoire Client CRM (Customer CRM & Context Memory)", "description": "Historique des appels, mémoire client CRM et notes de conversation par numéro de téléphone."},
+        {"name": "4. Base de Connaissances RAG (Knowledge Base & Semantic RAG)", "description": "Téléchargement de documents, indexation vectorielle pgvector et recherche sémantique avec Gemini."},
+        {"name": "5. Serveurs FastMCP et Outils IA (FastMCP Servers & Live Tools)", "description": "Connecter des serveurs FastMCP SSE externes et synchroniser les outils IA en direct."},
+        {"name": "6. Téléphonie, PBX et DID (Telephony, PBX & DIDs)", "description": "Lignes de PBX (Issabel), passerelles SIP sortantes et mappage de numéros DID."},
+        {"name": "7. Annuaire et Postes Internes (Employee Directory & Extensions)", "description": "Annuaire des employés, postes SIP internes, transfert d'appels et statut de disponibilité."},
+        {"name": "8. Files d'Attente et Routage (Call Queues & Routing)", "description": "Files d'attente du centre d'appels, stratégies de distribution (Round Robin) et agents."},
+        {"name": "9. Campagnes d'Appels Sortants (Outbound Campaigns)", "description": "Créer des campagnes d'appels sortants automatisées et planification parallèle via Inngest."},
+        {"name": "10. Journaux d'Appels CDR (Call Logs & CDR)", "description": "Détails des appels (CDR), minutes facturées, enregistrements audio et résumés IA."},
+        {"name": "11. Webhooks et Événements (Webhooks & Events)", "description": "Configurer les points de terminaison webhook pour les notifications d'appels terminés."},
+        {"name": "12. Contexte Dynamique en Direct (Structured Live Context)", "description": "Cache mémoire Redis ultra-rapide (< 2ms) pour les données d'entreprise dynamiques."},
+        {"name": "13. Rôles Métiers IA (Industry AI Roles)", "description": "Catalogue de rôles sectoriels prédéfinis, création de rôles sur mesure et outils."},
+        {"name": "14. Liste Ne Pas Appeler (Do Not Call - DNC)", "description": "Gestion de la liste d'opposition téléphonique et vérification avant appel."},
+        {"name": "15. Gestion WhatsApp et Omnicanal (WhatsApp Omnichannel)", "description": "Gestion des sessions WhatsApp, envoi automatisé, reprise par un opérateur et suivis d'appels."}
+    ]
+
+    tags_de = [
+        {"name": "1. Konto und Guthaben (Account & Balance)", "description": "Kontodetails, verfügbares Guthaben und Status der aktiven Sprachpersona abrufen."},
+        {"name": "2. Sprachprofile und Personas (Voice Profiles & Personas)", "description": "KI-Sprachpersönlichkeiten, Dialekte und Aktivierung verwalten."},
+        {"name": "3. Kunden-CRM und Kontextgedächtnis (Customer CRM & Context Memory)", "description": "Gesprächsverlauf, CRM-Kundengedächtnis und Notizen nach Telefonnummer abfragen."},
+        {"name": "4. Wissensdatenbank und RAG (Knowledge Base & Semantic RAG)", "description": "Dokumenten-Upload, pgvector-Indexierung und semantische Suche über Gemini."},
+        {"name": "5. FastMCP-Server und KI-Tools (FastMCP Servers & Live Tools)", "description": "Externe FastMCP SSE-Server verbinden und Live-Tools synchronisieren."},
+        {"name": "6. Telefonie, PBX und DIDs (Telephony, PBX & DIDs)", "description": "PBX-Trunks (Issabel), ausgehende SIP-Verbindungen und DID-Rufnummernzuweisung."},
+        {"name": "7. Mitarbeiterverzeichnis und Nebenstellen (Employee Directory & Extensions)", "description": "Mitarbeiterverzeichnis, interne SIP-Nebenstellen, Weiterleitungen und Verfügbarkeitsstatus."},
+        {"name": "8. Anrufwarteschlangen und Routing (Call Queues & Routing)", "description": "Callcenter-Warteschlangen, Verteilungsstrategien (Round Robin) und Mitglieder."},
+        {"name": "9. Ausgehende Anrufkampagnen (Outbound Campaigns)", "description": "Automatisierte Anrufkampagnen erstellen und parallele Anrufe über Inngest ausführen."},
+        {"name": "10. Anrufprotokolle und CDR (Call Logs & CDR)", "description": "Anrufprotokolle (CDR), abgerechnete Minuten, Audioaufnahmen und KI-Zusammenfassungen."},
+        {"name": "11. Webhooks und Ereignisse (Webhooks & Events)", "description": "Webhook-Endpunkte für Anrufbenachrichtigungen und signierte Ereignisse konfigurieren."},
+        {"name": "12. Strukturierter Live-Kontext (Structured Live Context)", "description": "Echtzeit-In-Memory-Cache (< 2ms) für dynamische Geschäftsdaten zur Vermeidung von Halluzinationen."},
+        {"name": "13. Branchenspezifische KI-Rollen (Industry AI Roles)", "description": "Branchenrollen-Katalog, Erstellung benutzerdefinierter Rollen und Tool-Zuweisung."},
+        {"name": "14. Robinsonliste / Schutzliste (Do Not Call - DNC)", "description": "Sperrlistenverwaltung und automatische Nummernprüfung vor Anrufen."},
+        {"name": "15. WhatsApp und Omnichannel (WhatsApp Omnichannel)", "description": "WhatsApp-Sitzungen, automatisierte KI-Nachrichten, Operator-Übernahme und Anruf-Follow-ups."}
+    ]
+
+    tags_es = [
+        {"name": "1. Cuenta y Saldo (Account & Balance)", "description": "Consultar detalles de la cuenta, saldo de billetera disponible y estado de la persona activa."},
+        {"name": "2. Perfiles de Voz y Personas (Voice Profiles & Personas)", "description": "Crear y gestionar personalidades de voz IA, dialectos y activación."},
+        {"name": "3. CRM y Memoria del Cliente (Customer CRM & Context Memory)", "description": "Historial de llamadas, memoria del cliente CRM y notas mediante número de teléfono."},
+        {"name": "4. Base de Conocimiento y RAG (Knowledge Base & Semantic RAG)", "description": "Carga de documentos, indexación vectorial pgvector y búsqueda semántica con Gemini."},
+        {"name": "5. Servidores FastMCP y Herramientas IA (FastMCP Servers & Live Tools)", "description": "Conectar servidores FastMCP SSE externos y sincronizar herramientas de IA en vivo."},
+        {"name": "6. Telefonía, PBX y DIDs (Telephony, PBX & DIDs)", "description": "Troncales PBX (Issabel), terminales SIP salientes y mapeo de números DID."},
+        {"name": "7. Directorio de Personal y Extensiones (Employee Directory & Extensions)", "description": "Directorio de empleados, extensiones SIP internas, transferencias y disponibilidad."},
+        {"name": "8. Colas de Llamadas y Enrutamiento (Call Queues & Routing)", "description": "Colas de centro de llamadas, estrategias de distribución (Round Robin) y miembros."},
+        {"name": "9. Campañas de Llamadas Salientes (Outbound Campaigns)", "description": "Crear y gestionar campañas de llamadas automatizadas y ejecución paralela vía Inngest."},
+        {"name": "10. Registros de Llamadas CDR (Call Logs & CDR)", "description": "Registros de detalles de llamadas (CDR), minutos facturados, grabaciones y resúmenes de IA."},
+        {"name": "11. Webhooks y Notificaciones (Webhooks & Events)", "description": "Configurar webhooks para notificaciones de llamadas finalizadas y eventos firmados."},
+        {"name": "12. Contexto Estructurado en Tiempo Real (Structured Live Context)", "description": "Caché en memoria Redis ultrarrápida (< 2ms) para datos comerciales dinámicos."},
+        {"name": "13. Roles de IA por Industria (Industry AI Roles)", "description": "Catálogo de roles predefinidos por sector, creación de roles personalizados y herramientas."},
+        {"name": "14. Lista No Llamar (Do Not Call - DNC)", "description": "Gestión de lista de números bloqueados y verificación de cumplimiento antes de marcar."},
+        {"name": "15. WhatsApp y Gestión Omnicanal (WhatsApp Omnichannel)", "description": "Sesiones de WhatsApp, chats automáticos de IA, toma de control por operador y seguimiento post-llamada."}
+    ]
+
+    tags_map = {
+        "ar": tags_ar,
+        "en": tags_en,
+        "tr": tags_tr,
+        "fr": tags_fr,
+        "de": tags_de,
+        "es": tags_es,
+    }
+    tags = tags_map.get(lang, tags_ar)
     tag_map = {
         "tag_account": tags[0]["name"],
         "tag_profiles": tags[1]["name"],
