@@ -385,11 +385,29 @@ def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
         except Exception as sess_err:
             logger.warning(f"[ChatwootSSO] Warning pruning old sessions: {sess_err}")
 
-        # If locale is provided, synchronize with Chatwoot user & account
-        norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar' if locale else None
+        # If locale is provided, synchronize with Chatwoot user & account (6 languages support)
+        cw_loc_map = {'en': 0, 'ar': 1, 'fr': 3, 'de': 4, 'es': 12, 'tr': 23}
+        norm_locale = None
+        if locale:
+            loc_s = str(locale).lower().strip()
+            if loc_s in cw_loc_map:
+                norm_locale = loc_s
+            elif loc_s.startswith('en'):
+                norm_locale = 'en'
+            elif loc_s.startswith('tr'):
+                norm_locale = 'tr'
+            elif loc_s.startswith('fr'):
+                norm_locale = 'fr'
+            elif loc_s.startswith('de'):
+                norm_locale = 'de'
+            elif loc_s.startswith('es'):
+                norm_locale = 'es'
+            else:
+                norm_locale = 'ar'
+
         if norm_locale:
             try:
-                account_locale_int = 0 if norm_locale == 'en' else 1
+                account_locale_int = cw_loc_map.get(norm_locale, 1)
                 cur.execute("""
                     UPDATE users 
                     SET ui_settings = jsonb_set(COALESCE(ui_settings, '{}'), '{locale}', to_jsonb(%s::text))
@@ -418,6 +436,8 @@ def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
         redirect_target += "?" + "&".join(query_params)
 
         sso_url = f"{CHATWOOT_BASE_URL}/app/login?email={encoded_email}&sso_auth_token={token}&redirect_url={urllib.parse.quote(redirect_target)}&theme=light&color_scheme=light"
+        if norm_locale:
+            sso_url += f"&locale={norm_locale}"
         logger.info(f"[ChatwootSSO] Generated silent SSO link for user {email} (ID {user_id}) -> Account {account_id} [locale: {norm_locale}]")
         return sso_url
     except Exception as e:
@@ -429,9 +449,25 @@ def generate_chatwoot_sso_url(user=None, account_id=None, locale=None):
 def set_chatwoot_user_locale(user=None, account_id=None, locale='ar'):
     """
     Update Chatwoot user's ui_settings.locale and account.locale,
-    and generate a fresh SSO URL matching the language.
+    and generate a fresh SSO URL matching the language (ar, en, tr, fr, de, es).
     """
-    norm_locale = 'en' if str(locale).lower().startswith('en') else 'ar'
+    cw_loc_map = {'en': 0, 'ar': 1, 'fr': 3, 'de': 4, 'es': 12, 'tr': 23}
+    loc_s = str(locale).lower().strip() if locale else 'ar'
+    if loc_s in cw_loc_map:
+        norm_locale = loc_s
+    elif loc_s.startswith('en'):
+        norm_locale = 'en'
+    elif loc_s.startswith('tr'):
+        norm_locale = 'tr'
+    elif loc_s.startswith('fr'):
+        norm_locale = 'fr'
+    elif loc_s.startswith('de'):
+        norm_locale = 'de'
+    elif loc_s.startswith('es'):
+        norm_locale = 'es'
+    else:
+        norm_locale = 'ar'
+
     if account_id is None and user and getattr(user, 'is_authenticated', False):
         cfg = get_or_create_tenant_chatwoot(user)
         if cfg:

@@ -982,9 +982,11 @@
     }
   }
 
-  // Language synchronization between Main Website and Chatwoot
+  // Language synchronization between Main Website and Chatwoot (6 Languages)
   async function syncChatwootLocale(lang) {
-    const targetLang = lang ? (lang.startsWith('en') ? 'en' : 'ar') : (localStorage.getItem('app_lang') || 'ar');
+    const validLocales = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+    const curSaved = localStorage.getItem('app_lang') || 'ar';
+    const targetLang = (lang && validLocales.includes(lang)) ? lang : (validLocales.includes(curSaved) ? curSaved : 'ar');
     const loader = document.getElementById('chat-frame-loader');
     const frame = document.getElementById('chatwoot-frame');
 
@@ -1025,8 +1027,8 @@
   document.addEventListener('DOMContentLoaded', function() {
     const activeLang = localStorage.getItem('app_lang') || 'ar';
     const frame = document.getElementById('chatwoot-frame');
-    if (frame && activeLang === 'en' && !frame.src.includes('locale=en')) {
-      syncChatwootLocale('en');
+    if (frame && activeLang !== 'ar' && !frame.src.includes('locale=' + activeLang)) {
+      syncChatwootLocale(activeLang);
     }
 
     // Deep linking: auto-switch sub-tab if specified via URL (?tab=settings, ?tab=channels, ?tab=live)

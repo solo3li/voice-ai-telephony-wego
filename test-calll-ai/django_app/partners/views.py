@@ -2510,7 +2510,7 @@ def api_partner_docs(request):
         partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
 
     lang = request.GET.get('lang', 'ar').lower().strip()
-    if lang not in ('ar', 'en'):
+    if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
         lang = 'ar'
 
     return render(request, 'partners/scalar_docs.html', {
@@ -2536,7 +2536,7 @@ class PartnerSpectacularSchemaView(SpectacularAPIView):
 
     def get(self, request, *args, **kwargs):
         lang = request.GET.get('lang', 'ar').lower().strip()
-        if lang not in ('ar', 'en'):
+        if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
             lang = 'ar'
 
         resp = super().get(request, *args, **kwargs)

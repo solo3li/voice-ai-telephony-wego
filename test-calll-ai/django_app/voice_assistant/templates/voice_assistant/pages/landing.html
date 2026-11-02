@@ -98,16 +98,44 @@
 
       <!-- Right Action CTAs -->
       <div class="flex items-center gap-2.5">
-        <!-- Language Switcher Pill -->
-        <button 
-          type="button"
-          onclick="toggleAppLanguage()" 
-          id="landing-lang-btn" 
-          class="px-2.5 py-1 rounded-md text-xs font-mono font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition flex items-center gap-1 cursor-pointer"
-          title="Switch Language"
-        >
-          <span id="landing-lang-text">EN</span>
-        </button>
+        <!-- 6-Language Dropdown Selector Component -->
+        <div class="relative inline-block text-start" id="landing-lang-dropdown-wrapper">
+          <button type="button" onclick="toggleLangDropdown('landing-lang-menu')" id="lang-switch-btn" class="px-2.5 py-1 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" aria-haspopup="true" aria-expanded="false" title="Language / تغيير اللغة">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+            </svg>
+            <span id="lang-text" class="text-xs font-medium">العربية</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div id="landing-lang-menu" class="hidden absolute end-0 mt-1.5 w-40 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 transition-all">
+            <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-700 hover:bg-violet-50 hover:text-[#7c3aed] transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
+              <span class="lang-check text-[#7c3aed] font-bold text-xs hidden">✓</span>
+            </button>
+          </div>
+        </div>
 
         {% if is_authenticated %}
           <a href="{% url 'voice_assistant:room' %}" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-xs transition flex items-center gap-1.5">
@@ -363,7 +391,8 @@
     </div>
   </footer>
 
-  <!-- ==================== JAVASCRIPT: FULL BILINGUAL I18N & LIVE INTERACTIONS ==================== -->
+  <!-- ==================== JAVASCRIPT: FULL 6-LANGUAGE I18N & LIVE INTERACTIONS ==================== -->
+  <script src="{% static 'js/common.js' %}"></script>
   <script>
     // 1. COMPREHENSIVE BILINGUAL TRANSLATION DICTIONARY
     const LANDING_I18N = {
@@ -472,6 +501,30 @@
         'Realtime AI Voice Agents',
         'Enterprise Cloud PBX Telephony',
         'Zero-Wait Customer Care Suite'
+      ],
+      tr: [
+        'Otonom Çağrı Merkezleri',
+        'Gerçek Zamanlı Yapay Zeka Sesli Temsilcileri',
+        'Kurumsal Bulut Santral Çözümleri',
+        'Sıfır Beklemeli Müşteri Hizmetleri'
+      ],
+      fr: [
+        'Centres d\'appels autonomes',
+        'Agents vocaux IA en temps réel',
+        'Standard téléphonique cloud d\'entreprise',
+        'Service client sans attente'
+      ],
+      de: [
+        'Autonome Callcenter',
+        'Echtzeit-KI-Sprachagenten',
+        'Enterprise-Cloud-Telefonie',
+        'Kundenservice ohne Wartezeit'
+      ],
+      es: [
+        'Centros de llamadas autónomos',
+        'Agentes de voz con IA en tiempo real',
+        'Telefonía PBX en la nube para empresas',
+        'Atención al cliente sin esperas'
       ]
     };
 
@@ -521,31 +574,25 @@
 
     // 3. LANGUAGE SWITCHING & DOM UPDATES
     function getCurrentLang() {
-      return localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      const saved = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      return valid.includes(saved) ? saved : 'ar';
     }
 
     function applyLandingLanguage(lang) {
+      const valid = ['ar', 'en', 'tr', 'fr', 'de', 'es'];
+      if (!valid.includes(lang)) lang = 'ar';
       const isRtl = (lang === 'ar');
       document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
       document.documentElement.lang = lang;
 
-      // Update button label
-      const langBtnText = document.getElementById('landing-lang-text');
-      if (langBtnText) {
-        langBtnText.textContent = isRtl ? 'EN' : 'عربي';
+      if (typeof window.applyCommonLanguage === 'function') {
+        window.applyCommonLanguage(lang);
       }
 
-      // Update all [data-i18n] text elements
-      const dict = LANDING_I18N[lang] || LANDING_I18N.ar;
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (dict[key]) {
-          el.textContent = dict[key];
-        }
-      });
-
-      // Update document title
-      if (dict.page_title) {
+      // Update document title if present
+      const dict = (window.APP_I18N && window.APP_I18N[lang]) || (LANDING_I18N[lang] || LANDING_I18N.ar);
+      if (dict && dict.page_title) {
         document.title = dict.page_title;
       }
 
@@ -554,14 +601,20 @@
     }
 
     function toggleAppLanguage() {
-      const current = getCurrentLang();
-      const next = (current === 'ar') ? 'en' : 'ar';
-      localStorage.setItem('app_lang', next);
-      localStorage.setItem('voice_app_lang', next);
-      document.cookie = 'app_lang=' + next + '; path=/; max-age=31536000';
-      applyLandingLanguage(next);
-      window.dispatchEvent(new CustomEvent('appLanguageChanged', { detail: { lang: next, isRtl: (next === 'ar') } }));
+      if (typeof window.toggleLanguage === 'function') {
+        window.toggleLanguage();
+      } else {
+        const current = getCurrentLang();
+        const next = (current === 'ar') ? 'en' : 'ar';
+        applyLandingLanguage(next);
+      }
     }
+
+    window.addEventListener('appLanguageChanged', function(e) {
+      if (e.detail && e.detail.lang) {
+        startTypewriter(e.detail.lang);
+      }
+    });
 
     // Initialize Language on Load
     document.addEventListener('DOMContentLoaded', function() {
@@ -606,6 +659,26 @@
         '"Welcome! Your appointment is successfully booked and details sent to your WhatsApp."',
         '"Hello and welcome to customer care. How can I assist with your phone inquiry today?"',
         '"Your request has been updated in our cloud PBX and ticket is active."'
+      ],
+      tr: [
+        '"Hoş geldiniz! Randevunuz başarıyla oluşturuldu ve bilgiler WhatsApp hattınıza iletildi."',
+        '"Müşteri hizmetlerine hoş geldiniz, bugünkü sesli talebinizle ilgili nasıl yardımcı olabilirim?"',
+        '"Talebiniz bulut santral sistemimizde güncellendi ve destek kaydınız aktif duruma getirildi."'
+      ],
+      fr: [
+        '"Bienvenue ! Votre rendez-vous est confirmé avec succès et les détails ont été envoyés sur votre WhatsApp."',
+        '"Bonjour et bienvenue au service client. Comment puis-je vous aider aujourd\'hui ?"',
+        '"Votre demande a été mise à jour dans notre système cloud et votre ticket est en cours de traitement."'
+      ],
+      de: [
+        '"Herzlich willkommen! Ihr Termin wurde erfolgreich gebucht und die Bestätigung an Ihr WhatsApp gesendet."',
+        '"Guten Tag beim Kundenservice. Wie kann ich Ihnen heute bei Ihrem Anliegen behilflich sein?"',
+        '"Ihre Anfrage wurde in unserer Telefonanlage aktualisiert und das Ticket ist aktiv."'
+      ],
+      es: [
+        '"¡Bienvenido! Su cita ha sido reservada con éxito y los detalles se enviaron a su WhatsApp."',
+        '"Hola y bienvenido a atención al cliente. ¿En qué puedo ayudarle con su consulta hoy?"',
+        '"Su solicitud ha sido actualizada en nuestra centralita y su ticket está activo."'
       ]
     };
 

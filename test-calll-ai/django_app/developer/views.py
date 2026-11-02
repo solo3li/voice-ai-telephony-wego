@@ -175,7 +175,7 @@ def api_user_docs(request):
     Supports bilingual Arabic & English switching (?lang=ar | ?lang=en).
     """
     lang = request.GET.get('lang', 'ar').lower().strip()
-    if lang not in ('ar', 'en'):
+    if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
         lang = 'ar'
 
     user_api_key = ''
@@ -207,7 +207,7 @@ class UserSpectacularSchemaView(SpectacularAPIView):
 
     def get(self, request, *args, **kwargs):
         lang = request.GET.get('lang', 'ar').lower().strip()
-        if lang not in ('ar', 'en'):
+        if lang not in ('ar', 'en', 'tr', 'fr', 'de', 'es'):
             lang = 'ar'
 
         resp = super().get(request, *args, **kwargs)

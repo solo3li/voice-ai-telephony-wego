@@ -354,20 +354,43 @@ def generate_welcome_greeting(
     """Generate the exact proactive greeting message based on profile, customer identity, or outbound context."""
     raw_name = profile.get("name") or "المساعد"
     name = raw_name.split(" - ")[0].strip() if " - " in raw_name else raw_name.strip()
-    dialect = (profile.get("dialect") or "egyptian").lower()
+    lang = (profile.get("language") or "").lower().strip()
+    dialect = (profile.get("dialect") or "egyptian").lower().strip()
     role = profile.get("persona_role") or "خدمة العملاء"
 
     # 1. Outbound campaign call greeting
     if is_outbound and outbound_context:
         goal = (outbound_context.get("call_goal") or "").strip()
-        if goal and len(goal) < 80 and not any(kw in goal for kw in ["أنت", "سيناريو", "تعليمات", "\n"]):
-            return f"مرحباً بك، معك {name}. أتصل بحضرتك بخصوص {goal}."
-        return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
+        is_clean_goal = bool(goal and len(goal) < 80 and not any(kw in goal for kw in ["أنت", "سيناريو", "تعليمات", "\n"]))
+        if lang in ["english", "en"] or dialect.startswith("english") or dialect == "en":
+            return f"Hello, this is {name}. I'm calling regarding {goal}." if is_clean_goal else f"Hello, this is {name}. I hope you're having a great day."
+        elif lang in ["turkish", "tr"] or dialect.startswith("turkish") or dialect == "tr":
+            return f"Merhaba, ben {name}. Sizi {goal} ile ilgili arıyorum." if is_clean_goal else f"Merhaba, ben {name}, umarım gününüz iyi geçiyordur."
+        elif lang in ["french", "fr"] or dialect.startswith("french") or dialect == "fr":
+            return f"Bonjour, ici {name}. Je vous appelle concernant {goal}." if is_clean_goal else f"Bonjour, ici {name}, j'espère que vous passez une excellente journée."
+        elif lang in ["german", "de"] or dialect.startswith("german") or dialect == "de":
+            return f"Hallo, hier ist {name}. Ich rufe Sie bezüglich {goal} an." if is_clean_goal else f"Hallo, hier ist {name}, ich hoffe, es geht Ihnen gut."
+        elif lang in ["spanish", "es"] or dialect.startswith("spanish") or dialect == "es":
+            return f"Hola, le habla {name}. Me comunico con usted con respecto a {goal}." if is_clean_goal else f"Hola, le habla {name}, espero que se encuentre muy bien."
+        else:
+            if is_clean_goal:
+                return f"مرحباً بك، معك {name}. أتصل بحضرتك بخصوص {goal}."
+            return f"مرحباً بك، معك {name}، أتمنى أن تكون بخير."
 
     # 2. Personalized greeting for returning recognized customer
     if customer_name:
         c_clean = customer_name.strip()
-        if dialect == "saudi":
+        if lang in ["english", "en"] or dialect.startswith("english") or dialect == "en":
+            return f"Hello {c_clean}! Welcome back, this is {name}. How can I assist you today?"
+        elif lang in ["turkish", "tr"] or dialect.startswith("turkish") or dialect == "tr":
+            return f"Merhaba Sayın {c_clean}! Tekrar hoş geldiniz, ben {name}. Bugün size nasıl yardımcı olabilirim?"
+        elif lang in ["french", "fr"] or dialect.startswith("french") or dialect == "fr":
+            return f"Bonjour {c_clean} ! Ravi de vous retrouver, c'est {name}. Comment puis-je vous aider aujourd'hui ?"
+        elif lang in ["german", "de"] or dialect.startswith("german") or dialect == "de":
+            return f"Hallo Herr/Frau {c_clean}! Schön, dass Sie wieder da sind, hier ist {name}. Wie kann ich Ihnen heute helfen?"
+        elif lang in ["spanish", "es"] or dialect.startswith("spanish") or dialect == "es":
+            return f"¡Hola {c_clean}! Qué gusto saludarle de nuevo, le habla {name}. ¿En qué puedo ayudarle hoy?"
+        elif dialect == "saudi":
             return f"يا هلا والله أستاذ {c_clean}، مساك الله بالخير! معك {name}، كيف أقدر أخدمك اليوم؟"
         elif dialect in ["emirati", "kuwaiti", "gulf"]:
             return f"يا مرحباً بك أستاذ {c_clean}! معك {name}، شخبارك اليوم وكيف أقدر أساعدك؟"
@@ -388,8 +411,18 @@ def generate_welcome_greeting(
     if profile.get("welcome_message"):
         return profile["welcome_message"].strip()
 
-    # 4. Dialect-aware default greetings
-    if dialect == "saudi":
+    # 4. Dialect-aware & language-aware default greetings
+    if lang in ["english", "en"] or dialect.startswith("english") or dialect == "en":
+        return f"Hello! This is {name} from customer support. How can I help you today?"
+    elif lang in ["turkish", "tr"] or dialect.startswith("turkish") or dialect == "tr":
+        return f"Merhaba! Ben müşteri hizmetlerinden {name}. Size bugün nasıl yardımcı olabilirim?"
+    elif lang in ["french", "fr"] or dialect.startswith("french") or dialect == "fr":
+        return f"Bonjour ! C'est {name} du service client. Comment puis-je vous aider aujourd'hui ?"
+    elif lang in ["german", "de"] or dialect.startswith("german") or dialect == "de":
+        return f"Hallo! Hier ist {name} vom Kundenservice. Wie kann ich Ihnen heute behilflich sein?"
+    elif lang in ["spanish", "es"] or dialect.startswith("spanish") or dialect == "es":
+        return f"¡Hola! Le habla {name} de atención al cliente. ¿En qué puedo ayudarle hoy?"
+    elif dialect == "saudi":
         return f"يا هلا والله! معك {name} من خدمة العملاء، أمرني كيف أقدر أساعدك اليوم؟"
     elif dialect in ["emirati", "kuwaiti", "gulf"]:
         return f"مرحبا وسهلا! معك {name} من خدمة العملاء، كيف أقدر أساعدك اليوم؟"

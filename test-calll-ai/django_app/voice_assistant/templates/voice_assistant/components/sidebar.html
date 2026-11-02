@@ -39,20 +39,48 @@
       </div>
     </a>
     
-    <!-- Language Toggle in Sidebar Top (Compact Pill) -->
-    <button 
-      type="button" 
-      onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
-      id="sidebar-top-lang-btn" 
-      class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 px-2 py-1 rounded-md border border-slate-700/80 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs" 
-      title="تغيير اللغة / Switch Language" 
-      data-i18n-title="switch_language"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
-      </svg>
-      <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">EN</span>
-    </button>
+    <!-- 6-Language Dropdown in Sidebar Top -->
+    <div class="relative inline-block text-start shrink-0" id="sidebar-top-lang-wrapper">
+      <button 
+        type="button" 
+        onclick="toggleLangDropdown('sidebar-top-lang-menu')" 
+        id="sidebar-top-lang-btn" 
+        class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 px-2 py-1 rounded-md border border-slate-700/80 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs" 
+        title="تغيير اللغة / Switch Language" 
+        data-i18n-title="switch_language"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+        </svg>
+        <span id="sidebar-top-lang-text" class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">AR</span>
+      </button>
+      <div id="sidebar-top-lang-menu" class="hidden absolute end-0 mt-1.5 w-36 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 z-50">
+        <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs">✓</span>
+        </button>
+        <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+        </button>
+        <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+        </button>
+        <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+        </button>
+        <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+        </button>
+        <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+          <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
+          <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+        </button>
+      </div>
+    </div>
     
     <!-- Hidden element to preserve JS compatibility if queried -->
     <span id="sidebar-toggle-icon" class="hidden"></span>
@@ -101,20 +129,48 @@
         </div>
       </div>
       <div class="flex items-center gap-1 shrink-0">
-        <!-- Language Toggle in Sidebar Bottom -->
-        <button 
-          type="button" 
-          onclick="if(typeof toggleLanguage==='function')toggleLanguage();" 
-          id="sidebar-bottom-lang-btn" 
-          class="text-slate-400 hover:text-[#c4b5fd] p-1.5 rounded-md hover:bg-slate-800 transition flex items-center gap-1 cursor-pointer" 
-          title="تغيير اللغة / Switch Language" 
-          data-i18n-title="switch_language"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
-          </svg>
-          <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono text-slate-300">EN</span>
-        </button>
+        <!-- 6-Language Dropdown in Sidebar Bottom -->
+        <div class="relative inline-block text-start shrink-0" id="sidebar-bottom-lang-wrapper">
+          <button 
+            type="button" 
+            onclick="toggleLangDropdown('sidebar-bottom-lang-menu')" 
+            id="sidebar-bottom-lang-btn" 
+            class="text-slate-400 hover:text-[#c4b5fd] p-1.5 rounded-md hover:bg-slate-800 transition flex items-center gap-1 cursor-pointer" 
+            title="تغيير اللغة / Switch Language" 
+            data-i18n-title="switch_language"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+            </svg>
+            <span id="sidebar-bottom-lang-text" class="text-xs font-semibold font-mono text-slate-300">AR</span>
+          </button>
+          <div id="sidebar-bottom-lang-menu" class="hidden absolute end-0 bottom-full mb-1.5 w-36 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 z-50">
+            <button type="button" onclick="selectAppLanguage('ar')" data-lang-option="ar" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('en')" data-lang-option="en" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇬🇧</span><span>English</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('tr')" data-lang-option="tr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇹🇷</span><span>Türkçe</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('fr')" data-lang-option="fr" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('de')" data-lang-option="de" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+            </button>
+            <button type="button" onclick="selectAppLanguage('es')" data-lang-option="es" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer">
+              <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español</span></span>
+              <span class="lang-check text-[#a78bfa] font-bold text-xs hidden">✓</span>
+            </button>
+          </div>
+        </div>
 
         <a href="{% url 'voice_assistant:logout' %}" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-md hover:bg-rose-500/10 transition" title="تسجيل الخروج" data-i18n-title="btn_logout">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -129,13 +185,15 @@
     (function() {
       function syncSidebarLangLabels() {
         var savedLang = localStorage.getItem('app_lang') || localStorage.getItem('voice_app_lang') || 'ar';
+        var langLabels = { 'ar': 'عربي', 'en': 'EN', 'tr': 'TR', 'fr': 'FR', 'de': 'DE', 'es': 'ES' };
+        var label = langLabels[savedLang] || (savedLang ? savedLang.toUpperCase() : 'AR');
         var topText = document.getElementById('sidebar-top-lang-text');
         if (topText) {
-          topText.textContent = (savedLang === 'ar') ? 'EN' : 'عربي';
+          topText.textContent = label;
         }
         var bottomText = document.getElementById('sidebar-bottom-lang-text');
         if (bottomText) {
-          bottomText.textContent = (savedLang === 'ar') ? 'EN' : 'عربي';
+          bottomText.textContent = label;
         }
       }
       if (document.readyState === 'loading') {

@@ -5,7 +5,7 @@ endpoint summaries, realistic examples, and security definitions.
 """
 
 def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict:
-    lang = "en" if lang.lower() == "en" else "ar"
+    lang = "ar" if lang.lower() == "ar" else "en"
     is_ar = (lang == "ar")
 
     info = {

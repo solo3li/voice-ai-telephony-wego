@@ -85,6 +85,18 @@ DIALECT_RULES_MAP = {
     "italian_it": (
         "Parla principalmente in italiano naturale, cortese e professionale."
     ),
+    "french": (
+        "Parlez principalement en français métropolitain naturel, fluide et professionnel."
+    ),
+    "spanish": (
+        "Habla principalmente en español natural, profesional y cercano."
+    ),
+    "german": (
+        "Sprechen Sie vorrangig natürliches, professionelles Standarddeutsch."
+    ),
+    "turkish": (
+        "Öncelikli olarak doğal, akıcı ve profesyonel Türkçe konuşun."
+    ),
     "turkish_tr": (
         "Öncelikli olarak doğal, akıcı ve profesyonel Türkçe konuşun."
     ),
@@ -195,13 +207,29 @@ DIALECT_TO_LANG_FAMILY = {
     # French dialects
     "french_fr": "french",
     "french_ca": "french",
+    "french": "french",
+    "fr": "french",
     # Spanish dialects
     "spanish_es": "spanish",
     "spanish_latam": "spanish",
-    # Others
+    "spanish": "spanish",
+    "es": "spanish",
+    # German dialects
     "german_de": "german",
-    "italian_it": "italian",
+    "german": "german",
+    "de": "german",
+    # Turkish dialects
     "turkish_tr": "turkish",
+    "turkish": "turkish",
+    "tr": "turkish",
+    # English dialects
+    "english": "english",
+    "en": "english",
+    # Arabic
+    "arabic": "arabic",
+    "ar": "arabic",
+    # Others
+    "italian_it": "italian",
     "russian_ru": "russian",
     "urdu_pk": "urdu",
     "hindi_in": "hindi",
@@ -287,6 +315,10 @@ def build_language_lock_instruction(language: str = "arabic", dialect: str = "eg
             f"  * Politely offer in the caller's language to assist them and ask if they would like to switch:\n"
             f"    - If Arabic caller: \"أهلاً بك! يمكنني مساعدتك باللغة العربية، هل تفضل مواصلة المحادثة بالعربية؟\"\n"
             f"    - If English caller (when primary is non-English): \"Certainly! I can assist you in English. Would you like to continue our conversation in English?\"\n"
+            f"    - If French caller: \"Certainement ! Je peux vous aider en français. Souhaitez-vous poursuivre notre conversation en français ?\"\n"
+            f"    - If Turkish caller: \"Memnuniyetle! Size Türkçe olarak yardımcı olabilirim. Görüşmemize Türkçe olarak devam etmek ister misiniz?\"\n"
+            f"    - If German caller: \"Gerne! Ich kann Ihnen auf Deutsch helfen. Möchten Sie unser Gespräch auf Deutsch fortsetzen?\"\n"
+            f"    - If Spanish caller: \"¡Por supuesto! Puedo atenderle en español. ¿Le gustaría continuar nuestra conversación en español?\"\n"
             f"    - (Or the polite equivalent offer in the caller's spoken language).\n"
             f"  * Once the caller confirms (e.g., 'Yes', 'Sure', 'نعم تفضل', 'Oui'): seamlessly switch to that language to assist them through all tools, inquiries, and services without requiring human transfer.\n"
             f"  * If the caller declines or prefers your primary language, continue smoothly in {dialect_name}."
@@ -310,7 +342,9 @@ def build_language_lock_instruction(language: str = "arabic", dialect: str = "eg
             f"    - إذا تحدث بالإنجليزية (English): \"Certainly! I can assist you in English. Would you like to continue our conversation in English?\"\n"
             f"    - إذا تحدث بالفرنسية (Français): \"Certainement ! Je peux vous aider en français. Souhaitez-vous poursuivre notre conversation en français ?\"\n"
             f"    - إذا تحدث بالتركية (Türkçe): \"Memnuniyetle! Size Türkçe olarak yardımcı olabilirim. Görüşmemize Türkçe olarak devam etmek ister misiniz?\"\n"
-            f"    - (أو العبارة اللبقة المقابلة باللغة الأجنبية التي تحدث بها العميل مثل الإسبانية أو الألمانية أو الروسية).\n"
+            f"    - إذا تحدث بالألمانية (Deutsch): \"Gerne! Ich kann Ihnen auf Deutsch helfen. Möchten Sie unser Gespräch auf Deutsch fortsetzen?\"\n"
+            f"    - إذا تحدث بالإسبانية (Español): \"¡Por supuesto! Puedo atenderle en español. ¿Le gustaría continuar nuestra conversación en español?\"\n"
+            f"    - (أو العبارة اللبقة المقابلة باللغة الأجنبية التي تحدث بها العميل مثل الروسية أو الإيطالية).\n"
             f"  * بمجرد تأكيد المتصل وموافقته (مثل: 'Yes please', 'Sure', 'Oui', 'Yes', 'Okay', 'Evet'): تحول فوراً وسلساً للتحدث بلغته، وقدم له كافة الخدمات واستدعاء الأدوات والمعلومات المطلوبة باحترافية كاملة ودون الحاجة لتحويله لموظف بشري.\n"
             f"  * إذا رفض العميل التبديل أو فضل الاستمرار بالعربية، واصل خدمته بلهجتك المعتمدة بكل رحابة صدر."
         )
