@@ -138,7 +138,7 @@ sequenceDiagram
 
 ### 2.1 Mathematical Model & Configuration Variables
 
-The billing engine resides in `billing.models.BillingConfig`. It is a singleton record accessible via `BillingConfig.get_config()`.
+The billing engine configuration resides in `billing.models.BillingConfig`. It is a singleton record accessible via `BillingConfig.get_config()`.
 
 | Variable Name | DB Type | Default Value | Description (English) | الوصف (العربية) |
 |---|---|---|---|---|
@@ -149,8 +149,23 @@ The billing engine resides in `billing.models.BillingConfig`. It is a singleton 
 
 ### 2.2 معادلات التسعير والحدود الدنيا والمرفقات
 
-تُحسب الحروف والتكلفة طبقاً للمعادلات الخوارزمية التالية:
+تعتمد خوارزمية التسعير على المعادلة الرياضية الأساسية:
 
+$$\text{actual\_chars} = \begin{cases} \text{len}(\text{content.strip()}) & \text{if content is non-empty} \\ \text{media\_equivalent\_chars} & \text{if media attachment without text} \\ 0 & \text{otherwise} \end{cases}$$
+
+$$\text{billed\_chars} = \begin{cases} \max(\text{actual\_chars},\, \text{min\_chars\_per\_message}) & \text{if } \text{actual\_chars} > 0 \lor \text{has\_media} \\ 0 & \text{otherwise} \end{cases}$$
+
+$$\text{cost} = \text{round}\left( \frac{\text{Decimal}(\text{billed\_chars})}{\text{Decimal}(1000)} \times \text{rate\_per\_1k\_chars},\, 4 \right)$$
+
+#### الصيغة البرمجية المعتمدة (Mathematical Formula in Python):
+```python
+# Mathematical formula for per-character billing
+actual_chars = len(content.strip()) if content else (media_equivalent_chars if has_media else 0)
+billed_chars = max(actual_chars, min_chars_per_message) if (actual_chars > 0 or has_media) else 0
+cost = (Decimal(billed_chars) / Decimal(1000)) * rate_per_1k_chars
+```
+
+#### تفاصيل التنفيذ في الواجهة الخلفية (`billing/models.py` & `billing/views.py`):
 ```python
 # 1. حساب عدد الحروف الفعلي
 if content and content.strip():
@@ -180,36 +195,39 @@ else:
 
 ### 2.3 Real-World Numerical Calculation Examples
 
-لتوضيح الحسابات في بيئة الإنتاج الحقيقية، نورد السيناريوهات التالية بافتراض السعر الافتراضي العام (`0.0100$ / 1,000 حرف`):
+لتوضيح الحسابات في بيئة الإنتاج الحقيقية، نورد السيناريوهات التالية بافتراض السعر الافتراضي العام (`cost_per_1k_chars = 0.0100$ / 1,000 حرف`، والحد الأدنى `min_chars_per_message = 50` حرفاً، ومكافئ الوسائط `media_equivalent_chars = 500` حرف):
 
-#### المثال الأول: رسالة نصية قصيرة (أقل من الحد الأدنى)
-- **محتوى الرسالة**: `"أهلاً بك، تم استلام طلبك"` (27 حرفاً).
-- **الحروف الفعلية (`actual_chars`)**: `27`
-- **الحروف المحتسبة (`billed_chars`)**: `max(27, 50) = 50`
+#### المثال الأول: رسالة نصية قصيرة من 12 حرفاً (Short 12-char message)
+- **محتوى الرسالة**: `"مرحباً بك! 👋"` (أو `"Hello World!"` - إجمالي 12 حرفاً).
+- **الحروف الفعلية (`actual_chars`)**: `12`
+- **الحروف المحتسبة (`billed_chars`)**: `max(12, 50) = 50` (تطبيق الحد الأدنى).
 - **التكلفة (`cost`)**:
   $$\text{Cost} = \left(\frac{50}{1000}\right) \times 0.0100 = 0.0005\,\text{USD}$$
-- **البيان بالجدول**: خصم مالي متناهي الصغر بمقدار `$0.0005`.
+- **الأثر المالي**: خصم `$0.0005` من رصيد المحفظة مع حماية منصة الاتصال من تكلفة معالجة الرسائل متناهية الصغر.
 
-#### المثال الثاني: رسالة تفصيلية طويلة (أكبر من الحد الأدنى)
-- **محتوى الرسالة**: إرسال تفاصيل فاتورة وخطوات الاشتراك عبر واتساب (1,500 حرف).
+#### المثال الثاني: رسالة تفصيلية طويلة من 1500 حرف (1500-char message)
+- **محتوى الرسالة**: إرسال تفاصيل فاتورة وخطوات الاشتراك والشروط والأحكام (1,500 حرف).
 - **الحروف الفعلية (`actual_chars`)**: `1500`
-- **الحروف المحتسبة (`billed_chars`)**: `max(1500, 50) = 1500`
+- **الحروف المحتسبة (`billed_chars`)**: `max(1500, 50) = 1500` (تجاوزت الحد الأدنى).
 - **التكلفة (`cost`)**:
   $$\text{Cost} = \left(\frac{1500}{1000}\right) \times 0.0100 = 0.0150\,\text{USD}$$
+- **الأثر المالي**: خصم دقيق بقيمة `$0.0150` يعكس بدقة حجم البيانات المنقولة.
 
-#### المثال الثالث: مرفق وسائط بدون نص (Media Attachment / PDF / صورة)
-- **محتوى الرسالة**: ملف PDF لدليل الاستخدام أو صورة منتج مرسلة للعميل دون كتابة نصية مصاحبة (`content = ""`, `attachments = [pdf]`).
-- **الحروف الفعلية (`actual_chars`)**: مكافئ الميديا = `500` حرف.
+#### المثال الثالث: مرفق وسائط بدون نص - صورة أو PDF (Media photo/PDF attachment)
+- **محتوى الرسالة**: ملف PDF لدليل الاستخدام أو صورة منتج مرسلة للعميل دون كتابة نصية مصاحبة (`content = ""`, `has_media = True`, `attachments = [pdf]`).
+- **الحروف الفعلية (`actual_chars`)**: مكافئ الوسائط = `500` حرف.
 - **الحروف المحتسبة (`billed_chars`)**: `max(500, 50) = 500`
 - **التكلفة (`cost`)**:
   $$\text{Cost} = \left(\frac{500}{1000}\right) \times 0.0100 = 0.0050\,\text{USD}$$
+- **الأثر المالي**: احتساب تكلفة معالجة وسائط المرفقات بما يعادل 500 حرف (`$0.0050`).
 
-#### المثال الرابع: مرفق وسائط مع نص
-- **محتوى الرسالة**: صورة ملحقة بعبارة `"إليك الإيصال"` (12 حرفاً).
-- **الحروف الفعلية (`actual_chars`)**: `12`
-- **الحروف المحتسبة (`billed_chars`)**: `max(12, 50) = 50`
+#### المثال الرابع: مرفق وسائط مع نص قصير مصاحب (Media with text)
+- **محتوى الرسالة**: صورة إيصال مع تعليق نصي قصير `"إليك الإيصال"` (12 حرفاً).
+- **الحروف الفعلية (`actual_chars`)**: `12` (النص الصريح يتقدم على المكافئ).
+- **الحروف المحتسبة (`billed_chars`)**: `max(12, 50) = 50` (تطبيق الحد الأدنى).
 - **التكلفة (`cost`)**:
   $$\text{Cost} = \left(\frac{50}{1000}\right) \times 0.0100 = 0.0005\,\text{USD}$$
+- **الأثر المالي**: خصم `$0.0005` بناءً على الحروف الفعلية المطبقة على الحد الأدنى.
 
 ---
 
@@ -255,7 +273,29 @@ else:
 
 ### 3.2 معادلات الربح وإيرادات التجزئة
 
-يتم حساب أرباح الشريك على مستوى كل عميل (`PartnerClientRelationship`) أو على مستوى إجمالي أعمال الشريك عبر الخصائص الرياضية التالية:
+يقوم نموذج الشريك على احتساب تكلفة الجملة (`wholesale_cost`)، وإيراد التجزئة (`retail_revenue`)، وصافي الربح المقدر (`estimated_profit`) سواء على مستوى كل رسالة/مكالمة أو على مستوى إجمالي استهلاك العميل ولوحة التحكم.
+
+#### 1. معادلات التسعير والربح لكل رسالة شات ووت (Per-Message Profit Equations):
+- **تكلفة الجملة على الشريك (Wholesale Cost)**:
+  $$\text{wholesale\_cost} = \left(\frac{\text{billed\_chars}}{1000}\right) \times \text{partner.custom\_rate\_per\_1k\_chars}$$
+- **إيراد التجزئة المحصل من العميل (Retail Revenue)**:
+  $$\text{retail\_revenue} = \left(\frac{\text{billed\_chars}}{1000}\right) \times \text{partner.retail\_rate\_per\_1k\_chars}$$
+- **صافي ربح الشريك من الرسالة (Estimated Profit)**:
+  $$\text{estimated\_profit} = \text{retail\_revenue} - \text{wholesale\_cost}$$
+
+*مثال بالأرقام*:  
+إذا أرسل عميل رسالة بـ `1,000` حرف، وسعر الجملة للشريك هو `$0.0070`، وسعر التجزئة المحدد للعميل هو `$0.0150`:
+- $\text{wholesale\_cost} = (1000/1000) \times 0.0070 = 0.0070\,\text{USD}$ (يُخصم من محفظة الشريك).
+- $\text{retail\_revenue} = (1000/1000) \times 0.0150 = 0.0150\,\text{USD}$ (يُسجل في حساب العميل).
+- $\text{estimated\_profit} = 0.0150 - 0.0070 = +0.0080\,\text{USD}$ (هامش ربح صافي للشريك بنسبة 114%).
+
+#### 2. معادلات التسعير والربح لكل دقيقة مكالمة صوتية (Per-Minute Voice Profit Equations):
+- $\text{voice\_wholesale\_cost} = \text{billed\_minutes} \times \text{partner.custom\_rate\_per\_minute}$
+- $\text{voice\_retail\_revenue} = \text{billed\_minutes} \times \text{partner.retail\_rate\_per\_minute}$
+- $\text{voice\_estimated\_profit} = \text{voice\_retail\_revenue} - \text{voice\_wholesale\_cost}$
+
+#### 3. معادلات التجميع التراكمي للوحة التحكم (Dashboard KPI Aggregations):
+تُجمع إيرادات وأرباح الشريك عبر جميع عملائه (`PartnerClientRelationship`):
 
 $$\text{Minute Revenue} = \text{total\_minutes} \times \text{retail\_rate\_per\_minute}$$
 
@@ -263,9 +303,9 @@ $$\text{Message Revenue} = \left(\frac{\text{total\_message\_chars}}{1000}\right
 
 $$\text{Total Retail Revenue} = \text{round}(\text{Minute Revenue} + \text{Message Revenue},\, 4)$$
 
-$$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{total\_spent},\, 4)$$
+$$\text{Total Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{total\_spent},\, 4)$$
 
-حيث يمثل `total_spent` إجمالي المبالغ الفعلية التي خُصمت بالجملة من محفظة الشريك لصالح هذا العميل.
+حيث يمثل `total_spent` إجمالي المبالغ الفعلية التي خُصمت بالجملة من محفظة الشريك لصالح عملائه.
 
 ---
 
@@ -356,7 +396,7 @@ $$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{tot
 
 يسمح هذا الرابط للشريك بقراءة وتعديل أسعار التجزئة الخاصة به ورابط الـ Webhook الخاص بنظامه.
 
-#### Endpoint
+#### Endpoint Information
 - **URL**: `/api/partner/v1/settings/`
 - **Methods**: `GET`, `POST`
 - **Headers**:
@@ -366,23 +406,17 @@ $$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{tot
   ```
   *(يدعم أيضاً التوثيق عبر `Authorization: Bearer <key>` أو جلسة تسجيل الدخول).*
 
-#### Request Body (`POST`)
-```json
-{
-  "retail_rate_per_minute": 0.0550,
-  "retail_rate_per_1k_chars": 0.0160,
-  "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/",
-  "shared_mcp_server_id": 4
-}
-```
+---
 
-#### Response (`200 OK`)
+#### 1. قراءة إعدادات الشريك (`GET /api/partner/v1/settings/`)
+- **Request**: بدون محتوى (Empty Body)
+- **Response (`200 OK`)**:
 ```json
 {
   "status": "success",
-  "message": "تم حفظ إعدادات الشريك بنجاح.",
   "settings": {
     "company_name": "CloudReseller Corp",
+    "website": "https://partner-saas.com",
     "partner_code": "PRT-8F2B1C",
     "custom_rate_per_minute": 0.0300,
     "custom_rate_per_1k_chars": 0.0070,
@@ -392,6 +426,61 @@ $$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{tot
     "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/",
     "has_webhook_secret": true,
     "shared_mcp_server_id": 4
+  },
+  "partner": {
+    "id": 12,
+    "company_name": "CloudReseller Corp",
+    "partner_code": "PRT-8F2B1C",
+    "status": "approved",
+    "custom_rate_per_minute": 0.0300,
+    "custom_rate_per_1k_chars": 0.0070,
+    "retail_rate_per_minute": 0.0550,
+    "retail_rate_per_1k_chars": 0.0160,
+    "currency": "USD",
+    "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/",
+    "created_at": "2026-11-10 12:00"
+  }
+}
+```
+
+---
+
+#### 2. تحديث إعدادات الشريك وأسعار التجزئة (`POST /api/partner/v1/settings/`)
+- **Request Body (`POST`)**:
+```json
+{
+  "retail_rate_per_minute": 0.0550,
+  "retail_rate_per_1k_chars": 0.0160,
+  "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/",
+  "shared_mcp_server_id": 4,
+  "regenerate_api_key": false
+}
+```
+
+- **Response (`200 OK`)**:
+```json
+{
+  "status": "success",
+  "message": "تم حفظ إعدادات الشريك بنجاح.",
+  "settings": {
+    "retail_rate_per_minute": 0.0550,
+    "retail_rate_per_1k_chars": 0.0160,
+    "custom_rate_per_minute": 0.0300,
+    "custom_rate_per_1k_chars": 0.0070,
+    "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/"
+  },
+  "partner": {
+    "id": 12,
+    "company_name": "CloudReseller Corp",
+    "partner_code": "PRT-8F2B1C",
+    "status": "approved",
+    "custom_rate_per_minute": 0.0300,
+    "custom_rate_per_1k_chars": 0.0070,
+    "retail_rate_per_minute": 0.0550,
+    "retail_rate_per_1k_chars": 0.0160,
+    "currency": "USD",
+    "webhook_url": "https://partner-saas.com/api/webhooks/voice-events/",
+    "created_at": "2026-11-10 12:00"
   }
 }
 ```
@@ -402,14 +491,48 @@ $$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{tot
 
 يسمح بقراءة وتعديل أسقف الاستهلاك الأربعة لأي عميل تابع للشريك.
 
-#### Endpoints
+#### Endpoints Information
 - `GET /api/partner/v1/clients/<client_id>/quota/`
 - `POST /api/partner/v1/clients/<client_id>/quota/`
 - *(متاح أيضاً عبر مسار الـ Alias التوافقي: `/api/partner/v1/clients/<client_id>/cap/`)*
 
-> **ملاحظة**: يقبل المسار إما المعرف الداخلي للنظام `client_id` أو المعرف الخارجي التابع لنظام الشريك `external_reference`.
+> **ملاحظة**: يقبل المسار إما المعرف الداخلي للنظام `client_id` (رقم المستخدم أو رقم العلاقة) أو المعرف الخارجي التابع لنظام الشريك `external_reference`.
 
-#### Request Body (`POST`)
+---
+
+#### 1. قراءة حصص وأسقف استهلاك العميل (`GET /api/partner/v1/clients/<client_id>/quota/`)
+- **Request**: بدون محتوى (Empty Body)
+- **Response (`200 OK`)**:
+```json
+{
+  "status": "success",
+  "client": {
+    "id": 142,
+    "client_id": 1849,
+    "username": "client_acme_corp",
+    "name": "Acme Real Estate",
+    "email": "contact@acme.com",
+    "external_reference": "CRM-CLIENT-991",
+    "spending_cap": 50.0,
+    "minute_cap": 300,
+    "message_cap": 1000,
+    "message_char_cap": 150000,
+    "total_spent": 12.4500,
+    "total_minutes": 115,
+    "total_messages": 420,
+    "total_message_chars": 34100,
+    "retail_revenue": 21.2060,
+    "estimated_profit": 8.7560,
+    "is_active": true,
+    "created_at": "2026-11-10 14:30"
+  }
+}
+```
+
+---
+
+#### 2. تحديث حصص وأسقف استهلاك العميل (`POST /api/partner/v1/clients/<client_id>/quota/`)
+- **Request Body (`POST`)**:
 ```json
 {
   "spending_cap": 50.00,
@@ -421,7 +544,7 @@ $$\text{Estimated Profit} = \text{round}(\text{Total Retail Revenue} - \text{tot
 ```
 *ملاحظة: لإلغاء أي سقف وجعله غير محدود، قم بإرسال القيمة كـ `null` أو نص فارغ `""`.*
 
-#### Response (`200 OK`)
+- **Response (`200 OK`)**:
 ```json
 {
   "status": "success",
@@ -632,7 +755,7 @@ python manage.py register_chatwoot_webhooks --url http://voice_django:8000/api/b
   1. حساب Chatwoot مستقل (`Account`).
   2. مستخدم مميز (`User`).
   3. مساعد ذكاء اصطناعي (`Captain Assistant`).
-  4. **تسجيل Webhook الفوترة آلياً** في المعاملة نفسها لضمان عدم ضياع أي رسالة صادرة دون احتساب.
+  4. **تسجيل Webhook الفوترة آلياً** في المعاملة نفسها عبر `register_chatwoot_billing_webhook(acc_id, cur=cur)` لضمان عدم ضياع أي رسالة صادرة دون احتساب.
 
 ---
 
