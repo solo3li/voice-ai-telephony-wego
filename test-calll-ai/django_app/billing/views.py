@@ -154,6 +154,33 @@ def list_transactions(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+def _dispatch_cap_exceeded_webhook(partner, partner_rel, tenant_user, cap_type, billed_chars, cost_dec, msg_id):
+    if not partner:
+        return
+    try:
+        from partners.services.webhook import dispatch_partner_webhook
+        dispatch_partner_webhook(partner, "client.cap_exceeded", {
+            "client_id": tenant_user.id,
+            "client_name": tenant_user.first_name or tenant_user.username,
+            "username": tenant_user.username,
+            "external_reference": partner_rel.external_reference,
+            "cap_type": cap_type,
+            "spending_cap": float(partner_rel.spending_cap) if partner_rel.spending_cap is not None else None,
+            "minute_cap": partner_rel.minute_cap,
+            "message_cap": partner_rel.message_cap,
+            "message_char_cap": partner_rel.message_char_cap,
+            "total_spent": float(partner_rel.total_spent) if partner_rel.total_spent is not None else 0.0,
+            "total_minutes": partner_rel.total_minutes or 0,
+            "total_messages": partner_rel.total_messages or 0,
+            "total_message_chars": partner_rel.total_message_chars or 0,
+            "attempted_chars": billed_chars,
+            "attempted_cost": float(cost_dec),
+            "chatwoot_message_id": msg_id,
+        })
+    except Exception as wh_err:
+        logger.warning(f"[ChatwootWebhook] Failed to dispatch cap_exceeded webhook: {wh_err}")
+
+
 @csrf_exempt
 def chatwoot_webhook(request):
     """
@@ -294,6 +321,22 @@ def chatwoot_webhook(request):
     # Cost = (billed_chars / 1000) * rate
     cost_dec = config.calculate_message_cost(billed_chars, rate=rate)
 
+    # 7.5 Client Quotas & Consumption Caps Check
+    if is_partner_client and partner_rel:
+        if partner_rel.is_message_cap_exceeded(next_chars=billed_chars, next_cost=cost_dec):
+            cap_type = partner_rel.get_exceeded_message_cap_type(next_chars=billed_chars, next_cost=cost_dec) or "message_cap"
+            _dispatch_cap_exceeded_webhook(partner, partner_rel, tenant_user, cap_type, billed_chars, cost_dec, msg_id)
+            logger.warning(
+                f"[ChatwootWebhook] Blocked message #{msg_id} for sub-client {tenant_user.username}: "
+                f"cap exceeded ({cap_type})"
+            )
+            return JsonResponse({
+                "status": "blocked",
+                "reason": "client_cap_exceeded",
+                "client_id": tenant_user.id,
+                "cap_type": cap_type,
+            }, status=200)
+
     # 8. Atomic wallet lock & ledger entry
     with transaction.atomic():
         wallet, _ = UserWallet.objects.select_for_update().get_or_create(
@@ -319,6 +362,19 @@ def chatwoot_webhook(request):
             locked_rel = PartnerClientRelationship.objects.select_for_update().filter(id=partner_rel.id).first()
             if locked_rel:
                 partner_rel = locked_rel
+                if partner_rel.is_message_cap_exceeded(next_chars=billed_chars, next_cost=cost_dec):
+                    cap_type = partner_rel.get_exceeded_message_cap_type(next_chars=billed_chars, next_cost=cost_dec) or "message_cap"
+                    _dispatch_cap_exceeded_webhook(partner, partner_rel, tenant_user, cap_type, billed_chars, cost_dec, msg_id)
+                    logger.warning(
+                        f"[ChatwootWebhook] Blocked concurrent message #{msg_id} for sub-client {tenant_user.username}: "
+                        f"cap exceeded ({cap_type})"
+                    )
+                    return JsonResponse({
+                        "status": "blocked",
+                        "reason": "client_cap_exceeded",
+                        "client_id": tenant_user.id,
+                        "cap_type": cap_type,
+                    }, status=200)
 
         # Zero / insufficient balance safety check
         if wallet.balance < cost_dec:

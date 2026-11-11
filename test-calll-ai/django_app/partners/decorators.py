@@ -59,9 +59,10 @@ def partner_client_access_required(view_func):
             return JsonResponse({"status": "error", "message": "client_id parameter is required"}, status=400)
         
         from django.db.models import Q
-        q_filter = Q(client_id=client_id)
         if str(client_id).isdigit():
-            q_filter |= Q(id=int(client_id))
+            q_filter = Q(client_id=int(client_id)) | Q(id=int(client_id))
+        else:
+            q_filter = Q(external_reference=str(client_id))
         client_rel = PartnerClientRelationship.objects.select_related('client').filter(
             q_filter,
             partner=request.partner

@@ -1678,7 +1678,16 @@ const APP_I18N = {
     "widget_dtmf_title": "لوحة مفاتيح الاتصال التفاعلية (DTMF)",
     "widget_room_title": "غرفة الاتصال الصوتي المباشر",
     "widget_speech_text": "أهلاً بك أستاذ عبدالله! تم تأكيد موعد الصيانة وحجز الفني بنجاح، ووصلتك الآن رسالة تفاصيل عبر واتساب.",
-    "widget_voice_label": "صوت المساعد الذكي (لهجة سعودية حية)"
+    "widget_voice_label": "صوت المساعد الذكي (لهجة سعودية حية)",
+    "partner_kpi_retail_rate": "سعر بيع التجزئة للعملاء",
+    "partner_kpi_revenue": "إيرادات البيع التقديرية",
+    "partner_kpi_profit": "صافي الربح التقديري",
+    "partner_retail_min_rate_label": "سعر بيع الدقيقة للعملاء ($/د)",
+    "partner_retail_char_rate_label": "سعر بيع 1000 حرف للعملاء ($/1k)",
+    "partner_th_messages": "الرسائل والحروف",
+    "partner_th_cost_profit": "التكلفة والربح",
+    "partner_cap_messages_label": "سقف عدد الرسائل (Message Cap)",
+    "partner_cap_message_chars_label": "سقف حروف الرسائل (Message Characters Cap)"
   },
   "en": {
     "app_title": "AI Voice Assistant",
@@ -3124,7 +3133,16 @@ const APP_I18N = {
     "widget_dtmf_title": "Interactive DTMF Dialpad",
     "widget_room_title": "Live Voice Call Studio",
     "widget_speech_text": "Welcome Mr. Abdullah! Your maintenance appointment has been confirmed and the technician is booked. You will receive confirmation via WhatsApp.",
-    "widget_voice_label": "Smart Assistant Voice (Live AI Dialect)"
+    "widget_voice_label": "Smart Assistant Voice (Live AI Dialect)",
+    "partner_kpi_retail_rate": "Client Retail Rate",
+    "partner_kpi_revenue": "Estimated Retail Revenue",
+    "partner_kpi_profit": "Estimated Net Profit",
+    "partner_retail_min_rate_label": "Client Retail Rate per Minute ($/min)",
+    "partner_retail_char_rate_label": "Client Retail Rate per 1k Chars ($/1k)",
+    "partner_th_messages": "Messages & Chars",
+    "partner_th_cost_profit": "Cost & Profit",
+    "partner_cap_messages_label": "Message Cap",
+    "partner_cap_message_chars_label": "Message Characters Cap"
   },
   "tr": {
     "app_title": "AI Sesli Asistan",
@@ -4570,7 +4588,16 @@ const APP_I18N = {
     "widget_dtmf_title": "Etkileşimli DTMF Tuş Takımı",
     "widget_room_title": "Canlı Sesli Görüşme Stüdyosu",
     "widget_speech_text": "Hoş geldiniz Sayın Abdullah! Bakım randevunuz onaylandı ve teknisyen görevlendirildi. Detaylar WhatsApp üzerinden iletildi.",
-    "widget_voice_label": "Akıllı Asistan Sesi (Canlı Yapay Zeka)"
+    "widget_voice_label": "Akıllı Asistan Sesi (Canlı Yapay Zeka)",
+    "partner_kpi_retail_rate": "Müşteri Perakende Fiyatı",
+    "partner_kpi_revenue": "Tahmini Perakende Gelir",
+    "partner_kpi_profit": "Tahmini Net Kâr",
+    "partner_retail_min_rate_label": "Müşteri Dakika Satış Fiyatı ($/dk)",
+    "partner_retail_char_rate_label": "Müşteri 1000 Karakter Fiyatı ($/1k)",
+    "partner_th_messages": "Mesajlar ve Karakterler",
+    "partner_th_cost_profit": "Maliyet ve Kâr",
+    "partner_cap_messages_label": "Mesaj Limiti",
+    "partner_cap_message_chars_label": "Mesaj Karakter Limiti"
   },
   "fr": {
     "app_title": "Assistant Vocal IA",
@@ -6016,7 +6043,16 @@ const APP_I18N = {
     "widget_dtmf_title": "Clavier DTMF Interactif",
     "widget_room_title": "Studio d'Appel Vocal en Direct",
     "widget_speech_text": "Bienvenue M. Abdullah ! Votre rendez-vous de maintenance est confirmé et le technicien est réservé. Vous recevrez les détails par WhatsApp.",
-    "widget_voice_label": "Voix de l'Assistant Intelligent (IA en direct)"
+    "widget_voice_label": "Voix de l'Assistant Intelligent (IA en direct)",
+    "partner_kpi_retail_rate": "Tarif de vente clients",
+    "partner_kpi_revenue": "Revenu de vente estimé",
+    "partner_kpi_profit": "Bénéfice net estimé",
+    "partner_retail_min_rate_label": "Tarif de vente minute ($/min)",
+    "partner_retail_char_rate_label": "Tarif de vente 1000 caractères ($/1k)",
+    "partner_th_messages": "Messages et Caractères",
+    "partner_th_cost_profit": "Coût et Profit",
+    "partner_cap_messages_label": "Plafond de messages",
+    "partner_cap_message_chars_label": "Plafond de caractères"
   },
   "de": {
     "app_title": "KI-Sprachassistent",
@@ -7462,7 +7498,16 @@ const APP_I18N = {
     "widget_dtmf_title": "Interaktives DTMF-Tastenfeld",
     "widget_room_title": "Live-Sprachanruf-Studio",
     "widget_speech_text": "Willkommen Herr Abdullah! Ihr Wartungstermin wurde bestätigt und der Techniker ist gebucht. Sie erhalten die Details per WhatsApp.",
-    "widget_voice_label": "Stimme des KI-Assistenten (Echtzeit-Sprach-KI)"
+    "widget_voice_label": "Stimme des KI-Assistenten (Echtzeit-Sprach-KI)",
+    "partner_kpi_retail_rate": "Kunden-Verkaufspreis",
+    "partner_kpi_revenue": "Geschätzter Einzelhandelsumsatz",
+    "partner_kpi_profit": "Geschätzter Nettogewinn",
+    "partner_retail_min_rate_label": "Kunden-Minutenpreis ($/Min)",
+    "partner_retail_char_rate_label": "Kundenpreis pro 1000 Zeichen ($/1k)",
+    "partner_th_messages": "Nachrichten & Zeichen",
+    "partner_th_cost_profit": "Kosten & Gewinn",
+    "partner_cap_messages_label": "Nachrichten-Limit",
+    "partner_cap_message_chars_label": "Nachrichten-Zeichenlimit"
   },
   "es": {
     "app_title": "Asistente de Voz con IA",
@@ -8908,7 +8953,16 @@ const APP_I18N = {
     "widget_dtmf_title": "Teclado DTMF Interactivo",
     "widget_room_title": "Estudio de Llamada de Voz en Vivo",
     "widget_speech_text": "¡Bienvenido Sr. Abdullah! Su cita de mantenimiento ha sido confirmada y el técnico reservado. Recibirá los detalles por WhatsApp.",
-    "widget_voice_label": "Voz del Asistente Inteligente (IA en vivo)"
+    "widget_voice_label": "Voz del Asistente Inteligente (IA en vivo)",
+    "partner_kpi_retail_rate": "Tarifa minorista cliente",
+    "partner_kpi_revenue": "Ingresos minoristas estimados",
+    "partner_kpi_profit": "Beneficio neto estimado",
+    "partner_retail_min_rate_label": "Tarifa minorista por minuto ($/min)",
+    "partner_retail_char_rate_label": "Tarifa minorista por 1000 caracteres ($/1k)",
+    "partner_th_messages": "Mensajes y Caracteres",
+    "partner_th_cost_profit": "Coste y Ganancia",
+    "partner_cap_messages_label": "Límite de mensajes",
+    "partner_cap_message_chars_label": "Límite de caracteres de mensaje"
   }
 };
 

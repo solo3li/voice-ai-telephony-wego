@@ -11,7 +11,7 @@ import csv
 import datetime
 from django.utils import timezone
 from urllib.parse import urlparse, unquote
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse as _DjangoJsonResponse, FileResponse
@@ -202,6 +202,11 @@ def get_partner_dashboard(request):
             "total_minutes": total_sub_minutes,
             "total_sub_spent": round(total_sub_spent, 4),
             "custom_rate": float(partner.custom_rate_per_minute),
+            "custom_rate_per_1k_chars": float(partner.custom_rate_per_1k_chars),
+            "retail_rate_per_minute": float(partner.retail_rate_per_minute),
+            "retail_rate_per_1k_chars": float(partner.retail_rate_per_1k_chars),
+            "total_retail_revenue": round(sum(c.get('retail_revenue', 0.0) for c in clients_data), 4),
+            "total_estimated_profit": round(sum(c.get('estimated_profit', 0.0) for c in clients_data), 4),
         },
         "mcp_servers": mcp_servers,
         "clients": clients_data,
@@ -209,15 +214,48 @@ def get_partner_dashboard(request):
     })
 
 
-@login_required(login_url='/login/')
+@csrf_exempt
 def update_partner_settings(request):
-    """Partner updates webhook URL, shared MCP server, or regenerates API key."""
-    if request.method != 'POST':
+    """Partner fetches or updates webhook URL, retail markup rates, shared MCP server, or regenerates API key."""
+    if request.method not in ('GET', 'POST', 'PUT', 'PATCH'):
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
-    partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
-    if not partner:
-        return JsonResponse({"status": "error", "message": "الحساب غير معتمد كشريك نشط."}, status=403)
+    api_key = request.headers.get('X-Partner-Key')
+    if not api_key:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            api_key = auth_header.split(' ', 1)[1].strip()
+
+    partner = None
+    if api_key:
+        partner = PartnerProfile.objects.filter(api_key=api_key, status='approved').first()
+        if not partner:
+            return JsonResponse({"status": "error", "message": "مفتاح الشريك غير صالح أو غير معتمد."}, status=403)
+    elif request.user.is_authenticated:
+        partner = PartnerProfile.objects.filter(user=request.user, status='approved').first()
+        if not partner:
+            return JsonResponse({"status": "error", "message": "الحساب غير معتمد كشريك نشط."}, status=403)
+    else:
+        return JsonResponse({"status": "error", "message": "Authentication required (X-Partner-Key header or login session)"}, status=401)
+
+    if request.method == 'GET':
+        return JsonResponse({
+            "status": "success",
+            "settings": {
+                "company_name": partner.company_name,
+                "website": partner.website,
+                "partner_code": partner.partner_code,
+                "custom_rate_per_minute": float(partner.custom_rate_per_minute),
+                "custom_rate_per_1k_chars": float(partner.custom_rate_per_1k_chars),
+                "retail_rate_per_minute": float(partner.retail_rate_per_minute),
+                "retail_rate_per_1k_chars": float(partner.retail_rate_per_1k_chars),
+                "currency": partner.currency,
+                "webhook_url": partner.webhook_url,
+                "has_webhook_secret": bool(partner.webhook_secret),
+                "shared_mcp_server_id": partner.shared_mcp_server_id,
+            },
+            "partner": partner.to_dict()
+        })
 
     try:
         data = json.loads(request.body) if request.body else request.POST
@@ -226,11 +264,30 @@ def update_partner_settings(request):
 
     if 'webhook_url' in data:
         partner.webhook_url = data.get('webhook_url', '').strip()
-    
+
+    try:
+        if 'retail_rate_per_minute' in data:
+            val = data.get('retail_rate_per_minute')
+            if val is not None and str(val).strip() != '':
+                rate_dec = Decimal(str(val))
+                if rate_dec < 0:
+                    return JsonResponse({"status": "error", "message": "retail_rate_per_minute لا يمكن أن يكون سالباً."}, status=400)
+                partner.retail_rate_per_minute = rate_dec
+
+        if 'retail_rate_per_1k_chars' in data:
+            val = data.get('retail_rate_per_1k_chars')
+            if val is not None and str(val).strip() != '':
+                rate_dec = Decimal(str(val))
+                if rate_dec < 0:
+                    return JsonResponse({"status": "error", "message": "retail_rate_per_1k_chars لا يمكن أن يكون سالباً."}, status=400)
+                partner.retail_rate_per_1k_chars = rate_dec
+    except (InvalidOperation, ValueError, TypeError) as parse_err:
+        return JsonResponse({"status": "error", "message": f"قيم أسعار التجزئة غير صالحة: {parse_err}"}, status=400)
+
     if 'shared_mcp_server_id' in data:
         mcp_id = data.get('shared_mcp_server_id')
         if mcp_id:
-            mcp = UserMCPServer.objects.filter(id=mcp_id, user=request.user).first()
+            mcp = UserMCPServer.objects.filter(id=mcp_id, user=partner.user).first()
             partner.shared_mcp_server = mcp
         else:
             partner.shared_mcp_server = None
@@ -239,7 +296,18 @@ def update_partner_settings(request):
         partner.api_key = f"sk_live_prt_{secrets.token_urlsafe(32)}"
 
     partner.save()
-    return JsonResponse({"status": "success", "message": "تم حفظ إعدادات الشريك بنجاح.", "partner": partner.to_dict()})
+    return JsonResponse({
+        "status": "success",
+        "message": "تم حفظ إعدادات الشريك بنجاح.",
+        "settings": {
+            "retail_rate_per_minute": float(partner.retail_rate_per_minute),
+            "retail_rate_per_1k_chars": float(partner.retail_rate_per_1k_chars),
+            "custom_rate_per_minute": float(partner.custom_rate_per_minute),
+            "custom_rate_per_1k_chars": float(partner.custom_rate_per_1k_chars),
+            "webhook_url": partner.webhook_url,
+        },
+        "partner": partner.to_dict()
+    })
 
 
 @login_required(login_url='/login/')
@@ -261,8 +329,8 @@ def test_partner_webhook(request):
 
 @csrf_exempt
 def update_client_cap(request, client_id=None):
-    """Partner updates spending cap, minute cap, or toggle is_active for a client."""
-    if request.method != 'POST':
+    """Partner fetches or updates spending cap, minute cap, message caps, or toggle is_active for a client."""
+    if request.method not in ('GET', 'POST', 'PUT', 'PATCH'):
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
     api_key = request.headers.get('X-Partner-Key')
@@ -288,26 +356,68 @@ def update_client_cap(request, client_id=None):
     except Exception:
         data = {}
 
-    target_client_id = client_id or data.get('client_id')
+    target_client_id = client_id or data.get('client_id') or request.GET.get('client_id')
     if not target_client_id:
         return JsonResponse({"status": "error", "message": "client_id مطلوب."}, status=400)
 
     from django.db.models import Q
-    q_filter = Q(client_id=target_client_id)
     if str(target_client_id).isdigit():
-        q_filter |= Q(id=int(target_client_id))
+        q_filter = Q(client_id=int(target_client_id)) | Q(id=int(target_client_id))
+    else:
+        q_filter = Q(external_reference=str(target_client_id))
 
     client_rel = PartnerClientRelationship.objects.filter(q_filter, partner=partner).first()
     if not client_rel:
         return JsonResponse({"status": "error", "message": "العميل غير موجود أو لا يتبع حسابك."}, status=404)
 
-    if 'spending_cap' in data:
-        val = data.get('spending_cap')
-        client_rel.spending_cap = Decimal(str(val)) if (val is not None and str(val).strip() != '') else None
+    if request.method == 'GET':
+        return JsonResponse({
+            "status": "success",
+            "client": client_rel.to_dict()
+        })
 
-    if 'minute_cap' in data:
-        val = data.get('minute_cap')
-        client_rel.minute_cap = int(val) if (val is not None and str(val).strip() != '') else None
+    try:
+        if 'spending_cap' in data:
+            val = data.get('spending_cap')
+            if val is not None and str(val).strip() != '':
+                sp = Decimal(str(val))
+                if sp < 0:
+                    return JsonResponse({"status": "error", "message": "spending_cap لا يمكن أن يكون سالباً."}, status=400)
+                client_rel.spending_cap = sp
+            else:
+                client_rel.spending_cap = None
+
+        if 'minute_cap' in data:
+            val = data.get('minute_cap')
+            if val is not None and str(val).strip() != '':
+                mc = int(val)
+                if mc < 0:
+                    return JsonResponse({"status": "error", "message": "minute_cap لا يمكن أن يكون سالباً."}, status=400)
+                client_rel.minute_cap = mc
+            else:
+                client_rel.minute_cap = None
+
+        if 'message_cap' in data:
+            val = data.get('message_cap')
+            if val is not None and str(val).strip() != '':
+                msg_c = int(val)
+                if msg_c < 0:
+                    return JsonResponse({"status": "error", "message": "message_cap لا يمكن أن يكون سالباً."}, status=400)
+                client_rel.message_cap = msg_c
+            else:
+                client_rel.message_cap = None
+
+        if 'message_char_cap' in data:
+            val = data.get('message_char_cap')
+            if val is not None and str(val).strip() != '':
+                char_c = int(val)
+                if char_c < 0:
+                    return JsonResponse({"status": "error", "message": "message_char_cap لا يمكن أن يكون سالباً."}, status=400)
+                client_rel.message_char_cap = char_c
+            else:
+                client_rel.message_char_cap = None
+    except (InvalidOperation, ValueError, TypeError) as parse_err:
+        return JsonResponse({"status": "error", "message": f"قيم السقوف المدخلة غير صالحة: {parse_err}"}, status=400)
 
     if 'is_active' in data:
         client_rel.is_active = bool(data.get('is_active'))
@@ -343,6 +453,8 @@ def api_partner_register_client(request):
     email = str(data.get('email', '')).strip()
     spending_cap = data.get('spending_cap')
     minute_cap = data.get('minute_cap')
+    message_cap = data.get('message_cap')
+    message_char_cap = data.get('message_char_cap')
 
     # Check if already registered under this partner with external_ref
     if external_ref:
@@ -378,13 +490,31 @@ def api_partner_register_client(request):
     client_user.set_unusable_password()
     client_user.save()
 
+    try:
+        sc_val = Decimal(str(spending_cap)) if (spending_cap is not None and str(spending_cap).strip() != '') else None
+        if sc_val is not None and sc_val < 0:
+            return JsonResponse({"status": "error", "message": "spending_cap لا يمكن أن يكون سالباً."}, status=400)
+        mc_val = int(minute_cap) if (minute_cap is not None and str(minute_cap).strip() != '') else None
+        if mc_val is not None and mc_val < 0:
+            return JsonResponse({"status": "error", "message": "minute_cap لا يمكن أن يكون سالباً."}, status=400)
+        msg_val = int(message_cap) if (message_cap is not None and str(message_cap).strip() != '') else None
+        if msg_val is not None and msg_val < 0:
+            return JsonResponse({"status": "error", "message": "message_cap لا يمكن أن يكون سالباً."}, status=400)
+        char_val = int(message_char_cap) if (message_char_cap is not None and str(message_char_cap).strip() != '') else None
+        if char_val is not None and char_val < 0:
+            return JsonResponse({"status": "error", "message": "message_char_cap لا يمكن أن يكون سالباً."}, status=400)
+    except (InvalidOperation, ValueError, TypeError) as parse_err:
+        return JsonResponse({"status": "error", "message": f"قيم السقوف غير صالحة: {parse_err}"}, status=400)
+
     # Create relationship record
     client_rel = PartnerClientRelationship.objects.create(
         partner=request.partner,
         client=client_user,
         external_reference=external_ref,
-        spending_cap=Decimal(str(spending_cap)) if spending_cap is not None else None,
-        minute_cap=int(minute_cap) if minute_cap is not None else None,
+        spending_cap=sc_val,
+        minute_cap=mc_val,
+        message_cap=msg_val,
+        message_char_cap=char_val,
         is_active=True
     )
 
@@ -404,7 +534,10 @@ def api_partner_register_client(request):
         "external_reference": external_ref,
         "name": name,
         "username": username,
-        "spending_cap": float(client_rel.spending_cap) if client_rel.spending_cap else None,
+        "spending_cap": float(client_rel.spending_cap) if client_rel.spending_cap is not None else None,
+        "minute_cap": client_rel.minute_cap,
+        "message_cap": client_rel.message_cap,
+        "message_char_cap": client_rel.message_char_cap,
     })
 
     return JsonResponse({
@@ -440,9 +573,64 @@ def api_partner_list_clients(request):
 @partner_client_access_required
 def api_partner_client_detail(request, client_id):
     """
-    GET /api/partner/v1/clients/<int:client_id>/
-    Returns sub-client profile, call quotas, and usage statistics.
+    GET / PUT / PATCH / POST /api/partner/v1/clients/<int:client_id>/
+    Returns or updates sub-client profile, call quotas, and usage statistics.
     """
+    if request.method in ('PUT', 'PATCH', 'POST'):
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        except Exception:
+            data = {}
+        client_rel = request.client_rel
+        try:
+            if 'spending_cap' in data:
+                val = data.get('spending_cap')
+                if val is not None and str(val).strip() != '':
+                    sp = Decimal(str(val))
+                    if sp < 0:
+                        return JsonResponse({"status": "error", "message": "spending_cap لا يمكن أن يكون سالباً."}, status=400)
+                    client_rel.spending_cap = sp
+                else:
+                    client_rel.spending_cap = None
+            if 'minute_cap' in data:
+                val = data.get('minute_cap')
+                if val is not None and str(val).strip() != '':
+                    mc = int(val)
+                    if mc < 0:
+                        return JsonResponse({"status": "error", "message": "minute_cap لا يمكن أن يكون سالباً."}, status=400)
+                    client_rel.minute_cap = mc
+                else:
+                    client_rel.minute_cap = None
+            if 'message_cap' in data:
+                val = data.get('message_cap')
+                if val is not None and str(val).strip() != '':
+                    msg_c = int(val)
+                    if msg_c < 0:
+                        return JsonResponse({"status": "error", "message": "message_cap لا يمكن أن يكون سالباً."}, status=400)
+                    client_rel.message_cap = msg_c
+                else:
+                    client_rel.message_cap = None
+            if 'message_char_cap' in data:
+                val = data.get('message_char_cap')
+                if val is not None and str(val).strip() != '':
+                    char_c = int(val)
+                    if char_c < 0:
+                        return JsonResponse({"status": "error", "message": "message_char_cap لا يمكن أن يكون سالباً."}, status=400)
+                    client_rel.message_char_cap = char_c
+                else:
+                    client_rel.message_char_cap = None
+        except (InvalidOperation, ValueError, TypeError) as parse_err:
+            return JsonResponse({"status": "error", "message": f"قيم السقوف المدخلة غير صالحة: {parse_err}"}, status=400)
+
+        if 'is_active' in data:
+            client_rel.is_active = bool(data.get('is_active'))
+        client_rel.save()
+        return JsonResponse({
+            "status": "success",
+            "message": "تم تحديث بيانات وسقوف العميل بنجاح.",
+            "client": client_rel.to_dict()
+        })
+
     if request.method != 'GET':
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 

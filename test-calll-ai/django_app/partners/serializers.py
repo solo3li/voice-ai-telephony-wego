@@ -36,6 +36,17 @@ class PartnerSettingsUpdateRequestSerializer(serializers.Serializer):
     brand_name = serializers.CharField(required=False, allow_blank=True)
     webhook_url = serializers.URLField(required=False, allow_blank=True)
     webhook_secret = serializers.CharField(required=False, allow_blank=True)
+    retail_rate_per_minute = serializers.DecimalField(max_digits=10, decimal_places=4, required=False)
+    retail_rate_per_1k_chars = serializers.DecimalField(max_digits=10, decimal_places=4, required=False)
+
+
+class PartnerClientQuotaUpdateRequestSerializer(serializers.Serializer):
+    client_id = serializers.IntegerField(required=False)
+    spending_cap = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    minute_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_char_cap = serializers.IntegerField(required=False, allow_null=True)
+    is_active = serializers.BooleanField(required=False)
 
 
 # ============================================================================
@@ -43,11 +54,16 @@ class PartnerSettingsUpdateRequestSerializer(serializers.Serializer):
 # ============================================================================
 
 class PartnerClientRegisterRequestSerializer(serializers.Serializer):
-    external_client_id = serializers.CharField(required=True, help_text="المعرف الفريد للعميل في نظام الشريك (External ID)")
+    external_client_id = serializers.CharField(required=False, allow_blank=True, help_text="المعرف الفريد للعميل في نظام الشريك (External ID)")
+    external_reference = serializers.CharField(required=False, allow_blank=True)
     name = serializers.CharField(required=True, help_text="اسم العميل أو المؤسسة الفرعية")
     email = serializers.EmailField(required=False, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_blank=True)
-    concurrent_call_limit = serializers.IntegerField(default=1, help_text="الحد الأقصى للمكالمات المتزامنة لهذا العميل")
+    spending_cap = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    minute_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_char_cap = serializers.IntegerField(required=False, allow_null=True)
+    concurrent_call_limit = serializers.IntegerField(default=1, required=False, help_text="الحد الأقصى للمكالمات المتزامنة لهذا العميل")
     is_active = serializers.BooleanField(default=True)
 
 
@@ -58,7 +74,13 @@ class PartnerClientResponseSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone_number = serializers.CharField()
     concurrent_call_limit = serializers.IntegerField()
-    is_active = serializers.BooleanField()
+    is_active = serializers.BooleanField(default=True)
+    spending_cap = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    minute_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_cap = serializers.IntegerField(required=False, allow_null=True)
+    message_char_cap = serializers.IntegerField(required=False, allow_null=True)
+    retail_revenue = serializers.DecimalField(max_digits=10, decimal_places=4, required=False)
+    estimated_profit = serializers.DecimalField(max_digits=10, decimal_places=4, required=False)
     total_calls = serializers.IntegerField(read_only=True)
     total_documents = serializers.IntegerField(read_only=True)
     total_employees = serializers.IntegerField(read_only=True)

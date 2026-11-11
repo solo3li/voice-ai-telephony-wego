@@ -9,6 +9,8 @@ urlpatterns = [
     path('settings/test-webhook/', views.test_partner_webhook, name='partner_test_webhook'),
     path('clients/cap/', views.update_client_cap, name='partner_client_cap'),
     path('clients/<int:client_id>/cap/', views.update_client_cap, name='api_partner_client_cap'),
+    path('clients/quota/', views.update_client_cap, name='partner_client_quota'),
+    path('clients/<int:client_id>/quota/', views.update_client_cap, name='api_partner_client_quota'),
 
     path('docs/', views.api_partner_docs, name='partner_docs'),
     path('docs/openapi.json', views.api_partner_openapi_spec, name='partner_openapi_spec'),

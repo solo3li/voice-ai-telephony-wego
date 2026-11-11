@@ -372,6 +372,40 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                 }
             }
         },
+        "/settings/": {
+            "get": {
+                "tags": [tag_map["tag_auth"]],
+                "summary": "استرجاع إعدادات وأسعار الشريك (Get Partner Settings & Retail Rates)" if is_ar else "Get Partner Settings & Retail Markup Rates",
+                "description": "استرجاع أسعار البيع للعملاء (Retail Markup Rates) ورابط الـ Webhook وخادم الـ MCP الموروث." if is_ar else "Retrieve retail markup rates for sub-clients, webhook configuration, and inherited MCP server.",
+                "responses": {
+                    "200": {"description": "إعدادات الشريك بنجاح" if is_ar else "Partner settings retrieved successfully"}
+                }
+            },
+            "post": {
+                "tags": [tag_map["tag_auth"]],
+                "summary": "تحديث إعدادات وأسعار البيع للشريك (Update Partner Settings & Retail Rates)" if is_ar else "Update Partner Settings & Retail Markup Rates",
+                "description": "تحديث أسعار البيع للدقيقة والرسائل المطبقة على عملاء الساس لتقدير الأرباح." if is_ar else "Update retail rates per minute and per 1,000 characters applied to sub-clients for revenue/profit estimation.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "retail_rate_per_minute": {"type": "number", "example": 0.0500},
+                                    "retail_rate_per_1k_chars": {"type": "number", "example": 0.0150},
+                                    "webhook_url": {"type": "string", "example": "https://my-saas.com/webhook/"},
+                                    "shared_mcp_server_id": {"type": "integer", "nullable": True}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "تم حفظ الإعدادات بنجاح" if is_ar else "Settings updated successfully"}
+                }
+            }
+        },
         "/clients/register/": {
             "post": {
                 "tags": [tag_map["tag_clients"]],
@@ -392,7 +426,9 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                                 "email": "store9942@saas-demo.com",
                                 "password": "OptionalCustomPassword123!",
                                 "spending_cap": 25.0,
-                                "minute_cap": 200
+                                "minute_cap": 200,
+                                "message_cap": 1000,
+                                "message_char_cap": 50000
                             }
                         }
                     }
@@ -423,7 +459,11 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                                         "avatar_url": "https://api.dicebear.com/7.x/bottts/png?seed=101"
                                     },
                                     "spending_cap": 25.0,
-                                    "minute_cap": 200
+                                    "minute_cap": 200,
+                                    "message_cap": 1000,
+                                    "message_char_cap": 50000,
+                                    "retail_revenue": 0.0,
+                                    "estimated_profit": 0.0
                                 }
                             }
                         }
@@ -458,8 +498,12 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                                             "external_reference": "sub_store_9942",
                                             "spending_cap": 25.0,
                                             "minute_cap": 200,
+                                            "message_cap": 1000,
+                                            "message_char_cap": 50000,
                                             "total_spent": 0.06,
                                             "total_minutes": 2,
+                                            "retail_revenue": 0.10,
+                                            "estimated_profit": 0.04,
                                             "is_active": True
                                         }
                                     ]
@@ -490,7 +534,10 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                                 "properties": {
                                     "client_id": {"type": "integer", "example": 19},
                                     "spending_cap": {"type": "number", "example": 50.0},
-                                    "minute_cap": {"type": "integer", "example": 500}
+                                    "minute_cap": {"type": "integer", "example": 500},
+                                    "message_cap": {"type": "integer", "example": 1000},
+                                    "message_char_cap": {"type": "integer", "example": 50000},
+                                    "is_active": {"type": "boolean", "example": True}
                                 }
                             }
                         }
@@ -498,6 +545,41 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                 },
                 "responses": {
                     "200": {"description": "تم تحديث السقف بنجاح" if is_ar else "Cap updated successfully"},
+                    "403": {"$ref": "#/components/responses/403Error"},
+                    "404": {"$ref": "#/components/responses/404Error"}
+                }
+            }
+        },
+        "/clients/{client_id}/quota/": {
+            "get": {
+                "tags": [tag_map["tag_clients"]],
+                "summary": "استعلام سقف واستهلاك العميل (Get Client Quota)" if is_ar else "Get Client Quota & Usage",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "responses": {"200": {"description": "بيانات استهلاك وسقوف العميل بنجاح"}}
+            },
+            "post": {
+                "tags": [tag_map["tag_clients"]],
+                "summary": "تحديث سقف واستهلاك العميل (Update Client Quota)" if is_ar else "Update Client Quota & Caps",
+                "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "spending_cap": {"type": "number", "example": 50.0},
+                                    "minute_cap": {"type": "integer", "example": 500},
+                                    "message_cap": {"type": "integer", "example": 1000},
+                                    "message_char_cap": {"type": "integer", "example": 50000},
+                                    "is_active": {"type": "boolean", "example": True}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "تم تحديث الحصة والسقف بنجاح" if is_ar else "Quota updated successfully"},
                     "403": {"$ref": "#/components/responses/403Error"},
                     "404": {"$ref": "#/components/responses/404Error"}
                 }
@@ -2556,7 +2638,9 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                         "example": "SecretPass123!"
                     },
                     "spending_cap": {"type": "number", "default": 10.0, "example": 25.0},
-                    "minute_cap": {"type": "integer", "default": 60, "example": 200}
+                    "minute_cap": {"type": "integer", "default": 60, "example": 200},
+                    "message_cap": {"type": "integer", "example": 1000},
+                    "message_char_cap": {"type": "integer", "example": 50000}
                 }
             },
             "ClientRegisterResponse": {
@@ -2592,7 +2676,11 @@ def get_partner_openapi_spec(server_url: str = "/api/partner/v1", lang: str = "a
                     },
                     "client": {"type": "object"},
                     "spending_cap": {"type": "number", "example": 25.0},
-                    "minute_cap": {"type": "integer", "example": 200}
+                    "minute_cap": {"type": "integer", "example": 200},
+                    "message_cap": {"type": "integer", "example": 1000},
+                    "message_char_cap": {"type": "integer", "example": 50000},
+                    "retail_revenue": {"type": "number", "example": 15.25},
+                    "estimated_profit": {"type": "number", "example": 8.50}
                 }
             },
             "ClientListResponse": {

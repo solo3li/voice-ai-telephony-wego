@@ -83,20 +83,30 @@ async function loadPartnerDashboard() {
     // 1. KPIs
     const bEl = document.getElementById('partner-kpi-balance');
     const rEl = document.getElementById('partner-kpi-rate');
+    const retEl = document.getElementById('partner-kpi-retail-rate');
     const cEl = document.getElementById('partner-kpi-clients');
+    const revEl = document.getElementById('partner-kpi-revenue');
+    const profEl = document.getElementById('partner-kpi-profit');
     const mEl = document.getElementById('partner-kpi-minutes');
     if (bEl) bEl.innerText = `$${(wallet.balance || 0).toFixed(2)}`;
-    if (rEl) rEl.innerText = `$${(kpis.custom_rate || 0).toFixed(4)} / ` + (window.t ? window.t('minute_short', 'د') : 'د');
+    if (rEl) rEl.innerText = `$${(kpis.custom_rate || 0.0300).toFixed(4)}/د | $${(kpis.custom_rate_per_1k_chars || 0.0070).toFixed(4)}/1k`;
+    if (retEl) retEl.innerText = `$${(kpis.retail_rate_per_minute || 0.0500).toFixed(4)}/د | $${(kpis.retail_rate_per_1k_chars || 0.0150).toFixed(4)}/1k`;
     if (cEl) cEl.innerText = kpis.total_clients || 0;
+    if (revEl) revEl.innerText = `$${(kpis.total_retail_revenue || 0).toFixed(2)}`;
+    if (profEl) profEl.innerText = `$${(kpis.total_estimated_profit || 0).toFixed(2)}`;
     if (mEl) mEl.innerText = `${kpis.total_minutes || 0} ` + (window.t ? window.t('minute_short', 'د') : 'د');
 
-    // 2. Credentials
+    // 2. Credentials & Retail Rates
     const codeInp = document.getElementById('partner-code-input');
     const keyInp = document.getElementById('partner-api-key-input');
     const whInp = document.getElementById('partner-webhook-url-input');
+    const retailMinInp = document.getElementById('partner-retail-min-rate-input');
+    const retailCharInp = document.getElementById('partner-retail-char-rate-input');
     if (codeInp) codeInp.value = partner.partner_code || '';
     if (keyInp) keyInp.value = partner.api_key || '';
     if (whInp) whInp.value = partner.webhook_url || '';
+    if (retailMinInp) retailMinInp.value = partner.retail_rate_per_minute !== undefined ? partner.retail_rate_per_minute : 0.0500;
+    if (retailCharInp) retailCharInp.value = partner.retail_rate_per_1k_chars !== undefined ? partner.retail_rate_per_1k_chars : 0.0150;
 
     // White-label embed snippets
     const partnerKey = partner.api_key || '';
@@ -139,19 +149,34 @@ async function loadPartnerDashboard() {
     const cTbody = document.getElementById('partner-clients-tbody');
     if (cTbody) {
       if (clients.length === 0) {
-        cTbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">${window.t ? window.t('partner_no_clients', 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.') : 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.'}</td></tr>`;
+        cTbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">${window.t ? window.t('partner_no_clients', 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.') : 'لم يسجل أي عميل عبر الـ API الخلفي حتى الآن.'}</td></tr>`;
       } else {
-        cTbody.innerHTML = clients.map(c => `
+        cTbody.innerHTML = clients.map(c => {
+          const caps = [];
+          if (c.spending_cap !== null && c.spending_cap !== undefined) caps.push('$' + c.spending_cap);
+          if (c.minute_cap !== null && c.minute_cap !== undefined) caps.push(c.minute_cap + 'د');
+          if (c.message_cap !== null && c.message_cap !== undefined) caps.push(c.message_cap + ' رسالة');
+          if (c.message_char_cap !== null && c.message_char_cap !== undefined) caps.push(c.message_char_cap + ' حرف');
+          const capsDisplay = caps.length > 0 ? caps.join('<br>') : 'بلا سقف';
+
+          return `
           <tr class="hover:bg-slate-50/60 transition">
             <td class="py-3 px-4 font-mono font-medium text-[#7c3aed]">${c.client_id}</td>
             <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.name)} <span class="text-xs text-slate-400 block font-mono">${escapeHtml(c.email || '')}</span></td>
             <td class="py-3 px-4 font-mono text-slate-700">${escapeHtml(c.external_reference || '-')}</td>
             <td class="py-3 px-4 text-slate-400">${escapeHtml(c.created_at || '')}</td>
             <td class="py-3 px-4 font-mono font-medium text-slate-900">${c.total_minutes} د</td>
-            <td class="py-3 px-4 font-mono font-medium text-emerald-700">$${c.total_spent ? c.total_spent.toFixed(2) : '0.00'}</td>
-            <td class="py-3 px-4 text-slate-700">
-              ${c.spending_cap ? '$' + c.spending_cap : 'بلا سقف'} 
-              ${c.minute_cap ? '(' + c.minute_cap + 'د)' : ''}
+            <td class="py-3 px-4 font-mono text-slate-700">
+              <span class="font-medium text-slate-900">${c.total_messages || 0} رسالة</span>
+              <span class="text-xs text-slate-400 block">(${c.total_message_chars || 0} حرف)</span>
+            </td>
+            <td class="py-3 px-4 font-mono">
+              <div class="text-xs text-slate-500">تكلفة: <span class="font-medium text-slate-800">$${c.total_spent ? c.total_spent.toFixed(2) : '0.00'}</span></div>
+              <div class="text-xs text-purple-700">بيع: <span class="font-medium">$${c.retail_revenue ? c.retail_revenue.toFixed(2) : '0.00'}</span></div>
+              <div class="text-xs text-emerald-700 font-semibold">ربح: $${c.estimated_profit ? c.estimated_profit.toFixed(2) : '0.00'}</div>
+            </td>
+            <td class="py-3 px-4 text-slate-700 text-xs">
+              ${capsDisplay}
             </td>
             <td class="py-3 px-4">
               <span class="px-2 py-0.5 rounded-md text-xs font-medium ${c.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
@@ -163,13 +188,14 @@ async function loadPartnerDashboard() {
                 <button type="button" data-client-id="${c.client_id}" data-client-name="${escapeHtml(c.name || c.username || '')}" onclick="openClientEmbedModal(this.dataset.clientId, this.dataset.clientName)" class="px-2.5 py-1 rounded-md bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#7c3aed] border border-[#ddd6fe] text-xs font-semibold transition flex items-center gap-1 shadow-2xs">
                   <span>📋 كود التضمين</span>
                 </button>
-                <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition">
+                <button type="button" onclick="openClientCapModal(${c.client_id}, ${c.spending_cap !== undefined && c.spending_cap !== null ? c.spending_cap : 'null'}, ${c.minute_cap !== undefined && c.minute_cap !== null ? c.minute_cap : 'null'}, ${c.is_active}, ${c.message_cap !== undefined && c.message_cap !== null ? c.message_cap : 'null'}, ${c.message_char_cap !== undefined && c.message_char_cap !== null ? c.message_char_cap : 'null'})" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition">
                   تعديل السقف
                 </button>
               </div>
             </td>
           </tr>
-        `).join('');
+        `;
+        }).join('');
       }
     }
 
@@ -247,6 +273,19 @@ async function savePartnerSettings() {
   const whUrl = document.getElementById('partner-webhook-url-input').value.trim();
   const mcpSelect = document.getElementById('partner-shared-mcp-select');
   const mcpId = mcpSelect ? mcpSelect.value : null;
+  const retailMinInp = document.getElementById('partner-retail-min-rate-input');
+  const retailCharInp = document.getElementById('partner-retail-char-rate-input');
+
+  const payload = {
+    webhook_url: whUrl,
+    shared_mcp_server_id: mcpId || null
+  };
+  if (retailMinInp && retailMinInp.value !== '') {
+    payload.retail_rate_per_minute = parseFloat(retailMinInp.value);
+  }
+  if (retailCharInp && retailCharInp.value !== '') {
+    payload.retail_rate_per_1k_chars = parseFloat(retailCharInp.value);
+  }
 
   try {
     const res = await fetch('/api/partner/v1/settings/', {
@@ -255,11 +294,12 @@ async function savePartnerSettings() {
         'Content-Type': 'application/json',
         'X-CSRFToken': getCookie('csrftoken')
       },
-      body: JSON.stringify({ webhook_url: whUrl, shared_mcp_server_id: mcpId || null })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (data.status === 'success') {
-      showToast('تم حفظ إعدادات الشريك والـ Webhook بنجاح.', 'success');
+      showToast('تم حفظ إعدادات الشريك وأسعار البيع بنجاح.', 'success');
+      await loadPartnerDashboard();
     } else {
       showToast(data.message || 'حدث خطأ أثناء الحفظ.', 'error');
     }
@@ -288,10 +328,14 @@ async function testPartnerWebhook() {
   }
 }
 
-function openClientCapModal(clientId, spendingCap, minuteCap, isActive) {
+function openClientCapModal(clientId, spendingCap, minuteCap, isActive, messageCap, messageCharCap) {
   document.getElementById('cap-modal-client-id').value = clientId;
   document.getElementById('cap-modal-spending').value = spendingCap !== null && spendingCap !== undefined ? spendingCap : '';
   document.getElementById('cap-modal-minutes').value = minuteCap !== null && minuteCap !== undefined ? minuteCap : '';
+  const msgCapInp = document.getElementById('cap-modal-messages');
+  const charCapInp = document.getElementById('cap-modal-message-chars');
+  if (msgCapInp) msgCapInp.value = messageCap !== null && messageCap !== undefined ? messageCap : '';
+  if (charCapInp) charCapInp.value = messageCharCap !== null && messageCharCap !== undefined ? messageCharCap : '';
   document.getElementById('cap-modal-active').checked = isActive !== false;
   const alertBox = document.getElementById('cap-modal-alert');
   if (alertBox) alertBox.classList.add('hidden');
@@ -306,6 +350,10 @@ async function saveClientCap() {
   const clientId = document.getElementById('cap-modal-client-id').value;
   const spending = document.getElementById('cap-modal-spending').value;
   const minutes = document.getElementById('cap-modal-minutes').value;
+  const msgCapInp = document.getElementById('cap-modal-messages');
+  const charCapInp = document.getElementById('cap-modal-message-chars');
+  const messages = msgCapInp ? msgCapInp.value : '';
+  const messageChars = charCapInp ? charCapInp.value : '';
   const isActive = document.getElementById('cap-modal-active').checked;
   const alertBox = document.getElementById('cap-modal-alert');
 
@@ -320,6 +368,8 @@ async function saveClientCap() {
         client_id: clientId,
         spending_cap: spending !== '' ? parseFloat(spending) : null,
         minute_cap: minutes !== '' ? parseInt(minutes) : null,
+        message_cap: messages !== '' ? parseInt(messages) : null,
+        message_char_cap: messageChars !== '' ? parseInt(messageChars) : null,
         is_active: isActive
       })
     });

@@ -39,6 +39,22 @@ class PartnerProfile(models.Model):
         verbose_name="سعر الشريك لكل 1000 حرف",
         help_text="السعر المخفض المخصوم من محفظة الشريك لكل 1000 حرف لرسائل عملائه"
     )
+
+    # Retail Markup Pricing for Partner's Clients
+    retail_rate_per_minute = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0.0500'),
+        verbose_name="سعر بيع الدقيقة للعملاء",
+        help_text="سعر بيع الدقيقة الذي يفرضه الشريك على عملائه لتقدير الإيرادات والأرباح"
+    )
+    retail_rate_per_1k_chars = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0.0150'),
+        verbose_name="سعر بيع 1000 حرف للعملاء",
+        help_text="سعر بيع 1000 حرف لرسائل العملاء لتقدير الإيرادات والأرباح"
+    )
     currency = models.CharField(max_length=8, choices=CURRENCY_CHOICES, default='USD', verbose_name="العملة")
 
     # Master Partner API Key
@@ -87,8 +103,10 @@ class PartnerProfile(models.Model):
             "partner_code": self.partner_code,
             "status": self.status,
             "status_display": self.get_status_display(),
-            "custom_rate_per_minute": float(self.custom_rate_per_minute),
-            "custom_rate_per_1k_chars": float(self.custom_rate_per_1k_chars),
+            "custom_rate_per_minute": float(self.custom_rate_per_minute) if self.custom_rate_per_minute is not None else 0.0300,
+            "custom_rate_per_1k_chars": float(self.custom_rate_per_1k_chars) if self.custom_rate_per_1k_chars is not None else 0.0070,
+            "retail_rate_per_minute": float(self.retail_rate_per_minute) if self.retail_rate_per_minute is not None else 0.0500,
+            "retail_rate_per_1k_chars": float(self.retail_rate_per_1k_chars) if self.retail_rate_per_1k_chars is not None else 0.0150,
             "currency": self.currency,
             "api_key": self.api_key,
             "webhook_url": self.webhook_url,
@@ -98,6 +116,10 @@ class PartnerProfile(models.Model):
             "clients_count": self.clients.count(),
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }
+
+
+# Alias for PartnerProfile
+PartnerSaaSProfile = PartnerProfile
 
 
 class PartnerClientRelationship(models.Model):
@@ -120,6 +142,18 @@ class PartnerClientRelationship(models.Model):
         verbose_name="سقف الدقائق",
         help_text="الحد الأقصى للدقائق الصوتية المسموح بها لهذا العميل"
     )
+    message_cap = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="سقف عدد الرسائل",
+        help_text="الحد الأقصى لعدد الرسائل الصادرة للعميل (فارغ = بلا سقف)"
+    )
+    message_char_cap = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="سقف حروف الرسائل",
+        help_text="الحد الأقصى لإجمالي الحروف المحتسبة لرسائل العميل"
+    )
 
     total_spent = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0.0000'), verbose_name="إجمالي المستهلك ($)")
     total_minutes = models.PositiveIntegerField(default=0, verbose_name="إجمالي الدقائق المحتسبة")
@@ -137,12 +171,49 @@ class PartnerClientRelationship(models.Model):
     def __str__(self):
         return f"{self.client.username} -> {self.partner.company_name} ({self.total_spent}$)"
 
+    @property
+    def retail_revenue(self) -> Decimal:
+        partner = getattr(self, 'partner', None)
+        min_rate = Decimal(str(partner.retail_rate_per_minute)) if (partner and getattr(partner, 'retail_rate_per_minute', None) is not None) else Decimal('0.0500')
+        char_rate = Decimal(str(partner.retail_rate_per_1k_chars)) if (partner and getattr(partner, 'retail_rate_per_1k_chars', None) is not None) else Decimal('0.0150')
+        minutes = int(self.total_minutes) if self.total_minutes is not None else 0
+        chars = int(self.total_message_chars) if self.total_message_chars is not None else 0
+        minute_rev = Decimal(minutes) * min_rate
+        char_rev = (Decimal(chars) / Decimal(1000)) * char_rate
+        return round(minute_rev + char_rev, 4)
+
+    @property
+    def estimated_profit(self) -> Decimal:
+        spent = Decimal(str(self.total_spent)) if self.total_spent is not None else Decimal('0.0000')
+        return round(self.retail_revenue - spent, 4)
+
     def is_cap_exceeded(self, next_minute_cost: Decimal = Decimal('0.0')) -> bool:
-        if self.spending_cap is not None and (self.total_spent + next_minute_cost) > self.spending_cap:
+        spent = Decimal(str(self.total_spent)) if self.total_spent is not None else Decimal('0.0000')
+        cost = Decimal(str(next_minute_cost)) if next_minute_cost is not None else Decimal('0.0')
+        if self.spending_cap is not None and (spent + cost) > Decimal(str(self.spending_cap)):
             return True
-        if self.minute_cap is not None and (self.total_minutes + 1) > self.minute_cap:
+        total_mins = int(self.total_minutes) if self.total_minutes is not None else 0
+        if self.minute_cap is not None and (total_mins + 1) > self.minute_cap:
             return True
         return False
+
+    def get_exceeded_message_cap_type(self, next_chars: int = 50, next_cost: Decimal = Decimal('0.0')) -> str | None:
+        cost_val = Decimal(str(next_cost)) if next_cost is not None else Decimal('0.0')
+        chars_val = int(next_chars) if next_chars is not None else 0
+        spent_val = Decimal(str(self.total_spent)) if self.total_spent is not None else Decimal('0.0000')
+        msgs_val = int(self.total_messages) if self.total_messages is not None else 0
+        chars_total = int(self.total_message_chars) if self.total_message_chars is not None else 0
+
+        if self.spending_cap is not None and (spent_val + cost_val) > Decimal(str(self.spending_cap)):
+            return "spending_cap"
+        if self.message_cap is not None and (msgs_val + 1) > self.message_cap:
+            return "message_cap"
+        if self.message_char_cap is not None and (chars_total + chars_val) > self.message_char_cap:
+            return "message_char_cap"
+        return None
+
+    def is_message_cap_exceeded(self, next_chars: int = 50, next_cost: Decimal = Decimal('0.0')) -> bool:
+        return self.get_exceeded_message_cap_type(next_chars=next_chars, next_cost=next_cost) is not None
 
     def to_dict(self):
         return {
@@ -154,10 +225,14 @@ class PartnerClientRelationship(models.Model):
             "external_reference": self.external_reference,
             "spending_cap": float(self.spending_cap) if self.spending_cap is not None else None,
             "minute_cap": self.minute_cap,
-            "total_spent": float(self.total_spent),
-            "total_minutes": self.total_minutes,
-            "total_messages": self.total_messages,
-            "total_message_chars": self.total_message_chars,
+            "message_cap": self.message_cap,
+            "message_char_cap": self.message_char_cap,
+            "total_spent": float(self.total_spent) if self.total_spent is not None else 0.0,
+            "total_minutes": self.total_minutes or 0,
+            "total_messages": self.total_messages or 0,
+            "total_message_chars": self.total_message_chars or 0,
+            "retail_revenue": float(self.retail_revenue),
+            "estimated_profit": float(self.estimated_profit),
             "is_active": self.is_active,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }
