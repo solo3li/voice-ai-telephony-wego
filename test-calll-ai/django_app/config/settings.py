@@ -12,6 +12,14 @@ DEBUG = os.getenv('DEBUG', '0') == '1'
 
 ALLOWED_HOSTS = ['*']
 
+import re
+import django.http.request
+# Allow container hostnames with underscores like 'voice_django'
+django.http.request.host_validation_re = re.compile(
+    r"^([a-z0-9_.-]+|\[[a-f0-9]*:[a-f0-9:]+\])(?::([0-9]+))?$",
+    re.IGNORECASE
+)
+
 CSRF_TRUSTED_ORIGINS = [
     'https://app.localhost',
     'https://*.localhost',

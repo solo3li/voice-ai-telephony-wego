@@ -2288,6 +2288,7 @@
               <select id="filter-tx-type" onchange="loadTransactions(this.value)" class="px-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-[#7c3aed]">
                 <option value="all" data-i18n="auto_all_transactions">جميع الحركات</option>
                 <option value="call_deduction" data-i18n="auto_voice_calls_deductions">خصم مكالمات صوتية</option>
+                <option value="message_deduction" data-i18n="billing_filter_message_deduction">خصم رسائل شات ووت</option>
                 <option data-i18n="badge_topup" value="topup">شحن رصيد</option>
                 <option value="welcome_bonus" data-i18n="auto_welcome_bonus">رصيد ترحيبي</option>
               </select>
@@ -4053,6 +4054,13 @@
             }
           })
           .catch(err => console.debug('Room chatwoot sync error:', err));
+        }
+
+        if (document.getElementById('billing-transactions-tbody')) {
+          const filterVal = document.getElementById('filter-tx-type') ? document.getElementById('filter-tx-type').value : 'all';
+          if (typeof loadTransactions === 'function') {
+            loadTransactions(filterVal);
+          }
         }
       }
     });
@@ -7744,16 +7752,24 @@
 
         let typeBadge = '';
         if (t.transaction_type === 'topup') {
-          typeBadge = `<span data-i18n="badge_topup" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">شحن رصيد</span>`;
+          typeBadge = `<span data-i18n="badge_topup" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">${window.t ? window.t('badge_topup', 'شحن رصيد') : 'شحن رصيد'}</span>`;
         } else if (t.transaction_type === 'call_deduction') {
-          typeBadge = `<span data-i18n="badge_deduction" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]">خصم مكالمة</span>`;
+          typeBadge = `<span data-i18n="badge_deduction" class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe]">${window.t ? window.t('badge_deduction', 'خصم مكالمة') : 'خصم مكالمة'}</span>`;
+        } else if (t.transaction_type === 'message_deduction') {
+          typeBadge = `<span data-i18n="badge_message_deduction" class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">${window.t ? window.t('badge_message_deduction', 'خصم رسالة') : 'خصم رسالة'}</span>`;
         } else {
-          typeBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0]">${t.transaction_type_display}</span>`;
+          typeBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0]">${escapeHtml(t.transaction_type_display)}</span>`;
         }
 
-        const minsDisplay = t.billed_minutes > 0
-          ? `<span class="font-mono font-bold text-[#7c3aed]">${t.billed_minutes} د</span> <span class="text-xs text-[#94a3b8]">(${t.actual_seconds} ث)</span>`
-          : `<span class="text-[#94a3b8]">-</span>`;
+        const minUnit = window.t ? window.t('minute_short', 'د') : 'د';
+        const secUnit = window.t ? window.t('second_short', 'ث') : 'ث';
+        const charUnit = window.t ? window.t('chars_short', 'حرف') : 'حرف';
+        let minsDisplay = '<span class="text-[#94a3b8]">-</span>';
+        if (t.transaction_type === 'message_deduction') {
+          minsDisplay = `<span class="font-mono font-bold text-blue-600">${t.billed_characters || 0} ${charUnit}</span> <span class="text-xs text-[#94a3b8]">(${t.actual_characters || 0})</span>`;
+        } else if (t.billed_minutes > 0) {
+          minsDisplay = `<span class="font-mono font-bold text-[#7c3aed]">${t.billed_minutes} ${minUnit}</span> <span class="text-xs text-[#94a3b8]">(${t.actual_seconds} ${secUnit})</span>`;
+        }
 
         const rateDisplay = t.rate_applied > 0
           ? `<span class="font-mono">${sym}${t.rate_applied.toFixed(4)}</span>`

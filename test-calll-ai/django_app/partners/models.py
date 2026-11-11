@@ -32,6 +32,13 @@ class PartnerProfile(models.Model):
         verbose_name="سعر الدقيقة المخصص",
         help_text="السعر المخفض المخصوم من محفظة الشريك لكل دقيقة محسوبة لعملائه"
     )
+    custom_rate_per_1k_chars = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0.0070'),
+        verbose_name="سعر الشريك لكل 1000 حرف",
+        help_text="السعر المخفض المخصوم من محفظة الشريك لكل 1000 حرف لرسائل عملائه"
+    )
     currency = models.CharField(max_length=8, choices=CURRENCY_CHOICES, default='USD', verbose_name="العملة")
 
     # Master Partner API Key
@@ -81,6 +88,7 @@ class PartnerProfile(models.Model):
             "status": self.status,
             "status_display": self.get_status_display(),
             "custom_rate_per_minute": float(self.custom_rate_per_minute),
+            "custom_rate_per_1k_chars": float(self.custom_rate_per_1k_chars),
             "currency": self.currency,
             "api_key": self.api_key,
             "webhook_url": self.webhook_url,
@@ -115,6 +123,8 @@ class PartnerClientRelationship(models.Model):
 
     total_spent = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0.0000'), verbose_name="إجمالي المستهلك ($)")
     total_minutes = models.PositiveIntegerField(default=0, verbose_name="إجمالي الدقائق المحتسبة")
+    total_messages = models.PositiveIntegerField(default=0, verbose_name="إجمالي الرسائل المرسلة")
+    total_message_chars = models.PositiveIntegerField(default=0, verbose_name="إجمالي حروف الرسائل المحتسبة")
     is_active = models.BooleanField(default=True, verbose_name="مفعل للاتصال")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الانضمام")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="آخر نشاط")
@@ -146,6 +156,8 @@ class PartnerClientRelationship(models.Model):
             "minute_cap": self.minute_cap,
             "total_spent": float(self.total_spent),
             "total_minutes": self.total_minutes,
+            "total_messages": self.total_messages,
+            "total_message_chars": self.total_message_chars,
             "is_active": self.is_active,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
         }

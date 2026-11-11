@@ -88,6 +88,41 @@ CHATWOOT_REDIS_CONFIG = {
 }
 
 CHATWOOT_BASE_URL = getattr(settings, 'CHATWOOT_BASE_URL', 'https://chatwoot.169.58.32.179.nip.io')
+CHATWOOT_BILLING_WEBHOOK_URL = getattr(settings, 'CHATWOOT_BILLING_WEBHOOK_URL', 'http://voice_django:8000/api/billing/chatwoot/webhook/')
+
+
+def register_chatwoot_billing_webhook(account_id: int, cur=None, webhook_url: str = None) -> bool:
+    """
+    Auto-register or update billing webhook for a Chatwoot account.
+    Listens to 'message_created' events to calculate and deduct character costs.
+    """
+    if not account_id:
+        return False
+
+    url = webhook_url or CHATWOOT_BILLING_WEBHOOK_URL
+    subscriptions_json = json.dumps(["message_created"])
+
+    sql = """
+        INSERT INTO webhooks (account_id, url, webhook_type, subscriptions, created_at, updated_at)
+        VALUES (%s, %s, 0, %s::jsonb, NOW(), NOW())
+        ON CONFLICT (account_id, url) DO UPDATE
+        SET subscriptions = EXCLUDED.subscriptions, updated_at = NOW();
+    """
+
+    if cur is not None:
+        cur.execute(sql, (account_id, url, subscriptions_json))
+        return True
+
+    try:
+        with get_chatwoot_db_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql, (account_id, url, subscriptions_json))
+            conn.commit()
+            logger.info(f"[ChatwootBilling] Registered billing webhook for account #{account_id} -> {url}")
+            return True
+    except Exception as e:
+        logger.error(f"[ChatwootBilling] Failed to register billing webhook for account #{account_id}: {e}", exc_info=True)
+        return False
 
 
 def get_or_create_tenant_chatwoot(user):
@@ -121,6 +156,10 @@ def get_or_create_tenant_chatwoot(user):
                 'is_provisioned': True,
             }
         )
+        try:
+            register_chatwoot_billing_webhook(2)
+        except Exception as wh_err:
+            logger.warning(f"Failed to register billing webhook for superuser account 2: {wh_err}")
         return config
 
     # 3. Fast check existing config in Django
@@ -194,6 +233,9 @@ def get_or_create_tenant_chatwoot(user):
                 RETURNING id;
             """, (acc_id,))
             assistant_id = cur.fetchone()[0]
+
+            # 4.6 Register Chatwoot billing webhook
+            register_chatwoot_billing_webhook(acc_id, cur=cur)
 
             conn.commit()
 

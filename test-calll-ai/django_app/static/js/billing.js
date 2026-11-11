@@ -102,15 +102,21 @@ function renderTransactionsTable(txs, sym = '$') {
       typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">${window.t ? window.t('billing_type_topup', 'شحن رصيد') : 'شحن رصيد'}</span>`;
     } else if (t.transaction_type === 'call_deduction') {
       typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${window.t ? window.t('billing_type_deduction', 'خصم مكالمة') : 'خصم مكالمة'}</span>`;
+    } else if (t.transaction_type === 'message_deduction') {
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">${window.t ? window.t('badge_message_deduction', 'خصم رسالة') : 'خصم رسالة'}</span>`;
     } else {
       typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(t.transaction_type_display)}</span>`;
     }
 
     const minUnit = window.t ? window.t('minute_short', 'د') : 'د';
     const secUnit = window.t ? window.t('second_short', 'ث') : 'ث';
-    const minsDisplay = t.billed_minutes > 0
-      ? `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} ${minUnit}</span> <span class="text-xs text-slate-400">(${t.actual_seconds} ${secUnit})</span>`
-      : `<span class="text-slate-400">-</span>`;
+    const charUnit = window.t ? window.t('chars_short', 'حرف') : 'حرف';
+    let minsDisplay = '<span class="text-slate-400">-</span>';
+    if (t.transaction_type === 'message_deduction') {
+      minsDisplay = `<span class="font-mono font-medium text-blue-700">${t.billed_characters || 0} ${charUnit}</span> <span class="text-xs text-slate-400">(${t.actual_characters || 0})</span>`;
+    } else if (t.billed_minutes > 0) {
+      minsDisplay = `<span class="font-mono font-medium text-slate-900">${t.billed_minutes} ${minUnit}</span> <span class="text-xs text-slate-400">(${t.actual_seconds} ${secUnit})</span>`;
+    }
 
     const rateDisplay = t.rate_applied > 0
       ? `<span class="font-mono text-slate-700">${sym}${t.rate_applied.toFixed(4)}</span>`

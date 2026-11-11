@@ -4,7 +4,7 @@ from .models import PartnerProfile, PartnerClientRelationship
 
 @admin.register(PartnerProfile)
 class PartnerProfileAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'partner_code', 'user', 'status', 'custom_rate_per_minute', 'currency', 'clients_count', 'created_at')
+    list_display = ('company_name', 'partner_code', 'user', 'status', 'custom_rate_per_minute', 'custom_rate_per_1k_chars', 'currency', 'clients_count', 'created_at')
     list_filter = ('status', 'currency', 'created_at')
     search_fields = ('company_name', 'partner_code', 'user__username', 'user__email', 'api_key')
     readonly_fields = ('partner_code', 'api_key', 'created_at', 'updated_at')
@@ -25,7 +25,7 @@ class PartnerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(PartnerClientRelationship)
 class PartnerClientRelationshipAdmin(admin.ModelAdmin):
-    list_display = ('client', 'partner', 'external_reference', 'spending_cap', 'total_spent', 'total_minutes', 'is_active', 'created_at')
+    list_display = ('client', 'partner', 'external_reference', 'spending_cap', 'total_spent', 'total_minutes', 'total_messages', 'total_message_chars', 'is_active', 'created_at')
     list_filter = ('is_active', 'partner__company_name', 'created_at')
     search_fields = ('client__username', 'partner__company_name', 'external_reference')
     readonly_fields = ('created_at', 'updated_at')

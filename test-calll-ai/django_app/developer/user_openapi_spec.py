@@ -326,7 +326,7 @@ def get_user_openapi_spec(server_url: str = "/api/v1", lang: str = "ar") -> dict
                     "Paginated ledger of all financial transactions (call deductions, top-ups, adjustments)."
                 ),
                 "parameters": [
-                    {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["call_deduction", "topup", "admin_adjustment", "welcome_bonus"]}, "description": "تصفية بنوع الحركة" if is_ar else "Filter by transaction type"},
+                    {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["call_deduction", "message_deduction", "topup", "admin_adjustment", "welcome_bonus"]}, "description": "تصفية بنوع الحركة" if is_ar else "Filter by transaction type"},
                     {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 50}},
                     {"name": "offset", "in": "query", "schema": {"type": "integer", "default": 0}}
                 ],

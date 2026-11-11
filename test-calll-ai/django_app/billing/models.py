@@ -53,6 +53,23 @@ class BillingConfig(models.Model):
         verbose_name="رصيد ترحيبي تجريبي",
         help_text="الرصيد المبدئي المجاني الممنوح للمستخدم الجديد للتجربة"
     )
+    cost_per_1k_chars = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0.0100'),
+        verbose_name="سعر كل 1000 حرف",
+        help_text="التكلفة المخصومة لكل 1000 حرف لرسائل شات ووت"
+    )
+    min_chars_per_message = models.PositiveIntegerField(
+        default=50,
+        verbose_name="الحد الأدنى لحروف الرسالة",
+        help_text="الحد الأدنى لاحتساب الحروف لأي رسالة صادرة"
+    )
+    media_equivalent_chars = models.PositiveIntegerField(
+        default=500,
+        verbose_name="عدد الحروف المكافئ للميديا",
+        help_text="عدد الحروف المحتسب للرسائل التي تحتوي على وسائط ومرفقات فقط بدون نص"
+    )
     updated_at = models.DateTimeField(auto_now=True, verbose_name="آخر تحديث")
 
     class Meta:
@@ -87,6 +104,29 @@ class BillingConfig(models.Model):
         billed_minutes = self.calculate_billed_minutes(duration_seconds)
         cost = Decimal(str(billed_minutes)) * self.cost_per_minute
         return billed_minutes, cost
+
+    def calculate_message_characters(self, content: str = '', has_media: bool = False) -> tuple[int, int]:
+        """
+        Returns (actual_characters, billed_characters).
+        """
+        raw_text = (content or '').strip()
+        if raw_text:
+            actual = len(raw_text)
+        elif has_media:
+            actual = self.media_equivalent_chars
+        else:
+            actual = 0
+
+        billed = max(actual, self.min_chars_per_message) if (actual > 0 or has_media) else 0
+        return actual, billed
+
+    def calculate_message_cost(self, billed_characters: int, rate: Decimal = None) -> Decimal:
+        if rate is None:
+            rate = self.cost_per_1k_chars
+        if billed_characters <= 0:
+            return Decimal('0.0000')
+        cost = (Decimal(str(billed_characters)) / Decimal('1000')) * rate
+        return round(cost, 4)
 
     def get_currency_symbol(self) -> str:
         return "$" if self.currency == "USD" else "ج.م"
@@ -142,6 +182,7 @@ class BillingTransaction(models.Model):
     """
     TYPE_CHOICES = [
         ('call_deduction', 'خصم مكالمة صوتية'),
+        ('message_deduction', 'خصم رسائل شات ووت'),
         ('topup', 'شحن رصيد مباشر'),
         ('admin_adjustment', 'تعديل رصيد إداري'),
         ('welcome_bonus', 'رصيد ترحيبي مجاني'),
@@ -167,7 +208,17 @@ class BillingTransaction(models.Model):
     currency = models.CharField(max_length=8, default='USD', verbose_name="العملة")
     actual_seconds = models.PositiveIntegerField(default=0, verbose_name="الثواني الفعلية")
     billed_minutes = models.PositiveIntegerField(default=0, verbose_name="الدقائق المحتسبة (Ceiling)")
-    rate_applied = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0.0000'), verbose_name="السعر المطبق للدقيقة")
+    chatwoot_message_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        unique=True,
+        db_index=True,
+        verbose_name="معرف رسالة شات ووت"
+    )
+    actual_characters = models.PositiveIntegerField(default=0, verbose_name="عدد الحروف الفعلي")
+    billed_characters = models.PositiveIntegerField(default=0, verbose_name="عدد الحروف المحتسب")
+    inbox_name = models.CharField(max_length=128, blank=True, default='', verbose_name="اسم القناة / صندوق الوارد")
+    rate_applied = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0.0000'), verbose_name="السعر المطبق للدقيقة أو الألف حرف")
     description = models.CharField(max_length=255, blank=True, default='', verbose_name="الوصف والبيان")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="التاريخ والوقت")
 
@@ -183,18 +234,32 @@ class BillingTransaction(models.Model):
 
     def to_dict(self):
         sym = "$" if self.currency == "USD" else "ج.م"
+        if self.transaction_type == 'message_deduction' or (self.amount != 0 and abs(self.amount) < Decimal('0.01')):
+            amount_formatted = f"{'+' if self.amount > 0 else ''}{self.amount:.4f} {sym}"
+        else:
+            amount_formatted = f"{'+' if self.amount > 0 else ''}{self.amount:.2f} {sym}"
+
+        if self.transaction_type == 'message_deduction' or (self.balance_after != round(self.balance_after, 2)):
+            balance_after_formatted = f"{self.balance_after:.4f} {sym}"
+        else:
+            balance_after_formatted = f"{self.balance_after:.2f} {sym}"
+
         return {
             "id": self.id,
             "transaction_type": self.transaction_type,
             "transaction_type_display": self.get_transaction_type_display(),
             "amount": float(self.amount),
-            "amount_formatted": f"{'+' if self.amount > 0 else ''}{self.amount:.2f} {sym}",
+            "amount_formatted": amount_formatted,
             "balance_after": float(self.balance_after),
-            "balance_after_formatted": f"{self.balance_after:.2f} {sym}",
+            "balance_after_formatted": balance_after_formatted,
             "currency": self.currency,
             "currency_symbol": sym,
             "actual_seconds": self.actual_seconds,
             "billed_minutes": self.billed_minutes,
+            "chatwoot_message_id": self.chatwoot_message_id,
+            "actual_characters": self.actual_characters,
+            "billed_characters": self.billed_characters,
+            "inbox_name": self.inbox_name,
             "rate_applied": float(self.rate_applied),
             "description": self.description,
             "room_name": self.call_session.room_name if self.call_session else "",

@@ -81,6 +81,45 @@ def test_1_frontend_i18n_dictionaries_and_page_titles():
             val = i18n_data[lang].get(k)
             assert val and isinstance(val, str), f"Key '{k}' in '{lang}' is empty or not string: {val}"
 
+    # Verify Chatwoot message billing transaction keys in all 6 languages
+    expected_billing_keys = {
+        'ar': {
+            'badge_message_deduction': 'خصم رسالة',
+            'chars_short': 'حرف',
+            'billing_filter_message_deduction': 'خصم رسائل شات ووت',
+        },
+        'en': {
+            'badge_message_deduction': 'Message Deduction',
+            'chars_short': 'chars',
+            'billing_filter_message_deduction': 'Chatwoot Message Deductions',
+        },
+        'tr': {
+            'badge_message_deduction': 'Mesaj Ücreti',
+            'chars_short': 'karakter',
+            'billing_filter_message_deduction': 'Chatwoot Mesaj Kesintileri',
+        },
+        'fr': {
+            'badge_message_deduction': 'Déduction message',
+            'chars_short': 'caractères',
+            'billing_filter_message_deduction': 'Déductions messages Chatwoot',
+        },
+        'de': {
+            'badge_message_deduction': 'Nachrichten-Abzug',
+            'chars_short': 'Zeichen',
+            'billing_filter_message_deduction': 'Chatwoot-Nachrichtenabzüge',
+        },
+        'es': {
+            'badge_message_deduction': 'Deducción de mensaje',
+            'chars_short': 'caracteres',
+            'billing_filter_message_deduction': 'Deducciones de mensajes de Chatwoot',
+        },
+    }
+    for lang, keys_dict in expected_billing_keys.items():
+        for k, expected_v in keys_dict.items():
+            actual_v = i18n_data[lang].get(k)
+            assert actual_v == expected_v, f"Language '{lang}' key '{k}' expected '{expected_v}', got '{actual_v}'"
+    print("  [+] Verified Chatwoot message billing keys parity & values across all 6 languages.")
+
     # 2. Verify PAGE_TITLES for all 18 routes in all 6 languages
     m_titles = re.search(r'const PAGE_TITLES = (\{.*?\n\};)', content, re.DOTALL)
     assert m_titles, "const PAGE_TITLES not found in common.js!"
